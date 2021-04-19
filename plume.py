@@ -12,6 +12,8 @@ if ' ' in CURRENT_PATH:
     print('Changez le programme de place pour un path sans espace svp.')
 
 
+
+
 class App():
 
 
@@ -21,15 +23,33 @@ class App():
 
         self.path = CURRENT_PATH
 
-        #super(App, self).__init__()
+        ### windows
+
         self.window = pyglet.window.Window()
 
-        self.size_scr = 1000,800
-        self.window.set_size(self.size_scr[0],self.size_scr[1])
+        #self.size_scr = 1000,800
+        #self.window.set_size(self.size_scr[0],self.size_scr[1])
 
-        #self.keys = key.KeyStateHandler()
+        self.window.set_fullscreen()
+
         self.window.push_handlers(self)
 
+        ### screens
+
+        display = pyglet.canvas.get_display()
+        self.screens = display.get_screens()
+        used_screen = self.get_current_screen()
+
+        ### managers
+
+        self.manager = graphic.MainManager(CURRENT_PATH)
+        self.group_manager = graphic.GroupManager()
+        self.graphic = graphic.GraphManager(self.manager,self.group_manager)
+        self.labman = graphic.LabelManager(self.manager,self.group_manager,self.font[0])
+        #self.cmd = graphic.CmdManager((20 , self.size_fullscr[1] - 50))
+        #self.specMan = graphic.SpecialManager(self.manager,self.current_size_scr)
+
+        #self.aff_cmd = False
 
     def init(self):
 

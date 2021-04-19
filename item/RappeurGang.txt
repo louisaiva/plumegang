@@ -1,0 +1,90 @@
+
+
+idée jeu : RappeurGang
+
+Synopsis général du jeu:
+	
+	-vous vous réveillez un matin avec une terrible maladie qui vous procure des super pouvoirs !
+	-vous pouvez à présent voler la plume d'autres rappeurs afin de récuperer des phases à écrire !
+	-Le but du jeu est d'accumuler un maaax de fans et pour cela on créé des musiques avec les paroles qu'on a volé (en volant la plume d'un autre rappeur).
+	-Pour faire un son t'as besoin de paroles (à l'aide des plumes volées) et d'une instru (à l'aide de contrats avec un beatmaker), et d'un label (aussi contrat, pour diffuser le son)
+	-ton premier son tu le fais dans ta chambre avec tes propres phases éclatées et ton pote beatmaker. Attention à pas trop laisser tomber ton pote beatmaker pcq il peut etre ton fervent ennemi plus tard
+
+
+idées comme ça:
+
+	-plus on a de fans plus la ville est grande -> plus on a de plumes/contrats qui nous attendent
+	-un rappeur qui se voit voler sa plume va être en état végétatif donc faut pas trop se faire remarquer sinon les fans vont pas vous aimer.
+	-les plumes sont de différents niveaux (commun,rare,epique,legendaire) et plus un rappeur est connu plus le niveau de sa plume est élevé (nekfeu = ultra legendaire) et en même temps si tu te fais remarquer en volant une plume d'un rappeur commun les fans vont s'en battre la race alors que si tu te fais choper en rendant damso vegetatif, tu vas te faire bouillav
+	-tu gagne (non seulemetn des fans mais aussi) de la thune en fonction de tes sons qui vont te permettre de t'acheter des trucs afin de voler des plumes plus facilement et de te déplacer plus facilement (en évitant les nombreux autographes) et aussi de faire des gros contrats avec des btmkr et des labels qui sont au dessus de ton nivo
+	-quand tu te déplace dans la rue en fonction de ta notoriété, plus de gens feront attention à toi, donc plus faudra etre discret lors d'actes illégaux
+	-différents moyens de voler une plume:
+			moyens légaux~:
+
+				faire un battle à la rap contenders et éclater l'autre rappeur
+
+			moyens illégaux:
+
+				venir braquer un rappeur chez lui et lui arracher de force
+				inviter un rappeur pour un feat et lui arracher de force
+
+	-chaque parole à des catégories [sexiste,violent,chill,oldschool] et un niveau de punchline [*,**,***,****,*****], chaque catégorie va cibler une partie précise du public et peut en dégouter une autre -> potentiellement nourrir un clan anti-vous
+	-des sons trop explicites peuvent donc créer scandale et vous faire perdre des fans mais aussi vous donner de la street cred
+	-des punchlines légendaires peuvent rameuter plus de public
+	-les instrus aussi ont des catégories et de la lourdeur -> fonctionne pareil que les paroles
+	-au bout d'un moment dans le jeu va être créé un hopital pour soigner les rappeurs sans plume : on peut le détruire (extremement illégal) ou alors rien faire et certains rappeurs seront soignés et alors ils se mettront à vouloir recuperer leur plume à tout prix, attention à aps se faire bouillav
+	
+
+
+Détails techniques:
+
+	-jeu en 2D à la michel tejla ? sorte de platformer viteaif
+	-on peut entrer dans des maisons/shop
+	-on peut avoir jusqu'à 6 plumes actives, les autre sont stockées dans l'armoire à plumes
+	-différents compteurs:
+		barre de vie
+		fans
+		thune
+		barre de street cred -> si yen a trop la police débarque et vs allez en prison, si yen a pas assez : aucune streetcred
+		
+##############################################
+
+OBJECTS :
+
+	RAPPEUR ->
+
+		Un rappeur possède une plume et des sons. Il peut voler les plumes des autres
+		Chaque son qu'il produit attire des fans
+
+		possède :
+
+		-une plume
+		-des sons
+		-des fans
+
+
+	PLUME ->
+
+		Chaque plume te donne accès à des "phases", soit quand t'écris, soit à des moments aléatoires
+
+
+		Elle possède :
+
+
+		-un pouvoir de street cred
+		-une rareté (fixé au départ)
+		-un niveau (plus t'écris de phases plus le niveau augmente -> ça va jusqu'au niv100 puis après tu unlok une rareté de mieux)
+
+
+	PHASE ->
+
+
+
+##############################################
+
+
+
+easter egg:
+
+	-seul moyen de voler la plume de 69 : aller en prison
+	-une plume secrète jamais indiquée par le radar à plume : plume du rappeur delta, vous permet d'écrire vos propres phases
