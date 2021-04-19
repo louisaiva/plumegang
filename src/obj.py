@@ -1,8 +1,11 @@
 
 import random as r
 import json
+#import graphic as g
 
-######################## INIT
+"""""""""""""""""""""""""""""""""""
+ INIT
+"""""""""""""""""""""""""""""""""""
 
 QUALITIES = ['F'
             ,'D-','D','D+'
@@ -18,21 +21,42 @@ QUALITIES_coeff = [0.1
             ,0.9,0.92,0.94
             ,0.96,0.98,0.995
             ,1.1]
+QUALITIES_up = {'F':0.1
+            ,'D-':0.1,'D':0.1,'D+':0.1
+            ,'C-':0.1,'C':0.1,'C+':0.1
+            ,'B-':0.05,'B':0.05,'B+':0.05
+            ,'A-':0.05,'A':0.02,'A+':0.02
+            ,'S-':0.02,'S':0.02,'S+':0.015
+            ,'S*':1}
+QUALITIES_dwn = {'F':-1,'D-':-0.1
+            ,'D':-0.1,'D+':-0.1,'C-':-0.1
+            ,'C':-0.1,'C+':-0.1,'B-':-0.1
+            ,'B':-0.05,'B+':-0.05,'A-':-0.05
+            ,'A':-0.05,'A+':-0.02,'S-':-0.02
+            ,'S':-0.02,'S+':-0.02,'S*':-0.015}
 
 CRED = ['pire merde de la terre','sous-merde','merde'
         ,'victime','neutre','thug'
         ,'gangster','gros ganster','ennemi number one']
 CRED_coeff = [-95,-80,-50,-10,10,50,80,95,101]
 
-with open('../item/mots.json','r') as f:
+with open('src/mots.json','r') as f:
     MOTS = json.load(f)
 
+THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','mort + dévastation','notoriété','chill','rap']
 
-######################## CLASSES
+"""""""""""""""""""""""""""""""""""
+ CLASSES
+"""""""""""""""""""""""""""""""""""
+
+
+#------# phases
 
 class Rappeur():
 
-    def __init__(self,name='Delta'):
+    def __init__(self,textid,graph,pos=(0,0),name='Delta'):
+
+        # general
 
         self.name = name
 
@@ -46,16 +70,22 @@ class Rappeur():
 
         self.plume = None
 
+        # skins
+
+        self.spr_id = graph.addSpr(textid)
+        graph.modify(self.spr_id,pos,(10,10))
+
+
     def get_Plume(plume):
 
         self.plume = plume
 
 class Plume():
 
-    def __init__(self,quality,cred_power):
+    def __init__(self,qua,cred):
 
-        self.quality = quality
-        self.cred_power = cred_power
+        self.quality = qua
+        self.cred_power = cred
 
         self.level = 0
 
@@ -64,11 +94,14 @@ class Plume():
         x = 2
         qua = (self.quality*x + r.random())/(x+1)
 
-        x = 2
+        x = 3
         cred = (self.cred_power*x + r.randint(-100,100))/(x+1)
 
         phase = Phase(qua,cred)
-        print(phase.content)
+        #print(phase.content)
+        #print(convert_quality(qua),convert_streetcred(cred))
+
+        return phase
 
 class Phase():
 
@@ -79,6 +112,8 @@ class Phase():
 
             self.content = self.generate_content()
 
+            self.them = r.choice(THEMES)
+
         def generate_content(self):
 
             nb = r.randint(3,6)
@@ -87,10 +122,82 @@ class Phase():
                 s += ' ' + r.choice(MOTS)
             return s
 
+#------# instrus
 
-#################### USEFUL FUNCTIONS
+class Btmaker():
 
-def create_random_Plume():
+    def __init__(self,qua=0.5,name='Bokusan'):
+
+        self.name = name
+
+        #self.money = 1000
+
+        self.quality = qua
+
+    def drop_instru(self):
+
+        x = 2
+        qua = (self.quality*x + r.random())/(x+1)
+
+        instru = Instru(qua,self.name)
+        #print('instru '+convert_quality(qua))
+        return instru
+
+class Instru():
+
+    def __init__(self,qua,author):
+
+        self.quality = qua
+        self.author = author
+
+#------# sons
+
+class Son():
+
+    def __init__(self,instru,phases,name='cheh'):
+
+        self.name = name
+
+        self.instru = instru
+        self.phases = phases
+
+        self.quality = self.global_qua()
+        self.cred = max([ x.cred for x in self.phases])
+
+        print(convert_quality(self.quality),convert_streetcred(self.cred))
+
+    def global_qua(self):
+
+        x_instru = 1
+        x_phases = 1
+
+        qua_instru = self.instru.quality
+
+        qua_phases = 0
+        themes = []
+        for ph in self.phases:
+            qua_phases += ph.quality
+            if ph.them not in themes:
+                themes.append(ph.them)
+        qua_phases/=len(self.phases)
+
+        qua = (x_instru*qua_instru + x_phases*qua_phases)/(x_instru+x_phases)
+
+        if len(themes) <= 1:
+            qua = upgrade_qua(qua,1)
+        elif len(themes) > 2:
+            qua = upgrade_qua(qua,-1)
+
+        return qua
+
+
+
+
+"""""""""""""""""""""""""""""""""""
+ USEFUL FUNCTIONS
+"""""""""""""""""""""""""""""""""""
+
+def test():
 
     quality = r.random()
     cred_power = r.randint(-100,100)
@@ -100,9 +207,22 @@ def create_random_Plume():
     plum = Plume(quality,cred_power)
     print('\n')
     for i in range(20):
-        plum.drop_phase()
+        phaz = []
+        for i in range(4):
+            phaz.append(plum.drop_phase())
+        btmker = Btmaker(r.random())
+        Son(btmker.drop_instru(),phaz)
 
     #return Plume(quality,cred_power)
+
+def rplum():
+
+    quality = r.random()
+    cred_power = r.randint(-100,100)
+
+    #print(convert_quality(quality),convert_streetcred(cred_power))
+
+    return Plume(quality,cred_power)
 
 def convert_quality(qua,test=(QUALITIES,QUALITIES_coeff)):
 
@@ -118,3 +238,10 @@ def convert_streetcred(cred,test=(CRED,CRED_coeff)):
         return test[0][0]
     else:
         return convert_streetcred(cred,(test[0][1:],test[1][1:]))
+
+def upgrade_qua(qua,bonus=True):
+
+    if bonus:
+        return qua + QUALITIES_up[convert_quality(qua)]
+    else:
+        return qua + QUALITIES_dwn[convert_quality(qua)]
