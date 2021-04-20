@@ -1,7 +1,8 @@
 
 
-import pyglet
+import pyglet,time
 from pyglet.window import key
+import pyglet.gl as gl
 
 from src.utils import *
 import src.getsave as gs
@@ -74,16 +75,44 @@ class App():
         self.textids = {}
 
         self.textids['persos'] = self.manager.loadImSeq('perso.png',(3,9))
+        self.textids['son'] = self.manager.loadImSeq('son.png',(1,6))
+        self.textids['phaz'] = self.manager.loadImSeq('phaz.png',(1,6))
+        self.textids['instru'] = self.manager.loadImSeq('instru.png',(1,6))
+        self.textids['plum'] = self.manager.loadImSeq('plum.png',(1,6))
+
+        qua = ['F','D','C','B','A','S']
+        self.textids['plume'] = {}
+        for i in range(len(self.textids['plum'])):
+            self.textids['plume'][qua[i]] = self.textids['plum'][i]
+        del self.textids['plum']
+
+        self.textids['gui'] = self.manager.loadImSeq('gui.png',(2,2))
+        self.textids['bg'] = self.manager.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
 
 
         self.sprids = {}
+        self.sprids['bg'] = self.graphic.addSpr(self.textids['bg'],(0,250))
+        self.graphic.modify(self.sprids['bg'],scale=(1.5,1.5))
+        self.graphic.addToGroup(self.sprids['bg'],['back'])
 
         ## PERSOS
 
-        self.perso = obj.Rappeur(self.textids['persos'][0],self.graphic)
+        self.perso = obj.Rappeur(self.textids['persos'][0],self.textids['plume'],self.graphic,self.labman)
+        #self.sprids['cred_bar'] =
 
 
         ## END
+
+        # keys
+        self.keys = key.KeyStateHandler()
+        self.window.push_handlers(self.keys)
+        self.longpress = {}
+        self.cooldown = 0.5
+
+        # clicks
+        self.clicks = {'L':False,'R':False,'M':[0,0]}
+        self.mouse_speed = 0
+
 
         self.playing = True
 
@@ -101,8 +130,28 @@ class App():
 
     def on_key_press(self,symbol,modifiers):
 
-        if symbol == key.A:
-            self.get_out()
+        self.longpress[symbol] = time.time()
+
+        #affiche les différents OrderedGroup d'affichage
+        if symbol == key.G:
+
+            print('\nYOU ASKED TO PRINT GROUPS AND THEIR ORGANISATION:')
+            print('  will be displayed in descending order like that : order,name\n')
+
+            tab = []
+            orders_sorted = sorted(self.group_manager.names_wo,reverse=True)
+
+            for order in orders_sorted:
+                say = str(order)
+                say += (6-len(say))*' '
+                say +=self.group_manager.names_wo[order]
+                print(say)
+            print('')
+
+    def on_key_release(self,symbol,modifiers):
+
+        del self.longpress[symbol]
+
 
     def on_close(self):
 
@@ -115,15 +164,15 @@ class App():
 
     def events(self):
 
-        if self.keys[key.Z]:
-            self.perso.move([0,1],self.keys[key.LSHIFT],self.keys[key.SPACE])
-        if self.keys[key.S]:
-            self.perso.move([0,-1],self.keys[key.LSHIFT],self.keys[key.SPACE])
         if self.keys[key.Q]:
-            self.perso.move([-1,0],self.keys[key.LSHIFT],self.keys[key.SPACE])
+            self.perso.move('R')
         if self.keys[key.D]:
-            self.perso.move([1,0],self.keys[key.LSHIFT],self.keys[key.SPACE])
+            self.perso.move('L')
 
+        if self.keys[key.E]:
+            if time.time() - self.longpress[key.E] > self.cooldown:
+                self.longpress[key.E] = time.time()
+                self.perso.rplum()
 
     def draw(self):
 
@@ -131,9 +180,12 @@ class App():
 
     def gameloop(self,dt):
 
-
         if self.playing:
 
+            # EVENTS
+            self.events()
+
+            gl.glClearColor(1/4,1/4,1/4,1)
             # CLR
             self.window.clear()
 

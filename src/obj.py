@@ -1,6 +1,7 @@
 
 import random as r
 import json
+from src.utils import *
 #import graphic as g
 
 """""""""""""""""""""""""""""""""""
@@ -54,12 +55,12 @@ THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','mor
 
 class Rappeur():
 
-    def __init__(self,textid,graph,pos=(0,0),name='Delta'):
+    def __init__(self,textid,plumtext_id,graph,labman,pos=(200,200),name='Delta'):
 
         # general
 
         self.name = name
-
+        self.speed = 50
 
         self.street_score = 0
 
@@ -68,17 +69,47 @@ class Rappeur():
         self.nb_fans = 0
         self.fans = []
 
-        self.plume = None
+        self.plume = rplum()
+
+        self.graph = graph
+        self.labman = labman
+        self.plumtext_id = plumtext_id
 
         # skins
 
-        self.spr_id = graph.addSpr(textid)
-        graph.modify(self.spr_id,pos,(10,10))
+        self.skin_id = graph.addSpr(textid)
+        graph.modify(self.skin_id,pos,(10,10))
+        graph.addToGroup(self.skin_id,'up')
+
+        self.plum_id = graph.addSpr(plumtext_id[convert_quality(self.plume.quality)[0]],(1500,40))
+        graph.modify(self.plum_id,scale=(0.4,0.4))
+        graph.addToGroup(self.skin_id,['up'])
+
+        # labels
+
+        self.label_name_id = labman.addLabel(self.name,(40,40))
+        self.label_qua_id = labman.addLabel(convert_quality(self.plume.quality)+' '+trunc(self.plume.quality),(1600,60))
+        self.label_cred_id = labman.addLabel(convert_streetcred(self.plume.cred_power)+' '+str(self.plume.cred_power),(1500,10),font_size=20)
+
+    def rplum(self):
+        self.plume = rplum()
+        self.actualise_skins()
 
 
-    def get_Plume(plume):
+    def actualise_skins(self):
 
-        self.plume = plume
+        #self.plum_id = graph.addSpr(plumtext_id[convert_quality(self.plume.quality)[0]],(1500,40))
+        self.graph.set_text(self.plum_id,self.plumtext_id[convert_quality(self.plume.quality)[0]])
+        self.labman.set_text(self.label_qua_id,convert_quality(self.plume.quality)+' '+trunc(self.plume.quality))
+        self.labman.set_text(self.label_cred_id,convert_streetcred(self.plume.cred_power)+' '+str(self.plume.cred_power))
+
+
+    def move(self,dir):
+        x,y = self.graph.spr(self.skin_id).position
+        if dir == 'R':
+            self.graph.modify(self.skin_id,(x-self.speed,y))
+        elif dir == 'L':
+            self.graph.modify(self.skin_id,(x+self.speed,y))
 
 class Plume():
 

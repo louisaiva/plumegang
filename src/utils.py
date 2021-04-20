@@ -128,7 +128,7 @@ def mycopy(thg):
 
         return thg
 
-def truncate(f, n=3):
+def trunc(f, n=3):
     '''Truncates/pads a float f to n decimal places without rounding'''
     s = '{}'.format(f)
     if 'e' in s or 'E' in s:
