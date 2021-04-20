@@ -16,9 +16,7 @@ if ' ' in CURRENT_PATH:
 
 
 
-
 class App():
-
 
     ### INIT FUNCTIONS
 
@@ -30,19 +28,9 @@ class App():
 
         self.window = pyglet.window.Window()
 
-        #self.size_scr = 1000,800
-        #self.window.set_size(self.size_scr[0],self.size_scr[1])
-
         self.window.set_fullscreen()
 
         self.window.push_handlers(self)
-
-        ### screens
-
-        """display = pyglet.canvas.get_display()
-        self.screens = display.get_screens()
-        used_screen = self.get_current_screen()
-        """
 
         ### loading fonts
         font_path = 'item/fonts/'
@@ -59,12 +47,12 @@ class App():
 
         ### managers
 
-        self.manager = g.MainManager(CURRENT_PATH)
-        self.group_manager = g.GroupManager()
-        self.graphic = g.GraphManager(self.manager,self.group_manager)
-        self.labman = g.LabelManager(self.manager,self.group_manager,self.font[0])
+        #g.init_managers(CURRENT_PATH,self.font)
+
+        g.lman.updateman(self.font[0])
+
         #self.cmd = graphic.CmdManager((20 , self.size_fullscr[1] - 50))
-        #self.specMan = graphic.SpecialManager(self.manager,self.current_size_scr)
+        #self.specMan = graphic.SpecialManager(g.tman,self.current_size_scr)
 
         #self.aff_cmd = False
 
@@ -74,11 +62,11 @@ class App():
 
         self.textids = {}
 
-        self.textids['persos'] = self.manager.loadImSeq('perso.png',(3,9))
-        self.textids['son'] = self.manager.loadImSeq('son.png',(1,6))
-        self.textids['phaz'] = self.manager.loadImSeq('phaz.png',(1,6))
-        self.textids['instru'] = self.manager.loadImSeq('instru.png',(1,6))
-        self.textids['plum'] = self.manager.loadImSeq('plum.png',(1,6))
+        self.textids['persos'] = g.tman.loadImSeq('perso.png',(3,9))
+        self.textids['son'] = g.tman.loadImSeq('son.png',(1,6))
+        self.textids['phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
+        self.textids['instru'] = g.tman.loadImSeq('instru.png',(1,6))
+        self.textids['plum'] = g.tman.loadImSeq('plum.png',(1,6))
 
         qua = ['F','D','C','B','A','S']
         self.textids['plume'] = {}
@@ -86,18 +74,18 @@ class App():
             self.textids['plume'][qua[i]] = self.textids['plum'][i]
         del self.textids['plum']
 
-        self.textids['gui'] = self.manager.loadImSeq('gui.png',(2,2))
-        self.textids['bg'] = self.manager.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
+        self.textids['gui'] = g.tman.loadImSeq('gui.png',(2,2))
+        self.textids['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
 
 
         self.sprids = {}
-        self.sprids['bg'] = self.graphic.addSpr(self.textids['bg'],(0,250))
-        self.graphic.modify(self.sprids['bg'],scale=(1.5,1.5))
-        self.graphic.addToGroup(self.sprids['bg'],['back'])
+        self.sprids['bg'] = g.sman.addSpr(self.textids['bg'],(0,250))
+        g.sman.modify(self.sprids['bg'],scale=(1.5,1.5))
+        g.sman.addToGroup(self.sprids['bg'],'back')
 
         ## PERSOS
 
-        self.perso = obj.Rappeur(self.textids['persos'][0],self.textids['plume'],self.graphic,self.labman)
+        self.perso = obj.Rappeur(self.textids['persos'][0],self.textids['plume'])
         #self.sprids['cred_bar'] =
 
 
@@ -132,33 +120,34 @@ class App():
 
         self.longpress[symbol] = time.time()
 
+        if symbol == key.ESCAPE:
+            print('wesh')
+
         #affiche les différents OrderedGroup d'affichage
-        if symbol == key.G:
+        elif symbol == key.G:
 
             print('\nYOU ASKED TO PRINT GROUPS AND THEIR ORGANISATION:')
             print('  will be displayed in descending order like that : order,name\n')
 
             tab = []
-            orders_sorted = sorted(self.group_manager.names_wo,reverse=True)
+            orders_sorted = sorted(g.gman.names_wo,reverse=True)
 
             for order in orders_sorted:
                 say = str(order)
                 say += (6-len(say))*' '
-                say +=self.group_manager.names_wo[order]
+                say +=g.gman.names_wo[order]
                 print(say)
             print('')
 
     def on_key_release(self,symbol,modifiers):
 
-        del self.longpress[symbol]
-
+        if symbol in self.longpress:
+            del self.longpress[symbol]
 
     def on_close(self):
 
         print('\n\nNumber of lines :',compt(self.path))
         gs.save_files(self.path)
-
-
 
     ### LOOP
 
@@ -176,7 +165,7 @@ class App():
 
     def draw(self):
 
-        self.manager.draw()
+        g.tman.draw()
 
     def gameloop(self,dt):
 

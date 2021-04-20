@@ -11,6 +11,28 @@ from math import *
 class POINT(Structure):
     _fields_ = [("x", c_long), ("y", c_long)]
 
+class box():
+
+    def __init__(self,x=0,y=0,w=30,h=30):
+
+        self.w = w
+        self.h = h
+        self.x = x
+        self.y = y
+
+    def _wh(self):
+        return self.w,self.h
+
+    def _xy(self):
+        return self.x,self.y
+
+    def _xywh(self):
+        return self.x,self.y,self.w,self.h
+
+    wh = property(_wh)
+    xy = property(_xy)
+    xywh = property(_xywh)
+
 ## partie SCREEN
 
 def get_screen_size():
@@ -137,101 +159,6 @@ def trunc(f, n=3):
     return '.'.join([i, (d+'0'*n)[:n]])
 
 ### PARTIE AUTO-SAUVEGARDE
-"""
-def save_files(bigpath,path = ['/.','/src'],save_path = '/autosav/'):
-
-    autosav = ''
-
-    for chem in path:
-        #print('path',bigpath+chem,':',os.listdir(bigpath+chem))
-        try:
-            for file in os.listdir(bigpath+chem):
-                if file[-3:] == '.py':
-                    autosav += '\n\n\n _newfile_ :' + bigpath+chem+'/'+file + '\n\n\n'
-                    with open(bigpath+chem+'/'+file,'r') as f:
-                        autosav += f.read()
-        except :
-            jsghd=0
-            #print('no path',bigpath+chem,':',os.listdir(bigpath+chem))
-
-    version = ['alpha',10001]
-
-    try:
-        with open(bigpath+save_path+'version','r') as f:
-            tab = f.read().split('_')
-            version = [tab[0],int(tab[1])*10000+int(tab[2])]
-        version[1]+=1
-        with open(bigpath+save_path+'version','w') as f:
-            f.write(version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
-    except:
-        os.makedirs(bigpath+save_path)
-        with open(bigpath+save_path+'version','w') as f:
-            f.write(version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
-
-    with open(bigpath+save_path+'saved_'+version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:]+'.savd','w') as f:
-        f.write(autosav)
-
-    print('files saved, version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
-
-def recup_files(path2):
-
-    ##version obsolete de getback ?
-
-    currentpath = path2.split('\\')[-1]
-    currentpath = currentpath.split('/')[-1]
-    currentpath = path2[:(len(path2)-len(currentpath))]
-
-    all =[]
-    with open(path2,'r') as f:
-        all = f.readlines()
-
-    files = {}
-    titles = [0]
-    file = []
-    for line in all:
-        if '_newfile_ :' in line and line[-4:] == '.py\n':
-            name = line[len('_newfile_ '):]
-            names = name.split('\\')
-            names2 = []
-
-            for nam in names:
-                for naam in nam.split('/'):
-                    names2.append(naam)
-                    name = ('/').join(names2[-2:])
-
-            files[titles[-1]] = file
-            titles.append(name[:-1])
-            file = []
-        else:
-            file.append(line)
-
-    files[titles[-1]] = file
-
-    for name in files:
-        print(name)
-        if name != 0:
-            try:
-                with open(currentpath+name,'w') as f:
-                    for line in files[name]:
-                        f.write(line)
-            except :
-                file = name.split('/')[0]
-                os.makedirs(currentpath+file)
-                with open(currentpath+name,'w') as f:
-                    for line in files[name]:
-                        f.write(line)
-
-def get_version(bigpath,save_path = '/autosav/'):
-    version = ['alpha',10001]
-
-    try:
-        with open(bigpath+save_path+'version','r') as f:
-            tab = f.read().split('_')
-            version = [tab[0],int(tab[1])*10000+int(tab[2])]
-    except:
-        a=0
-    return version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:]
-"""
 def compt(bigpath,path = ['/.','/src']):
 
     long = 0
@@ -247,3 +174,11 @@ def compt(bigpath,path = ['/.','/src']):
             #print('no path',bigpath+chem,':',os.listdir(bigpath+chem))
 
     return long
+
+
+# collision
+def collision(a,b):
+    if (a[0] > b[2]) or (a[2] < b[0]) or (a[1] > b[3]) or (a[3] < b[1]):
+        return False #  oklm c'est bon ca collisionne PAS
+    else:
+        return True # aoutch ca collisionne
