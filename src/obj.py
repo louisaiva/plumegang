@@ -1,7 +1,7 @@
 
 import random as r
 import json
-from src import colors
+from src.colors import *
 from src.utils import *
 from src import graphic as g
 
@@ -56,58 +56,80 @@ THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','mor
 
 class Rappeur():
 
-    def __init__(self,textid,plumtext_id,pos=(200,200),name='Delta'):
+    def __init__(self,textid,pos=(200,200),name='Delta'):
 
         # general
 
         self.name = name
         self.speed = 50
 
-        self.street_score = 0
+        #self.street_score = 0
 
-        self.money = 1000
+        #self.money = 1000
 
-        self.nb_fans = 0
-        self.fans = []
+        #self.nb_fans = 0
+        #self.fans = []
 
         self.plume = rplum()
-        self.plumtext_id = plumtext_id
+
+        self.element_colli = None
 
         # skins
-
         self.skin_id = g.sman.addSpr(textid)
-        g.sman.modify(self.skin_id,pos,(10,10))
-        g.sman.addToGroup(self.skin_id,'up')
-
-        self.plum_id = g.sman.addSpr(plumtext_id[convert_quality(self.plume.quality)[0]],(1500,40))
-        g.sman.modify(self.plum_id,scale=(0.4,0.4))
-        g.sman.addToGroup(self.skin_id,'up')
+        g.sman.modify(self.skin_id,pos,(10,10),'up')
 
         # labels
-
         self.label_name_id = g.lman.addLabel(self.name,(40,40))
-        self.label_qua_id = g.lman.addLabel(convert_quality(self.plume.quality)+' ('+trunc(self.plume.quality)+')',(1600,60))
-        self.label_cred_id = g.lman.addLabel(convert_streetcred(self.plume.cred_power)+' ('+str(self.plume.cred_power)+')',(1500,10),font_size=20)
 
     def rplum(self):
-        self.plume = rplum()
-        self.actualise_skins()
+        self.plume.rplum()
 
+    def update_skin(self):
 
-    def actualise_skins(self):
-
-        #self.plum_id = graph.addSpr(plumtext_id[convert_quality(self.plume.quality)[0]],(1500,40))
-        g.sman.set_text(self.plum_id,self.plumtext_id[convert_quality(self.plume.quality)[0]])
-        g.lman.set_text(self.label_qua_id,convert_quality(self.plume.quality)+' '+trunc(self.plume.quality))
-        g.lman.set_text(self.label_cred_id,convert_streetcred(self.plume.cred_power)+' '+str(self.plume.cred_power))
-
+        if self.plume != None:
+            self.plume.update_skin()
 
     def move(self,dir):
+
+        moved = False
         x,y = g.sman.spr(self.skin_id).position
         if dir == 'R':
             g.sman.modify(self.skin_id,(x-self.speed,y))
+            moved = True
         elif dir == 'L':
             g.sman.modify(self.skin_id,(x+self.speed,y))
+            moved = True
+
+        if moved :
+            self.check_colli()
+
+    def check_colli(self):
+
+        boxper = g.sman.box(self.skin_id)
+        colli_elem = None
+        for elem in ZONES['ELEM']:
+            if collision(boxper,ZONES['ELEM'][elem].box()) :
+                    colli_elem = ZONES['ELEM'][elem]
+
+        if self.element_colli != None:
+            if colli_elem != None:
+                if colli_elem != self.element_colli :
+                    self.element_colli.unhoover()
+                    self.element_colli = colli_elem
+                    self.element_colli.hoover()
+            else:
+                self.element_colli.unhoover()
+                self.element_colli = None
+        else:
+            if colli_elem != None:
+                self.element_colli = colli_elem
+                self.element_colli.hoover()
+
+        #print(self.element_colli)
+
+    def hit(self):
+        print(self.name,'hits the void')
+
 
 class Plume():
 
@@ -117,6 +139,26 @@ class Plume():
         self.cred_power = cred
 
         self.level = 0
+
+        # skins
+        self.skin_id = g.sman.addSpr(g.TEXTIDS['plume'][convert_quality(self.quality)[0]],(1500,40),'up')
+        g.sman.modify(self.skin_id,scale=(0.4,0.4))
+
+        # labels
+        self.lbl_qua_id = g.lman.addLabel(convert_quality(self.quality)+' '+trunc(self.quality),(1600,60))
+        self.lbl_cred_id = g.lman.addLabel(convert_streetcred(self.cred_power)+' '+str(self.cred_power),(1500,10),font_size=20)
+
+    def rplum(self):
+
+        self.quality = r.random()
+        self.cred_power = r.randint(-100,100)
+        self.update_skin()
+
+    def update_skin(self):
+
+        g.sman.set_text(self.skin_id,g.TEXTIDS['plume'][convert_quality(self.quality)[0]])
+        g.lman.set_text(self.lbl_qua_id,convert_quality(self.quality)+' '+trunc(self.quality))
+        g.lman.set_text(self.lbl_cred_id,convert_streetcred(self.cred_power)+' '+str(self.cred_power))
 
     def drop_phase(self):
 
@@ -224,16 +266,85 @@ class Son():
  CLASSES GRAFIK
 """""""""""""""""""""""""""""""""""
 
-"""class Zone():
+class Zone():
 
-    def __init__(self,box,textid='red',group=['mid']):
+    def __init__(self,box,textid='white',group='mid'):
 
-        if textid[:4] != 'text':
-
+        if textid[:4] == 'text':
+            self.text_id = textid
         else:
-            text =
-            self.skin_id ="""
+            self.text_id = g.tman.addCol(*box.wh,c[textid])
+        self.skin_id = g.sman.addSpr(self.text_id,box.xy,group)
 
+    def box(self):
+        return g.sman.box(self.skin_id)
+
+#------# ui
+
+class Zone_UI(Zone):
+
+    ## HOOVER WITH MOVEMENT OF MOUSE
+
+    def __init__(self,box,name='thing',textid='white',group='mid'):
+        super(Zone_UI,self).__init__(box,textid,group)
+
+        self.name = name
+
+        # label
+        pos = box.x + box.w/2 , box.y + box.h + 20
+        self.label = g.lman.addLabel(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,color=c['darkkhaki'])
+
+    def hoover(self):
+        g.lman.unhide(self.label)
+
+    def unhoover(self):
+        g.lman.unhide(self.label,True)
+
+    def activate(self):
+        print(self.skin_id,'activated')
+
+#------# elements
+
+class Zone_ELEM(Zone):
+
+    ## HOOVER WITH MOVEMENT OF PERSO
+
+    def __init__(self,box,name='thing',textid='white',group='mid',long=False):
+        super(Zone_ELEM,self).__init__(box,textid,group)
+
+        self.name = name
+        self.longpress = long
+
+        # label
+        pos = box.x + box.w/2 , box.y + box.h + 20
+        self.label = g.lman.addLabel(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20)
+
+    def hoover(self):
+        g.lman.unhide(self.label)
+
+    def unhoover(self):
+        g.lman.unhide(self.label,True)
+
+    def activate(self):
+        print(self.name,'activated')
+
+class Market(Zone_ELEM):
+
+    def __init__(self,box,perso):
+        super(Market,self).__init__(box,'market','pink','mid',long=True)
+
+        self.perso = perso
+
+    def activate(self):
+        print(self.name,'activated')
+        self.perso.rplum()
+
+
+ZONES = {}
+ZONES['UI'] = {}
+ZONES['ELEM'] = {}
+# use ZONES['UI'] for gui
+# use ZONES['ELEM'] for graphic element
 
 
 """""""""""""""""""""""""""""""""""

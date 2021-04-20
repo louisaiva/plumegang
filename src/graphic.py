@@ -8,86 +8,6 @@ import src.utils as utils
 
 
 #manager who rules groups to draw things in the right order u know
-"""class GroupManager():
-
-    def __init__(self):
-
-
-        self.groups = {} ## give the group with the name
-
-        self.names_wo = {} ## give the name with the order
-        self.orders = {} ## give the order with the name
-
-        names = ['back','mid','front','hud','map','up']
-        self.distance_btw = 8
-
-        for i in range(len(names)):
-            self.groups[names[i]] = pyglet.graphics.OrderedGroup(i*self.distance_btw)
-            self.orders[names[i]] = i*self.distance_btw
-            self.names_wo[i*self.distance_btw] = names[i]
-
-    def getOrderGroup(self,thg=['back',None],thg2=0):
-
-        name=''
-
-        if thg[0] != None: ## atteint un groupe particulier avec son nom
-            name = thg[0]
-        elif thg[1] != None: ## atteint un groupe particulier avec son order d'affichage
-            return thg[1]
-
-        if thg2 != 0:
-            name += str(thg2)
-
-        if name in self.groups:
-            return self.orders[name]
-
-        return None
-
-    def getGroup(self,thg=['back',None],thg2=0):
-
-        name = ''
-
-        if thg[0] != None: ## atteint un groupe particulier avec son nom
-            name = thg[0]
-        elif thg[1] != None: ## atteint un groupe particulier avec son order d'affichage
-            name = self.names_wo[thg[1]]
-
-        if thg2 != 0:
-            name +=str(thg2)
-
-        if name in self.groups:
-            return self.groups[name]
-
-        return None #le groupe n'existe pas
-
-    def createGroup(self,thg=['back',None],thg2=0,level_to_put_in=0):
-        group = self.getGroup(thg,thg2)
-        if group == None: ## pas encore de groupe créé
-
-            if thg[0] != None:
-                if thg2 == 0:
-                    return self.quickCreateGroup(thg[0],level_to_put_in)
-                else:
-                    name = thg[0]+str(thg2)
-                    return self.quickCreateGroup(name,self.orders[thg[0]]+thg2)
-            elif thg[1] != None:
-                try:
-                    name = self.names_wo[thg[1]]+str(thg2)
-                    return self.quickCreateGroup(name,thg[1]+thg2)
-                except :
-                    print('chien essaie de regler la creation dun groupe avec order')
-
-        # ah si on est là le groupe était créé
-        return group
-
-    def quickCreateGroup(self,name,order):
-        if not name in self.groups:
-            self.groups[name] = pyglet.graphics.OrderedGroup(order)
-            self.orders[name] = order
-            self.names_wo[order] = name
-            return self.groups[name]
-        return self.groups[name] # group was already created"""
-
 class GroupManager():
 
     def __init__(self):
@@ -158,6 +78,14 @@ class TextureManager():
         self.ids.append(id)
         return id
 
+    def addCol(self,w,h,color=(255,255,255,255)):
+
+        pattern = pyglet.image.SolidColorImagePattern(color)
+        id = utils.get_id('col')
+        self.textures[id] = pattern.create_image(w,h)
+        self.ids.append(id)
+        return id
+
     def draw(self):
         self.batch.draw()
 
@@ -174,7 +102,7 @@ class SpriteManager():
 
         self.ids = []
 
-    def addSpr(self,textid,xy_pos=(0,0),alr_id=-1,vis=True):
+    def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True):
 
         if alr_id == -1:
             id = utils.get_id('spr')
@@ -182,11 +110,13 @@ class SpriteManager():
         else:
             id =alr_id
 
+
         self.sprites[id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
         self.sprites[id].position = xy_pos
         self.sprites[id].visible = vis
 
-        #self.detect()
+        if group != None:
+            self.addToGroup(id,group)
 
         return id
 
@@ -232,7 +162,7 @@ class SpriteManager():
 
         # updating group
         if group != None:
-            group = gman.getGroup(*group)
+            group = gman.getGroup(group)
             if group != self.sprites[sprid].group:
                 self.sprites[sprid].group = group
 
@@ -240,10 +170,13 @@ class SpriteManager():
         self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
 
     def spr(self,id):
-
         if id in self.sprites:
             return self.sprites[id]
         return None
+
+    def box(self,id):
+        spr = self.sprites[id]
+        return [spr.x,spr.y,spr.x+spr.width,spr.y+spr.height]
 
     def delete(self,tabids='all'):
 
@@ -393,3 +326,5 @@ class LabelManager():
                 self.delete(tabids[lab])
 
 sman,lman = SpriteManager(),LabelManager()
+
+TEXTIDS = {}

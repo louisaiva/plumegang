@@ -6,7 +6,7 @@ import pyglet.gl as gl
 
 from src.utils import *
 import src.getsave as gs
-from src import obj
+from src import obj as o
 from src import graphic as g
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__)) # fopatouché
@@ -60,33 +60,35 @@ class App():
 
         ## SPRITES / TEXTURES
 
-        self.textids = {}
-
-        self.textids['persos'] = g.tman.loadImSeq('perso.png',(3,9))
-        self.textids['son'] = g.tman.loadImSeq('son.png',(1,6))
-        self.textids['phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
-        self.textids['instru'] = g.tman.loadImSeq('instru.png',(1,6))
-        self.textids['plum'] = g.tman.loadImSeq('plum.png',(1,6))
+        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(3,9))
+        g.TEXTIDS['son'] = g.tman.loadImSeq('son.png',(1,6))
+        g.TEXTIDS['phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
+        g.TEXTIDS['instru'] = g.tman.loadImSeq('instru.png',(1,6))
+        g.TEXTIDS['plum'] = g.tman.loadImSeq('plum.png',(1,6))
 
         qua = ['F','D','C','B','A','S']
-        self.textids['plume'] = {}
-        for i in range(len(self.textids['plum'])):
-            self.textids['plume'][qua[i]] = self.textids['plum'][i]
-        del self.textids['plum']
+        g.TEXTIDS['plume'] = {}
+        for i in range(len(g.TEXTIDS['plum'])):
+            g.TEXTIDS['plume'][qua[i]] = g.TEXTIDS['plum'][i]
+        del g.TEXTIDS['plum']
 
-        self.textids['gui'] = g.tman.loadImSeq('gui.png',(2,2))
-        self.textids['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
+        g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
+        g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
 
 
         self.sprids = {}
-        self.sprids['bg'] = g.sman.addSpr(self.textids['bg'],(0,250))
+        self.sprids['bg'] = g.sman.addSpr(g.TEXTIDS['bg'],(0,250),'back')
         g.sman.modify(self.sprids['bg'],scale=(1.5,1.5))
-        g.sman.addToGroup(self.sprids['bg'],'back')
 
         ## PERSOS
 
-        self.perso = obj.Rappeur(self.textids['persos'][0],self.textids['plume'])
+        self.perso = o.Rappeur(g.TEXTIDS['persos'][0])
         #self.sprids['cred_bar'] =
+
+        ## ZONES
+
+        o.ZONES['ELEM']['ordi'] = o.Zone_ELEM(box(1400,225,200,200),'ordi','red')
+        o.ZONES['ELEM']['plume'] = o.Market(box(600,225,200,200),self.perso)
 
 
         ## END
@@ -139,6 +141,13 @@ class App():
                 print(say)
             print('')
 
+        elif symbol == key.E:
+            if self.perso.element_colli != None:
+                if not self.perso.element_colli.longpress:
+                    self.perso.element_colli.activate()
+            else:
+                self.perso.hit()
+
     def on_key_release(self,symbol,modifiers):
 
         if symbol in self.longpress:
@@ -159,13 +168,19 @@ class App():
             self.perso.move('L')
 
         if self.keys[key.E]:
-            if time.time() - self.longpress[key.E] > self.cooldown:
-                self.longpress[key.E] = time.time()
-                self.perso.rplum()
+            if self.perso.element_colli != None:
+                if self.perso.element_colli.longpress:
+                    if time.time() - self.longpress[key.E] > self.cooldown:
+                        self.longpress[key.E] = time.time()
+                        self.perso.element_colli.activate()
+
 
     def draw(self):
 
         g.tman.draw()
+
+    def refresh(self):
+        pass
 
     def gameloop(self,dt):
 
@@ -179,6 +194,7 @@ class App():
             self.window.clear()
 
             # RFRSH
+            self.refresh()
 
             # DRW
             self.draw()
