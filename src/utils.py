@@ -139,6 +139,27 @@ def rangef(a,b,d=1):
 
     return res
 
+def convert_huge_nb(n,letters = True):
+
+    if letters:
+
+        if n <= 0:
+            return str(n)
+            
+        tab = ['',' K',' M',' T']
+
+        for i in range(4,0,-1):
+            f = n/(1000**(i-1))
+            if f > 1:
+                if f >= 10:
+                    return str(int(f))+tab[i-1]
+                else:
+                    return trunc(f,1)+tab[i-1]
+
+
+
+# partie ids
+
 ids = 1112
 
 def get_id(key):

@@ -56,16 +56,19 @@ THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','mor
 
 class Rappeur():
 
-    def __init__(self,textids,pos=(200,200),name='Delta'):
+    def __init__(self,textids,pos=(400,200),name='Delta'):
 
         # general
 
         self.name = name
         self.speed = 12
 
+        self.gex = pos[0] # general x
+        self.gey = pos[1] # general y
+
         #self.street_score = 0
 
-        self.money = 1000
+        self.money = 10000
 
         #self.nb_fans = 0
         #self.fans = []
@@ -115,12 +118,14 @@ class Rappeur():
     def move(self,dir):
 
         moved = False
-        x,y = g.sman.spr(self.skin_id).position
+        #x,y = g.sman.spr(self.skin_id).position
         if dir == 'R':
-            g.sman.modify(self.skin_id,(x+self.speed,y))
+            self.gex+=self.speed
+            #g.sman.modify(self.skin_id,(x+self.speed,y))
             moved = True
         elif dir == 'L':
-            g.sman.modify(self.skin_id,(x-self.speed,y))
+            self.gex-=self.speed
+            #g.sman.modify(self.skin_id,(x-self.speed,y))
             moved = True
 
         if moved :
@@ -137,10 +142,9 @@ class Rappeur():
 
     def check_colli(self):
 
-        boxper = g.sman.box(self.skin_id)
         colli_elem = None
         for elem in ZONES['ELEM']:
-            if collision(boxper,ZONES['ELEM'][elem].box()) :
+            if collision(self.box,ZONES['ELEM'][elem].box) :
                     colli_elem = ZONES['ELEM'][elem]
 
         if self.element_colli != None:
@@ -181,6 +185,16 @@ class Rappeur():
     def add_money(self,qté):
         self.money += qté
 
+    ##
+
+    def _realbox(self):
+        return g.sman.box(self.skin_id)
+
+    box = property(_realbox)
+    """
+    def _plum(self):
+        if self._plume != None
+        return self._plume"""
 
 class Plume():
 
@@ -192,17 +206,11 @@ class Plume():
         self.level = 0
 
         # skins
-        self.skin_id = g.sman.addSpr(g.TEXTIDS['plume'][convert_quality(self.quality)[0]],(1500,40),'up')
-        g.sman.modify(self.skin_id,scale=(0.4,0.4))
-
-        # labels
-        self.lbl_qua_id = g.lman.addLab(convert_quality(self.quality)+' '+trunc(self.quality),(1600,60))
-        self.lbl_cred_id = g.lman.addLab(convert_streetcred(self.cred_power)+' '+str(self.cred_power),(1500,10),font_size=20)
+        self.hud = PlumHUD(self)
 
     def delete(self):
 
-        g.lman.delete([self.lbl_qua_id,self.lbl_cred_id])
-        g.sman.delete(self.skin_id)
+        self.hud.delete()
         return None
 
     def rplum(self):
@@ -248,6 +256,15 @@ class Phase():
             s = r.choice(MOTS)
             for i in range(nb-1):
                 s += ' ' + r.choice(MOTS)
+            return s
+
+        def str(self):
+
+            s= '\n'
+            s += self.content + '\t:' + convert_quality(self.quality) + '  ' + convert_streetcred(self.cred) + '\n'
+            s+= str(self.them)
+            s+= '\n'
+
             return s
 
 #------# instrus
@@ -333,8 +350,14 @@ class Zone():
             self.text_id = g.tman.addCol(*box.wh,c[textid])
         self.skin_id = g.sman.addSpr(self.text_id,box.xy,group)
 
-    def box(self):
+        self.gex,self.gey = box.xy
+
+        self._hoover = False
+
+    def _realbox(self):
         return g.sman.box(self.skin_id)
+
+    box = property(_realbox)
 
 #------# ui
 
@@ -376,32 +399,67 @@ class Zone_ELEM(Zone):
         pos = box.x + box.w/2 , box.y + box.h + 20
         self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20)
 
+        self.color = c['coral']
+
     def hoover(self):
         g.lman.unhide(self.label)
+        self._hoover = True
 
     def unhoover(self):
         g.lman.unhide(self.label,True)
+        self._hoover = False
 
     def activate(self,perso):
-        print(perso.name,'just activated',self.name)
+        #print(perso.name,'just activated',self.name)
+        g.lman.modify(self.label,color=self.color)
+
+        pyglet.clock.schedule_once(self.deactivate,0.5)
+
+    def deactivate(self,dt):
+        if self._hoover:
+            g.lman.modify(self.label,color=c['white'])
+        else:
+            g.lman.modify(self.label,color=(255,255,255,0))
+
+    def update(self):
+        # label
+        pos = (self.box[0] + self.box[2])/2 , self.box[3] + 20
+        g.lman.modify(self.label,pos)
 
 class Market(Zone_ELEM):
 
-    def __init__(self,box):
-        super(Market,self).__init__(box,'market','pink','mid',long=True)
+    def __init__(self,x,y):
+        super(Market,self).__init__(box(x,y,200,200),'market','pink','mid',long=True)
 
     def activate(self,perso):
-        print(perso.name,'just activated',self.name)
+        super(Market,self).activate(perso)
         perso.rplum()
 
 class Ordi(Zone_ELEM):
 
-    def __init__(self,box):
-        super(Ordi,self).__init__(box,'ordi','red','mid')
+    def __init__(self,x,y):
+        super(Ordi,self).__init__(box(x,y,150,200),'ordi','red','mid')
 
     def activate(self,perso):
-        print(perso.name,'just activated',self.name)
+        super(Ordi,self).activate(perso)
         perso.add_money(10000)
+
+class Studio(Zone_ELEM):
+
+    def __init__(self,x,y):
+        super(Studio,self).__init__(box(x,y,50,200),'studio','blue','mid')
+
+class Lit(Zone_ELEM):
+
+    def __init__(self,x,y):
+        super(Lit,self).__init__(box(x,y,300,150),'lit','darkgreen','mid',long=True)
+
+    def activate(self,perso):
+        super(Lit,self).activate(perso)
+        if perso.plume != None:
+            phase =perso.plume.drop_phase()
+            print(phase.str())
+
 
 ZONES = {}
 ZONES['UI'] = {}
@@ -414,15 +472,15 @@ ZONES['ELEM'] = {}
 
 class HUD():
 
-    def __init__(self,dic_ids={'spr':{},'lab':{}},group='hud',name='main'):
+    def __init__(self,group='hud',name='main'):
 
         self.name = name
         self.group = group
 
         #---#
 
-        self.sprids = dic_ids['spr']
-        self.labids = dic_ids['lab']
+        self.sprids = {}
+        self.labids = {}
 
         #---#
 
@@ -435,13 +493,15 @@ class HUD():
 
         self.sprids[key] = g.sman.addSpr(textid,xy_pos,group)
 
-    def addCol(self,key,box,color='lightsalmon',group=None):
+    def addCol(self,key,box,color=(102, 102, 153,255),group=None):
 
         if group == None:
             group = self.group
 
-
-        textid = g.tman.addCol(*box.wh,c[color])
+        if type(color) == type(()):
+            textid = g.tman.addCol(*box.wh,color)
+        else:
+            textid = g.tman.addCol(*box.wh,c[color])
         self.addSpr(key,textid,box.xy,group=group)
 
     def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_size=30,anchor=('left','bottom'),color=(255,255,255,255)):
@@ -451,7 +511,7 @@ class HUD():
 
         self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_size=font_size,anchor=anchor,color=color)
 
-        print(xy_pos)
+        #print(xy_pos)
 
     def modifySpr(self,key,pos=None,scale=None):
         g.sman.modify(self.sprids[key],pos,scale)
@@ -465,6 +525,10 @@ class HUD():
         self.unhide(self.visible)
         self.visible = not self.visible
         #print(self.visible)
+
+    def delete(self):
+        g.lman.delete(self.labids)
+        g.sman.delete(self.sprids)
 
     ## oeoe
 
@@ -493,11 +557,34 @@ class PersoHUD(HUD):
         ycoin = self.lab('name').y  - self.padding
 
         self.addSpr('coin_spr',g.TEXTIDS['item'][0],(xcoin,ycoin - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
-        self.addLab('coin_lab',self.perso.money,(xcoin ,ycoin),font_size=20,color=c['yellow'],anchor=('right','center'))
+        self.addLab('coin_lab',convert_huge_nb(self.perso.money),(xcoin ,ycoin),font_size=20,color=c['yellow'],anchor=('right','center'))
 
     def update(self):
 
-        g.lman.set_text(self.labids['coin_lab'],self.perso.money)
+        g.lman.set_text(self.labids['coin_lab'],convert_huge_nb(self.perso.money))
+
+class PlumHUD(HUD):
+
+    def __init__(self,plum):
+
+        super(PlumHUD, self).__init__(group='hud',name='plum')
+
+        self.plum = plum
+
+        self.box = box(1600,20,300,150)
+        self.padding = 50
+
+        self.addCol('bg',self.box,group='mid')
+
+        self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
+
+        xplum = self.lab('quality').x - self.padding
+        yplum = self.box.cy
+
+        self.addSpr('plum_spr',g.TEXTIDS['plume'][convert_quality(self.plum.quality)[0]])
+        g.sman.modify(self.sprids['plum_spr'],scale=(0.4,0.4))
+        g.sman.modify(self.sprids['plum_spr'],pos=(xplum - self.spr('plum_spr').width/2,yplum - self.spr('plum_spr').height/2))
+        self.addLab('cred',convert_streetcred(self.plum.cred_power),(xplum - self.padding -10 ,yplum),font_size=20,anchor=('right','center'))
 
 
 

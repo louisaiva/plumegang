@@ -284,7 +284,7 @@ class LabelManager():
         print('\tforegroup :',self.labels[lblid].foreground_group)
         print('\tforegroupdeco :',self.labels[lblid].foreground_decoration_group)
 
-    def modify(self,lblid,pos=None,scale=None):
+    def modify(self,lblid,pos=None,scale=None,color=None):
 
         if scale != None and scale != (self.labels[lblid].scale_x,self.labels[lblid].scale_y):
             self.labels[lblid].update(scale_x = scale[0],scale_y=scale[1])
@@ -292,6 +292,9 @@ class LabelManager():
 
         if pos != None and pos != (self.labels[lblid].x,self.labels[lblid].y):
             self.labels[lblid].x,self.labels[lblid].y = pos
+
+        if color != None and color != self.labels[lblid].color:
+            self.labels[lblid].color = color
 
     def delete(self,tabids='all'):
 
@@ -319,3 +322,67 @@ class LabelManager():
 sman,lman = SpriteManager(),LabelManager()
 
 TEXTIDS = {}
+
+
+
+#### CAMERA
+
+class Camera():
+
+    def __init__(self):
+
+        self._X,self._Y = 0,0
+        self.BGX,self.BGY = 0,0
+
+        self.d = 0.2
+
+        self.speed = 12
+
+    def update(self,persobox):
+
+        scr = (1920,1080)
+
+        if persobox[2] > 4*scr[0]/5:
+            self.lessx()
+        elif persobox[0] < scr[0]/5:
+            self.morex()
+
+        if persobox[3] > 7*scr[1]/8:
+            self.lessy()
+        elif persobox[1] < scr[1]/8:
+            self.morey()
+
+    ##
+
+    def morex(self):
+        self._X += self.speed
+        self.BGX = self._X*self.d
+    def morey(self):
+        self._Y += self.speed
+        self.BGY = self._Y*self.d
+    def lessx(self):
+        self._X -= self.speed
+        self.BGX = self._X*self.d
+    def lessy(self):
+        self._Y -= self.speed
+        self.BGY = self._Y*self.d
+
+
+    ##
+
+    def _setX(self,X):
+        if X != self._X:
+            self._X = X
+            self.BGX = self.d*X
+    def _X(self):
+        return self._X
+    def _setY(self,Y):
+        if Y != self._Y:
+            self._Y = Y
+            self.BGY = self.d*Y
+    def _Y(self):
+        return self._Y
+    X = property(_X,_setX)
+    Y = property(_Y,_setY)
+
+Cam = Camera()

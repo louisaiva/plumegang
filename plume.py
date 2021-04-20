@@ -78,9 +78,11 @@ class App():
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
 
 
+        self.bgx,self.bgy = 0,250
+
         self.sprids = {}
-        self.sprids['bg'] = g.sman.addSpr(g.TEXTIDS['bg'],(0,250),'back')
-        g.sman.modify(self.sprids['bg'],scale=(1.5,1.5))
+        self.sprids['bg'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'back')
+        g.sman.modify(self.sprids['bg'],scale=(1.5,1.5),group='back')
 
         ## PERSOS
 
@@ -90,12 +92,14 @@ class App():
 
         ## ZONES
 
-        o.ZONES['ELEM']['ordi'] = o.Ordi(box(1400,225,200,200))
-        o.ZONES['ELEM']['plume'] = o.Market(box(600,225,200,200))
+        o.ZONES['ELEM']['ordi'] = o.Ordi(1400,225)
+        o.ZONES['ELEM']['studio'] = o.Studio(-100,225)
+        o.ZONES['ELEM']['plume'] = o.Market(600,225)
+        o.ZONES['ELEM']['lit'] = o.Lit(900,225)
 
         ## ANCHOR
 
-        self.X,self.Y = 0,0
+        #self.X,self.Y = 0,0
 
         ## END
 
@@ -202,6 +206,12 @@ class App():
                             self.perso.element_colli.activate(self.perso)
                             self.perso.hit()
 
+        if self.keys[key.LEFT]:
+            g.Cam.morex()
+
+        if self.keys[key.RIGHT]:
+            g.Cam.lessx()
+
     def draw(self):
 
         g.tman.draw()
@@ -212,9 +222,24 @@ class App():
 
         g.lman.set_text(self.fps,'FPS : '+str(int(pyglet.clock.get_fps())))
 
-        ## anchor
+        ## anchor / moving sprites
 
-        #g.sman.apply
+        for zone in o.ZONES['ELEM']:
+            zone=o.ZONES['ELEM'][zone]
+            x_r = zone.gex + g.Cam.X
+            y_r = zone.gey + g.Cam.Y
+            g.sman.modify(zone.skin_id,(x_r,y_r))
+            zone.update()
+
+        x_r = self.perso.gex + g.Cam.X
+        y_r = self.perso.gey + g.Cam.Y
+        g.sman.modify(self.perso.skin_id,(x_r,y_r))
+
+        x_bg,y_bg = self.bgx+g.Cam.BGX,g.Cam.BGY+self.bgy
+        g.sman.modify(self.sprids['bg'],(x_bg,y_bg))
+
+        g.Cam.update(self.perso.box)
+
 
         ## perso
 
