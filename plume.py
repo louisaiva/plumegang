@@ -5,6 +5,7 @@ from pyglet.window import key
 import pyglet.gl as gl
 
 from src.utils import *
+from src.colors import *
 import src.getsave as gs
 from src import obj as o
 from src import graphic as g
@@ -65,6 +66,7 @@ class App():
         g.TEXTIDS['phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
         g.TEXTIDS['instru'] = g.tman.loadImSeq('instru.png',(1,6))
         g.TEXTIDS['plum'] = g.tman.loadImSeq('plum.png',(1,6))
+        g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
 
         qua = ['F','D','C','B','A','S']
         g.TEXTIDS['plume'] = {}
@@ -84,15 +86,28 @@ class App():
 
         self.perso = o.Rappeur(g.TEXTIDS['persos'])
         #self.sprids['cred_bar'] =
-        self.lab_doing = g.lman.addLabel(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
+        self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         ## ZONES
 
-        o.ZONES['ELEM']['ordi'] = o.Zone_ELEM(box(1400,225,200,200),'ordi','red')
+        o.ZONES['ELEM']['ordi'] = o.Ordi(box(1400,225,200,200))
         o.ZONES['ELEM']['plume'] = o.Market(box(600,225,200,200))
 
+        ## ANCHOR
+
+        self.X,self.Y = 0,0
 
         ## END
+
+        self.nb = 0
+        self.gameover = False
+
+        # labels
+
+        self.fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
+
+
+
 
         # keys
         self.keys = key.KeyStateHandler()
@@ -113,6 +128,11 @@ class App():
 
     ### ONCE FUNCTIONS
 
+    def game_over(self):
+
+        self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=200,color=c['darkkhaki'])
+        self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=210,color=c['black'])
+
     def get_out(self):
         self.playing = False
 
@@ -123,8 +143,8 @@ class App():
 
         self.longpress[symbol] = time.time()
 
-        if symbol == key.ESCAPE:
-            pass
+        if symbol == key.A:
+            self.perso.drop_plume()
 
         #affiche les différents OrderedGroup d'affichage
         elif symbol == key.G:
@@ -150,6 +170,9 @@ class App():
             else:
                 self.perso.hit()
 
+        elif symbol == key.X:
+            self.perso.hud.rollhide()
+
     def on_key_release(self,symbol,modifiers):
 
         if symbol in self.longpress:
@@ -164,19 +187,20 @@ class App():
 
     def events(self):
 
-        if self.keys[key.Q]:
-            self.perso.move('L')
-        if self.keys[key.D]:
-            self.perso.move('R')
+        if not self.gameover:
 
-        if self.keys[key.E]:
-            if self.perso.element_colli != None:
-                if self.perso.element_colli.longpress:
-                    if time.time() - self.longpress[key.E] > self.cooldown:
-                        self.longpress[key.E] = time.time()
-                        self.perso.element_colli.activate(self.perso)
-                        self.perso.hit()
+            if self.keys[key.Q]:
+                self.perso.move('L')
+            if self.keys[key.D]:
+                self.perso.move('R')
 
+            if self.keys[key.E]:
+                if self.perso.element_colli != None:
+                    if self.perso.element_colli.longpress:
+                        if time.time() - self.longpress[key.E] > self.cooldown:
+                            self.longpress[key.E] = time.time()
+                            self.perso.element_colli.activate(self.perso)
+                            self.perso.hit()
 
     def draw(self):
 
@@ -184,15 +208,35 @@ class App():
 
     def refresh(self):
 
+        ## labels
+
+        g.lman.set_text(self.fps,'FPS : '+str(int(pyglet.clock.get_fps())))
+
+        ## anchor
+
+        #g.sman.apply
+
         ## perso
 
         self.perso.check_ani()
         g.lman.set_text(self.lab_doing,self.perso.doing)
+        self.perso.hud.update()
 
+        if self.perso.money <= 0:
+            #print('game over')
+            self.gameover = True
+            self.game_over()
+        else:
+            self.perso.add_money(-1)
 
     def gameloop(self,dt):
 
         if self.playing:
+            if self.nb == 0:
+
+
+
+                self.nb += 1
 
             # EVENTS
             self.events()

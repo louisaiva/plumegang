@@ -202,21 +202,6 @@ class SpriteManager():
             for lab in tabids:
                 self.delete(tabids[lab])
 
-    def detect(self):
-
-        errorsS = []
-        errorsV = []
-        for id in self.sprites:
-            if type(self.sprites[id]) != pyglet.sprite.Sprite:
-                errorsS.append(id)
-            else:
-                if self.sprites[id]._vertex_list == None:
-                    errorsV.append(id)
-        if errorsS != []:
-            print('noSprite',errorsS)
-        if errorsV != []:
-            print('noVertex',errorsV)
-
 #manager who rules normal labels
 class LabelManager():
 
@@ -237,7 +222,7 @@ class LabelManager():
         else:
             self.font = 'arial'
 
-    def addLabel(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group=None,anchor = ('left','bottom'),color=(255,255,255,255)):
+    def addLab(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group='hud',anchor = ('left','bottom'),color=(255,255,255,255)):
 
         if alr_id == -1:
             id = utils.get_id('lbl')
@@ -251,12 +236,14 @@ class LabelManager():
 
         anchor_x,anchor_y= anchor
 
-        #group = gman.createGroup(['hud'])
+        if group != None:
+            group = gman.getGroup(group)
         self.labels[id] = pyglet.text.Label(contenu,font_name=font_name,font_size=font_size,group=group, \
                         batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color)
         self.labels[id].x,self.labels[id].y = xy_pos
         self.unhide(id,not vis)
         #self.labels[id].visible = vis
+
 
         return id
 
@@ -284,6 +271,10 @@ class LabelManager():
                 self.labels[tabids].color = [*self.labels[tabids].color[:3],0]
 
     def set_text(self,lblid,contenu):
+
+        if type(contenu) != type('qsdd'):
+            contenu = str(contenu)
+
         if self.labels[lblid].text != contenu:
             self.labels[lblid].text = contenu
 

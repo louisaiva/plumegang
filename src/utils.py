@@ -20,6 +20,7 @@ class box():
         self.x = x
         self.y = y
 
+
     def _wh(self):
         return self.w,self.h
 
@@ -32,6 +33,20 @@ class box():
     wh = property(_wh)
     xy = property(_xy)
     xywh = property(_xywh)
+
+
+    def _centerx(self):
+        return self.x + self.w/2
+
+    def _centery(self):
+        return self.y + self.h/2
+
+    def _center(self):
+        return self.centerx,self.centery
+
+    cx = property(_centerx)
+    cy = property(_centery)
+    cxy = property(_center)
 
 ## partie SCREEN
 
