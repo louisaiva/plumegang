@@ -1,6 +1,6 @@
 
 import random as r
-import json
+import json,time,pyglet
 from src.colors import *
 from src.utils import *
 from src import graphic as g
@@ -56,12 +56,12 @@ THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','mor
 
 class Rappeur():
 
-    def __init__(self,textid,pos=(200,200),name='Delta'):
+    def __init__(self,textids,pos=(200,200),name='Delta'):
 
         # general
 
         self.name = name
-        self.speed = 50
+        self.speed = 12
 
         #self.street_score = 0
 
@@ -74,34 +74,62 @@ class Rappeur():
 
         self.element_colli = None
 
+        # track of time
+        self.time_last_move = 0
+
+        self.doing = 'nothing'
+        self.dir = 'R'
+
         # skins
-        self.skin_id = g.sman.addSpr(textid)
-        g.sman.modify(self.skin_id,pos,(10,10),'up')
+        self.textids = { ('nothing','R',0):textids[0] , ('nothing','R',1):textids[1]
+                        , ('nothing','L',0):textids[0+2] , ('nothing','L',1):textids[1+2]
+                        , ('moving','R',0):textids[2+2]
+                        , ('moving','R',1):textids[3+2] , ('moving','L',0):textids[4+2] , ('moving','L',1):textids[5+2]
+                        , ('hitting','R',0):textids[6+2] , ('hitting','R',1):textids[6+2] , ('hitting','L',0):textids[7+2] , ('hitting','L',1):textids[7+2] }
+        self.roll_skin = 0
+        self.skin_id = g.sman.addSpr(self.textids[(self.doing,self.dir,0)],pos,'up')
 
         # labels
         self.label_name_id = g.lman.addLabel(self.name,(40,40))
 
+        self.update_skin()
+
     def rplum(self):
         self.plume.rplum()
 
-    def update_skin(self):
+    def update_skin(self,dt=0.2,repeat=True):
 
-        if self.plume != None:
-            self.plume.update_skin()
+        g.sman.set_text(self.skin_id,self.textids[(self.doing,self.dir,self.roll_skin)])
+        if self.roll_skin:
+            self.roll_skin = 0
+        else:
+            self.roll_skin = 1
+
+        if repeat :
+            pyglet.clock.schedule_once(self.update_skin, 0.2)
 
     def move(self,dir):
 
         moved = False
         x,y = g.sman.spr(self.skin_id).position
         if dir == 'R':
-            g.sman.modify(self.skin_id,(x-self.speed,y))
+            g.sman.modify(self.skin_id,(x+self.speed,y))
             moved = True
         elif dir == 'L':
-            g.sman.modify(self.skin_id,(x+self.speed,y))
+            g.sman.modify(self.skin_id,(x-self.speed,y))
             moved = True
 
         if moved :
+            if self.doing != 'hitting':
+                if (self.doing != 'moving' or self.dir != dir):
+                    self.doing = 'moving'
+                    self.dir = dir
+                    self.update_skin(repeat=False)
+                self.doing = 'moving'
+                self.dir = dir
             self.check_colli()
+
+            self.time_last_move = time.time()
 
     def check_colli(self):
 
@@ -127,8 +155,20 @@ class Rappeur():
 
         #print(self.element_colli)
 
-    def hit(self):
-        print(self.name,'hits the void')
+    def check_ani(self):
+
+        if time.time()-self.time_last_move > 0.2 and self.doing != 'hitting':
+            self.doing = 'nothing'
+
+    def hit(self,dt=0):
+
+        if self.doing != 'hitting':
+            self.doing = 'hitting'
+            self.update_skin(repeat=False)
+            #print(self.name,'hits the void')
+            pyglet.clock.schedule_once(self.hit,0.2)
+        else:
+            self.doing = 'nothing'
 
 
 class Plume():
@@ -325,19 +365,17 @@ class Zone_ELEM(Zone):
     def unhoover(self):
         g.lman.unhide(self.label,True)
 
-    def activate(self):
-        print(self.name,'activated')
+    def activate(self,perso):
+        print(perso.name,'just activated',self.name)
 
 class Market(Zone_ELEM):
 
-    def __init__(self,box,perso):
+    def __init__(self,box):
         super(Market,self).__init__(box,'market','pink','mid',long=True)
 
-        self.perso = perso
-
-    def activate(self):
-        print(self.name,'activated')
-        self.perso.rplum()
+    def activate(self,perso):
+        print(perso.name,'just activated',self.name)
+        perso.rplum()
 
 
 ZONES = {}

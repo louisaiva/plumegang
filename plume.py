@@ -60,7 +60,7 @@ class App():
 
         ## SPRITES / TEXTURES
 
-        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(3,9))
+        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(2,6))
         g.TEXTIDS['son'] = g.tman.loadImSeq('son.png',(1,6))
         g.TEXTIDS['phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
         g.TEXTIDS['instru'] = g.tman.loadImSeq('instru.png',(1,6))
@@ -82,13 +82,14 @@ class App():
 
         ## PERSOS
 
-        self.perso = o.Rappeur(g.TEXTIDS['persos'][0])
+        self.perso = o.Rappeur(g.TEXTIDS['persos'])
         #self.sprids['cred_bar'] =
+        self.lab_doing = g.lman.addLabel(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         ## ZONES
 
         o.ZONES['ELEM']['ordi'] = o.Zone_ELEM(box(1400,225,200,200),'ordi','red')
-        o.ZONES['ELEM']['plume'] = o.Market(box(600,225,200,200),self.perso)
+        o.ZONES['ELEM']['plume'] = o.Market(box(600,225,200,200))
 
 
         ## END
@@ -123,7 +124,7 @@ class App():
         self.longpress[symbol] = time.time()
 
         if symbol == key.ESCAPE:
-            print('wesh')
+            pass
 
         #affiche les différents OrderedGroup d'affichage
         elif symbol == key.G:
@@ -144,7 +145,8 @@ class App():
         elif symbol == key.E:
             if self.perso.element_colli != None:
                 if not self.perso.element_colli.longpress:
-                    self.perso.element_colli.activate()
+                    self.perso.element_colli.activate(self.perso)
+                    self.perso.hit()
             else:
                 self.perso.hit()
 
@@ -163,16 +165,17 @@ class App():
     def events(self):
 
         if self.keys[key.Q]:
-            self.perso.move('R')
-        if self.keys[key.D]:
             self.perso.move('L')
+        if self.keys[key.D]:
+            self.perso.move('R')
 
         if self.keys[key.E]:
             if self.perso.element_colli != None:
                 if self.perso.element_colli.longpress:
                     if time.time() - self.longpress[key.E] > self.cooldown:
                         self.longpress[key.E] = time.time()
-                        self.perso.element_colli.activate()
+                        self.perso.element_colli.activate(self.perso)
+                        self.perso.hit()
 
 
     def draw(self):
@@ -180,7 +183,12 @@ class App():
         g.tman.draw()
 
     def refresh(self):
-        pass
+
+        ## perso
+
+        self.perso.check_ani()
+        g.lman.set_text(self.lab_doing,self.perso.doing)
+
 
     def gameloop(self,dt):
 
