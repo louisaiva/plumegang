@@ -504,7 +504,7 @@ class Lit(Zone_ACTIV):
         super(Lit,self).close(perso)
         self.hud.delete_phase()
         self.hud.unhide(True)
-        perso.invhud.unhide(True)
+        perso.invhud.unhide(True) 
 
     def write(self,perso):
 
