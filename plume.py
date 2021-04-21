@@ -170,9 +170,9 @@ class App():
             if self.perso.element_colli != None:
                 if not self.perso.element_colli.longpress:
                     self.perso.element_colli.activate(self.perso)
-                    self.perso.hit()
+                    self.perso.do('hit')
             else:
-                self.perso.hit()
+                self.perso.do('hit')
 
         elif symbol == key.X:
             self.perso.hud.rollhide()
@@ -204,7 +204,7 @@ class App():
                         if time.time() - self.longpress[key.E] > self.cooldown:
                             self.longpress[key.E] = time.time()
                             self.perso.element_colli.activate(self.perso)
-                            self.perso.hit()
+                            self.perso.do('hit')
 
         if self.keys[key.LEFT]:
             g.Cam.morex()
@@ -243,7 +243,7 @@ class App():
 
         ## perso
 
-        self.perso.check_ani()
+        self.perso.check_do()
         g.lman.set_text(self.lab_doing,self.perso.doing)
         self.perso.hud.update()
 

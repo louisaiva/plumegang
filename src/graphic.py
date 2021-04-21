@@ -18,7 +18,7 @@ class GroupManager():
         self.names_wo = {} ## give the name with the order
         self.orders = {} ## give the order with the name
 
-        names = ['back','mid','front','hud','map','up']
+        names = ['back','back2','mid','mid2','mid3','front','hud','hud2','perso','up']
         self.distance_btw = 8
 
         for i in range(len(names)):
@@ -233,6 +233,8 @@ class LabelManager():
         if not font_name:
             font_name = self.font
 
+        if type(contenu) != type('qsd'):
+            contenu = str(contenu)
 
         anchor_x,anchor_y= anchor
 

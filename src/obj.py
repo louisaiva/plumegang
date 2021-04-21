@@ -80,22 +80,22 @@ class Rappeur():
         # track of time
         self.time_last_move = 0
 
-        self.doing = 'nothing'
+        self.doing = ['nothing']
         self.dir = 'R'
 
         # skins
         self.textids = { ('nothing','R',0):textids[0] , ('nothing','R',1):textids[1]
                         , ('nothing','L',0):textids[0+2] , ('nothing','L',1):textids[1+2]
-                        , ('moving','R',0):textids[2+2]
-                        , ('moving','R',1):textids[3+2] , ('moving','L',0):textids[4+2] , ('moving','L',1):textids[5+2]
-                        , ('hitting','R',0):textids[6+2] , ('hitting','R',1):textids[6+2] , ('hitting','L',0):textids[7+2] , ('hitting','L',1):textids[7+2] }
+                        , ('move','R',0):textids[2+2]
+                        , ('move','R',1):textids[3+2] , ('move','L',0):textids[4+2] , ('move','L',1):textids[5+2]
+                        , ('hit','R',0):textids[6+2] , ('hit','R',1):textids[6+2] , ('hit','L',0):textids[7+2] , ('hit','L',1):textids[7+2]
+                        , ('write','R',0):textids[0] , ('write','R',1):textids[0] , ('write','L',0):textids[0+2] , ('write','L',1):textids[0+2] ,
+                         }
         self.roll_skin = 0
-        self.skin_id = g.sman.addSpr(self.textids[(self.doing,self.dir,0)],pos,'up')
+        self.skin_id = g.sman.addSpr(self.textids[(self.doing[0],self.dir,0)],pos,'perso')
 
         # hud
         self.hud = PersoHUD(self)
-
-        #print(self.hud)
 
         self.update_skin()
 
@@ -106,7 +106,7 @@ class Rappeur():
 
     def update_skin(self,dt=0.4,repeat=True):
 
-        g.sman.set_text(self.skin_id,self.textids[(self.doing,self.dir,self.roll_skin)])
+        g.sman.set_text(self.skin_id,self.textids[(self.doing[0],self.dir,self.roll_skin)])
         if self.roll_skin:
             self.roll_skin = 0
         else:
@@ -117,28 +117,26 @@ class Rappeur():
 
     def move(self,dir):
 
-        moved = False
-        #x,y = g.sman.spr(self.skin_id).position
-        if dir == 'R':
-            self.gex+=self.speed
-            #g.sman.modify(self.skin_id,(x+self.speed,y))
-            moved = True
-        elif dir == 'L':
-            self.gex-=self.speed
-            #g.sman.modify(self.skin_id,(x-self.speed,y))
-            moved = True
+        if 'write' not in self.doing:
 
-        if moved :
-            if self.doing != 'hitting':
-                if (self.doing != 'moving' or self.dir != dir):
-                    self.doing = 'moving'
+            moved = False
+            if dir == 'R':
+                self.gex+=self.speed
+
+                moved = True
+            elif dir == 'L':
+                self.gex-=self.speed
+
+                moved = True
+
+            if moved :
+
+                if self.dir != dir:
                     self.dir = dir
-                    self.update_skin(repeat=False)
-                self.doing = 'moving'
-                self.dir = dir
-            self.check_colli()
+                self.do('move')
+                self.check_colli()
 
-            self.time_last_move = time.time()
+                self.time_last_move = time.time()
 
     def check_colli(self):
 
@@ -163,21 +161,6 @@ class Rappeur():
 
         #print(self.element_colli)
 
-    def check_ani(self):
-
-        if time.time()-self.time_last_move > 0.2 and self.doing != 'hitting':
-            self.doing = 'nothing'
-
-    def hit(self,dt=0):
-
-        if self.doing != 'hitting':
-            self.doing = 'hitting'
-            self.update_skin(repeat=False)
-            #print(self.name,'hits the void')
-            pyglet.clock.schedule_once(self.hit,0.2)
-        else:
-            self.doing = 'nothing'
-
     def drop_plume(self):
         if self.plume != None:
             self.plume = self.plume.delete()
@@ -187,14 +170,49 @@ class Rappeur():
 
     ##
 
+    def do(self,action='nothing'):
+
+        if action not in self.doing:
+
+            if action == 'nothing':
+                self.doing = ['nothing']
+
+            elif action == 'hit':
+                self.doing.insert(0, action)
+                self.undo()
+                self.update_skin(repeat=False)
+                pyglet.clock.schedule_once(self.undo,0.1,'hit')
+
+            elif action == 'write':
+                self.doing.insert(0, action)
+                self.undo()
+
+            elif action == 'move':
+                self.doing.append(action)
+                self.undo()
+                self.update_skin(repeat=False)
+
+    def undo(self,dt=0,action='nothing'):
+
+        if action in self.doing:
+            self.doing.remove(action)
+            if self.doing == []:
+                self.do()
+
+    def check_do(self):
+
+        if 'hit' not in self.doing and 'write' not in self.doing:
+            if time.time()-self.time_last_move > 0.2:
+                self.do()
+
+
+    ##
+
     def _realbox(self):
         return g.sman.box(self.skin_id)
 
     box = property(_realbox)
-    """
-    def _plum(self):
-        if self._plume != None
-        return self._plume"""
+
 
 class Plume():
 
@@ -397,7 +415,7 @@ class Zone_ELEM(Zone):
 
         # label
         pos = box.x + box.w/2 , box.y + box.h + 20
-        self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20)
+        self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
 
         self.color = c['coral']
 
@@ -454,13 +472,16 @@ class Lit(Zone_ELEM):
     def __init__(self,x,y):
         super(Lit,self).__init__(box(x,y,300,150),'lit','darkgreen','mid',long=True)
 
+        self.hud = WriteHUD()
+
     def activate(self,perso):
         super(Lit,self).activate(perso)
-        if perso.plume != None:
-            phase =perso.plume.drop_phase()
-            print(phase.str())
 
-
+        self.hud.rollhide()
+        if 'write' not in perso.doing:
+            perso.do('write')
+        else:
+            perso.undo(0,'write')
 ZONES = {}
 ZONES['UI'] = {}
 ZONES['ELEM'] = {}
@@ -472,7 +493,7 @@ ZONES['ELEM'] = {}
 
 class HUD():
 
-    def __init__(self,group='hud',name='main'):
+    def __init__(self,group='hud2',name='main',vis=True):
 
         self.name = name
         self.group = group
@@ -484,14 +505,14 @@ class HUD():
 
         #---#
 
-        self.visible = True
+        self.visible = vis
 
     def addSpr(self,key,textid,xy_pos=(0,0),group=None):
 
         if group == None:
             group = self.group
 
-        self.sprids[key] = g.sman.addSpr(textid,xy_pos,group)
+        self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible)
 
     def addCol(self,key,box,color=(102, 102, 153,255),group=None):
 
@@ -509,7 +530,7 @@ class HUD():
         if group == None:
             group = self.group
 
-        self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_size=font_size,anchor=anchor,color=color)
+        self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_size=font_size,anchor=anchor,color=color,vis=self.visible)
 
         #print(xy_pos)
 
@@ -542,14 +563,14 @@ class PersoHUD(HUD):
 
     def __init__(self,perso):
 
-        super(PersoHUD, self).__init__(group='hud',name='perso')
+        super(PersoHUD, self).__init__(group='hud2',name='perso')
 
         self.perso = perso
 
         self.box = box(1700,460+150,200,400)
         self.padding = 50
 
-        self.addCol('bg',self.box,group='mid')
+        self.addCol('bg',self.box,group='hud')
 
         self.addLab('name',self.perso.name,(self.box.cx,self.box.y+self.box.h-self.padding),anchor=('center','center'))
 
@@ -567,14 +588,14 @@ class PlumHUD(HUD):
 
     def __init__(self,plum):
 
-        super(PlumHUD, self).__init__(group='hud',name='plum')
+        super(PlumHUD, self).__init__(group='hud2',name='plum')
 
         self.plum = plum
 
         self.box = box(1600,20,300,150)
         self.padding = 50
 
-        self.addCol('bg',self.box,group='mid')
+        self.addCol('bg',self.box,group='hud')
 
         self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
 
@@ -585,6 +606,31 @@ class PlumHUD(HUD):
         g.sman.modify(self.sprids['plum_spr'],scale=(0.4,0.4))
         g.sman.modify(self.sprids['plum_spr'],pos=(xplum - self.spr('plum_spr').width/2,yplum - self.spr('plum_spr').height/2))
         self.addLab('cred',convert_streetcred(self.plum.cred_power),(xplum - self.padding -10 ,yplum),font_size=20,anchor=('right','center'))
+
+class WriteHUD(HUD):
+
+    def __init__(self):
+
+        super(WriteHUD, self).__init__(group='hud2',name='write',vis=False)
+
+        self.box = box(400,300,1000,600)
+        self.padding = 50
+
+        self.addCol('bg',self.box,group='hud')
+
+        #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
+
+        """xplum = self.lab('quality').x - self.padding
+        yplum = self.box.cy
+
+        self.addSpr('plum_spr',g.TEXTIDS['plume'][convert_quality(self.plum.quality)[0]])
+        g.sman.modify(self.sprids['plum_spr'],scale=(0.4,0.4))
+        g.sman.modify(self.sprids['plum_spr'],pos=(xplum - self.spr('plum_spr').width/2,yplum - self.spr('plum_spr').height/2))
+        self.addLab('cred',convert_streetcred(self.plum.cred_power),(xplum - self.padding -10 ,yplum),font_size=20,anchor=('right','center'))"""
+
+    def write(self):
+        pass
+
 
 
 
