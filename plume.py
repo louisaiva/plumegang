@@ -1,6 +1,6 @@
 
 
-import pyglet,time
+import pyglet,time,random
 from pyglet.window import key
 import pyglet.gl as gl
 
@@ -193,6 +193,9 @@ class App():
         elif symbol == key.X:
             self.perso.hud.rollhide()
 
+        elif symbol == key.I:
+            self.perso.invhud.rollhide()
+
     def on_key_release(self,symbol,modifiers):
 
         if symbol in self.longpress:
@@ -202,6 +205,42 @@ class App():
 
         print('\n\nNumber of lines :',compt(self.path))
         gs.save_files(self.path)
+
+    def on_mouse_motion(self,x,y,dx,dy):
+
+        ## CHECK ALL UI
+
+        # plumUI
+        if self.perso.plume != None and self.perso.plume.hud.ui.visible:
+            self.perso.plume.hud.ui.check_mouse(x,y)
+
+        #phaseUI
+
+        for zone in o.ZONES['ELEM']:
+            if o.ZONES['ELEM'][zone].activated:
+
+                if zone == 'lit':
+                    if o.ZONES['ELEM']['lit'].hud.ui != None :
+                        o.ZONES['ELEM']['lit'].hud.ui.check_mouse(x,y)
+                        if o.ZONES['ELEM']['lit'].hud.ui.caught:
+                                o.ZONES['ELEM']['lit'].hud.ui.move(x,y)
+
+    def on_mouse_press(self,x, y, button, modifiers):
+
+        ## CHECK ALL UI
+
+        # plumUI
+        if self.perso.plume != None and self.perso.plume.hud.ui.visible:
+            self.perso.plume.hud.ui.check_pressed()
+
+        #phaseUI
+
+        for zone in o.ZONES['ELEM']:
+            if o.ZONES['ELEM'][zone].activated:
+
+                if zone == 'lit':
+                    if o.ZONES['ELEM']['lit'].hud.ui != None : # and self.perso.plume.hud.ui.visible:
+                        o.ZONES['ELEM']['lit'].hud.catch_phase(x,y,self.perso)
 
     ### LOOP
 
@@ -269,6 +308,7 @@ class App():
             self.game_over()
         else:
             self.perso.add_money(-1)
+            self.perso.nb_fans += random.randint(1*(self.perso.money//1000),10*(self.perso.money//1000))
 
     def gameloop(self,dt):
 

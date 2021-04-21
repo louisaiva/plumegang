@@ -3,7 +3,7 @@
 
 
 import pyglet
-import src.utils as utils
+import src.utils as u
 
 
 
@@ -18,7 +18,7 @@ class GroupManager():
         self.names_wo = {} ## give the name with the order
         self.orders = {} ## give the order with the name
 
-        names = ['back','back1','mid-1','mid','mid1','front','hud-1','hud','hud1','perso','up']
+        names = ['back','back1','mid-1','mid','mid1','front','hud-1','hud','hud1','perso','ui-1','ui','up']
         self.distance_btw = 8
 
         for i in range(len(names)):
@@ -62,7 +62,7 @@ class TextureManager():
 
         ids = []
         for txt in textures:
-            id = utils.get_id('text')
+            id = u.get_id('text')
             self.textures[id] = txt
 
             self.ids.append(id)
@@ -72,7 +72,7 @@ class TextureManager():
     def loadIm(self,path2):
 
         path3 = '/item/'
-        id = utils.get_id('img')
+        id = u.get_id('img')
         img = pyglet.image.load(self.path+path3+path2)
         self.textures[id] = img
         self.ids.append(id)
@@ -81,7 +81,7 @@ class TextureManager():
     def addCol(self,w,h,color=(255,255,255,255)):
 
         pattern = pyglet.image.SolidColorImagePattern(color)
-        id = utils.get_id('col')
+        id = u.get_id('col')
         self.textures[id] = pattern.create_image(w,h)
         self.ids.append(id)
         return id
@@ -105,7 +105,7 @@ class SpriteManager():
     def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True):
 
         if alr_id == -1:
-            id = utils.get_id('spr')
+            id = u.get_id('spr')
             self.ids.append(id)
         else:
             id =alr_id
@@ -119,6 +119,10 @@ class SpriteManager():
             self.addToGroup(id,group)
 
         return id
+
+    def addCol(self,col=(255,255,255,255),box=u.box(),group=None,alr_id=-1,vis=True):
+        text = tman.addCol(*box.wh,col)
+        return self.addSpr(text,box.xy,group,alr_id,vis)
 
     def addToGroup(self,id,group_name='back'):
 
@@ -225,7 +229,7 @@ class LabelManager():
     def addLab(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group='hud',anchor = ('left','bottom'),color=(255,255,255,255)):
 
         if alr_id == -1:
-            id = utils.get_id('lbl')
+            id = u.get_id('lbl')
             self.ids.append(id)
         else:
             id =alr_id

@@ -27,11 +27,14 @@ class box():
     def _xy(self):
         return self.x,self.y
 
+    def _setxy(self,xy):
+        self.x,self.y = xy
+
     def _xywh(self):
         return self.x,self.y,self.w,self.h
 
     wh = property(_wh)
-    xy = property(_xy)
+    xy = property(_xy,_setxy)
     xywh = property(_xywh)
 
 
@@ -47,6 +50,19 @@ class box():
     cx = property(_centerx)
     cy = property(_centery)
     cxy = property(_center)
+
+    def _fx(self):
+        return self.x+self.w
+
+    def _fy(self):
+        return self.y+self.h
+
+    def _realbox(self):
+        return self.x,self.y,self.fx,self.fy
+
+    fx = property(_fx)
+    fy = property(_fy)
+    realbox = property(_realbox)
 
 ## partie SCREEN
 
@@ -145,7 +161,7 @@ def convert_huge_nb(n,letters = True):
 
         if n <= 0:
             return str(n)
-            
+
         tab = ['',' K',' M',' T']
 
         for i in range(4,0,-1):
@@ -213,8 +229,20 @@ def compt(bigpath,path = ['/.','/src']):
 
 
 # collision
-def collision(a,b):
+def collisionAB(a,b):
     if (a[0] > b[2]) or (a[2] < b[0]) or (a[1] > b[3]) or (a[3] < b[1]):
         return False #  oklm c'est bon ca collisionne PAS
     else:
         return True # aoutch ca collisionne
+
+def collisionAX(a,pos):
+
+    if pos[0] > a[2]:
+        return False #  oklm c'est bon ca collisionne PAS
+    if pos[0] < a[0]:
+        return False #  oklm c'est bon ca collisionne PAS
+    if pos[1] > a[3]:
+        return False #  oklm c'est bon ca collisionne PAS
+    if pos[1] < a[1]:
+        return False #  oklm c'est bon ca collisionne PAS
+    return True # aoutch ca collisionne
