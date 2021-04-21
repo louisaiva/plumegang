@@ -59,24 +59,11 @@ class App():
 
     def init(self):
 
-        ## SPRITES / TEXTURES
+        ##  TEXTURES
 
-        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(2,6))
-        g.TEXTIDS['son'] = g.tman.loadImSeq('son.png',(1,6))
-        g.TEXTIDS['phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
-        g.TEXTIDS['instru'] = g.tman.loadImSeq('instru.png',(1,6))
-        g.TEXTIDS['plum'] = g.tman.loadImSeq('plum.png',(1,6))
-        g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
+        self.create_organise_textures()
 
-        qua = ['F','D','C','B','A','S']
-        g.TEXTIDS['plume'] = {}
-        for i in range(len(g.TEXTIDS['plum'])):
-            g.TEXTIDS['plume'][qua[i]] = g.TEXTIDS['plum'][i]
-        del g.TEXTIDS['plum']
-
-        g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
-        g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
-
+        ## SPRITES
 
         self.bgx,self.bgy = 0,250
 
@@ -129,13 +116,37 @@ class App():
         pyglet.clock.schedule_interval(self.gameloop,0.0000001)
         pyglet.app.run()
 
+    def create_organise_textures(self):
+
+        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(2,6))
+        g.TEXTIDS['_son'] = g.tman.loadImSeq('son.png',(1,6))
+        g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
+        g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
+        g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
+        g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
+
+        qua = ['F','D','C','B','A','S']
+        g.TEXTIDS['plume'] = {}
+        for i in range(len(g.TEXTIDS['_plum'])):
+            g.TEXTIDS['plume'][qua[i]] = g.TEXTIDS['_plum'][i]
+        del g.TEXTIDS['_plum']
+
+        g.TEXTIDS['phase'] = {}
+        for i in range(len(g.TEXTIDS['_phaz'])):
+            g.TEXTIDS['phase'][qua[i]] = g.TEXTIDS['_phaz'][i]
+        del g.TEXTIDS['_phaz']
+
+        g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
+        g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
+
+
 
     ### ONCE FUNCTIONS
 
     def game_over(self):
 
-        self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=200,color=c['darkkhaki'])
-        self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=210,color=c['black'])
+        self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=200,color=c['darkkhaki'],group='up')
+        self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=210,color=c['black'],group='up')
 
     def get_out(self):
         self.playing = False
@@ -147,7 +158,12 @@ class App():
 
         self.longpress[symbol] = time.time()
 
-        if symbol == key.A:
+        if symbol == key.ESCAPE:
+            if self.perso.element_colli != None and self.perso.element_colli.activated:
+                self.perso.element_colli.close(self.perso)
+                return pyglet.event.EVENT_HANDLED
+
+        elif symbol == key.A:
             self.perso.drop_plume()
 
         #affiche les différents OrderedGroup d'affichage
@@ -238,7 +254,7 @@ class App():
         x_bg,y_bg = self.bgx+g.Cam.BGX,g.Cam.BGY+self.bgy
         g.sman.modify(self.sprids['bg'],(x_bg,y_bg))
 
-        g.Cam.update(self.perso.box)
+        g.Cam.update(self.perso.realbox)
 
 
         ## perso
