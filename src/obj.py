@@ -73,7 +73,7 @@ class Rappeur():
 
         self.money = 10000
 
-        #self.nb_fans = 0
+        self.nb_fans = 0
         #self.fans = []
 
         self.plume = rplum()
@@ -516,7 +516,10 @@ class Lit(Zone_ACTIV):
 
     def deactivate(self,dt):
         super(Lit,self).deactivate(0)
-        g.lman.modify(self.hud.labids['lit'],color=c['white'])
+        if self.activated:
+            g.lman.modify(self.hud.labids['lit'],color=c['white'])
+        else:
+            g.lman.modify(self.hud.labids['lit'],color=(255,255,255,0))
 
     def close(self,perso):
         super(Lit,self).close(perso)
@@ -599,7 +602,7 @@ class HUD():
 
     def rollhide(self):
         self.unhide(self.visible)
-        self.visible = not self.visible
+        #self.visible = not self.visible
         #print(self.visible)
 
     def delete(self):
@@ -623,11 +626,14 @@ class PersoHUD(HUD):
         self.perso = perso
 
         self.box = box(1700,460+150,200,400)
-        self.padding = 50
+        self.padding = 64
 
         self.addCol('bg',self.box,group='hud-1')
 
+        ## name
         self.addLab('name',self.perso.name,(self.box.cx,self.box.y+self.box.h-self.padding),anchor=('center','center'))
+
+        ## coin
 
         xcoin = self.box.cx
         ycoin = self.lab('name').y  - self.padding
@@ -635,11 +641,22 @@ class PersoHUD(HUD):
         self.addSpr('coin_spr',g.TEXTIDS['item'][0],(xcoin,ycoin - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
         self.addLab('coin_lab',convert_huge_nb(self.perso.money),(xcoin ,ycoin),font_size=20,color=c['yellow'],anchor=('right','center'))
 
-        self.addLab('pressX','X to hide',(self.box.cx,self.box.y+self.padding),font_size=20,anchor=('center','center'))
+        ## fans
+
+        xfan = self.box.cx
+        yfan = self.lab('coin_lab').y - self.padding
+
+        self.addSpr('fan_spr',g.TEXTIDS['item'][1],(xfan,yfan - g.tman.textures[g.TEXTIDS['item'][1]].height/2))
+        self.addLab('fan_lab',convert_huge_nb(self.perso.nb_fans),(xfan ,yfan),font_size=20,color=c['green'],anchor=('right','center'))
+
+
+        ## pressX
+        self.addLab('pressX','X to hide',(self.box.cx,self.box.y+20),font_size=10,color=c['black'],anchor=('center','center'))
 
     def update(self):
 
         g.lman.set_text(self.labids['coin_lab'],convert_huge_nb(self.perso.money))
+        g.lman.set_text(self.labids['fan_lab'],convert_huge_nb(self.perso.nb_fans))
 
 class PlumHUD(HUD):
 
@@ -694,6 +711,22 @@ class WriteHUD(HUD):
         if 'phaz_spr' in self.sprids:
             g.sman.delete(self.sprids['phaz_spr'])
             del self.sprids['phaz_spr']
+
+        if 'phaz_content' in self.labids:
+            g.lman.delete(self.labids['phaz_content'])
+            del self.labids['phaz_content']
+
+        if 'phaz_qua' in self.labids:
+            g.lman.delete(self.labids['phaz_qua'])
+            del self.labids['phaz_qua']
+
+        if 'phaz_cred' in self.labids:
+            g.lman.delete(self.labids['phaz_cred'])
+            del self.labids['phaz_cred']
+
+        if 'phaz_them' in self.labids:
+            g.lman.delete(self.labids['phaz_them'])
+            del self.labids['phaz_them']
 
     def write(self,phase):
 
