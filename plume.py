@@ -122,7 +122,7 @@ class App():
 
     def create_organise_textures(self):
 
-        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(2,6))
+        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(4,6))
         g.TEXTIDS['_son'] = g.tman.loadImSeq('son.png',(1,6))
         g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
         g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
