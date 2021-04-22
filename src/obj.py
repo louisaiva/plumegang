@@ -555,7 +555,7 @@ class Zone_UI(Zone):
         pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
         self.label = g.lman.addLab(lab_text,pos,vis=False,anchor = ('center','bottom'),font_size=20,color=c['coral'],group=group)
         boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
-        self.label_bg = g.sman.addCol((120,120,120,int(0.75*255)),boxbg,group=group+'-1',vis=False)
+        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group=group+'-1',vis=False)
 
     def hoover(self):
         g.lman.unhide(self.label)
@@ -610,13 +610,13 @@ class Plume_UI(Zone_UI):
 
 class Item_UI(Zone_UI):
 
-    def __init__(self,box,lab_text,texture,spr_vis=False,scale=0.5):
+    def __init__(self,box,lab_text,texture,spr_vis=False):
 
         super(Item_UI,self).__init__(box,lab_text,group='ui',makeCol=False)
 
         #self.text_id = texture
-        self.itemspr = g.sman.addSpr(texture,group='ui',vis=spr_vis)
-        g.sman.modify(self.itemspr,scale=(scale,scale))#,opacity=128)
+        self.itemspr = g.sman.addSpr(texture,group='ui-2',vis=spr_vis)
+        g.sman.modify(self.itemspr,scale=(0.25,0.25))#,opacity=128)
 
         pos = box.cx - g.sman.spr(self.itemspr).width/2 , box.cy - g.sman.spr(self.itemspr).height/2
         g.sman.modify(self.itemspr,pos)
@@ -627,6 +627,7 @@ class Item_UI(Zone_UI):
     def catch(self):
         self.caught = True
         g.sman.unhide(self.itemspr)
+        g.sman.modify(self.itemspr,scale=(0.5,0.5),group='ui')
         self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
 
         pos = self.box.cx , self.box.fy + 20
@@ -637,7 +638,9 @@ class Item_UI(Zone_UI):
     def drop(self):
         self.dropped = True
         self.caught = False
+        g.sman.modify(self.itemspr,scale=(0.25,0.25),group='ui-2')
         g.sman.unhide(self.itemspr,True)
+        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
 
     def reset(self,hide=False):
         self.dropped = False
@@ -702,7 +705,7 @@ class Invent_UI(Item_UI):
 
         lab_text = cquecé +' '+ convert_quality(item.quality)
 
-        super(Invent_UI,self).__init__(box,lab_text,g.TEXTIDS[cquecé.lower()][convert_quality(item.quality)[0]],spr_vis=spr_vis,scale=0.25)
+        super(Invent_UI,self).__init__(box,lab_text,g.TEXTIDS[cquecé.lower()][convert_quality(item.quality)[0]],spr_vis=spr_vis)
 
         self.item = item
 
@@ -950,6 +953,7 @@ class WriteHUD(HUD):
         if self.ui.caught:
             perso.invhud.unhide()
             self.delete_phase(False)
+            return 1
         elif self.ui.dropped:
             if collisionAX(self.box.realbox,(x,y)):
                 self.write(self.ui.phase)
@@ -958,10 +962,8 @@ class WriteHUD(HUD):
                 self.delete_phase()
             else:
                 self.delete_phase()
-        else:
-            if perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
-                perso.invhud.catch(self.ui.phase)
-                self.delete_phase()
+            return -1
+        return 0
 
 class InventHUD(HUD):
 
@@ -970,6 +972,8 @@ class InventHUD(HUD):
         super(InventHUD, self).__init__(group='hud1',name='inv',vis=False)
 
         self.perso = perso
+
+        self.item_caught = None
 
         # inventory
         self.inventory = {}
@@ -1084,33 +1088,31 @@ class InventHUD(HUD):
 
     def catch_or_drop(self,x,y):
 
-        to_del = []
+        if self.item_caught :
+            ## on check kelui pour vwar si on l'drop
 
-        for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
-
-            ui.check_pressed()
-
-            if ui.dropped:
+            self.item_caught.check_pressed()
+            if self.item_caught.dropped:
                 if collisionAX(self.box.realbox,(x,y)):
-                    ui.reset()
+                    self.item_caught.reset()
                     self.update()
                 else:
-                    to_del.append(ui)
-                    #ui.delete()
+                    self.item_caught.delete()
+                    self.inventory[self.item_caught.item.type().lower()].remove(self.item_caught)
+                    self.update()
+                self.item_caught = None
+                return -1
 
-        for ui in to_del:
-            if ui in self.inventory['phase']:
-                ui.delete()
-                self.inventory['phase'].remove(ui)
-            elif ui in self.inventory['instru']:
-                ui.delete()
-                self.inventory['instru'].remove(ui)
-            elif ui in self.inventory['son']:
-                ui.delete()
-                self.inventory['son'].remove(ui)
+        else:
+            ## on check touu pour vwar si on en catch
 
-        if len(to_del) > 0:
-            self.update()
+            for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
+
+                ui.check_pressed()
+                if ui.caught:
+                    self.item_caught = ui
+                    return 1
+        return 0
 
 
 """""""""""""""""""""""""""""""""""

@@ -86,7 +86,7 @@ class App():
 
 
         ## items
-        #self.item_caught = None
+        self.this_hud_caught_an_item = None
 
         ## ANCHOR
 
@@ -225,7 +225,7 @@ class App():
         ## CHECK ALL UI
 
         # plumUI
-        if self.perso.plume != None and self.perso.plume.hud.ui.visible:
+        if self.perso.plume != None and self.perso.plume.hud.ui.visible and self.this_hud_caught_an_item == None:
             self.perso.plume.hud.ui.check_mouse(x,y)
 
         #phaseUI
@@ -235,27 +235,32 @@ class App():
 
                 if zone == 'lit':
                     if o.ZONES['ELEM']['lit'].hud.ui != None :
-                        o.ZONES['ELEM']['lit'].hud.ui.check_mouse(x,y)
-                        if o.ZONES['ELEM']['lit'].hud.ui.caught:
-                                o.ZONES['ELEM']['lit'].hud.ui.move(x,y)
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o.ZONES['ELEM']['lit'].hud) : #check si il a caught
+
+                            o.ZONES['ELEM']['lit'].hud.ui.check_mouse(x,y)
+                            if o.ZONES['ELEM']['lit'].hud.ui.caught:
+                                    o.ZONES['ELEM']['lit'].hud.ui.move(x,y)
 
         # inventUI
         if self.perso.invhud.visible:
-            for uitype in self.perso.invhud.inventory:
-                for ui in self.perso.invhud.inventory[uitype]:
-                    ui.check_mouse(x,y)
-                    if ui.caught:
-                            ui.move(x,y)
+            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.invhud) : #check si il peut catch
+                for uitype in self.perso.invhud.inventory:
+                    for ui in self.perso.invhud.inventory[uitype]:
+                        if self.this_hud_caught_an_item == None:
+                            ui.check_mouse(x,y)
+                        if ui.caught:
+                                ui.move(x,y)
+                                ui.check_mouse(x,y)
 
     def on_mouse_press(self,x, y, button, modifiers):
+
+        letsbacktnothingcaught = False
 
         ## CHECK ALL UI
 
         # plumUI
-        if self.perso.plume != None and self.perso.plume.hud.ui.visible:
+        if self.perso.plume != None and self.perso.plume.hud.ui.visible and self.this_hud_caught_an_item == None:
             self.perso.plume.hud.ui.check_pressed()
-
-        item_actionned = False
 
         #phaseUI
 
@@ -263,18 +268,34 @@ class App():
             if o.ZONES['ELEM'][zone].activated:
 
                 if zone == 'lit':
-                    if o.ZONES['ELEM']['lit'].hud.ui != None : # and self.perso.plume.hud.ui.visible:
-                        o.ZONES['ELEM']['lit'].hud.catch_or_drop(x,y,self.perso)
-                        item_actionned = True
-                        self.on_mouse_motion(x,y,0,0)
+                    if o.ZONES['ELEM']['lit'].hud.ui != None :
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o.ZONES['ELEM']['lit'].hud) : #check si il peut catch
 
-        if item_actionned:
-            return
+                            caught_dropped = o.ZONES['ELEM']['lit'].hud.catch_or_drop(x,y,self.perso)
+
+                            if caught_dropped == 1: # means caught
+                                self.this_hud_caught_an_item = o.ZONES['ELEM']['lit'].hud
+                            elif caught_dropped == -1: # means dropped
+                                letsbacktnothingcaught = True
+
+                            self.on_mouse_motion(x,y,0,0)
 
         # inventUI
         if self.perso.invhud.visible:
-            self.perso.invhud.catch_or_drop(x,y)
-            self.on_mouse_motion(x,y,0,0)
+
+            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.invhud) : #check si il peut catch
+
+                caught_dropped = self.perso.invhud.catch_or_drop(x,y)
+
+                if caught_dropped == 1: # means caught
+                    self.this_hud_caught_an_item = self.perso.invhud
+                elif caught_dropped == -1: # means dropped
+                    letsbacktnothingcaught = True
+
+                self.on_mouse_motion(x,y,0,0)
+
+        if letsbacktnothingcaught:
+            self.this_hud_caught_an_item = None
 
     ### LOOP
 
