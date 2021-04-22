@@ -79,7 +79,7 @@ entier entre -100 et 100 :
 -100..................-95........-80.......-50......-10........10.......50........80..............95................100
 						sous-merde			  victime		       thug				 gros ganster
  pire merde de la terre 			 merde 				neutre				gangster			    ennemi number one
-  
+  			----			---			--		-			/		*			**			***			****
 
 
 OBJECTS :
@@ -201,4 +201,11 @@ OBJECTS :
 easter egg:
 
 	-seul moyen de voler la plume de 69 : aller en prison
-	-une plume secrète jamais indiquée par le radar à plume : plume du rappeur delta, vous permet d'écrire vos propres phases
+	-une plume secrète jamais indiquée par le radar à plume : plume du rappeur delta, vous permet d'écrire vos propres phases -> map générée procéduralement sauf pour la maison de delta, qui apparait une fois la ville suffisament grande
+	-combinaison de touche qui affiche les détails techniques sur les élements, notamment la qualité, ...
+
+
+idées pour plus tard:
+
+	-pouvoir "réécrire ses phases" -> machine à débloquer pour les améliorer encore plus
+	-qualité X > 0.9999

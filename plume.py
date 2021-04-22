@@ -136,6 +136,16 @@ class App():
             g.TEXTIDS['phase'][qua[i]] = g.TEXTIDS['_phaz'][i]
         del g.TEXTIDS['_phaz']
 
+        g.TEXTIDS['instru'] = {}
+        for i in range(len(g.TEXTIDS['_instru'])):
+            g.TEXTIDS['instru'][qua[i]] = g.TEXTIDS['_instru'][i]
+        del g.TEXTIDS['_instru']
+
+        g.TEXTIDS['son'] = {}
+        for i in range(len(g.TEXTIDS['_son'])):
+            g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
+        del g.TEXTIDS['_son']
+
         g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
 
@@ -241,6 +251,7 @@ class App():
                 if zone == 'lit':
                     if o.ZONES['ELEM']['lit'].hud.ui != None : # and self.perso.plume.hud.ui.visible:
                         o.ZONES['ELEM']['lit'].hud.catch_phase(x,y,self.perso)
+                        self.on_mouse_motion(x,y,0,0)
 
     ### LOOP
 

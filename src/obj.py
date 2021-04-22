@@ -268,6 +268,9 @@ class Plume():
 
         return phase
 
+    def __lt__(self, other):
+         return self.quality < other.quality
+
 class Phase():
 
         def __init__(self,quality,cred,):
@@ -296,6 +299,9 @@ class Phase():
 
             return s
 
+        def __lt__(self, other):
+             return self.quality < other.quality
+
 #------# instrus
 
 class Btmaker():
@@ -317,12 +323,18 @@ class Btmaker():
         #print('instru '+convert_quality(qua))
         return instru
 
+    def __lt__(self, other):
+         return self.quality < other.quality
+
 class Instru():
 
     def __init__(self,qua,author):
 
         self.quality = qua
         self.author = author
+
+    def __lt__(self, other):
+         return self.quality < other.quality
 
 #------# sons
 
@@ -364,6 +376,8 @@ class Son():
 
         return qua
 
+    def __lt__(self, other):
+         return self.quality < other.quality
 
 """""""""""""""""""""""""""""""""""
  CLASSES GRAFIK
@@ -504,7 +518,7 @@ class Lit(Zone_ACTIV):
         super(Lit,self).close(perso)
         self.hud.delete_phase()
         self.hud.unhide(True)
-        perso.invhud.unhide(True) 
+        perso.invhud.unhide(True)
 
     def write(self,perso):
 
@@ -594,12 +608,13 @@ class Item_UI(Zone_UI):
 
         #self.text_id = texture
         self.itemspr = g.sman.addSpr(texture,group='ui',vis=False)
-        g.sman.modify(self.itemspr,scale=(0.5,0.5))
+        g.sman.modify(self.itemspr,scale=(0.5,0.5))#,opacity=128)
 
         pos = box.cx - g.sman.spr(self.itemspr).width/2 , box.cy - g.sman.spr(self.itemspr).height/2
         g.sman.modify(self.itemspr,pos)
 
         self.caught = False
+        self.dropped = False
 
     def catch(self):
         self.caught = True
@@ -612,6 +627,7 @@ class Item_UI(Zone_UI):
         g.sman.modify(self.label_bg,pos)
 
     def drop(self):
+        self.dropped = True
         self.caught = False
         g.sman.unhide(self.itemspr,True)
 
@@ -750,10 +766,11 @@ class InventHUD(HUD):
         self.inventory['instru'] = []
         self.inventory['son'] = []
 
-        self.box = box(20,200,320,800)
+        self.box = box(20,200,338,800)
         self.padding = 64
         self.padding2 = 20
         self.lilpadding = 12
+        self.lilpadding2 = 6
 
         self.addCol('bg',self.box,group='hud-1')
 
@@ -761,10 +778,22 @@ class InventHUD(HUD):
 
         self.addCol('bg2',self.box2,color=c['delta_blue'],group='hud')
 
-        print(self.box2.wh)
+        #print(self.box2.wh)
 
         ## inv
         self.addLab('inv_lab','inventory',(self.box.cx,self.box.fy-50),anchor=('center','center'))
+
+        #self.update()
+        for i in range(r.randint(2,10)):
+            self.catch(Instru(r.random(),'wesh'))
+
+        for i in range(r.randint(2,10)):
+            ph = []
+            for i in range(4):
+                ph.append(Phase(rqua(),rcred()))
+            instru = Instru(r.random(),'wesh')
+
+            self.catch(Son(instru,ph))
 
     def catch(self,item):
 
@@ -775,7 +804,68 @@ class InventHUD(HUD):
         elif type(item) == Son:
             self.inventory['son'].append(item)
 
-        print(self.inventory)
+        self.update()
+
+        #print(self.inventory)
+
+    def update(self):
+
+        yf = self.box2.fy
+
+        #sons
+        if self.inventory['son'] != []:
+            self.addLab('sons_lab','sons',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            yf -= self.padding2*2
+
+            self.inventory['son'].sort(reverse=True)
+
+            for i in range(len(self.inventory['son'])):
+
+                x = self.box2.x + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                y = yf - (self.padding + self.lilpadding2)*(i//4 + 1)
+
+                self.addSpr('son_spr'+str(i),g.TEXTIDS['son'][convert_quality(self.inventory['son'][i].quality)[0]])
+                g.sman.modify(self.sprids['son_spr'+str(i)],scale=(0.25,0.25))
+                g.sman.modify(self.sprids['son_spr'+str(i)],pos=(x,y))
+            yf -= (self.padding + self.lilpadding2)*((len(self.inventory['son'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+
+
+        #instrus
+        if self.inventory['instru'] != []:
+            self.addLab('instrus_lab','instrus',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            yf -= self.padding2*2
+
+            self.inventory['instru'].sort(reverse=True)
+
+            for i in range(len(self.inventory['instru'])):
+
+                x = self.box2.x + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                y = yf - (self.padding + self.lilpadding2)*(i//4 + 1)
+
+                self.addSpr('instru_spr'+str(i),g.TEXTIDS['instru'][convert_quality(self.inventory['instru'][i].quality)[0]])
+                g.sman.modify(self.sprids['instru_spr'+str(i)],scale=(0.25,0.25))
+                g.sman.modify(self.sprids['instru_spr'+str(i)],pos=(x,y))
+            yf -= (self.padding + self.lilpadding2)*((len(self.inventory['instru'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+
+
+        #phases
+        if self.inventory['phase'] != []:
+            self.addLab('phases_lab','phases',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            yf -= self.padding2*2
+
+            self.inventory['phase'].sort(reverse=True)
+
+            for i in range(len(self.inventory['phase'])):
+
+                x = self.box2.x + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                y = yf - (self.padding + self.lilpadding2)*(i//4 + 1)
+
+                self.addSpr('phaz_spr'+str(i),g.TEXTIDS['phase'][convert_quality(self.inventory['phase'][i].quality)[0]])
+                g.sman.modify(self.sprids['phaz_spr'+str(i)],scale=(0.25,0.25))
+                g.sman.modify(self.sprids['phaz_spr'+str(i)],pos=(x,y))
+            yf -= (self.padding + self.lilpadding2)*((len(self.inventory['phase'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+
+
 
 class PersoHUD(HUD):
 
@@ -937,13 +1027,18 @@ class WriteHUD(HUD):
         if self.ui.caught:
             perso.invhud.unhide()
             self.delete_phase(False)
-        elif collisionAX(self.box.realbox,(x,y)):
-            self.write(self.ui.phase)
-        elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
-            perso.invhud.catch(self.ui.phase)
-            self.delete_phase()
+        elif self.ui.dropped:
+            if collisionAX(self.box.realbox,(x,y)):
+                self.write(self.ui.phase)
+            elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+                perso.invhud.catch(self.ui.phase)
+                self.delete_phase()
+            else:
+                self.delete_phase()
         else:
-            self.delete_phase()
+            if perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+                perso.invhud.catch(self.ui.phase)
+                self.delete_phase()
 
 
 
@@ -1003,3 +1098,9 @@ def upgrade_qua(qua,bonus=True):
 def aff_phase(phase):
 
     print(phase.str())
+
+def rqua():
+    return r.random()
+
+def rcred():
+    return r.randint(-100,100)

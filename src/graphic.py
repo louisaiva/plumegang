@@ -152,7 +152,7 @@ class SpriteManager():
         if self.sprites[sprid].image != tman.textures[textid]:
             self.sprites[sprid].image = tman.textures[textid]
 
-    def modify(self,sprid,pos=None,scale=None,group=None):
+    def modify(self,sprid,pos=None,scale=None,group=None,opacity=None):
 
         # position
         x,y = None,None
@@ -169,6 +169,12 @@ class SpriteManager():
             group = gman.getGroup(group)
             if group != self.sprites[sprid].group:
                 self.sprites[sprid].group = group
+
+
+        # updating opacity
+        if opacity != None:
+            if opacity != self.sprites[sprid].opacity:
+                self.sprites[sprid].opacity = opacity
 
         # final updating positon and scale
         self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
