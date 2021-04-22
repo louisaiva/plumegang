@@ -84,6 +84,10 @@ class App():
         o.ZONES['ELEM']['plume'] = o.Market(600,225)
         o.ZONES['ELEM']['lit'] = o.Lit(900,225)
 
+
+        ## items
+        #self.item_caught = None
+
         ## ANCHOR
 
         #self.X,self.Y = 0,0
@@ -235,6 +239,14 @@ class App():
                         if o.ZONES['ELEM']['lit'].hud.ui.caught:
                                 o.ZONES['ELEM']['lit'].hud.ui.move(x,y)
 
+        # inventUI
+        if self.perso.invhud.visible:
+            for uitype in self.perso.invhud.inventory:
+                for ui in self.perso.invhud.inventory[uitype]:
+                    ui.check_mouse(x,y)
+                    if ui.caught:
+                            ui.move(x,y)
+
     def on_mouse_press(self,x, y, button, modifiers):
 
         ## CHECK ALL UI
@@ -243,6 +255,8 @@ class App():
         if self.perso.plume != None and self.perso.plume.hud.ui.visible:
             self.perso.plume.hud.ui.check_pressed()
 
+        item_actionned = False
+
         #phaseUI
 
         for zone in o.ZONES['ELEM']:
@@ -250,8 +264,17 @@ class App():
 
                 if zone == 'lit':
                     if o.ZONES['ELEM']['lit'].hud.ui != None : # and self.perso.plume.hud.ui.visible:
-                        o.ZONES['ELEM']['lit'].hud.catch_phase(x,y,self.perso)
+                        o.ZONES['ELEM']['lit'].hud.catch_or_drop(x,y,self.perso)
+                        item_actionned = True
                         self.on_mouse_motion(x,y,0,0)
+
+        if item_actionned:
+            return
+
+        # inventUI
+        if self.perso.invhud.visible:
+            self.perso.invhud.catch_or_drop(x,y)
+            self.on_mouse_motion(x,y,0,0)
 
     ### LOOP
 
