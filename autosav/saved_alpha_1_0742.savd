@@ -1,0 +1,2616 @@
+
+
+
+ _newfile_ :Z:\DESKTOP\CODING\plumegang/./plume.py
+
+
+
+
+import pyglet,time,random
+from pyglet.window import key
+import pyglet.gl as gl
+
+from src.utils import *
+from src.colors import *
+import src.getsave as gs
+from src import obj as o
+from src import graphic as g
+
+CURRENT_PATH = os.path.dirname(os.path.abspath(__file__)) # fopatouché
+if ' ' in CURRENT_PATH:
+    print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
+    print('Changez le programme de place pour un path sans espace svp.')
+
+
+
+class App():
+
+    ### INIT FUNCTIONS
+
+    def __init__(self):
+
+        self.path = CURRENT_PATH
+
+        ### windows
+
+        self.window = pyglet.window.Window()
+
+        self.window.set_fullscreen()
+
+        self.window.push_handlers(self)
+
+        ### loading fonts
+        font_path = 'item/fonts/'
+        self.fonts = ['RaubFont']
+        self.font = ['RaubFont']
+        for ft in self.fonts:
+            try:
+                pyglet.resource.add_font(font_path+ft+'.otf')
+            except:
+                try:
+                    pyglet.resource.add_font(font_path+ft+'.ttf')
+                except :
+                    pyglet.resource.add_font('arial.ttf')
+
+        ### managers
+
+        #g.init_managers(CURRENT_PATH,self.font)
+
+        g.lman.updateman(self.font[0])
+
+        #self.cmd = graphic.CmdManager((20 , self.size_fullscr[1] - 50))
+        #self.specMan = graphic.SpecialManager(g.tman,self.current_size_scr)
+
+        #self.aff_cmd = False
+
+    def init(self):
+
+        ##  TEXTURES
+
+        self.create_organise_textures()
+
+        ## SPRITES
+
+        self.bgx,self.bgy = 0,250
+
+        self.sprids = {}
+        self.sprids['bg'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'back')
+        g.sman.modify(self.sprids['bg'],scale=(1.5,1.5),group='back')
+
+        ## PERSOS
+
+        self.perso = o.Rappeur(g.TEXTIDS['persos'])
+        #self.sprids['cred_bar'] =
+        self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
+
+        ## ZONES
+
+        o.ZONES['ELEM']['ordi'] = o.Ordi(1400,225)
+        o.ZONES['ELEM']['studio'] = o.Studio(-100,225)
+        o.ZONES['ELEM']['plume'] = o.Market(600,225)
+        o.ZONES['ELEM']['lit'] = o.Lit(900,225)
+
+
+        ## items
+        self.this_hud_caught_an_item = None
+
+        ## ANCHOR
+
+        #self.X,self.Y = 0,0
+
+        ## END
+
+        self.nb = 0
+        self.gameover = False
+
+        # labels
+
+        self.fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
+
+
+
+
+        # keys
+        self.keys = key.KeyStateHandler()
+        self.window.push_handlers(self.keys)
+        self.longpress = {}
+        self.cooldown = 0.5
+
+        # clicks
+        self.clicks = {'L':False,'R':False,'M':[0,0]}
+        self.mouse_speed = 0
+
+
+        self.playing = True
+
+        pyglet.clock.schedule_interval(self.gameloop,0.0000001)
+        pyglet.app.run()
+
+    def create_organise_textures(self):
+
+        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(4,6))
+        g.TEXTIDS['_son'] = g.tman.loadImSeq('son.png',(1,6))
+        g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
+        g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
+        g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
+        g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
+
+        qua = ['F','D','C','B','A','S']
+        g.TEXTIDS['plume'] = {}
+        for i in range(len(g.TEXTIDS['_plum'])):
+            g.TEXTIDS['plume'][qua[i]] = g.TEXTIDS['_plum'][i]
+        del g.TEXTIDS['_plum']
+
+        g.TEXTIDS['phase'] = {}
+        for i in range(len(g.TEXTIDS['_phaz'])):
+            g.TEXTIDS['phase'][qua[i]] = g.TEXTIDS['_phaz'][i]
+        del g.TEXTIDS['_phaz']
+
+        g.TEXTIDS['instru'] = {}
+        for i in range(len(g.TEXTIDS['_instru'])):
+            g.TEXTIDS['instru'][qua[i]] = g.TEXTIDS['_instru'][i]
+        del g.TEXTIDS['_instru']
+
+        g.TEXTIDS['son'] = {}
+        for i in range(len(g.TEXTIDS['_son'])):
+            g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
+        del g.TEXTIDS['_son']
+
+        g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
+        g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
+
+
+
+    ### ONCE FUNCTIONS
+
+    def game_over(self):
+
+        self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=200,color=c['darkkhaki'],group='up')
+        self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=210,color=c['black'],group='up')
+
+    def get_out(self):
+        self.playing = False
+
+
+    ### PYGLET FUNCTIONS
+
+    def on_key_press(self,symbol,modifiers):
+
+        self.longpress[symbol] = time.time()
+
+        if symbol == key.ESCAPE:
+            if self.perso.element_colli != None and self.perso.element_colli.activated:
+                self.perso.element_colli.close(self.perso)
+                return pyglet.event.EVENT_HANDLED
+
+        elif symbol == key.A:
+            self.perso.drop_plume()
+
+        #affiche les différents OrderedGroup d'affichage
+        elif symbol == key.G:
+
+            print('\nYOU ASKED TO PRINT GROUPS AND THEIR ORGANISATION:')
+            print('  will be displayed in descending order like that : order,name\n')
+
+            tab = []
+            orders_sorted = sorted(g.gman.names_wo,reverse=True)
+
+            for order in orders_sorted:
+                say = str(order)
+                say += (6-len(say))*' '
+                say +=g.gman.names_wo[order]
+                print(say)
+            print('')
+
+        elif symbol == key.E:
+            if self.perso.element_colli != None:
+                if not self.perso.element_colli.longpress:
+                    self.perso.element_colli.activate(self.perso)
+                    self.perso.do('hit')
+            else:
+                self.perso.do('hit')
+
+        elif symbol == key.X:
+            self.perso.hud.rollhide()
+
+        elif symbol == key.B:
+            print(self.perso.invhud)
+            print('\n')
+            print(self.perso.plume)
+
+        elif symbol == key.I:
+            self.perso.invhud.rollhide()
+
+    def on_key_release(self,symbol,modifiers):
+
+        if symbol in self.longpress:
+            del self.longpress[symbol]
+
+    def on_close(self):
+
+        print('\n\nNumber of lines :',compt(self.path))
+        gs.save_files(self.path)
+
+    def on_mouse_motion(self,x,y,dx,dy):
+
+        ## CHECK ALL UI
+
+        # plumUI
+        if self.perso.plume != None and self.perso.plume.hud.ui.visible and self.this_hud_caught_an_item == None:
+            self.perso.plume.hud.ui.check_mouse(x,y)
+
+        #phaseUI
+
+        for zone in o.ZONES['ELEM']:
+            if o.ZONES['ELEM'][zone].activated:
+
+                if zone == 'lit':
+                    if o.ZONES['ELEM']['lit'].hud.ui != None :
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o.ZONES['ELEM']['lit'].hud) : #check si il a caught
+
+                            o.ZONES['ELEM']['lit'].hud.ui.check_mouse(x,y)
+                            if o.ZONES['ELEM']['lit'].hud.ui.caught:
+                                    o.ZONES['ELEM']['lit'].hud.ui.move(x,y)
+
+        # inventUI
+        if self.perso.invhud.visible:
+            #if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.invhud) : #check si il peut catch
+
+            if self.this_hud_caught_an_item == None:
+                self.perso.invhud.check_hoover(x,y)
+            elif self.this_hud_caught_an_item == self.perso.invhud:
+                for uitype in self.perso.invhud.inventory:
+                    for ui in self.perso.invhud.inventory[uitype]:
+                        if ui.caught:
+                            ui.move(x,y)
+                            ui.check_mouse(x,y)
+
+    def on_mouse_press(self,x, y, button, modifiers):
+
+        letsbacktnothingcaught = False
+
+        ## CHECK ALL UI
+
+        # plumUI
+        if self.perso.plume != None and self.perso.plume.hud.ui.visible and self.this_hud_caught_an_item == None:
+            self.perso.plume.hud.ui.check_pressed()
+
+        #phaseUI
+
+        for zone in o.ZONES['ELEM']:
+            if o.ZONES['ELEM'][zone].activated:
+
+                if zone == 'lit':
+                    if o.ZONES['ELEM']['lit'].hud.ui != None :
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o.ZONES['ELEM']['lit'].hud) : #check si il peut catch
+
+                            caught_dropped = o.ZONES['ELEM']['lit'].hud.catch_or_drop(x,y,self.perso)
+
+                            if caught_dropped == 1: # means caught
+                                self.this_hud_caught_an_item = o.ZONES['ELEM']['lit'].hud
+                            elif caught_dropped == -1: # means dropped
+                                letsbacktnothingcaught = True
+
+                            self.on_mouse_motion(x,y,0,0)
+
+        # inventUI
+        if self.perso.invhud.visible:
+
+            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.invhud) : #check si il peut catch
+
+                caught_dropped = self.perso.invhud.catch_or_drop(x,y)
+
+                if caught_dropped == 1: # means caught
+                    self.this_hud_caught_an_item = self.perso.invhud
+                elif caught_dropped == -1: # means dropped
+                    letsbacktnothingcaught = True
+
+                self.on_mouse_motion(x,y,0,0)
+
+        if letsbacktnothingcaught:
+            self.this_hud_caught_an_item = None
+
+    ### LOOP
+
+    def events(self):
+
+        if not self.gameover:
+
+            if self.keys[key.Q]:
+                self.perso.move('L')
+            if self.keys[key.D]:
+                self.perso.move('R')
+
+            if self.keys[key.E]:
+                if self.perso.element_colli != None:
+                    if self.perso.element_colli.longpress:
+                        if time.time() - self.longpress[key.E] > self.cooldown:
+                            self.longpress[key.E] = time.time()
+                            self.perso.element_colli.activate(self.perso)
+                            self.perso.do('hit')
+
+        if self.keys[key.LEFT]:
+            g.Cam.morex()
+
+        if self.keys[key.RIGHT]:
+            g.Cam.lessx()
+
+    def draw(self):
+
+        g.tman.draw()
+
+    def refresh(self):
+
+        ## labels
+
+        g.lman.set_text(self.fps,'FPS : '+str(int(pyglet.clock.get_fps())))
+
+        ## anchor / moving sprites
+
+        for zone in o.ZONES['ELEM']:
+            zone=o.ZONES['ELEM'][zone]
+            x_r = zone.gex + g.Cam.X
+            y_r = zone.gey + g.Cam.Y
+            g.sman.modify(zone.skin_id,(x_r,y_r))
+            zone.update()
+
+        x_r = self.perso.gex + g.Cam.X
+        y_r = self.perso.gey + g.Cam.Y
+        g.sman.modify(self.perso.skin_id,(x_r,y_r))
+
+        x_bg,y_bg = self.bgx+g.Cam.BGX,g.Cam.BGY+self.bgy
+        g.sman.modify(self.sprids['bg'],(x_bg,y_bg))
+
+        g.Cam.update(self.perso.realbox)
+
+
+        ## perso
+
+        self.perso.check_do()
+        g.lman.set_text(self.lab_doing,self.perso.doing)
+        self.perso.hud.update()
+
+        if self.perso.money <= 0:
+            #print('game over')
+            self.gameover = True
+            self.game_over()
+        else:
+            self.perso.add_money(-1)
+            self.perso.nb_fans += random.randint(1*(self.perso.money//1000),10*(self.perso.money//1000))
+
+    def gameloop(self,dt):
+
+        if self.playing:
+            if self.nb == 0:
+
+
+
+                self.nb += 1
+
+            # EVENTS
+            self.events()
+
+            gl.glClearColor(1/4,1/4,1/4,1)
+            # CLR
+            self.window.clear()
+
+            # RFRSH
+            self.refresh()
+
+            # DRW
+            self.draw()
+
+        else:
+            print('\n\nNumber of lines :',compt(self.path))
+            gs.save_files(self.path)
+
+            self.window.close()
+
+
+def main():
+
+    app = App()
+    app.init()
+
+if __name__ == '__main__':
+    main()
+
+
+
+ _newfile_ :Z:\DESKTOP\CODING\plumegang/src/colors.py
+
+
+
+### colors
+c = {
+
+"air" : (0,0,0,0),
+"aliceblue" : (240, 248, 255,255),
+"antiquewhite" : (250, 235, 215,255),
+"aqua" : (0, 255, 255,255),
+"aquamarine" : (127, 255, 212,255),
+"azure" : (240, 255, 255,255),
+"beige" : (245, 245, 220,255),
+"bisque" : (255, 228, 196,255),
+"black" : (0, 0, 0,255),
+"blanchedalmond" : (255, 235, 205,255),
+"blue" : (0, 0, 255,255),
+"blueviolet" : (138, 43, 226,255),
+"brown" : (165, 42, 42,255),
+"burlywood" : (222, 184, 135,255),
+"cadetblue" : (95, 158, 160,255),
+"chartreuse" : (127, 255, 0,255),
+"chocolate" : (210, 105, 30,255),
+"coral" : (255, 127, 80,255),
+"cornflowerblue" : (100, 149, 237,255),
+"cornsilk" : (255, 248, 220,255),
+"crimson" : (220, 20, 60,255),
+"cyan" : (0, 255, 255,255),
+"darkblue" : (0, 0, 139,255),
+"darkcyan" : (0, 139, 139,255),
+"darkgoldenrod" : (184, 134, 11,255),
+"darkgray" : (169, 169, 169,255),
+"darkgrey" : (169, 169, 169,255),
+"darkgreen" : (0, 100, 0,255),
+"darkkhaki" : (189, 183, 107,255),
+"darkmagenta" : (139, 0, 139,255),
+"darkolivegreen" : (85, 107, 47,255),
+"darkorange" : (255, 140, 0,255),
+"darkorchid" : (153, 50, 204,255),
+"darkred" : (139, 0, 0,255),
+"darksalmon" : (233, 150, 122,255),
+"darkseagreen" : (143, 188, 143,255),
+"darkslateblue" : (72, 61, 139,255),
+"darkslategray" : (47, 79, 79,255),
+"darkslategrey" : (47, 79, 79,255),
+"darkturquoise" : (0, 206, 209,255),
+"darkviolet" : (148, 0, 211,255),
+"deeppink" : (255, 20, 147,255),
+"deepskyblue" : (0, 191, 255,255),
+"dimgray" : (105, 105, 105,255),
+"dimgrey" : (105, 105, 105,255),
+"dodgerblue" : (30, 144, 255,255),
+"firebrick" : (178, 34, 34,255),
+"floralwhite" : (255, 250, 240,255),
+"forestgreen" : (34, 139, 34,255),
+"fuchsia" : (255, 0, 255,255),
+"gainsboro" : (220, 220, 220,255),
+"ghostwhite" : (248, 248, 255,255),
+"gold" : (255, 215, 0,255),
+"goldenrod" : (218, 165, 32,255),
+"gray" : (128, 128, 128,255),
+"grey" : (128, 128, 128,255),
+"green" : (0, 128, 0,255),
+"greenyellow" : (173, 255, 47,255),
+"honeydew" : (240, 255, 240,255),
+"hotpink" : (255, 105, 180,255),
+"indianred" : (205, 92, 92,255),
+"indigo" : (75, 0, 130,255),
+"ivory" : (255, 255, 240,255),
+"khaki" : (240, 230, 140,255),
+"lavender" : (230, 230, 250,255),
+"lavenderblush" : (255, 240, 245,255),
+"lawngreen" : (124, 252, 0,255),
+"lemonchiffon" : (255, 250, 205,255),
+"lightblue" : (173, 216, 230,255),
+"lightcoral" : (240, 128, 128,255),
+"lightcyan" : (224, 255, 255,255),
+"lightgoldenrodyellow" : (250, 250, 210,255),
+"lightgray" : (211, 211, 211,255),
+"lightgrey" : (211, 211, 211,255),
+"lightgreen" : (144, 238, 144,255),
+"lightpink" : (255, 182, 193,255),
+"lightsalmon" : (255, 160, 122,255),
+"lightseagreen" : (32, 178, 170,255),
+"lightskyblue" : (135, 206, 250,255),
+"lightslategray" : (119, 136, 153,255),
+"lightslategrey" : (119, 136, 153,255),
+"lightsteelblue" : (176, 196, 222,255),
+"lightyellow" : (255, 255, 224,255),
+"lime" : (0, 255, 0,255),
+"limegreen" : (50, 205, 50,255),
+"linen" : (250, 240, 230,255),
+"magenta" : (255, 0, 255,255),
+"maroon" : (128, 0, 0,255),
+"mediumaquamarine" : (102, 205, 170,255),
+"mediumblue" : (0, 0, 205,255),
+"mediumorchid" : (186, 85, 211,255),
+"mediumpurple" : (147, 112, 219,255),
+"mediumseagreen" : (60, 179, 113,255),
+"mediumslateblue" : (123, 104, 238,255),
+"mediumspringgreen" : (0, 250, 154,255),
+"mediumturquoise" : (72, 209, 204,255),
+"mediumvioletred" : (199, 21, 133,255),
+"midnightblue" : (25, 25, 112,255),
+"mintcream" : (245, 255, 250,255),
+"mistyrose" : (255, 228, 225,255),
+"moccasin" : (255, 228, 181,255),
+"navajowhite" : (255, 222, 173,255),
+"navy" : (0, 0, 128,255),
+"oldlace" : (253, 245, 230,255),
+"olive" : (128, 128, 0,255),
+"olivedrab" : (107, 142, 35,255),
+"orange" : (255, 165, 0,255),
+"orangered" : (255, 69, 0,255),
+"orchid" : (218, 112, 214,255),
+"palegoldenrod" : (238, 232, 170,255),
+"palegreen" : (152, 251, 152,255),
+"paleturquoise" : (175, 238, 238,255),
+"palevioletred" : (219, 112, 147,255),
+"papayawhip" : (255, 239, 213,255),
+"peachpuff" : (255, 218, 185,255),
+"peru" : (205, 133, 63,255),
+"pink" : (255, 192, 203,255),
+"plum" : (221, 160, 221,255),
+"powderblue" : (176, 224, 230,255),
+"purple" : (128, 0, 128,255),
+"red" : (255, 0, 0,255),
+"rosybrown" : (188, 143, 143,255),
+"royalblue" : (65, 105, 225,255),
+"saddlebrown" : (139, 69, 19,255),
+"salmon" : (250, 128, 114,255),
+"sandybrown" : (244, 164, 96,255),
+"seagreen" : (46, 139, 87,255),
+"seashell" : (255, 245, 238,255),
+"sienna" : (160, 82, 45,255),
+"silver" : (192, 192, 192,255),
+"skyblue" : (135, 206, 235,255),
+"slateblue" : (106, 90, 205,255),
+"slategray" : (112, 128, 144,255),
+"slategrey" : (112, 128, 144,255),
+"snow" : (255, 250, 250,255),
+"springgreen" : (0, 255, 127,255),
+"steelblue" : (70, 130, 180,255),
+"tan" : (210, 180, 140,255),
+"teal" : (0, 128, 128,255),
+"thistle" : (216, 191, 216,255),
+"tomato" : (255, 99, 71,255),
+"turquoise" : (64, 224, 208,255),
+"violet" : (238, 130, 238,255),
+"wheat" : (245, 222, 179,255),
+"white" : (255, 255, 255,255),
+"whitesmoke" : (245, 245, 245,255),
+"yellow" : (255, 255, 0,255),
+"yellowgreen" : (154, 205, 50,255),
+
+#my colors
+
+"delta_blue" : (150, 150, 200,255),
+"delta_purple" : (102, 102, 153,255),
+"F" : (255,255,255,255),
+"D" : (100, 200, 255,255),
+"C" : (156, 204, 101,255),
+"B" : (255, 112, 67,255),
+"A" : (255, 202, 40,255),
+"S" : (209, 196, 233,255),
+"X" : (0, 0, 0,255),
+
+}
+
+
+
+ _newfile_ :Z:\DESKTOP\CODING\plumegang/src/getsave.py
+
+
+"""""
+programme sauvegarde de fichiers sources
+"""""
+
+# va de pair avec getback v3
+
+version = 3
+
+import os
+
+def save_files(bigpath,path = ['/.','/src'],save_path = '/autosav/'):
+
+    autosav = ''
+
+    for chem in path:
+        #print('path',bigpath+chem,':',os.listdir(bigpath+chem))
+        try:
+            for file in os.listdir(bigpath+chem):
+                if file[-3:] == '.py':
+                    autosav += '\n\n\n _newfile_ :' + bigpath+chem+'/'+file + '\n\n\n'
+                    with open(bigpath+chem+'/'+file,'r') as f:
+                        autosav += f.read()
+        except :
+            jsghd=0
+            #print('no path',bigpath+chem,':',os.listdir(bigpath+chem))
+
+    version = ['alpha',10001]
+
+    try:
+        with open(bigpath+save_path+'version','r') as f:
+            tab = f.read().split('_')
+            version = [tab[0],int(tab[1])*10000+int(tab[2])]
+        version[1]+=1
+        with open(bigpath+save_path+'version','w') as f:
+            f.write(version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
+    except:
+        os.makedirs(bigpath+save_path)
+        with open(bigpath+save_path+'version','w') as f:
+            f.write(version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
+
+    with open(bigpath+save_path+'saved_'+version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:]+'.savd','w') as f:
+        f.write(autosav)
+
+    print('files saved, version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
+
+def get_version(bigpath,save_path = '/autosav/'):
+    version = ['alpha',10001]
+
+    try:
+        with open(bigpath+save_path+'version','r') as f:
+            tab = f.read().split('_')
+            version = [tab[0],int(tab[1])*10000+int(tab[2])]
+    except:
+        a=0
+    return version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:]
+
+
+
+ _newfile_ :Z:\DESKTOP\CODING\plumegang/src/graphic.py
+
+
+
+
+
+
+import pyglet
+import src.utils as u
+
+
+
+#manager who rules groups to draw things in the right order u know
+class GroupManager():
+
+    def __init__(self):
+
+
+        self.groups = {} ## give the group with the name
+
+        self.names_wo = {} ## give the name with the order
+        self.orders = {} ## give the order with the name
+
+        names = ['back','back1','mid-1','mid','mid1','front','hud-1','hud','hud1','perso','ui-2','ui-1','ui','up']
+        self.distance_btw = 8
+
+        for i in range(len(names)):
+            self.addGroup(names[i],i*self.distance_btw)
+
+    def getGroup(self,name):
+        if name not in self.groups:
+            print('aie ce groupe n\'existe pas')
+            return None
+        else:
+            return self.groups[name]
+
+    def addGroup(self,name,order):
+        if not name in self.groups:
+            self.groups[name] = pyglet.graphics.OrderedGroup(order)
+            self.orders[name] = order
+            self.names_wo[order] = name
+            return self.groups[name]
+        return self.groups[name] # group was already created
+
+#manager who init images
+class TextureManager():
+
+    def __init__(self,path='.'):
+
+        self.textures = {}
+
+        self.path = path
+
+        self.ids = []
+
+        self.batch = pyglet.graphics.Batch()
+
+    def loadImSeq(self,path2,size):
+
+        # size décrit le nb de tiles en w et en h
+
+        path3 = '/item/'
+        img = pyglet.image.load(self.path+path3+path2)
+        textures = pyglet.image.ImageGrid(img, *size)
+
+        ids = []
+        for txt in textures:
+            id = u.get_id('text')
+            self.textures[id] = txt
+
+            self.ids.append(id)
+            ids.append(id)
+        return ids
+
+    def loadIm(self,path2):
+
+        path3 = '/item/'
+        id = u.get_id('img')
+        img = pyglet.image.load(self.path+path3+path2)
+        self.textures[id] = img
+        self.ids.append(id)
+        return id
+
+    def addCol(self,w,h,color=(255,255,255,255)):
+
+        pattern = pyglet.image.SolidColorImagePattern(color)
+        id = u.get_id('col')
+        self.textures[id] = pattern.create_image(w,h)
+        self.ids.append(id)
+        return id
+
+    def draw(self):
+        self.batch.draw()
+
+tman,gman = TextureManager(),GroupManager()
+
+#manager who rules normal sprites
+class SpriteManager():
+
+    def __init__(self):
+
+        ## SPRITES
+
+        self.sprites = {}
+
+        self.ids = []
+
+    def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True):
+
+        if alr_id == -1:
+            id = u.get_id('spr')
+            self.ids.append(id)
+        else:
+            id =alr_id
+
+
+        self.sprites[id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
+        self.sprites[id].position = xy_pos
+        self.sprites[id].visible = vis
+
+        if group != None:
+            self.addToGroup(id,group)
+
+        return id
+
+    def addCol(self,col=(255,255,255,255),box=u.box(),group=None,alr_id=-1,vis=True):
+        text = tman.addCol(*box.wh,col)
+        return self.addSpr(text,box.xy,group,alr_id,vis)
+
+    def addToGroup(self,id,group_name='back'):
+
+        group = gman.getGroup(group_name)
+        self.sprites[id].group = group
+
+        #self.detect()
+
+    def unhide(self,tabids,hide=False):
+        ## unhide(machin) AFFICHE machin
+        ## unhide(machin,True) N'AFFICHE PAS machin
+
+        if type(tabids) == type([]):
+            for id in tabids:
+                if self.sprites[id].visible != (not hide):
+                    self.sprites[id].visible = (not hide)
+
+        elif type(tabids) == type({}):
+            for id in tabids:
+                self.unhide(tabids[id],hide)
+
+        else:
+            if self.sprites[tabids].visible != (not hide):
+                self.sprites[tabids].visible = (not hide)
+
+    def set_text(self,sprid,textid):
+        if self.sprites[sprid].image != tman.textures[textid]:
+            self.sprites[sprid].image = tman.textures[textid]
+
+    def modify(self,sprid,pos=None,scale=None,group=None,opacity=None):
+
+        # position
+        x,y = None,None
+        if pos != None and pos != (self.sprites[sprid].x,self.sprites[sprid].y):
+            x,y = pos
+
+        # scale
+        scalex,scaley = None,None
+        if scale != None and scale != (self.sprites[sprid].scale_x,self.sprites[sprid].scale_y):
+            scalex,scaley = scale
+
+        # updating group
+        if group != None:
+            group = gman.getGroup(group)
+            if group != self.sprites[sprid].group:
+                self.sprites[sprid].group = group
+
+
+        # updating opacity
+        if opacity != None:
+            if opacity != self.sprites[sprid].opacity:
+                self.sprites[sprid].opacity = opacity
+
+        # final updating positon and scale
+        self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
+
+    def spr(self,id):
+        if id in self.sprites:
+            return self.sprites[id]
+        return None
+
+    def box(self,id):
+        spr = self.sprites[id]
+        return [spr.x,spr.y,spr.x+spr.width,spr.y+spr.height]
+
+    def delete(self,tabids='all'):
+
+        if tabids == 'all': # on delete tous les sprites affichés ingame
+            for id in self.sprites:
+                self.sprites[id].delete()
+            self.sprites = {}
+            #print('sprites deleted')
+
+        elif type(tabids) == type('aa'): # on delete un seul sprite precis
+            if tabids in self.sprites:
+                self.sprites[tabids].delete()
+                del self.sprites[tabids]
+                #print(tabids,'deleted')
+
+        elif type(tabids) == type([]): # on delete un tableau de sprite
+            #print('deleting',tabids)
+            for id in tabids:
+                self.delete(id)
+
+        elif type(tabids) == type({}): # on delete un dico de sprite
+            #print('deleting',tabids)
+            for lab in tabids:
+                self.delete(tabids[lab])
+
+#manager who rules normal labels
+class LabelManager():
+
+    def __init__(self,font=None):
+
+        if font != None:
+            self.font = font
+        else:
+            self.font = 'arial'
+
+        self.labels = {}
+        self.ids = []
+
+    def updateman(self,font=None):
+
+        if font != None:
+            self.font = font
+        else:
+            self.font = 'arial'
+
+    def addLab(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group='hud',anchor = ('left','bottom'),color=(255,255,255,255)):
+
+        if alr_id == -1:
+            id = u.get_id('lbl')
+            self.ids.append(id)
+        else:
+            id =alr_id
+
+        if not font_name:
+            font_name = self.font
+
+        if type(contenu) != type('qsd'):
+            contenu = str(contenu)
+
+        multi = '\n' in contenu
+
+        anchor_x,anchor_y= anchor
+
+        if multi:
+            maxwidth=0
+            lines = contenu.split('\n')
+            for line in lines:
+                lab = pyglet.text.Label(line,font_name=font_name,font_size=font_size, \
+                                anchor_x= anchor_x,anchor_y= anchor_y,color=color)
+                maxwidth = max(maxwidth,lab.content_width)
+                lab.delete()
+            width = maxwidth+1
+
+        else:
+            width = None
+
+
+        if group != None:
+            group = gman.getGroup(group)
+        self.labels[id] = pyglet.text.Label(contenu,font_name=font_name,font_size=font_size,group=group, \
+                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,width=width)
+
+
+
+        self.labels[id].x,self.labels[id].y = xy_pos
+        self.unhide(id,not vis)
+        #self.labels[id].visible = vis
+
+
+        return id
+
+    def addToGroup(self,id,thg=['back',None],thg2=0,level_to_put_in=0):
+
+        group = gman.createGroup(thg,thg2,level_to_put_in)
+        #print('GROUP IS',group)
+        self.labels[id]._init_groups(group)
+        self.labels[id]._update()
+
+    def unhide(self,tabids,hide=False):
+        ## unhide(machin) AFFICHE machin
+        ## unhide(machin,True) N'AFFICHE PAS machin
+
+        if type(tabids) == type([]):
+            for id in tabids:
+                self.unhide(id,hide)
+        elif type(tabids) == type({}):
+            for id in tabids:
+                self.unhide(tabids[id],hide)
+        else:
+            if hide == False and self.labels[tabids].color[3] == 0:
+                self.labels[tabids].color = [*self.labels[tabids].color[:3],255]
+            elif hide == True and self.labels[tabids].color[3] != 0:
+                self.labels[tabids].color = [*self.labels[tabids].color[:3],0]
+
+    def set_text(self,lblid,contenu):
+
+        if type(contenu) != type('qsdd'):
+            contenu = str(contenu)
+
+        if self.labels[lblid].text != contenu:
+            self.labels[lblid].text = contenu
+
+    def printGroup(self,lblid):
+        print('\ttopgroup :',self.labels[lblid].top_group)
+        print('\tbackgroup :',self.labels[lblid].background_group)
+        print('\tforegroup :',self.labels[lblid].foreground_group)
+        print('\tforegroupdeco :',self.labels[lblid].foreground_decoration_group)
+
+    def modify(self,lblid,pos=None,scale=None,color=None):
+
+        if scale != None and scale != (self.labels[lblid].scale_x,self.labels[lblid].scale_y):
+            self.labels[lblid].update(scale_x = scale[0],scale_y=scale[1])
+            #self.labels[lblid].scale_x,self.labels[lblid].scale_y = scale
+
+        if pos != None and pos != (self.labels[lblid].x,self.labels[lblid].y):
+            self.labels[lblid].x,self.labels[lblid].y = pos
+
+        if color != None and color != self.labels[lblid].color:
+            self.labels[lblid].color = color
+
+    def delete(self,tabids='all'):
+
+        if tabids == 'all': # on delete tous les labels affichés ingame
+            for id in self.labels:
+                self.labels[id].delete()
+            self.labels = {}
+            #print('labels deleted')
+
+        elif type(tabids) == type('aa'): # on delete un seul label precis
+            self.labels[tabids].delete()
+            del self.labels[tabids]
+            #print(tabids,'deleted')
+
+        elif type(tabids) == type([]): # on delete un tableau de label
+            #print('deleting',tabids)
+            for id in tabids:
+                self.delete(id)
+
+        elif type(tabids) == type({}): # on delete un dico de label
+            #print('deleting',tabids)
+            for lab in tabids:
+                self.delete(tabids[lab])
+
+sman,lman = SpriteManager(),LabelManager()
+
+TEXTIDS = {}
+
+
+
+#### CAMERA
+
+class Camera():
+
+    def __init__(self):
+
+        self._X,self._Y = 0,0
+        self.BGX,self.BGY = 0,0
+
+        self.d = 0.2
+
+        self.speed = 12
+
+    def update(self,persobox):
+
+        scr = (1920,1080)
+
+        if persobox[2] > 4*scr[0]/5:
+            self.lessx()
+        elif persobox[0] < scr[0]/5:
+            self.morex()
+
+        if persobox[3] > 7*scr[1]/8:
+            self.lessy()
+        elif persobox[1] < scr[1]/8:
+            self.morey()
+
+    ##
+
+    def morex(self):
+        self._X += self.speed
+        self.BGX = self._X*self.d
+    def morey(self):
+        self._Y += self.speed
+        self.BGY = self._Y*self.d
+    def lessx(self):
+        self._X -= self.speed
+        self.BGX = self._X*self.d
+    def lessy(self):
+        self._Y -= self.speed
+        self.BGY = self._Y*self.d
+
+
+    ##
+
+    def _setX(self,X):
+        if X != self._X:
+            self._X = X
+            self.BGX = self.d*X
+    def _X(self):
+        return self._X
+    def _setY(self,Y):
+        if Y != self._Y:
+            self._Y = Y
+            self.BGY = self.d*Y
+    def _Y(self):
+        return self._Y
+    X = property(_X,_setX)
+    Y = property(_Y,_setY)
+
+Cam = Camera()
+
+
+
+ _newfile_ :Z:\DESKTOP\CODING\plumegang/src/obj.py
+
+
+
+import random as r
+import json,time,pyglet
+from src.colors import *
+from src.utils import *
+from src import graphic as g
+
+"""""""""""""""""""""""""""""""""""
+ INIT
+"""""""""""""""""""""""""""""""""""
+
+QUALITIES = ['F'
+            ,'D-','D','D+'
+            ,'C-','C','C+'
+            ,'B-','B','B+'
+            ,'A-','A','A+'
+            ,'S-','S','S+'
+            ,'S*']
+QUALITIES_coeff = [0.1
+            ,0.2,0.3,0.4
+            ,0.5,0.6,0.7
+            ,0.75,0.8,0.85
+            ,0.9,0.92,0.94
+            ,0.96,0.98,0.995
+            ,1.1]
+QUALITIES_up = {'F':0.1
+            ,'D-':0.1,'D':0.1,'D+':0.1
+            ,'C-':0.1,'C':0.1,'C+':0.1
+            ,'B-':0.05,'B':0.05,'B+':0.05
+            ,'A-':0.05,'A':0.02,'A+':0.02
+            ,'S-':0.02,'S':0.02,'S+':0.015
+            ,'S*':1}
+QUALITIES_dwn = {'F':-1,'D-':-0.1
+            ,'D':-0.1,'D+':-0.1,'C-':-0.1
+            ,'C':-0.1,'C+':-0.1,'B-':-0.1
+            ,'B':-0.05,'B+':-0.05,'A-':-0.05
+            ,'A':-0.05,'A+':-0.02,'S-':-0.02
+            ,'S':-0.02,'S+':-0.02,'S*':-0.015}
+
+CRED = ['pire merde de la terre','sous-merde','merde'
+        ,'victime','neutre','thug'
+        ,'gangster','gros ganster','ennemi number one']
+CRED = ['----','---','--'
+        ,'-','/','*'
+        ,'**','***','****']
+
+CRED_coeff = [-95,-80,-50,-10,10,50,80,95,101]
+
+with open('src/mots.json','r', encoding="utf-8") as f:
+    MOTS = json.load(f)
+
+THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','tristesse','notoriété','chill','rap']
+
+"""""""""""""""""""""""""""""""""""
+ CLASSES BASIK
+"""""""""""""""""""""""""""""""""""
+
+
+#------# phases
+
+class Rappeur():
+
+    def __init__(self,textids,pos=(400,200),name='Delta'):
+
+        # general
+
+        self.name = name
+        self.speed = 12
+
+        self.gex = pos[0] # general x
+        self.gey = pos[1] # general y
+
+        #self.street_score = 0
+
+        self.money = 10000
+
+        self.nb_fans = 0
+        #self.fans = []
+
+        self.plume = rplum(self.name)
+
+        self.element_colli = None
+
+        # track of time
+        self.time_last_move = 0
+
+        self.doing = ['nothing']
+        self.dir = 'R'
+
+        # skins
+        self.textids = { ('nothing','R',0):textids[0] , ('nothing','R',1):textids[1] , ('nothing','L',0):textids[0+2] , ('nothing','L',1):textids[1+2]
+                        , ('move','R',0):textids[2+2] , ('move','R',1):textids[3+2] , ('move','L',0):textids[4+2] , ('move','L',1):textids[5+2]
+                        , ('hit','R',0):textids[6+2] , ('hit','R',1):textids[6+2] , ('hit','L',0):textids[7+2] , ('hit','L',1):textids[7+2]
+                        , ('write','R',0):textids[10] , ('write','R',1):textids[11] , ('write','L',0):textids[12] , ('write','L',1):textids[13]
+                        , ('wait','R',0):textids[0] , ('wait','R',1):textids[0] , ('wait','L',0):textids[0+2] , ('wait','L',1):textids[0+2]
+                         }
+        self.roll_skin = 0
+        self.skin_id = g.sman.addSpr(self.textids[(self.doing[0],self.dir,0)],pos,'perso')
+
+        # hud
+        self.hud = PersoHUD(self)
+        self.invhud = InventHUD(self)
+
+        self.update_skin()
+
+    def rplum(self):
+        if self.plume != None:
+            self.plume.delete()
+        self.plume = rplum(self.name)
+
+    def update_skin(self,dt=0.4,repeat=True):
+
+        g.sman.set_text(self.skin_id,self.textids[(self.doing[0],self.dir,self.roll_skin)])
+        if self.roll_skin:
+            self.roll_skin = 0
+        else:
+            self.roll_skin = 1
+
+        if repeat :
+            pyglet.clock.schedule_once(self.update_skin, 0.4)
+
+    def move(self,dir):
+
+        if 'write' not in self.doing and 'wait' not in self.doing:
+
+            moved = False
+            if dir == 'R':
+                self.gex+=self.speed
+
+                moved = True
+            elif dir == 'L':
+                self.gex-=self.speed
+
+                moved = True
+
+            if moved :
+
+                if self.dir != dir:
+                    self.dir = dir
+                    self.do('move')
+                    self.update_skin(repeat=False)
+                else:
+                    self.do('move')
+                self.check_colli()
+
+                self.time_last_move = time.time()
+
+    def check_colli(self):
+
+        colli_elem = None
+        for elem in ZONES['ELEM']:
+            if collisionAB(self.realbox,ZONES['ELEM'][elem].realbox) :
+                    colli_elem = ZONES['ELEM'][elem]
+
+        if self.element_colli != None:
+            if colli_elem != None:
+                if colli_elem != self.element_colli :
+                    self.element_colli.unhoover()
+                    self.element_colli = colli_elem
+                    self.element_colli.hoover()
+            else:
+                self.element_colli.unhoover()
+                self.element_colli = None
+        else:
+            if colli_elem != None:
+                self.element_colli = colli_elem
+                self.element_colli.hoover()
+
+        #print(self.element_colli)
+
+    def drop_plume(self):
+        if self.plume != None:
+            self.plume = self.plume.delete()
+
+    def creer_son(self):
+
+        if len(self.invhud.inventory['instru']) > 0 and len(self.invhud.inventory['phase']) > 3:
+
+            instru = self.invhud.inventory['instru'][0].item
+            ph = []
+            for i in range(4):
+                ph.append(self.invhud.inventory['phase'][i].item)
+
+            son = Son(instru,ph,self.name)
+            self.invhud.remove([self.invhud.inventory['instru'][0],*self.invhud.inventory['phase'][:4]])
+            return son
+        return None
+
+    def add_money(self,qté):
+        self.money += qté
+
+    ##
+
+    def do(self,action='nothing'):
+
+        if action not in self.doing:
+
+            if action == 'nothing':
+                self.doing = ['nothing']
+
+            elif action == 'hit':
+                self.doing.insert(0, action)
+                self.undo()
+                self.update_skin(repeat=False)
+                pyglet.clock.schedule_once(self.undo,0.1,'hit')
+
+            elif action == 'write':
+                self.doing.insert(0, action)
+                self.undo()
+
+            elif action == 'move':
+                self.doing.append(action)
+                self.undo()
+
+            elif action == 'wait':
+                self.doing.insert(0, action)
+                self.undo()
+                self.update_skin(repeat=False)
+
+    def undo(self,dt=0,action='nothing'):
+
+        if action in self.doing:
+            self.doing.remove(action)
+            if self.doing == []:
+                self.do()
+
+    def check_do(self):
+
+        if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing:
+            if time.time()-self.time_last_move > 0.2:
+                self.do()
+
+
+    ##
+
+    def _realbox(self):
+        return g.sman.box(self.skin_id)
+
+    realbox = property(_realbox)
+
+
+class Plume():
+
+    def __init__(self,owner,qua,cred):
+
+        self.quality = qua
+        self.cred = cred
+        self.owner = owner
+
+        self.level = 0
+
+        # skins
+        self.hud = PlumHUD(self)
+
+    def delete(self):
+
+        self.hud.delete()
+        return None
+
+    def rplum(self):
+
+        self.quality = r.random()
+        self.cred = r.randint(-100,100)
+        self.update_skin()
+
+    def update_skin(self):
+
+        g.sman.set_text(self.skin_id,g.TEXTIDS['plume'][convert_quality(self.quality)[0]])
+        g.lman.set_text(self.lbl_qua_id,convert_quality(self.quality)+' '+trunc(self.quality))
+        g.lman.set_text(self.lbl_cred_id,convert_streetcred(self.cred)+' '+str(self.cred))
+
+    def drop_phase(self):
+
+        x = 2
+        qua = (self.quality*x + r.random())/(x+1)
+
+        x = 3
+        cred = (self.cred*x + r.randint(-100,100))/(x+1)
+
+        phase = Phase(qua,cred)
+        #print(phase.content)
+        #print(convert_quality(qua),convert_streetcred(cred))
+
+        return phase
+
+    def __lt__(self, other):
+         return self.quality < other.quality
+
+    def __str__(self):
+        return 'plume ' + '  ' + trunc(self.quality) + '  ' + str(self.cred)
+
+class Phase():
+
+    def __init__(self,quality,cred,):
+
+        self.quality = quality
+        self.cred = cred
+
+        self.content = self.generate_content()
+        self.them = r.choice(THEMES)
+
+    def generate_content(self):
+
+        nb = r.randint(3,4)
+        s = r.choice(MOTS)
+        for i in range(nb-1):
+            s += ' ' + r.choice(MOTS)
+        return s
+
+    def str(self):
+
+        s= '\n'
+        s += self.content + '\t:' + convert_quality(self.quality) + '  ' + convert_streetcred(self.cred) + '\n'
+        s+= str(self.them)
+        s+= '\n'
+
+        return s
+
+    def __lt__(self, other):
+         return self.quality < other.quality
+
+    def __str__(self):
+        return 'phase ' + '  ' + trunc(self.quality) + '  ' + str(self.cred) + ' || ' + self.content + ' ('+ self.them+')'
+
+    def type(self):
+        return 'Phase'
+
+#------# instrus
+
+class Btmaker():
+
+    def __init__(self,qua=0.5,name='Bokusan'):
+
+        self.name = name
+
+        #self.money = 1000
+
+        self.quality = qua
+
+    def drop_instru(self):
+
+        x = 2
+        qua = (self.quality*x + r.random())/(x+1)
+
+        instru = Instru(qua,self.name)
+        #print('instru '+convert_quality(qua))
+        return instru
+
+    def __lt__(self, other):
+         return self.quality < other.quality
+
+class Instru():
+
+    def __init__(self,qua,author):
+
+        self.quality = qua
+        self.author = author
+
+    def __lt__(self, other):
+         return self.quality < other.quality
+
+    def __str__(self):
+        return 'instru' + '  ' + trunc(self.quality) + '  ' + self.author
+
+    def type(self):
+        return 'Instru'
+
+#------# sons
+
+class Son():
+
+    def __init__(self,instru,phases,name='cheh'):
+
+        self.name = name
+
+        self.instru = instru
+        self.phases = phases
+
+        self.quality = self.global_qua()
+        self.cred = max([ x.cred for x in self.phases])
+
+        #print(convert_quality(self.quality),convert_streetcred(self.cred))
+
+    def global_qua(self):
+
+        x_instru = 1
+        x_phases = 1
+
+        qua_instru = self.instru.quality
+
+        qua_phases = 0
+        themes = []
+        for ph in self.phases:
+            qua_phases += ph.quality
+            if ph.them not in themes:
+                themes.append(ph.them)
+        qua_phases/=len(self.phases)
+
+        qua = (x_instru*qua_instru + x_phases*qua_phases)/(x_instru+x_phases)
+
+        if len(themes) <= 1:
+            qua = upgrade_qua(qua,1)
+        elif len(themes) > 2:
+            qua = upgrade_qua(qua,-1)
+
+        return qua
+
+    def __lt__(self, other):
+         return self.quality < other.quality
+
+    def __str__(self):
+        return 'son   ' + '  ' + trunc(self.quality) + '  ' + str(self.cred)
+
+    def type(self):
+        return 'Son'
+
+"""""""""""""""""""""""""""""""""""
+ CLASSES GRAFIK
+"""""""""""""""""""""""""""""""""""
+
+class Zone():
+
+    def __init__(self,box,textid='white',group='mid',makeCol=True):
+
+        if makeCol:
+            if textid[:4] == 'text':
+                self.text_id = textid
+            else:
+                self.text_id = g.tman.addCol(*box.wh,c[textid])
+            self.skin_id = g.sman.addSpr(self.text_id,box.xy,group)
+
+        self.gex,self.gey = box.xy
+
+        self._hoover = False
+
+    def _realbox(self):
+        return g.sman.box(self.skin_id)
+
+    realbox = property(_realbox)
+
+#------# elements
+
+class Zone_ELEM(Zone):
+
+    ## HOOVER WITH MOVEMENT OF PERSO
+
+    def __init__(self,box,name='thing',textid='white',group='mid',long=False):
+        super(Zone_ELEM,self).__init__(box,textid,group)
+
+        self.name = name
+        self.longpress = long
+
+        self.box = box
+
+        # label
+        pos = box.x + box.w/2 , box.y + box.h + 20
+        self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
+
+        self.color = c['coral']
+
+        self.activated = False
+
+    def hoover(self):
+        g.lman.unhide(self.label)
+        self._hoover = True
+
+    def unhoover(self):
+        g.lman.unhide(self.label,True)
+        self._hoover = False
+
+    def activate(self,perso):
+        #print(perso.name,'just activated',self.name)
+        g.lman.modify(self.label,color=self.color)
+
+        pyglet.clock.schedule_once(self.deactivate,0.5)
+
+    def deactivate(self,dt):
+        if self._hoover:
+            g.lman.modify(self.label,color=c['white'])
+        else:
+            g.lman.modify(self.label,color=(255,255,255,0))
+
+    def update(self):
+        # label
+        pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
+        g.lman.modify(self.label,pos)
+
+class Market(Zone_ELEM):
+
+    def __init__(self,x,y):
+        super(Market,self).__init__(box(x,y,200,200),'market','pink','mid',long=True)
+
+    def activate(self,perso):
+        super(Market,self).activate(perso)
+        perso.rplum()
+
+#------# active elements
+
+class Zone_ACTIV(Zone_ELEM):
+
+    def __init__(self,box,name='thing',textid='white',group='mid',long=False):
+        super(Zone_ACTIV,self).__init__(box,name,textid,group,long)
+
+    def activate(self,perso):
+        super(Zone_ACTIV,self).activate(perso)
+        self.activated = True
+
+    def close(self,perso):
+        self.activated = False
+        perso.do()
+
+class Ordi(Zone_ELEM):
+
+    def __init__(self,x,y):
+        super(Ordi,self).__init__(box(x,y,150,200),'ordi','red','mid')
+
+    def activate(self,perso):
+        super(Ordi,self).activate(perso)
+        perso.add_money(10000)
+
+class Studio(Zone_ELEM):
+
+    def __init__(self,x,y):
+        super(Studio,self).__init__(box(x,y,50,200),'studio','blue','mid')
+
+    def activate(self,perso):
+        super(Studio,self).activate(perso)
+        self.assemble(perso)
+
+    def assemble(self,perso):
+
+        son = perso.creer_son()
+        if son != None:
+            perso.invhud.catch(son)
+        else:
+            print('Frerooooo t\'as besoin d\'une instru et de 4 phases pour faire un son tu vas ou commas ?')
+
+class Lit(Zone_ACTIV):
+
+    def __init__(self,x,y):
+        super(Lit,self).__init__(box(x,y,300,150),'lit','darkgreen','mid',long=True)
+
+        self.hud = WriteHUD()
+
+    def activate(self,perso):
+        super(Lit,self).activate(perso)
+        g.lman.modify(self.hud.labids['lit'],color=self.color)
+
+        if self.hud.visible:
+            perso.do('write')
+            perso.undo(0,'wait')
+            self.write(perso)
+        else:
+            perso.do('wait')
+            self.hud.unhide()
+
+    def deactivate(self,dt):
+        super(Lit,self).deactivate(0)
+        if self.activated:
+            g.lman.modify(self.hud.labids['lit'],color=c['white'])
+        else:
+            g.lman.modify(self.hud.labids['lit'],color=(255,255,255,0))
+
+    def close(self,perso):
+        super(Lit,self).close(perso)
+        self.hud.delete_phase()
+        self.hud.unhide(True)
+        #perso.invhud.unhide(True)
+
+    def write(self,perso):
+
+        if perso.plume != None:
+            phase = perso.plume.drop_phase()
+            #aff_phase(phase)
+            self.hud.write(phase)
+
+#------# ui
+
+class Zone_UI(Zone):
+
+    ## HOOVER WITH MOVEMENT OF MOUSE
+
+    def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,longpress=False,colorlab=c['coral']):
+        super(Zone_UI,self).__init__(box2,textid,group,makeCol)
+        self.box = box2
+
+        self.lab_text=lab_text
+
+        self.longpress = longpress
+        self.visible = True
+        self._hoover = False
+
+        # label
+        pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
+        self.label = g.lman.addLab(lab_text,pos,vis=False,anchor = ('center','bottom'),font_size=20,color=colorlab,group=group)
+        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
+        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group=group+'-1',vis=False)
+
+    def hoover(self):
+        g.lman.unhide(self.label)
+        g.sman.unhide(self.label_bg)
+        self._hoover = True
+
+    def unhoover(self):
+        g.lman.unhide(self.label,True)
+        g.sman.unhide(self.label_bg,True)
+        self._hoover = False
+
+    def activate(self):
+        #print(self.lab_text,'activated')
+        pass
+
+    def delete(self):
+
+        if hasattr(self,'skin_id'):
+            g.sman.delete(self.skin_id)
+
+        g.sman.delete(self.label_bg)
+        g.lman.delete(self.label)
+
+    ##
+
+    def check_mouse(self,x,y):
+
+        if collisionAX(self.box.realbox,(x,y)):
+            self.hoover()
+            return True
+        else:
+            self.unhoover()
+            return False
+
+    def check_pressed(self):
+
+        if self._hoover:
+            self.activate()
+
+class Plume_UI(Zone_UI):
+
+    def __init__(self,box,plume):
+
+        lab_text = plume.owner+'\'s plume '#+convert_quality(plume.quality)
+
+        super(Plume_UI,self).__init__(box,lab_text,group='ui',makeCol=False,colorlab=c[convert_quality(plume.quality)[0]])
+
+        #self.plume = phase
+
+    def update(self):
+        pass
+
+class Item_UI(Zone_UI):
+
+    def __init__(self,box,lab_text,texture,spr_vis=False,colorlab=c['F']):
+
+        super(Item_UI,self).__init__(box,lab_text,group='ui',colorlab=colorlab)
+
+        #self.text_id = texture
+        self.itemspr = g.sman.addSpr(texture,group='ui-2',vis=spr_vis)
+        g.sman.modify(self.itemspr,scale=(0.25,0.25))#,opacity=128)
+
+        pos = box.cx - g.sman.spr(self.itemspr).width/2 , box.cy - g.sman.spr(self.itemspr).height/2
+        g.sman.modify(self.itemspr,pos)
+
+        self.caught = False
+        self.dropped = False
+
+    def catch(self):
+        self.caught = True
+        self.dropped = False
+        g.sman.unhide(self.itemspr)
+        g.sman.modify(self.itemspr,scale=(0.5,0.5),group='ui')
+        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
+
+        pos = self.box.cx , self.box.fy + 20
+        g.lman.modify(self.label,pos)
+        pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
+        g.sman.modify(self.label_bg,pos)
+
+    def drop(self):
+        self.dropped = True
+        self.caught = False
+        g.sman.modify(self.itemspr,scale=(0.25,0.25),group='ui-2')
+        g.sman.unhide(self.itemspr,True)
+        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
+
+    def reset(self,hide=False):
+        self.dropped = False
+        self.caught = False
+        g.sman.unhide(self.itemspr,hide)
+
+    def move(self,x,y):
+        self.box.xy = x-g.sman.spr(self.itemspr).width/2,y-g.sman.spr(self.itemspr).height/2
+        self.update()
+
+    def update(self):
+
+        if self.caught:
+
+            # itemspr
+            g.sman.unhide(self.itemspr)
+        pos = self.box.cx - g.sman.spr(self.itemspr).width/2 , self.box.cy - g.sman.spr(self.itemspr).height/2
+        g.sman.modify(self.itemspr,pos)
+
+        # label
+        pos = self.box.cx , self.box.fy + 20
+        g.lman.modify(self.label,pos)
+        # labelbg
+        pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
+        g.sman.modify(self.label_bg,pos)
+
+    def delete(self):
+        super(Item_UI,self).delete()
+        g.sman.delete(self.itemspr)
+
+    def activate(self):
+        super(Item_UI,self).activate()
+        if self.caught:
+            self.drop()
+        else:
+            self.catch()
+
+    def unhide(self,hide=False):
+
+        g.sman.unhide(self.itemspr,hide)
+        if hide:
+            g.lman.unhide(self.label,hide)
+            g.sman.unhide(self.label_bg,hide)
+        self.visible = not hide
+
+class Writingphase_UI(Item_UI):
+
+    def __init__(self,box,phase):
+
+        lab_text = 'Phase '+convert_quality(phase.quality)+'\n' +phase.them
+
+        super(Writingphase_UI,self).__init__(box,lab_text,g.TEXTIDS['phase'][convert_quality(phase.quality)[0]],colorlab=c[convert_quality(phase.quality)[0]])
+
+        self.phase = phase
+
+class Invent_UI(Item_UI):
+
+    def __init__(self,box,item,spr_vis=False):
+        #print(spr_vis)
+
+        cquecé = item.type()
+
+        lab_text = cquecé +' '+ convert_quality(item.quality)
+        col = c[convert_quality(item.quality)[0]]
+
+        if cquecé == 'Phase':
+            lab_text+='\n'+item.them
+
+        super(Invent_UI,self).__init__(box,lab_text,g.TEXTIDS[cquecé.lower()][convert_quality(item.quality)[0]],spr_vis=spr_vis,colorlab=col)
+
+        self.item = item
+
+        #self.boxdeta = box_details
+
+
+    def __lt__(self, other):
+         return self.item.quality < other.item.quality
+
+
+ZONES = {}
+#ZONES['UI'] = {} # use ZONES['UI'] for ui
+#ZONES['Item'] = {} # use ZONES['UI'] for item ui
+ZONES['ELEM'] = {} # use ZONES['ELEM'] for in-game graph element
+
+
+#------# hud
+
+class HUD():
+
+    def __init__(self,group='hud1',name='main',vis=True):
+
+        self.name = name
+        self.group = group
+
+        #---#
+
+        self.sprids = {}
+        self.labids = {}
+
+        #---#
+
+        self.visible = vis
+
+    def addSpr(self,key,textid,xy_pos=(0,0),group=None):
+
+        if key in self.sprids:
+            g.sman.delete(self.sprids[key])
+
+        if group == None:
+            group = self.group
+
+        self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible)
+
+    def addCol(self,key,box,color=c['delta_purple'],group=None):
+
+        if group == None:
+            group = self.group
+
+        if type(color) == type(()):
+            textid = g.tman.addCol(*box.wh,color)
+        else:
+            textid = g.tman.addCol(*box.wh,c[color])
+        self.addSpr(key,textid,box.xy,group=group)
+
+    def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_size=30,anchor=('left','bottom'),color=(255,255,255,255)):
+
+        if key in self.labids:
+            g.lman.delete(self.labids[key])
+
+        if group == None:
+            group = self.group
+
+        self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_size=font_size,anchor=anchor,color=color,vis=self.visible)
+
+        #print(xy_pos)
+
+    def modifySpr(self,key,pos=None,scale=None):
+        g.sman.modify(self.sprids[key],pos,scale)
+
+    def unhide(self,hide=False):
+
+        g.sman.unhide(self.sprids,hide)
+        g.lman.unhide(self.labids,hide)
+        self.visible = not hide
+
+    def rollhide(self):
+        self.unhide(self.visible)
+
+    def delete(self):
+        g.lman.delete(self.labids)
+        g.sman.delete(self.sprids)
+
+    ## oeoe
+
+    def spr(self,key):
+        return g.sman.spr(self.sprids[key])
+
+    def lab(self,key):
+        return g.lman.labels[self.labids[key]]
+
+class PersoHUD(HUD):
+
+    def __init__(self,perso):
+
+        super(PersoHUD, self).__init__(group='hud1',name='perso')
+
+        self.perso = perso
+
+        self.box = box(1700,460+150,200,400)
+        self.padding = 64
+
+        self.addCol('bg',self.box,group='hud-1')
+
+        ## name
+        self.addLab('name',self.perso.name,(self.box.cx,self.box.y+self.box.h-50),anchor=('center','center'))
+
+        ## coin
+
+        xcoin = self.box.cx
+        ycoin = self.lab('name').y  - self.padding
+
+        self.addSpr('coin_spr',g.TEXTIDS['item'][0],(xcoin,ycoin - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+        self.addLab('coin_lab',convert_huge_nb(self.perso.money),(xcoin ,ycoin),font_size=20,color=c['yellow'],anchor=('right','center'))
+
+        ## fans
+
+        xfan = self.box.cx
+        yfan = self.lab('coin_lab').y - self.padding
+
+        self.addSpr('fan_spr',g.TEXTIDS['item'][1],(xfan,yfan - g.tman.textures[g.TEXTIDS['item'][1]].height/2))
+        self.addLab('fan_lab',convert_huge_nb(self.perso.nb_fans),(xfan ,yfan),font_size=20,color=c['green'],anchor=('right','center'))
+
+
+        ## pressX
+        self.addLab('pressX','X to hide',(self.box.cx,self.box.y+20),font_size=10,color=c['black'],anchor=('center','center'))
+
+    def update(self):
+
+        g.lman.set_text(self.labids['coin_lab'],convert_huge_nb(self.perso.money))
+        g.lman.set_text(self.labids['fan_lab'],convert_huge_nb(self.perso.nb_fans))
+
+class PlumHUD(HUD):
+
+    def __init__(self,plum):
+
+        super(PlumHUD, self).__init__(group='hud1',name='plum')
+
+        self.plum = plum
+
+
+        self.box = box(1650,20,250,150)
+        self.padding = 50
+
+        self.addCol('bg',self.box,group='hud-1')
+
+        self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
+
+        self.addSpr('plum_spr',g.TEXTIDS['plume'][convert_quality(self.plum.quality)[0]])
+        g.sman.modify(self.sprids['plum_spr'],scale=(0.4,0.4))
+
+        xplum = self.lab('quality').x - self.padding - self.spr('plum_spr').width/2
+        yplum = self.box.cy - self.spr('plum_spr').height/2
+
+        g.sman.modify(self.sprids['plum_spr'],pos=(xplum,yplum))
+
+
+        x = (xplum +  (self.box.x) )/2
+
+        self.addLab('cred',convert_streetcred(self.plum.cred),(x ,self.box.cy),font_size=20,anchor=('center','center'))
+
+
+        ### UI
+        self.ui = Plume_UI(box(xplum,yplum,self.spr('plum_spr').width,self.spr('plum_spr').height),plum)
+
+    def delete(self):
+        super(PlumHUD,self).delete()
+        self.ui.delete()
+
+class WriteHUD(HUD):
+
+    def __init__(self):
+
+        super(WriteHUD, self).__init__(group='hud1',name='write',vis=False)
+
+        ##
+
+        self.ui = None
+
+        self.box = box(400,300,1000,600)
+        self.padding = 50
+
+        self.addCol('bg',self.box,group='hud-1')
+
+        self.box2 = box(self.box.x+self.padding,self.box.y+2*self.padding,self.box.w-2*self.padding,self.box.h-3*self.padding)
+
+        self.addCol('bg2',self.box2,color=c['delta_blue'],group='hud')
+
+        #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
+        self.addLab('pressE','E to write --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_size=20,anchor=('center','center'))
+        self.addLab('lit','LIT - zone d\'ecriture',(self.box.cx,self.box.y+self.box.h+self.padding),font_size=20,anchor=('center','center'))
+
+    def delete_phase(self,ui=True):
+
+        if 'phaz_spr' in self.sprids:
+            g.sman.delete(self.sprids['phaz_spr'])
+            del self.sprids['phaz_spr']
+
+        if 'phaz_content' in self.labids:
+            g.lman.delete(self.labids['phaz_content'])
+            del self.labids['phaz_content']
+
+        if 'phaz_qua' in self.labids:
+            g.lman.delete(self.labids['phaz_qua'])
+            del self.labids['phaz_qua']
+
+        if 'phaz_cred' in self.labids:
+            g.lman.delete(self.labids['phaz_cred'])
+            del self.labids['phaz_cred']
+
+        if 'phaz_them' in self.labids:
+            g.lman.delete(self.labids['phaz_them'])
+            del self.labids['phaz_them']
+
+        if self.ui != None and ui:
+            self.ui.delete()
+            self.ui = None
+
+    def write(self,phase):
+
+        text = g.TEXTIDS['phase'][convert_quality(phase.quality)[0]]
+
+        self.addSpr('phaz_spr',text)
+        #g.sman.modify(self.sprids['phaz_spr'],scale=(0.8,0.8))
+        g.sman.modify(self.sprids['phaz_spr'],pos=(self.box2.cx - self.spr('phaz_spr').width/2,self.box2.cy - self.spr('phaz_spr').height/2))
+
+        y = (( self.box2.cy + self.spr('phaz_spr').height/2 )  +  (self.box2.y + self.box2.h) )/2
+        self.addLab('phaz_content',phase.content,(self.box2.cx,y),anchor=('center','center'),color=c['black'])
+
+        x = (self.box2.cx + self.spr('phaz_spr').width/2  +  (self.box2.x + self.box2.w) )/2
+        self.addLab('phaz_qua',convert_quality(phase.quality),(x,self.box2.cy),anchor=('center','center'),color=c['black'],font_size=100)
+
+        x = (self.box2.cx - self.spr('phaz_spr').width/2  +  (self.box2.x) )/2
+        self.addLab('phaz_cred',convert_streetcred(phase.cred),(x,self.box2.cy),anchor=('center','center'),color=c['black'],font_size=100)
+
+        #y = (( self.box2.cy - self.spr('phaz_spr').height/2 )  +  (self.box2.y) )/2
+        y = ( self.box2.cy - self.spr('phaz_spr').height/2 ) - 30
+        self.addLab('phaz_them','thème : '+phase.them,(self.box2.cx,y),anchor=('center','center'),font_size=20)
+
+        x,y,w,h = self.box2.cx - self.spr('phaz_spr').width/2 , self.box2.cy - self.spr('phaz_spr').height/2 , self.spr('phaz_spr').width , self.spr('phaz_spr').height
+
+        if self.ui != None:
+            self.ui.delete()
+        self.ui = Writingphase_UI(box(x,y,w,h),phase)
+
+    def catch_or_drop(self,x,y,perso):
+
+        self.ui.check_pressed()
+        if self.ui.caught:
+            perso.invhud.unhide()
+            self.delete_phase(False)
+            return 1
+        elif self.ui.dropped:
+            if collisionAX(self.box.realbox,(x,y)):
+                self.write(self.ui.phase)
+            elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+                perso.invhud.catch(self.ui.phase)
+                self.delete_phase()
+            else:
+                self.delete_phase()
+            return -1
+        return 0
+
+class InventHUD(HUD):
+
+    def __init__(self,perso):
+
+        super(InventHUD, self).__init__(group='hud1',name='inv',vis=False)
+
+        self.perso = perso
+
+        self.item_caught = None
+
+        # inventory
+        self.inventory = {}
+        self.inventory['phase'] = []
+        self.inventory['instru'] = []
+        self.inventory['son'] = []
+        #self.inventory['caught'] = None
+
+        self.box = box(20,200,338,800)
+        self.padding = 64
+        self.padding2 = 20
+        self.lilpadding = 12
+        self.lilpadding2 = 6
+
+        self.addCol('bg',self.box,group='hud-1')
+
+        self.box2 = box(self.box.x+self.padding2,self.box.y+self.padding2,self.box.w-2*self.padding2,self.box.h-self.padding2-100)
+
+        self.addCol('bg2',self.box2,color=c['delta_blue'],group='hud')
+
+        #print(self.box2.wh)
+
+        ## inv
+        self.addLab('inv_lab','inventory',(self.box.cx,self.box.fy-50),anchor=('center','center'))
+
+        #self.update()
+        for i in range(r.randint(2,10)):
+            self.catch(Instru(r.random(),'wesh'))
+
+        for i in range(r.randint(2,10)):
+            ph = []
+            for i in range(4):
+                ph.append(Phase(rqua(),rcred()))
+            instru = Instru(r.random(),'wesh')
+
+            self.catch(Son(instru,ph))
+
+    def catch(self,item):
+
+        ui = Invent_UI(box(w=self.padding,h=self.padding),item,self.visible)
+        self.inventory[item.type().lower()].append(ui)
+
+        self.update()
+
+        #print(self.inventory)
+
+    def update(self):
+
+        yf = self.box2.fy
+
+        #sons
+        if self.inventory['son'] != []:
+            self.addLab('sons_lab','sons',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            yf -= self.padding2*2
+
+            self.inventory['son'].sort(reverse=True)
+
+            for i in range(len(self.inventory['son'])):
+
+                x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
+
+                self.inventory['son'][i].move(x,y)
+            yf -= (self.padding + self.lilpadding2)*((len(self.inventory['son'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+        else:
+            if 'sons_lab' in self.labids:
+                g.lman.delete(self.labids['sons_lab'])
+                del self.labids['sons_lab']
+
+        #instrus
+        if self.inventory['instru'] != []:
+            self.addLab('instrus_lab','instrus',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            yf -= self.padding2*2
+
+            self.inventory['instru'].sort(reverse=True)
+
+            for i in range(len(self.inventory['instru'])):
+
+                x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
+
+                self.inventory['instru'][i].move(x,y)
+            yf -= (self.padding + self.lilpadding2)*((len(self.inventory['instru'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+        else:
+            if 'instrus_lab' in self.labids:
+                g.lman.delete(self.labids['instrus_lab'])
+                del self.labids['instrus_lab']
+
+        #phases
+        if self.inventory['phase'] != []:
+            self.addLab('phases_lab','phases',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            yf -= self.padding2*2
+
+            self.inventory['phase'].sort(reverse=True)
+
+            for i in range(len(self.inventory['phase'])):
+
+                x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                y = yf + self.padding/2 - (self.padding + self.lilpadding2 )*(i//4 + 1)
+
+                self.inventory['phase'][i].move(x,y)
+            yf -= (self.padding + self.lilpadding2)*((len(self.inventory['phase'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+        else:
+            if 'phases_lab' in self.labids:
+                g.lman.delete(self.labids['phases_lab'])
+                del self.labids['phases_lab']
+
+    def unhide(self,hide=False):
+        super(InventHUD,self).unhide(hide)
+        for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
+            ui.unhide(hide)
+
+    def catch_or_drop(self,x,y):
+
+        if self.item_caught :
+            ## on check kelui pour vwar si on l'drop
+
+            self.item_caught.check_pressed()
+            if self.item_caught.dropped:
+                if collisionAX(self.box.realbox,(x,y)):
+                    self.item_caught.reset()
+                    self.update()
+                    self.item_caught = None
+                    return -1
+
+                elif self.perso.element_colli != None and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
+
+                    if type(self.perso.element_colli) == Lit and self.item_caught.item.type() == 'Phase':
+                        self.perso.element_colli.hud.write(self.item_caught.item)
+                        self.remove(self.item_caught)
+                        self.item_caught = None
+                        return -1
+                    else:
+                        self.item_caught.check_pressed()
+
+                else:
+                    self.remove(self.item_caught)
+                    self.item_caught = None
+                    return -1
+
+        else:
+            ## on check touu pour vwar si on en catch
+
+            for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
+
+                ui.check_pressed()
+                if ui.caught:
+                    self.item_caught = ui
+                    return 1
+        return 0
+
+    def remove(self,item,up=True):
+
+        if type(item) == type([]):
+            for subitem in item:
+                self.remove(subitem,False)
+        elif item != None:
+            item.delete()
+            self.inventory[item.item.type().lower()].remove(item)
+
+        if up:
+            self.update()
+
+    def check_hoover(self,x,y):
+
+        something_to_aff = False
+
+        for uitype in self.inventory:
+            for ui in self.inventory[uitype]:
+                ui.check_mouse(x,y)
+                if ui._hoover:
+                    something_to_aff = True
+                    self.aff_detail(ui)
+
+        if not something_to_aff:
+            self.eff_detail()
+
+    ## print
+
+    def __str__(self):
+        s = ''
+        #print('waw')
+        for item in self.inventory['son']+self.inventory['instru']+self.inventory['phase']:
+            s+=str(item.item)+'\n'
+        return s
+
+    ## details
+
+    def aff_detail(self,ui):
+        #print(ui.item.str())
+        pass
+
+    def eff_detail(self):
+        pass
+
+
+"""""""""""""""""""""""""""""""""""
+ USEFUL FUNCTIONS
+"""""""""""""""""""""""""""""""""""
+
+def test():
+
+    quality = r.random()
+    cred = r.randint(-100,100)
+
+    print(convert_quality(quality),convert_streetcred(cred))
+
+    plum = Plume('delta',quality,cred)
+    print('\n')
+    for i in range(20):
+        phaz = []
+        for i in range(4):
+            phaz.append(plum.drop_phase())
+        btmker = Btmaker(r.random())
+        Son(btmker.drop_instru(),phaz)
+
+    #return Plume(quality,cred)
+
+def rplum(owner):
+
+    quality = r.random()
+    cred = r.randint(-100,100)
+
+    #print(convert_quality(quality),convert_streetcred(cred))
+
+    return Plume(owner,quality,cred)
+
+def convert_quality(qua,test=(QUALITIES,QUALITIES_coeff)):
+
+
+    if qua < test[1][0]:
+        return test[0][0]
+    else:
+        return convert_quality(qua,(test[0][1:],test[1][1:]))
+
+def convert_streetcred(cred,test=(CRED,CRED_coeff)):
+
+    if cred < test[1][0]:
+        return test[0][0]
+    else:
+        return convert_streetcred(cred,(test[0][1:],test[1][1:]))
+
+def upgrade_qua(qua,bonus=True):
+
+    if bonus:
+        return qua + QUALITIES_up[convert_quality(qua)]
+    else:
+        return qua + QUALITIES_dwn[convert_quality(qua)]
+
+def aff_phase(phase):
+
+    print(phase.str())
+
+def rqua():
+    return r.random()
+
+def rcred():
+    return r.randint(-100,100)
+
+
+
+ _newfile_ :Z:\DESKTOP\CODING\plumegang/src/utils.py
+
+
+
+
+
+
+import random,os,ctypes,time
+from ctypes import windll, Structure, c_long, byref
+from math import *
+#from win32gui import GetWindowRect, GetForegroundWindow, GetWindowText
+
+
+class POINT(Structure):
+    _fields_ = [("x", c_long), ("y", c_long)]
+
+class box():
+
+    def __init__(self,x=0,y=0,w=30,h=30):
+
+        self.w = w
+        self.h = h
+        self.x = x
+        self.y = y
+
+
+    def _wh(self):
+        return self.w,self.h
+
+    def _xy(self):
+        return self.x,self.y
+
+    def _setxy(self,xy):
+        self.x,self.y = xy
+
+    def _xywh(self):
+        return self.x,self.y,self.w,self.h
+
+    wh = property(_wh)
+    xy = property(_xy,_setxy)
+    xywh = property(_xywh)
+
+
+    def _centerx(self):
+        return self.x + self.w/2
+
+    def _centery(self):
+        return self.y + self.h/2
+
+    def _center(self):
+        return self.centerx,self.centery
+
+    cx = property(_centerx)
+    cy = property(_centery)
+    cxy = property(_center)
+
+    def _fx(self):
+        return self.x+self.w
+
+    def _fy(self):
+        return self.y+self.h
+
+    def _realbox(self):
+        return self.x,self.y,self.fx,self.fy
+
+    fx = property(_fx)
+    fy = property(_fy)
+    realbox = property(_realbox)
+
+## partie SCREEN
+
+def get_screen_size():
+    user32 = ctypes.windll.user32
+    return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+
+
+## partie random
+
+def choice(thg):
+
+    if type(thg) == type({}):
+        return choice(list(thg.keys()))
+        #print(thg.keys())
+    else:
+        return random.choice(thg)
+
+def randmultint(n,a,b=None): #returns n differents numbers between a and b-1
+
+    if b == None:
+        return randmultint(n,0,a-1)
+    else:
+        t = []
+        while len(t) < n:
+            new = random.randint(a,b-1)
+            while new in t:
+                new = random.randint(a,b-1)
+            t.append(new)
+        return t
+
+
+def get_key_from_value(d,v,s=[]): # v valeur seule, d dic ou tab
+
+    if type(d) == type({}):
+        for key,val in d.items():
+            if type(val) != type({}) and type(val) != type([]):
+                if v == val:
+                    return s+[key]
+            else:
+                ns = get_key_from_value(val,v,s+[key])
+                if ns != None:
+                    return ns
+
+    elif type(d) == type([]):
+        for key in range(len(d)):
+            val = d[key]
+            if type(val) != type({}) and type(val) != type([]):
+                #print(val)
+                if v == val:
+                    return s+[key]
+            else:
+                ns = get_key_from_value(val,v,s+[key])
+                if ns != None:
+                    return ns
+
+    return None
+
+def getMousePos():
+    pt = POINT()
+    windll.user32.GetCursorPos(byref(pt))
+    return pt.x,pt.y
+
+def module(x,y):
+    return sqrt(x**2+y**2)
+
+def int_rd(dec):
+    if dec < int(dec)+0.5:
+        return int(dec)
+    else:
+        return ceil(dec)
+
+def sign(n):
+    if n==0:
+        return 0
+    else:
+        return n//abs(n)
+
+def rangef(a,b,d=1):
+
+    res = []
+    if b > a:
+        while b>a:
+            res.append(a)
+            a+=d
+    else:
+        while abs(b-a)>0:
+            res.append(a)
+            a+=d
+
+    return res
+
+def convert_huge_nb(n,letters = True):
+
+    if letters:
+
+        if n <= 0:
+            return str(n)
+
+        tab = ['',' K',' M',' T']
+
+        for i in range(4,0,-1):
+            f = n/(1000**(i-1))
+            if f > 1:
+                if f >= 10:
+                    return str(int(f))+tab[i-1]
+                else:
+                    return trunc(f,1)+tab[i-1]
+
+
+
+# partie ids
+
+ids = 1112
+
+def get_id(key):
+
+    global ids
+
+    id = ''+key
+    id+=str(ids)
+    ids+=1
+    return id
+
+def mycopy(thg):
+
+    if type(thg) == type([]):
+
+        res = []
+
+        for i in thg:
+            res.append(mycopy(i))
+
+        return res
+
+    else:
+
+        return thg
+
+def trunc(f, n=3):
+    '''Truncates/pads a float f to n decimal places without rounding'''
+    s = '{}'.format(f)
+    if 'e' in s or 'E' in s:
+        return '{0:.{1}f}'.format(f, n)
+    i, p, d = s.partition('.')
+    return '.'.join([i, (d+'0'*n)[:n]])
+
+### PARTIE AUTO-SAUVEGARDE
+def compt(bigpath,path = ['/.','/src']):
+
+    long = 0
+
+    for chem in path:
+        try:
+            for file in os.listdir(bigpath+chem):
+                if file[-3:] == '.py':
+                    with open(bigpath+chem+'/'+file,'r') as f:
+                        long += len(f.readlines())
+        except :
+            jsghd=0
+            #print('no path',bigpath+chem,':',os.listdir(bigpath+chem))
+
+    return long
+
+
+# collision
+def collisionAB(a,b):
+    if (a[0] > b[2]) or (a[2] < b[0]) or (a[1] > b[3]) or (a[3] < b[1]):
+        return False #  oklm c'est bon ca collisionne PAS
+    else:
+        return True # aoutch ca collisionne
+
+def collisionAX(a,pos):
+
+    if pos[0] > a[2]:
+        return False #  oklm c'est bon ca collisionne PAS
+    if pos[0] < a[0]:
+        return False #  oklm c'est bon ca collisionne PAS
+    if pos[1] > a[3]:
+        return False #  oklm c'est bon ca collisionne PAS
+    if pos[1] < a[1]:
+        return False #  oklm c'est bon ca collisionne PAS
+    return True # aoutch ca collisionne

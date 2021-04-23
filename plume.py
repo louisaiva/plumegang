@@ -207,6 +207,10 @@ class App():
         elif symbol == key.X:
             self.perso.hud.rollhide()
 
+        elif symbol == key.B:
+            print(self.perso.invhud)
+            print(self.perso.plume)
+
         elif symbol == key.I:
             self.perso.invhud.rollhide()
 
@@ -241,16 +245,19 @@ class App():
                             if o.ZONES['ELEM']['lit'].hud.ui.caught:
                                     o.ZONES['ELEM']['lit'].hud.ui.move(x,y)
 
+        if self.this_hud_caught_an_item == self.perso.invhud and self.perso.invhud.item_caught == None:
+            self.this_hud_caught_an_item = None
+
         # inventUI
         if self.perso.invhud.visible:
-            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.invhud) : #check si il peut catch
+            if self.this_hud_caught_an_item == None:
+                self.perso.invhud.check_hoover(x,y)
+            elif self.this_hud_caught_an_item == self.perso.invhud:
                 for uitype in self.perso.invhud.inventory:
                     for ui in self.perso.invhud.inventory[uitype]:
-                        if self.this_hud_caught_an_item == None:
-                            ui.check_mouse(x,y)
                         if ui.caught:
-                                ui.move(x,y)
-                                ui.check_mouse(x,y)
+                            ui.move(x,y)
+                            ui.check_mouse(x,y)
 
     def on_mouse_press(self,x, y, button, modifiers):
 
@@ -290,7 +297,7 @@ class App():
                 if caught_dropped == 1: # means caught
                     self.this_hud_caught_an_item = self.perso.invhud
                 elif caught_dropped == -1: # means dropped
-                    letsbacktnothingcaught = True
+                    self.this_hud_caught_an_item = None
 
                 self.on_mouse_motion(x,y,0,0)
 

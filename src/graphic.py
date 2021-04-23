@@ -246,12 +246,31 @@ class LabelManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
+        multi = '\n' in contenu
+
         anchor_x,anchor_y= anchor
+
+        if multi:
+            maxwidth=0
+            lines = contenu.split('\n')
+            for line in lines:
+                lab = pyglet.text.Label(line,font_name=font_name,font_size=font_size, \
+                                anchor_x= anchor_x,anchor_y= anchor_y,color=color)
+                maxwidth = max(maxwidth,lab.content_width)
+                lab.delete()
+            width = maxwidth+1
+
+        else:
+            width = None
+
 
         if group != None:
             group = gman.getGroup(group)
         self.labels[id] = pyglet.text.Label(contenu,font_name=font_name,font_size=font_size,group=group, \
-                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color)
+                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,width=width)
+
+
+
         self.labels[id].x,self.labels[id].y = xy_pos
         self.unhide(id,not vis)
         #self.labels[id].visible = vis
