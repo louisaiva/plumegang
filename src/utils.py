@@ -170,6 +170,8 @@ def convert_huge_nb(n,letters = True):
                 if f >= 10:
                     return str(int(f))+tab[i-1]
                 else:
+                    if tab[i-1] == '':
+                        return str(int(f))
                     return trunc(f,1)+tab[i-1]
 
 

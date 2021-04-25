@@ -46,6 +46,8 @@ class App():
                 except :
                     pyglet.resource.add_font('arial.ttf')
 
+        #pyglet.clock.set_fps_limit(None)
+
         ### managers
 
         #g.init_managers(CURRENT_PATH,self.font)
@@ -76,6 +78,16 @@ class App():
         self.perso = o.Rappeur(g.TEXTIDS['persos'])
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
+
+        self.ai = []
+        """nbai = 20
+        for _ in range(nbai):
+            self.ai.append(o.Human(g.TEXTIDS['persos'],pos=( random.randint(-10000,10000),200 )))"""
+
+        self.fans = []
+        nbfans = 1000
+        for _ in range(nbfans):
+            self.fans.append(o.Fan())
 
         ## ZONES
 
@@ -214,6 +226,16 @@ class App():
         elif symbol == key.I:
             self.perso.invhud.rollhide()
 
+        elif symbol == key.F:
+
+            choiced_son = None
+            for son in self.perso.invhud.inventory['son']:
+                if not son.item._released:
+                    choiced_son = son.item
+                    break
+            if choiced_son != None:
+                self.perso.release_son(choiced_son,self.fans)
+
     def on_key_release(self,symbol,modifiers):
 
         if symbol in self.longpress:
@@ -336,26 +358,51 @@ class App():
     def refresh(self):
 
         ## labels
-
-        g.lman.set_text(self.fps,'FPS : '+str(int(pyglet.clock.get_fps())))
+        dt = time.time() - self.fps_time
+        self.fps_time = time.time()
+        self.fps1.append(int(1/dt))
+        if len(self.fps1) > 10:
+            del self.fps1[0]
+        moyfps = sum(self.fps1)/len(self.fps1)
+        g.lman.set_text(self.fps,'FPS : '+str(moyfps))
 
         ## anchor / moving sprites
 
-        for zone in o.ZONES['ELEM']:
-            zone=o.ZONES['ELEM'][zone]
-            x_r = zone.gex + g.Cam.X
-            y_r = zone.gey + g.Cam.Y
-            g.sman.modify(zone.skin_id,(x_r,y_r))
-            zone.update()
+        if True:
 
-        x_r = self.perso.gex + g.Cam.X
-        y_r = self.perso.gey + g.Cam.Y
-        g.sman.modify(self.perso.skin_id,(x_r,y_r))
+            #--# zones elem
+            for zone in o.ZONES['ELEM']:
+                zone=o.ZONES['ELEM'][zone]
+                x_r = zone.gex + g.Cam.X
+                y_r = zone.gey + g.Cam.Y
+                g.sman.modify(zone.skin_id,(x_r,y_r))
+                zone.update()
 
-        x_bg,y_bg = self.bgx+g.Cam.BGX,g.Cam.BGY+self.bgy
-        g.sman.modify(self.sprids['bg'],(x_bg,y_bg))
+            #--# persos
+            x_r = self.perso.gex + g.Cam.X
+            y_r = self.perso.gey + g.Cam.Y
+            g.sman.modify(self.perso.skin_id,(x_r,y_r))
 
-        g.Cam.update(self.perso.realbox)
+            #--# ai
+            for ai in self.ai:
+                x_r = ai.gex + g.Cam.X
+                y_r = ai.gey + g.Cam.Y
+                g.sman.modify(ai.skin_id,(x_r,y_r))
+
+
+            #--# bg
+            x_bg,y_bg = self.bgx+g.Cam.BGX,g.Cam.BGY+self.bgy
+            g.sman.modify(self.sprids['bg'],(x_bg,y_bg))
+
+            g.Cam.update(self.perso.realbox)
+
+        ## fans are streaming
+
+        for i in range(len(self.perso.disco)):
+            chance = random.randint(0,int(60*moyfps))
+            malus = 1-i*0.2
+            if chance < self.perso.nb_fans*malus:
+                random.choice(self.fans).stream(self.perso.disco[i])
 
 
         ## perso
@@ -370,14 +417,15 @@ class App():
             self.game_over()
         else:
             self.perso.add_money(-1)
-            self.perso.nb_fans += random.randint(1*(self.perso.money//1000),10*(self.perso.money//1000))
+            #self.perso.nb_fans += random.randint(1*(self.perso.money//1000),10*(self.perso.money//1000))
 
     def gameloop(self,dt):
 
         if self.playing:
             if self.nb == 0:
 
-
+                self.fps_time = time.time()
+                self.fps1 = []
 
                 self.nb += 1
 
