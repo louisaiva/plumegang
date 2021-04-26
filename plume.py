@@ -68,10 +68,21 @@ class App():
         ## SPRITES
 
         self.bgx,self.bgy = 0,250
+        self.bg1dx = 0
+        self.bgdx = 0
 
         self.sprids = {}
-        self.sprids['bg'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'back')
-        g.sman.modify(self.sprids['bg'],scale=(1.5,1.5),group='back')
+        self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'back-1')
+        g.sman.modify(self.sprids['bg-1'],scale=(0.75,0.75))
+        self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'back')
+        g.sman.modify(self.sprids['bg.1'],scale=(0.75,0.75))
+        self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'back')
+        g.sman.modify(self.sprids['bg.2'],scale=(0.75,0.75))
+
+        self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'back1')
+        g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
+        self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'back1')
+        g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
 
         ## PERSOS
 
@@ -80,9 +91,6 @@ class App():
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         self.ai = []
-        """nbai = 20
-        for _ in range(nbai):
-            self.ai.append(o.Human(g.TEXTIDS['persos'],pos=( random.randint(-10000,10000),200 )))"""
 
         self.fans = []
         nbfans = 1000
@@ -106,12 +114,15 @@ class App():
 
         ## END
 
-        self.nb = 0
+        self.tick = 0
+        self.day = 0
+        self.duree_day = 10 # en secondes
         self.gameover = False
 
         # labels
 
-        self.fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
+        self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
+        self.lab_day = g.lman.addLab('DAY : 0',(20,20),group='up',font_size=32,anchor=('left','bottom'))
 
 
 
@@ -163,8 +174,9 @@ class App():
         del g.TEXTIDS['_son']
 
         g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
-        g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+str(random.randint(1,8))+'.png')
-
+        g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/bg-1'+'.png')
+        g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
+        g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
 
 
     ### ONCE FUNCTIONS
@@ -326,6 +338,7 @@ class App():
         if letsbacktnothingcaught:
             self.this_hud_caught_an_item = None
 
+
     ### LOOP
 
     def events(self):
@@ -358,13 +371,19 @@ class App():
     def refresh(self):
 
         ## labels
-        dt = time.time() - self.fps_time
-        self.fps_time = time.time()
-        self.fps1.append(int(1/dt))
-        if len(self.fps1) > 10:
-            del self.fps1[0]
-        moyfps = sum(self.fps1)/len(self.fps1)
-        g.lman.set_text(self.fps,'FPS : '+str(moyfps))
+        dt = time.time() - self.lab_fps_time
+        self.lab_fps_time = time.time()
+        self.lab_fps1.append(int(1/dt))
+        if len(self.lab_fps1) > 10:
+            del self.lab_fps1[0]
+        moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
+        g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
+
+        #print(self.tick//(self.duree_day*moyfps))
+        if (self.tick//(self.duree_day*moyfps)) > self.day:
+            self.day += 1
+            self.perso.add_money(-10)
+            g.lman.set_text(self.lab_day,'DAY : '+str(self.day))
 
         ## anchor / moving sprites
 
@@ -391,8 +410,32 @@ class App():
 
 
             #--# bg
-            x_bg,y_bg = self.bgx+g.Cam.BGX,g.Cam.BGY+self.bgy
-            g.sman.modify(self.sprids['bg'],(x_bg,y_bg))
+            w = g.sman.spr(self.sprids['bg.1']).width
+            x_bg1,y_bg1 = self.bgx+g.Cam.X*0.2 +self.bgdx ,g.Cam.Y*0.2 +self.bgy
+            x_bg2,y_bg2 = self.bgx+g.Cam.X*0.2 +w +self.bgdx,g.Cam.Y*0.2 +self.bgy
+
+            if x_bg1 >= 0:
+                print('hop à gauche')
+                self.bgdx -= w
+            elif x_bg2 + w <= 1920:
+                print('hop à droite')
+                self.bgdx += w
+
+            g.sman.modify(self.sprids['bg.1'],(x_bg1,y_bg1))
+            g.sman.modify(self.sprids['bg.2'],(x_bg2,y_bg2))
+
+            #bg1
+            w = g.sman.spr(self.sprids['bg1.1']).width
+            x_bg1,y_bg1 = self.bgx+g.Cam.X*0.4 +self.bg1dx ,g.Cam.Y*0.4 +self.bgy
+            x_bg2,y_bg2 = self.bgx+g.Cam.X*0.4 +w +self.bg1dx,g.Cam.Y*0.4 +self.bgy
+
+            if x_bg1 >= 0:
+                self.bg1dx -= w
+            elif x_bg2 + w <= 1920:
+                self.bg1dx += w
+
+            g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
+            g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
 
             g.Cam.update(self.perso.realbox)
 
@@ -415,19 +458,18 @@ class App():
             #print('game over')
             self.gameover = True
             self.game_over()
-        else:
-            self.perso.add_money(-1)
             #self.perso.nb_fans += random.randint(1*(self.perso.money//1000),10*(self.perso.money//1000))
 
     def gameloop(self,dt):
 
         if self.playing:
-            if self.nb == 0:
+            if self.tick == 0:
 
-                self.fps_time = time.time()
-                self.fps1 = []
+                self.lab_fps_time = time.time()
+                self.lab_fps1 = []
 
-                self.nb += 1
+            self.tick += 1
+            #print(self.tick)
 
             # EVENTS
             self.events()
