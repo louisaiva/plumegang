@@ -8,6 +8,7 @@ from src.utils import *
 from src.colors import *
 import src.getsave as gs
 from src import obj as o
+from src import obj2 as o2
 from src import graphic as g
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__)) # fopatouché
@@ -83,8 +84,14 @@ class App():
         g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
         self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'back1')
         g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
-        self.sprids['bgmid'] = g.sman.addSpr(g.TEXTIDS['bgmid'],(-1000,-50),'mid-1')
+        #self.sprids['bgmid'] = g.sman.addSpr(g.TEXTIDS['bgmid'],(-1000,-50),'mid-1')
         #g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
+
+
+        ## STREETS
+
+        self.city = {}
+        self.city['home'] = o2.Street(g.TEXTIDS['bgmid'],'home')
 
         ## PERSOS
 
@@ -101,10 +108,10 @@ class App():
 
         ## ZONES
 
-        o.ZONES['ELEM']['ordi'] = o.Ordi(1400,225)
-        o.ZONES['ELEM']['studio'] = o.Studio(-100,225)
-        o.ZONES['ELEM']['plume'] = o.Market(600,225)
-        o.ZONES['ELEM']['lit'] = o.Lit(900,225)
+        o.ZONES['ELEM']['ordi'] = o.Ordi(1800,225)
+        o.ZONES['ELEM']['studio'] = o.Studio(3050,225)
+        o.ZONES['ELEM']['plume'] = o.Market(500,225)
+        o.ZONES['ELEM']['lit'] = o.Lit(-600,225)
 
 
         ## items
@@ -353,9 +360,9 @@ class App():
         if not self.gameover:
 
             if self.keys[key.Q]:
-                self.perso.move('L')
+                self.perso.move('L',self.city['home'].xxf)
             if self.keys[key.D]:
-                self.perso.move('R')
+                self.perso.move('R',self.city['home'].xxf)
 
             if self.keys[key.E]:
                 if self.perso.element_colli != None:
@@ -442,9 +449,10 @@ class App():
 
             g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
             g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
-            g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
+            self.city['home'].modify(g.Cam.X-1000,-50+g.Cam.Y)
+            #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
-            g.Cam.update(self.perso.realbox)
+            g.Cam.update(self.perso.realbox,self.city['home'])
 
         ## particles
 

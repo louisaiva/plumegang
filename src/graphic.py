@@ -467,15 +467,15 @@ class Camera():
 
         self.speed = 12
 
-    def update(self,persobox):
+    def update(self,persobox,street):
 
         scr = (1920,1080)
         moved = [False,False]
 
-        if persobox[2] > 4*scr[0]/5:
+        if persobox[2] > 4*scr[0]/5 and street.xf > scr[0] +self.speed:
             self.lessx()
             moved[0] = True
-        elif persobox[0] < scr[0]/5:
+        elif persobox[0] < scr[0]/5 and street.x < -self.speed:
             self.morex()
             moved[0] = True
 

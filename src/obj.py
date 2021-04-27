@@ -293,16 +293,16 @@ class Rappeur(Human):
 
     ##
 
-    def move(self,dir):
+    def move(self,dir,maxx=(None,None)):
 
         if 'write' not in self.doing and 'wait' not in self.doing:
 
             moved = False
-            if dir == 'R':
-                self.gex+=self.speed
-
-                moved = True
-            elif dir == 'L':
+            if dir == 'R' :
+                if (maxx[1] == None or maxx[1] > self.gex+self.speed+g.sman.spr(self.skin_id).width ):
+                    self.gex+=self.speed
+                    moved = True
+            elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-self.speed ):
                 self.gex-=self.speed
 
                 moved = True
