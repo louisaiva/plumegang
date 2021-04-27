@@ -200,7 +200,7 @@ class Human(): #graphic
 
 class Rappeur(Human):
 
-    def __init__(self,textids,pos=(400,200),name='Delta'):
+    def __init__(self,textids,pos=(400,175),name='Delta'):
 
         super(Rappeur,self).__init__(textids,pos,name,group='perso')
 
@@ -544,11 +544,13 @@ class Zone():
             self.skin_id = g.sman.addSpr(self.text_id,box.xy,group)
 
         self.gex,self.gey = box.xy
+        self.x,self.y = 0,0
+        self.w,self.h = box.wh
 
         self._hoover = False
 
     def _realbox(self):
-        return g.sman.box(self.skin_id)
+        return self.x,self.y,self.x+self.w,self.y+self.h
 
     realbox = property(_realbox)
 
@@ -558,8 +560,8 @@ class Zone_ELEM(Zone):
 
     ## HOOVER WITH MOVEMENT OF PERSO
 
-    def __init__(self,box,name='thing',textid='white',group='mid',long=False):
-        super(Zone_ELEM,self).__init__(box,textid,group)
+    def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True):
+        super(Zone_ELEM,self).__init__(box,textid,group,makeCol)
 
         self.name = name
         self.longpress = long
@@ -573,6 +575,12 @@ class Zone_ELEM(Zone):
         self.color = c['coral']
 
         self.activated = False
+
+    def move(self,x_r,y_r):
+        if hasattr(self,'skin_id'):
+            g.sman.modify(self.skin_id,(x_r,y_r))
+        self.x,self.y = x_r,y_r
+        self.update()
 
     def hoover(self):
         g.lman.unhide(self.label)
@@ -602,7 +610,7 @@ class Zone_ELEM(Zone):
 class Market(Zone_ELEM):
 
     def __init__(self,x,y):
-        super(Market,self).__init__(box(x,y,200,200),'market','pink','mid',long=True)
+        super(Market,self).__init__(box(x,y,300,320),'plumoir','pink','mid',True,False)
 
     def activate(self,perso):
         super(Market,self).activate(perso)
@@ -626,11 +634,11 @@ class Zone_ACTIV(Zone_ELEM):
 class Ordi(Zone_ELEM):
 
     def __init__(self,x,y):
-        super(Ordi,self).__init__(box(x,y,150,200),'ordi','red','mid')
+        super(Ordi,self).__init__(box(x,y,230,260),'ordi','red','mid',makeCol=False)
 
     def activate(self,perso):
         super(Ordi,self).activate(perso)
-        perso.add_money(10000)
+        perso.add_money(r.randint(20,230))
 
 class Studio(Zone_ELEM):
 
@@ -962,14 +970,15 @@ class PersoHUD(HUD):
 
     def __init__(self,perso):
 
-        super(PersoHUD, self).__init__(group='hud1',name='perso')
+        super(PersoHUD, self).__init__(group='ui',name='perso')
+        print(self.group)
 
         self.perso = perso
 
         self.box = box(1700,460+150,200,400)
         self.padding = 64
 
-        self.addCol('bg',self.box,group='hud-1')
+        self.addCol('bg',self.box,group='ui-1')
 
         ## name
         self.addLab('name',self.perso.name,(self.box.cx,self.box.y+self.box.h-50),anchor=('center','center'))
@@ -1012,7 +1021,7 @@ class PlumHUD(HUD):
 
     def __init__(self,plum):
 
-        super(PlumHUD, self).__init__(group='hud1',name='plum')
+        super(PlumHUD, self).__init__(group='ui',name='plum')
 
         self.plum = plum
 
@@ -1020,7 +1029,7 @@ class PlumHUD(HUD):
         self.box = box(1650,20,250,150)
         self.padding = 50
 
-        self.addCol('bg',self.box,group='hud-1')
+        self.addCol('bg',self.box,group='ui-1')
 
         self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
 

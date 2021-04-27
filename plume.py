@@ -91,7 +91,7 @@ class App():
         ## STREETS
 
         self.city = {}
-        self.city['home'] = o2.Street(g.TEXTIDS['bgmid'],'home')
+        self.city['home'] = o2.Street((g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']),'home')
 
         ## PERSOS
 
@@ -108,9 +108,9 @@ class App():
 
         ## ZONES
 
-        o.ZONES['ELEM']['ordi'] = o.Ordi(1800,225)
-        o.ZONES['ELEM']['studio'] = o.Studio(3050,225)
-        o.ZONES['ELEM']['plume'] = o.Market(500,225)
+        o.ZONES['ELEM']['ordi'] = o.Ordi(1990,150)
+        o.ZONES['ELEM']['studio'] = o.Studio(2600,225)
+        o.ZONES['ELEM']['plume'] = o.Market(450,210)
         o.ZONES['ELEM']['lit'] = o.Lit(-600,225)
 
 
@@ -187,6 +187,7 @@ class App():
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
         g.TEXTIDS['bgmid'] = g.tman.loadIm('bg/bg2'+'.png')
+        g.TEXTIDS['bgup'] = g.tman.loadIm('bg/bg3'+'.png')
 
         ##
 
@@ -409,8 +410,8 @@ class App():
                 zone=o.ZONES['ELEM'][zone]
                 x_r = zone.gex + g.Cam.X
                 y_r = zone.gey + g.Cam.Y
-                g.sman.modify(zone.skin_id,(x_r,y_r))
-                zone.update()
+                #g.sman.modify(zone.skin_id,(x_r,y_r))
+                zone.move(x_r,y_r)
 
             #--# persos
             x_r = self.perso.gex + g.Cam.X
@@ -449,7 +450,7 @@ class App():
 
             g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
             g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
-            self.city['home'].modify(g.Cam.X-1000,-50+g.Cam.Y)
+            self.city['home'].modify(g.Cam.X,g.Cam.Y)
             #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
             g.Cam.update(self.perso.realbox,self.city['home'])
