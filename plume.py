@@ -83,6 +83,8 @@ class App():
         g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
         self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'back1')
         g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
+        self.sprids['bgmid'] = g.sman.addSpr(g.TEXTIDS['bgmid'],(-1000,-50),'mid-1')
+        #g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
 
         ## PERSOS
 
@@ -177,6 +179,7 @@ class App():
         g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/bg-1'+'.png')
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
+        g.TEXTIDS['bgmid'] = g.tman.loadIm('bg/bg2'+'.png')
 
         ##
 
@@ -383,7 +386,7 @@ class App():
         moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
         g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
 
-        #print(self.tick//(self.duree_day*moyfps))
+        # DAYS
         if (self.tick//(self.duree_day*moyfps)) > self.day:
             self.day += 1
             self.perso.add_money(-10)
@@ -439,6 +442,7 @@ class App():
 
             g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
             g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
+            g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
             g.Cam.update(self.perso.realbox)
 
@@ -449,6 +453,7 @@ class App():
             g.pman.addPart(g.TEXTIDS['steam2'],(random.randint(-50,2000),self.bgy),group='back',key='steam2',opac=128)
         g.pman.modify('steam',dy=0.5,dx=g.Cam.dx*0.4)
         g.pman.modify('steam2',dy=0.2,dx=g.Cam.dx*0.2)
+        g.pman.modify('icons',dy=0.1)
 
         ## fans are streaming
 

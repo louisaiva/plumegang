@@ -360,6 +360,10 @@ class ParticleManager():
         self.sprites['steam'] = {}
         self.sprites['steam2'] = {}
 
+        self.labels = {}
+        self.labels['normal'] = {}
+        self.labels['icons'] = {}
+
     def addPart(self,textid,xy_pos=(0,0),duree=5,group=None,key='normal',opac=255):
 
         id = u.get_id('spr_part')
@@ -375,6 +379,28 @@ class ParticleManager():
 
         pyglet.clock.schedule_once(self.delay_spr,duree*0.01,id,key)
 
+    def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
+                ('center','center'),color=(255,255,255,255),key='normal'):
+
+        id = u.get_id('lab_part')
+
+        if not font_name:
+            font_name = lman.font
+
+        if type(contenu) != type('qsd'):
+            contenu = str(contenu)
+
+        anchor_x,anchor_y= anchor
+
+        if group != None:
+            group = gman.getGroup(group)
+        self.labels[key][id] = pyglet.text.Label(contenu,font_name=font_name,font_size=font_size,group=group, \
+                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color)
+
+        self.labels[key][id].x,self.labels[key][id].y = xy_pos
+
+        pyglet.clock.schedule_once(self.delay_lab,duree*0.01,id,key)
+
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         text = tman.addCol(*box.wh,col)
         self.addPart(text,box.xy,duree,group,key)
@@ -389,16 +415,37 @@ class ParticleManager():
         else:
             pyglet.clock.schedule_once(self.delay_spr,dt,id,key)
 
+    def delay_lab(self,dt,id,key):
+
+        self.labels[key][id].color = (*self.labels[key][id].color[:3]  , int(self.labels[key][id].color[3]-(0.1*255)))
+        if self.labels[key][id].color[3] <= 0:
+            self.labels[key][id].delete()
+            del self.labels[key][id]
+        else:
+            pyglet.clock.schedule_once(self.delay_lab,dt,id,key)
+
     def modify(self,key,dx=0,dy=0,setx=None,sety=None):
-        for id in self.sprites[key]:
-            if setx == None:
-                self.sprites[key][id].x += dx
-            else:
-                self.sprites[key][id].x = setx
-            if sety == None:
-                self.sprites[key][id].y += dy
-            else:
-                self.sprites[key][id].y = sety
+        if key in self.sprites:
+            for id in self.sprites[key]:
+                if setx == None:
+                    self.sprites[key][id].x += dx
+                else:
+                    self.sprites[key][id].x = setx
+                if sety == None:
+                    self.sprites[key][id].y += dy
+                else:
+                    self.sprites[key][id].y = sety
+        else:
+            for id in self.labels[key]:
+                if setx == None:
+                    self.labels[key][id].x += dx
+                else:
+                    self.labels[key][id].x = setx
+                if sety == None:
+                    self.labels[key][id].y += dy
+                else:
+                    self.labels[key][id].y = sety
+
 
 pman = ParticleManager()
 

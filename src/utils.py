@@ -173,6 +173,10 @@ def convert_huge_nb(n,letters = True):
                     if tab[i-1] == '':
                         return str(int(f))
                     return trunc(f,1)+tab[i-1]
+            elif f == 1:
+                if tab[i-1] == '':
+                    return str(int(f))
+                return trunc(f,1)+tab[i-1]
 
 
 
