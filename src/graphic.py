@@ -472,10 +472,13 @@ class Camera():
         scr = (1920,1080)
         moved = [False,False]
 
-        if persobox[2] > 4*scr[0]/5 and street.xf > scr[0] +self.speed:
+        x,xf = street.xxf
+        #print(x,xf)
+
+        if persobox[2] > 4*scr[0]/5 and (xf == None or street.xf > scr[0] +self.speed):
             self.lessx()
             moved[0] = True
-        elif persobox[0] < scr[0]/5 and street.x < -self.speed:
+        elif persobox[0] < scr[0]/5 and (x == None or street.x < -self.speed):
             self.morex()
             moved[0] = True
 

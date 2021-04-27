@@ -5,6 +5,7 @@ from src.colors import *
 from src.utils import *
 from src import graphic as g
 from src import names as n
+from src import obj2 as o2
 
 """""""""""""""""""""""""""""""""""
  INIT
@@ -274,13 +275,13 @@ class Rappeur(Human):
         self.fans.append(fan)
         s = '+1'
         pos = g.lman.labels[self.hud.labids['fan_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['fan_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'))
+        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'),group='up')
 
     def addstream(self):
         self.nb_streams += 1
         s = '+1'
         pos = g.lman.labels[self.hud.labids['stream_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['stream_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightblue'],key='icons',anchor=('right','center'))
+        g.pman.addLabPart(s,pos,color=c['lightblue'],key='icons',anchor=('right','center'),group='up')
 
     def add_money(self,qté):
         self.money += qté
@@ -289,12 +290,13 @@ class Rappeur(Human):
         else:
             s='+' + convert_huge_nb(qté)
         pos = g.lman.labels[self.hud.labids['coin_lab']].x +r.randint(-2,2),g.lman.labels[self.hud.labids['coin_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',anchor=('right','center'))
+        g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',anchor=('right','center'),group='up')
 
     ##
 
-    def move(self,dir,maxx=(None,None)):
+    def move(self,dir,street):
 
+        maxx=street.xxf
         if 'write' not in self.doing and 'wait' not in self.doing:
 
             moved = False
@@ -315,16 +317,16 @@ class Rappeur(Human):
                     self.update_skin(repeat=False)
                 else:
                     self.do('move')
-                self.check_colli()
+                self.check_colli(street)
 
                 self.time_last_move = time.time()
 
-    def check_colli(self):
+    def check_colli(self,street):
 
         colli_elem = None
-        for elem in ZONES['ELEM']:
-            if collisionAB(self.realbox,ZONES['ELEM'][elem].realbox) :
-                    colli_elem = ZONES['ELEM'][elem]
+        for elem in street.zones:
+            if collisionAB(self.realbox,street.zones[elem].realbox) :
+                    colli_elem = street.zones[elem]
 
         if self.element_colli != None:
             if colli_elem != None:
@@ -607,6 +609,11 @@ class Zone_ELEM(Zone):
         pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
         g.lman.modify(self.label,pos)
 
+    def delete(self):
+        if hasattr(self,'skin_id'):
+            g.sman.delete(self.skin_id)
+        g.lman.delete(self.label)
+
 class Market(Zone_ELEM):
 
     def __init__(self,x,y):
@@ -885,10 +892,10 @@ class Invent_UI(Item_UI):
          return self.item.quality < other.item.quality
 
 
-ZONES = {}
+#ZONES = {}
 #ZONES['UI'] = {} # use ZONES['UI'] for ui
 #ZONES['Item'] = {} # use ZONES['UI'] for item ui
-ZONES['ELEM'] = {} # use ZONES['ELEM'] for in-game graph element
+#ZONES['ELEM'] = {} # use ZONES['ELEM'] for in-game graph element
 
 
 #------# hud

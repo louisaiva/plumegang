@@ -90,8 +90,9 @@ class App():
 
         ## STREETS
 
-        self.city = {}
-        self.city['home'] = o2.Street((g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']),'home')
+        #self.city = {}
+        o2.CITY['home'] = o2.Street((g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']),'home')
+        o2.CITY['street1'] = o2.Street()
 
         ## PERSOS
 
@@ -108,10 +109,16 @@ class App():
 
         ## ZONES
 
-        o.ZONES['ELEM']['ordi'] = o.Ordi(1990,150)
-        o.ZONES['ELEM']['studio'] = o.Studio(2600,225)
-        o.ZONES['ELEM']['plume'] = o.Market(450,210)
-        o.ZONES['ELEM']['lit'] = o.Lit(-600,225)
+        zones = []
+        zones.append(o.Ordi(1990,150))
+        zones.append(o.Studio(2600,225))
+        #o.ZONES['ELEM']['ordi'] = o.Ordi(1990,150)
+        #o.ZONES['ELEM']['studio'] = o.Studio(2600,225)
+        zones.append(o.Market(450,210))
+        zones.append(o.Lit(-600,225))
+        o2.CITY['home'].assign_zones(zones)
+
+        self.street = 'home'
 
 
         ## items
@@ -132,6 +139,7 @@ class App():
 
         self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
         self.lab_day = g.lman.addLab('DAY : 0',(20,20),group='up',font_size=32,anchor=('left','bottom'))
+        self.lab_street = g.lman.addLab('home',(20,60),group='up',font_size=20,anchor=('left','bottom'))
 
 
 
@@ -253,6 +261,14 @@ class App():
         elif symbol == key.I:
             self.perso.invhud.rollhide()
 
+        elif symbol == key.S:
+            o2.CITY[self.street].delete()
+            if self.street == 'home':
+                self.street = 'street1'
+            else:
+                self.street = 'home'
+            o2.CITY[self.street].load()
+
         elif symbol == key.F:
 
             choiced_son = None
@@ -283,16 +299,16 @@ class App():
 
         #phaseUI
 
-        for zone in o.ZONES['ELEM']:
-            if o.ZONES['ELEM'][zone].activated:
+        for zone in o2.CITY[self.street].zones:
+            if o2.CITY[self.street].zones[zone].activated:
 
                 if zone == 'lit':
-                    if o.ZONES['ELEM']['lit'].hud.ui != None :
-                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o.ZONES['ELEM']['lit'].hud) : #check si il a caught
+                    if o2.CITY[self.street].zones['lit'].hud.ui != None :
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['lit'].hud) : #check si il a caught
 
-                            o.ZONES['ELEM']['lit'].hud.ui.check_mouse(x,y)
-                            if o.ZONES['ELEM']['lit'].hud.ui.caught:
-                                    o.ZONES['ELEM']['lit'].hud.ui.move(x,y)
+                            o2.CITY[self.street].zones['lit'].hud.ui.check_mouse(x,y)
+                            if o2.CITY[self.street].zones['lit'].hud.ui.caught:
+                                    o2.CITY[self.street].zones['lit'].hud.ui.move(x,y)
 
         if self.this_hud_caught_an_item == self.perso.invhud and self.perso.invhud.item_caught == None:
             self.this_hud_caught_an_item = None
@@ -320,17 +336,17 @@ class App():
 
         #phaseUI
 
-        for zone in o.ZONES['ELEM']:
-            if o.ZONES['ELEM'][zone].activated:
+        for zone in o2.CITY[self.street].zones:
+            if o2.CITY[self.street].zones[zone].activated:
 
                 if zone == 'lit':
-                    if o.ZONES['ELEM']['lit'].hud.ui != None :
-                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o.ZONES['ELEM']['lit'].hud) : #check si il peut catch
+                    if o2.CITY[self.street].zones['lit'].hud.ui != None :
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['lit'].hud) : #check si il peut catch
 
-                            caught_dropped = o.ZONES['ELEM']['lit'].hud.catch_or_drop(x,y,self.perso)
+                            caught_dropped = o2.CITY[self.street].zones['lit'].hud.catch_or_drop(x,y,self.perso)
 
                             if caught_dropped == 1: # means caught
-                                self.this_hud_caught_an_item = o.ZONES['ELEM']['lit'].hud
+                                self.this_hud_caught_an_item = o2.CITY[self.street].zones['lit'].hud
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
 
@@ -361,9 +377,9 @@ class App():
         if not self.gameover:
 
             if self.keys[key.Q]:
-                self.perso.move('L',self.city['home'].xxf)
+                self.perso.move('L',o2.CITY[self.street])
             if self.keys[key.D]:
-                self.perso.move('R',self.city['home'].xxf)
+                self.perso.move('R',o2.CITY[self.street])
 
             if self.keys[key.E]:
                 if self.perso.element_colli != None:
@@ -393,6 +409,7 @@ class App():
             del self.lab_fps1[0]
         moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
         g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
+        g.lman.set_text(self.lab_street,self.street)
 
         # DAYS
         if (self.tick//(self.duree_day*moyfps)) > self.day:
@@ -406,8 +423,8 @@ class App():
         if True:
 
             #--# zones elem
-            for zone in o.ZONES['ELEM']:
-                zone=o.ZONES['ELEM'][zone]
+            for zone in o2.CITY[self.street].zones:
+                zone=o2.CITY[self.street].zones[zone]
                 x_r = zone.gex + g.Cam.X
                 y_r = zone.gey + g.Cam.Y
                 #g.sman.modify(zone.skin_id,(x_r,y_r))
@@ -450,10 +467,10 @@ class App():
 
             g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
             g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
-            self.city['home'].modify(g.Cam.X,g.Cam.Y)
+            o2.CITY[self.street].modify(g.Cam.X,g.Cam.Y)
             #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
-            g.Cam.update(self.perso.realbox,self.city['home'])
+            g.Cam.update(self.perso.realbox,o2.CITY[self.street])
 
         ## particles
 
