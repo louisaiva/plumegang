@@ -116,7 +116,7 @@ class App():
 
         self.tick = 0
         self.day = 0
-        self.duree_day = 10 # en secondes
+        self.duree_day = 60 # en secondes
         self.gameover = False
 
         # labels
@@ -178,6 +178,10 @@ class App():
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
 
+        ##
+
+        g.TEXTIDS['steam'] = g.tman.addCol(20,20,c['lightgrey'])
+        g.TEXTIDS['steam2'] = g.tman.addCol(50,50,c['grey'])
 
     ### ONCE FUNCTIONS
 
@@ -385,6 +389,7 @@ class App():
             self.perso.add_money(-10)
             g.lman.set_text(self.lab_day,'DAY : '+str(self.day))
 
+
         ## anchor / moving sprites
 
         if True:
@@ -415,10 +420,8 @@ class App():
             x_bg2,y_bg2 = self.bgx+g.Cam.X*0.2 +w +self.bgdx,g.Cam.Y*0.2 +self.bgy
 
             if x_bg1 >= 0:
-                print('hop à gauche')
                 self.bgdx -= w
             elif x_bg2 + w <= 1920:
-                print('hop à droite')
                 self.bgdx += w
 
             g.sman.modify(self.sprids['bg.1'],(x_bg1,y_bg1))
@@ -438,6 +441,14 @@ class App():
             g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
 
             g.Cam.update(self.perso.realbox)
+
+        ## particles
+
+        g.pman.addPart(g.TEXTIDS['steam'],(random.randint(-50,2000),self.bgy),group='back1',key='steam',opac=128)
+        if random.random() < 0.1:
+            g.pman.addPart(g.TEXTIDS['steam2'],(random.randint(-50,2000),self.bgy),group='back',key='steam2',opac=128)
+        g.pman.modify('steam',dy=0.5,dx=g.Cam.dx*0.4)
+        g.pman.modify('steam2',dy=0.2,dx=g.Cam.dx*0.2)
 
         ## fans are streaming
 

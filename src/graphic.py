@@ -352,6 +352,56 @@ class LabelManager():
 
 sman,lman = SpriteManager(),LabelManager()
 
+class ParticleManager():
+
+    def __init__(self):
+        self.sprites = {}
+        self.sprites['normal'] = {}
+        self.sprites['steam'] = {}
+        self.sprites['steam2'] = {}
+
+    def addPart(self,textid,xy_pos=(0,0),duree=5,group=None,key='normal',opac=255):
+
+        id = u.get_id('spr_part')
+        #self.ids.append(id)
+
+        self.sprites[key][id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
+        self.sprites[key][id].position = xy_pos
+        self.sprites[key][id].opacity = opac
+
+        if group != None:
+            group = gman.getGroup(group)
+            self.sprites[key][id].group = group
+
+        pyglet.clock.schedule_once(self.delay_spr,duree*0.01,id,key)
+
+    def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
+        text = tman.addCol(*box.wh,col)
+        self.addPart(text,box.xy,duree,group,key)
+
+    def delay_spr(self,dt,id,key):
+
+        #print(id)
+        self.sprites[key][id].opacity = self.sprites[key][id].opacity-(0.1*255)
+        if self.sprites[key][id].opacity <= 0:
+            self.sprites[key][id].delete()
+            del self.sprites[key][id]
+        else:
+            pyglet.clock.schedule_once(self.delay_spr,dt,id,key)
+
+    def modify(self,key,dx=0,dy=0,setx=None,sety=None):
+        for id in self.sprites[key]:
+            if setx == None:
+                self.sprites[key][id].x += dx
+            else:
+                self.sprites[key][id].x = setx
+            if sety == None:
+                self.sprites[key][id].y += dy
+            else:
+                self.sprites[key][id].y = sety
+
+pman = ParticleManager()
+
 TEXTIDS = {}
 
 
@@ -363,7 +413,8 @@ class Camera():
     def __init__(self):
 
         self._X,self._Y = 0,0
-        self.BGX,self.BGY = 0,0
+        #self.BGX,self.BGY = 0,0
+        self._dx,self._dy = 0,0
 
         self.d = 0.2
 
@@ -372,48 +423,71 @@ class Camera():
     def update(self,persobox):
 
         scr = (1920,1080)
+        moved = [False,False]
 
         if persobox[2] > 4*scr[0]/5:
             self.lessx()
+            moved[0] = True
         elif persobox[0] < scr[0]/5:
             self.morex()
+            moved[0] = True
 
         if persobox[3] > 7*scr[1]/8:
             self.lessy()
+            moved[1] = True
         elif persobox[1] < scr[1]/8:
             self.morey()
+            moved[1] = True
+
+        if not moved[0]:
+            self._dx = 0
+        if not moved[1]:
+            self._dy = 0
 
     ##
 
     def morex(self):
         self._X += self.speed
-        self.BGX = self._X*self.d
+        self._dx = self.speed
+        #self.BGX = self._X*self.d
     def morey(self):
         self._Y += self.speed
-        self.BGY = self._Y*self.d
+        self._dy = self.speed
+        #self.BGY = self._Y*self.d
     def lessx(self):
         self._X -= self.speed
-        self.BGX = self._X*self.d
+        self._dx = -self.speed
+        #self.BGX = self._X*self.d
     def lessy(self):
         self._Y -= self.speed
-        self.BGY = self._Y*self.d
+        self._dy = -self.speed
+        #self.BGY = self._Y*self.d
 
 
     ##
 
     def _setX(self,X):
         if X != self._X:
+            self._dx = self._X-X
             self._X = X
-            self.BGX = self.d*X
+            #self.BGX = self.d*X
     def _X(self):
         return self._X
     def _setY(self,Y):
         if Y != self._Y:
+            self._dy = self._Y-Y
             self._Y = Y
-            self.BGY = self.d*Y
+            #self.BGY = self.d*Y
     def _Y(self):
         return self._Y
     X = property(_X,_setX)
     Y = property(_Y,_setY)
+
+    def _dx(self):
+        return self._dx
+    def _dy(self):
+        return self._dy
+    dx = property(_dx)
+    dy = property(_dy)
 
 Cam = Camera()
