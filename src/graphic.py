@@ -475,13 +475,25 @@ class Camera():
         x,xf = street.xxf
         #print(x,xf)
 
-        if persobox[2] > 4*scr[0]/5 and (xf == None or street.xf > scr[0] +self.speed):
+        #X
+        if persobox[2] > 4*scr[0]/5 and (xf == None or street.rxf > scr[0] +self.speed):
             self.lessx()
             moved[0] = True
+
         elif persobox[0] < scr[0]/5 and (x == None or street.x < -self.speed):
             self.morex()
             moved[0] = True
 
+        if xf != None and street.rxf < scr[0]:
+            self.morex()
+            moved[0] = True
+        elif x != None and street.x > 0:
+            self.lessx()
+            moved[0] = True
+
+        #print(street.x,street.rxf)
+
+        #Y
         if persobox[3] > 7*scr[1]/8:
             self.lessy()
             moved[1] = True
@@ -489,6 +501,7 @@ class Camera():
             self.morey()
             moved[1] = True
 
+        #moved
         if not moved[0]:
             self._dx = 0
         if not moved[1]:

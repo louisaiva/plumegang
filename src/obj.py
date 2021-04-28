@@ -548,6 +548,7 @@ class Zone():
         self.gex,self.gey = box.xy
         self.x,self.y = 0,0
         self.w,self.h = box.wh
+        self.group = group
 
         self._hoover = False
 
@@ -585,34 +586,52 @@ class Zone_ELEM(Zone):
         self.update()
 
     def hoover(self):
-        g.lman.unhide(self.label)
-        self._hoover = True
+        if hasattr(self,'label'):
+            g.lman.unhide(self.label)
+            self._hoover = True
 
     def unhoover(self):
-        g.lman.unhide(self.label,True)
-        self._hoover = False
+        if hasattr(self,'label'):
+            g.lman.unhide(self.label,True)
+            self._hoover = False
 
     def activate(self,perso):
-        #print(perso.name,'just activated',self.name)
-        g.lman.modify(self.label,color=self.color)
 
-        pyglet.clock.schedule_once(self.deactivate,0.5)
+        print(perso.name,'just activated',self.name)
+        if hasattr(self,'label'):
+            g.lman.modify(self.label,color=self.color)
+
+            pyglet.clock.schedule_once(self.deactivate,0.5)
 
     def deactivate(self,dt):
-        if self._hoover:
-            g.lman.modify(self.label,color=c['white'])
-        else:
-            g.lman.modify(self.label,color=(255,255,255,0))
+        if hasattr(self,'label'):
+            if self._hoover:
+                g.lman.modify(self.label,color=c['white'])
+            else:
+                g.lman.modify(self.label,color=(255,255,255,0))
 
     def update(self):
-        # label
-        pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
-        g.lman.modify(self.label,pos)
+        if hasattr(self,'label'):
+            # label
+            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
+            g.lman.modify(self.label,pos)
 
-    def delete(self):
+    def deload(self):
         if hasattr(self,'skin_id'):
             g.sman.delete(self.skin_id)
-        g.lman.delete(self.label)
+            del self.skin_id
+        if hasattr(self,'label'):
+            g.lman.delete(self.label)
+            del self.label
+
+    def load(self):
+        if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
+            #g.sman.delete(self.skin_id)
+            self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group)
+        if not hasattr(self,'label'):
+            # label
+            pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
+            self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
 
 class Market(Zone_ELEM):
 
@@ -622,6 +641,26 @@ class Market(Zone_ELEM):
     def activate(self,perso):
         super(Market,self).activate(perso)
         perso.rplum()
+
+class Porte(Zone_ELEM):
+
+    def __init__(self,box,street,destination):
+        super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=False)
+        self.destination = destination
+        self.street = street
+
+    def assign_door_tp(self,door):
+        self.porte_tp = door
+
+    def activate(self,perso):
+        super(Porte,self).activate(perso)
+        #perso.add_money(r.randint(20,230))
+        perso.element_colli = None
+
+        self.street.deload()
+        self.destination.load()
+        perso.check_colli(self.destination)
+        return self.destination.name
 
 #------# active elements
 
@@ -650,7 +689,7 @@ class Ordi(Zone_ELEM):
 class Studio(Zone_ELEM):
 
     def __init__(self,x,y):
-        super(Studio,self).__init__(box(x,y,50,200),'studio','blue','mid')
+        super(Studio,self).__init__(box(x,y,50,200),'studio','blue','mid',makeCol=False)
 
     def activate(self,perso):
         super(Studio,self).activate(perso)
@@ -978,7 +1017,7 @@ class PersoHUD(HUD):
     def __init__(self,perso):
 
         super(PersoHUD, self).__init__(group='ui',name='perso')
-        print(self.group)
+        #print(self.group)
 
         self.perso = perso
 
@@ -1197,11 +1236,11 @@ class InventHUD(HUD):
         self.detaids['bg'] = {}
         self.detaids['lab'] = {}
 
-        height_detail = self.box.h/2
+        height_detail = 2*self.box.h/3
         width_detail = 180
 
         self.box3 = box(self.box.fx,self.box.cy-height_detail/2,width_detail,int(height_detail))
-        print(not self.deta_visible)
+        #print(not self.deta_visible)
         self.addCol('bgdeta',self.box3,group='hud-1',detail=True)
         #g.sman.unhide(self.sprids['bgdeta'],not self.deta_visible)
         #self.detaids.append(self.sprids['bgdeta'])

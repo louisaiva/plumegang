@@ -92,7 +92,7 @@ class App():
 
         #self.city = {}
         o2.CITY['home'] = o2.Street((g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']),'home')
-        o2.CITY['street1'] = o2.Street()
+        o2.CITY['street1'] = o2.Street((g.TEXTIDS['street1_bg'],None),'street1',box(2730,-50,None))
 
         ## PERSOS
 
@@ -111,14 +111,20 @@ class App():
 
         zones = []
         zones.append(o.Ordi(1990,150))
-        zones.append(o.Studio(2600,225))
+        zones.append(o.Studio(2640,225))
         #o.ZONES['ELEM']['ordi'] = o.Ordi(1990,150)
         #o.ZONES['ELEM']['studio'] = o.Studio(2600,225)
         zones.append(o.Market(450,210))
         zones.append(o.Lit(-600,225))
+        zones.append(o.Porte(box(3200,225,270,400),o2.CITY['home'],o2.CITY['street1']))
         o2.CITY['home'].assign_zones(zones)
 
+        zones = []
+        zones.append(o.Porte(box(3200,225,270,400),o2.CITY['street1'],o2.CITY['home']))
+        o2.CITY['street1'].assign_zones(zones)
+
         self.street = 'home'
+        o2.CITY['home'].load()
 
 
         ## items
@@ -196,6 +202,7 @@ class App():
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
         g.TEXTIDS['bgmid'] = g.tman.loadIm('bg/bg2'+'.png')
         g.TEXTIDS['bgup'] = g.tman.loadIm('bg/bg3'+'.png')
+        g.TEXTIDS['street1_bg'] = g.tman.loadIm('bg/street1_bg'+'.png')
 
         ##
 
@@ -246,7 +253,10 @@ class App():
         elif symbol == key.E:
             if self.perso.element_colli != None:
                 if not self.perso.element_colli.longpress:
-                    self.perso.element_colli.activate(self.perso)
+                    if type(self.perso.element_colli) == o.Porte:
+                        self.street = self.perso.element_colli.activate(self.perso)
+                    else:
+                        self.perso.element_colli.activate(self.perso)
                     self.perso.do('hit')
             else:
                 self.perso.do('hit')
@@ -261,13 +271,13 @@ class App():
         elif symbol == key.I:
             self.perso.invhud.rollhide()
 
-        elif symbol == key.S:
-            o2.CITY[self.street].delete()
-            if self.street == 'home':
-                self.street = 'street1'
-            else:
-                self.street = 'home'
-            o2.CITY[self.street].load()
+            """elif symbol == key.S:
+                o2.CITY[self.street].deload()
+                if self.street == 'home':
+                    self.street = 'street1'
+                else:
+                    self.street = 'home'
+                o2.CITY[self.street].load()"""
 
         elif symbol == key.F:
 
