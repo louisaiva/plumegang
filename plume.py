@@ -62,6 +62,7 @@ class App():
 
     def init(self):
 
+
         ##  TEXTURES
 
         self.create_organise_textures()
@@ -106,6 +107,10 @@ class App():
         nbfans = 1000
         for _ in range(nbfans):
             self.fans.append(o.Fan())
+
+        ## cycle
+
+        self.cycle = g.Cycle(self.perso)
 
         ## ZONES
 
@@ -422,10 +427,7 @@ class App():
         g.lman.set_text(self.lab_street,self.street)
 
         # DAYS
-        if (self.tick//(self.duree_day*moyfps)) > self.day:
-            self.day += 1
-            self.perso.add_money(-10)
-            g.lman.set_text(self.lab_day,'DAY : '+str(self.day))
+        g.lman.set_text(self.lab_day,'DAY : '+str(self.cycle.day))
 
 
         ## anchor / moving sprites
@@ -484,11 +486,11 @@ class App():
 
         ## particles
 
-        g.pman.addPart(g.TEXTIDS['steam'],(random.randint(-50,2000),self.bgy),group='back1',key='steam',opac=128)
+        """g.pman.addPart(g.TEXTIDS['steam'],(random.randint(-50,2000),self.bgy),group='back1',key='steam',opac=128)
         if random.random() < 0.1:
             g.pman.addPart(g.TEXTIDS['steam2'],(random.randint(-50,2000),self.bgy),group='back',key='steam2',opac=128)
         g.pman.modify('steam',dy=0.5,dx=g.Cam.dx*0.4)
-        g.pman.modify('steam2',dy=0.2,dx=g.Cam.dx*0.2)
+        g.pman.modify('steam2',dy=0.2,dx=g.Cam.dx*0.2)"""
         g.pman.modify('icons',dy=0.1)
 
         ## fans are streaming

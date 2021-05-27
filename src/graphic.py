@@ -364,12 +364,12 @@ class ParticleManager():
         self.labels['normal'] = {}
         self.labels['icons'] = {}
 
-    def addPart(self,textid,xy_pos=(0,0),duree=5,group=None,key='normal',opac=255):
+    def addPart(self,textid,xy_pos=(0,0),duree=5,group=None,key='normal',opac=255,vis=True):
 
         id = u.get_id('spr_part')
         #self.ids.append(id)
 
-        self.sprites[key][id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
+        self.sprites[key][id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch,visible=vis)
         self.sprites[key][id].position = xy_pos
         self.sprites[key][id].opacity = opac
 
@@ -380,12 +380,15 @@ class ParticleManager():
         pyglet.clock.schedule_once(self.delay_spr,duree*0.01,id,key)
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
-                ('center','center'),color=(255,255,255,255),key='normal'):
+                ('center','center'),color=(255,255,255,255),key='normal',vis=True):
 
         id = u.get_id('lab_part')
 
         if not font_name:
             font_name = lman.font
+
+        if not vis:
+            color = [*color[:3],0]
 
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
@@ -446,11 +449,62 @@ class ParticleManager():
                 else:
                     self.labels[key][id].y = sety
 
+    def unhide(self,key,hide=False):
+        if key in self.sprites:
+            for id in self.sprites[key]:
+                if self.sprites[key][id].visible != (not hide):
+                    self.sprites[key][id].visible = (not hide)
+        else:
+            for id in self.labels[key]:
+                if hide == False and self.labels[key][id].color[3] == 0:
+                    self.labels[key][id].color = [*self.labels[key][id].color[:3],255]
+                elif hide == True and self.labels[key][id].color[3] != 0:
+                    self.labels[key][id].color = [*self.labels[key][id].color[:3],0]
+
 
 pman = ParticleManager()
 
 TEXTIDS = {}
 
+#### CYCLE -> rules day/night cycle
+class Cycle():
+
+    def __init__(self,perso):
+
+        # general
+
+        self.len = 100 # longueur du cycle en secondes
+        self.dt = 1 # dt avant chaque update
+
+        self.tick = 0
+
+        self.day = 1 # nb de jour
+
+        self.perso = perso
+
+        # sprites
+
+        """self.sprids = {}
+        self.sprids['sun'] ="""
+
+
+
+        self.ticked()
+
+    def ticked(self,dt=0):
+
+        self.tick += 1
+        #print(self.tick)
+        if self.tick*self.dt > self.day*self.len:
+            self.day += 1
+            self.perso.add_money(-10)
+        day_percentage = (self.tick*self.dt - (self.day-1)*self.len )/self.len
+        #print(day_percentage)
+
+        pyglet.clock.schedule_once(self.ticked,self.dt)
+
+    def update(self,day_percentage):
+        pass
 
 
 #### CAMERA
