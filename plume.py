@@ -214,6 +214,9 @@ class App():
         g.TEXTIDS['steam'] = g.tman.addCol(20,20,c['lightgrey'])
         g.TEXTIDS['steam2'] = g.tman.addCol(50,50,c['grey'])
 
+        ## huds
+        g.TEXTIDS['studhud'] = g.tman.loadIm('studhud.png')
+
     ### ONCE FUNCTIONS
 
     def game_over(self):
@@ -276,14 +279,6 @@ class App():
         elif symbol == key.I:
             self.perso.invhud.rollhide()
 
-            """elif symbol == key.S:
-                o2.CITY[self.street].deload()
-                if self.street == 'home':
-                    self.street = 'street1'
-                else:
-                    self.street = 'home'
-                o2.CITY[self.street].load()"""
-
         elif symbol == key.F:
 
             choiced_son = None
@@ -307,6 +302,7 @@ class App():
     def on_mouse_motion(self,x,y,dx,dy):
 
         ## CHECK ALL UI
+        #print(self.this_hud_caught_an_item)
 
         # plumUI
         if self.perso.plume != None and self.perso.plume.hud.ui.visible and self.this_hud_caught_an_item == None:
@@ -315,6 +311,10 @@ class App():
         #phaseUI
 
         for zone in o2.CITY[self.street].zones:
+
+            if zone == 'studio' and self.this_hud_caught_an_item == o2.CITY[self.street].zones['studio'].hud and o2.CITY[self.street].zones['studio'].hud.item_caught == None:
+                self.this_hud_caught_an_item = None
+
             if o2.CITY[self.street].zones[zone].activated:
 
                 if zone == 'lit':
@@ -324,6 +324,20 @@ class App():
                             o2.CITY[self.street].zones['lit'].hud.ui.check_mouse(x,y)
                             if o2.CITY[self.street].zones['lit'].hud.ui.caught:
                                     o2.CITY[self.street].zones['lit'].hud.ui.move(x,y)
+
+                if zone == 'studio':
+                    if self.this_hud_caught_an_item == None:
+                        for lab in o2.CITY[self.street].zones['studio'].hud.uis:
+                            ui = o2.CITY[self.street].zones['studio'].hud.uis[lab]
+                            if ui != None :
+                                ui.check_mouse(x,y)
+
+                    elif self.this_hud_caught_an_item == o2.CITY[self.street].zones['studio'].hud: #check si il a caught
+                        if o2.CITY[self.street].zones['studio'].hud.item_caught != None:
+                            ui = o2.CITY[self.street].zones['studio'].hud.item_caught
+                            ui.check_mouse(x,y)
+                            if ui.caught:
+                                    ui.move(x,y)
 
         if self.this_hud_caught_an_item == self.perso.invhud and self.perso.invhud.item_caught == None:
             self.this_hud_caught_an_item = None
@@ -338,6 +352,8 @@ class App():
                         if ui.caught:
                             ui.move(x,y)
                             ui.check_mouse(x,y)
+
+        #print(self.this_hud_caught_an_item)
 
     def on_mouse_press(self,x, y, button, modifiers):
 
@@ -367,6 +383,19 @@ class App():
 
                             self.on_mouse_motion(x,y,0,0)
 
+                elif zone == 'studio':
+                    if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['studio'].hud) : #check si il peut catch
+                        caught_dropped = o2.CITY[self.street].zones['studio'].hud.catch_or_drop(x,y,self.perso)
+
+                        if caught_dropped == 1: # means caught
+                            self.this_hud_caught_an_item = o2.CITY[self.street].zones['studio'].hud
+                        elif caught_dropped == -1: # means dropped
+                            letsbacktnothingcaught = True
+
+                        print(caught_dropped)
+
+                        self.on_mouse_motion(x,y,0,0)
+
         # inventUI
         if self.perso.invhud.visible:
 
@@ -383,6 +412,10 @@ class App():
 
         if letsbacktnothingcaught:
             self.this_hud_caught_an_item = None
+
+    def on_mouse_drag(self,x, y, dx, dy, buttons, modifiers):
+        self.on_mouse_motion(x,y,dx,dy)
+
 
 
     ### LOOP
