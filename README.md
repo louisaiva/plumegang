@@ -21,6 +21,9 @@ You also need to find an 'instru' *(instrumental)* and there you go !
 
 Use the things in your house to make all this stuff !
 
+
+
+
 ### **FOR NOW**
 
 For now the game is in a very early version so don't expect to see every thing right now hehe (cheh)
@@ -35,6 +38,9 @@ Stuff working :
 *Plumoir* - long press **E** to get a new random plume
 
 *Ordi* - short press **E** to earn some money *(dev hack to simplify my life -- won't work like that in the future)*
+
+
+
 
 ### **COMMANDS**
 
