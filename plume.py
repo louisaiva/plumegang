@@ -392,8 +392,6 @@ class App():
                         elif caught_dropped == -1: # means dropped
                             letsbacktnothingcaught = True
 
-                        print(caught_dropped)
-
                         self.on_mouse_motion(x,y,0,0)
 
         # inventUI
