@@ -10,3 +10,5 @@ names = ['John','Gabriel','Raphaël','Léo','Louis','Lucas','Adam','Arthur','Jul
 ,'Clémence','Victoria','Léana','Clara','Éléna','Victoire','Aya','Margot','Nour','Giulia','Charlie','Capucine','Mya','Mathilde','Lana','Anaïs','Lilou','Alicia','Théa'
 ,'Gabrielle','Lya','Yasmine','Maëlys','Assia','Apolline','Élise','Alix','Emy','Lise','Elsa','Lily','Lyana','Lisa','Noémie','Marie','Roxane','Lyna','Héloïse','Candice','Valentine'
 ,'Zélie','Maya','Soline','Maria','Célia','Maëlle','Emmy','Éléna','Faustine','Salomé','Lila','Louane','Alya','Thaïs','Constance','Laura','Mélina','Livia','Amelia','Océane','Sara']
+
+btmakers = ['Bokusan','Zeyn','Malkrich','Costo','Pprod','Kezah','Ysos','Pandrezz','2ruty','Nausaah','Origami','KLM','Flem','Dany synthé','Skread','Askil','Krono','Born Hero','Yusei','nat','RAD&CO','Keido','EasyDew','Seezy']

@@ -41,4 +41,5 @@ def test2():
         b = a(qua)
         print(qua,b)
 
-test2()
+import src.obj as o
+o.test3()

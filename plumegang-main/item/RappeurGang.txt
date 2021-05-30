@@ -1,0 +1,211 @@
+
+
+idée jeu : RappeurGang
+
+Synopsis général du jeu:
+	
+	-vous vous réveillez un matin avec une terrible maladie qui vous procure des super pouvoirs !
+	-vous pouvez à présent voler la plume d'autres rappeurs afin de récuperer des phases à écrire !
+	-Le but du jeu est d'accumuler un maaax de fans et pour cela on créé des musiques avec les paroles qu'on a volé (en volant la plume d'un autre rappeur).
+	-Pour faire un son t'as besoin de paroles (à l'aide des plumes volées) et d'une instru (à l'aide de contrats avec un beatmaker), et d'un label (aussi contrat, pour diffuser le son)
+	-ton premier son tu le fais dans ta chambre avec tes propres phases éclatées et ton pote beatmaker. Attention à pas trop laisser tomber ton pote beatmaker pcq il peut etre ton fervent ennemi plus tard
+
+
+idées comme ça:
+
+	-plus on a de fans plus la ville est grande -> plus on a de plumes/contrats qui nous attendent
+	-un rappeur qui se voit voler sa plume va être en état végétatif donc faut pas trop se faire remarquer sinon les fans vont pas vous aimer.
+	-les plumes sont de différents niveaux (commun,rare,epique,legendaire) et plus un rappeur est connu plus le niveau de sa plume est élevé (nekfeu = ultra legendaire) et en même temps si tu te fais remarquer en volant une plume d'un rappeur commun les fans vont s'en battre la race alors que si tu te fais choper en rendant damso vegetatif, tu vas te faire bouillav
+	-tu gagne (non seulemetn des fans mais aussi) de la thune en fonction de tes sons qui vont te permettre de t'acheter des trucs afin de voler des plumes plus facilement et de te déplacer plus facilement (en évitant les nombreux autographes) et aussi de faire des gros contrats avec des btmkr et des labels qui sont au dessus de ton nivo
+	-quand tu te déplace dans la rue en fonction de ta notoriété, plus de gens feront attention à toi, donc plus faudra etre discret lors d'actes illégaux
+	-différents moyens de voler une plume:
+			moyens légaux~:
+
+				faire un battle à la rap contenders et éclater l'autre rappeur
+
+			moyens illégaux:
+
+				venir braquer un rappeur chez lui et lui arracher de force
+				inviter un rappeur pour un feat et lui arracher de force
+
+	-chaque parole à des catégories [sexiste,violent,chill,oldschool] et un niveau de punchline [*,**,***,****,*****], chaque catégorie va cibler une partie précise du public et peut en dégouter une autre -> potentiellement nourrir un clan anti-vous
+	-des sons trop explicites peuvent donc créer scandale et vous faire perdre des fans mais aussi vous donner de la street cred
+	-des punchlines légendaires peuvent rameuter plus de public
+	-les instrus aussi ont des catégories et de la lourdeur -> fonctionne pareil que les paroles
+	-au bout d'un moment dans le jeu va être créé un hopital pour soigner les rappeurs sans plume : on peut le détruire (extremement illégal) ou alors rien faire et certains rappeurs seront soignés et alors ils se mettront à vouloir recuperer leur plume à tout prix, attention à aps se faire bouillav
+	
+
+
+Détails techniques:
+
+	-jeu en 2D à la michel tejla ? sorte de platformer viteaif
+	-on peut entrer dans des maisons/shop
+	-on peut avoir jusqu'à 6 plumes actives, les autre sont stockées dans l'armoire à plumes
+	-différents compteurs:
+		barre de vie
+		fans
+		thune
+		barre de street cred -> si yen a trop la police débarque et vs allez en prison, si yen a pas assez : aucune streetcred
+		
+##############################################
+
+
+détails sur la QUALITY :
+
+la qualité est un float entre 0 et 1 :
+
+F  : 0 <-> 0.09..
+D- : 0.1 <-> 0.19..
+D  : 0.2 <-> 0.29..
+D+ : 0.3 <-> 0.39..
+C- : 0.4 <-> 0.49..
+C  : 0.5 <-> 0.59..
+C+ : 0.6 <-> 0.69..
+B- : 0.7 <-> 0.74..
+B  : 0.75 <-> 0.79..
+B+ : 0.8 <-> 0.84..
+A- : 0.85 <-> 0.89..
+A  : 0.9 <-> 0.919..
+A+ : 0.92 <-> 0.939..
+S- : 0.94 <-> 0.959..
+S  : 0.96 <-> 0.979..
+S+ : 0.98 <-> 0.9949..
+S* : 0.995 <-> 1
+
+détail sur la STREETCRED :
+
+entier entre -100 et 100 :
+
+-100..................-95........-80.......-50......-10........10.......50........80..............95................100
+						sous-merde			  victime		       thug				 gros ganster
+ pire merde de la terre 			 merde 				neutre				gangster			    ennemi number one
+  			----			---			--		-			/		*			**			***			****
+
+
+OBJECTS :
+
+	RAPPEUR ->
+
+		Un rappeur possède une plume et des sons. Il peut voler les plumes des autres
+		Chaque son qu'il produit attire des fans -> augmente la notoriété -> augmente les streams
+		Et le nombre de stream attire la thune -> gagne de la thune
+
+		Le rappeur perd de la thune à chaque seconde -> s'il en a plus : game over
+
+		possède :
+
+		-une plume
+		-des sons
+		-des fans
+
+
+		-une streetcred
+		-une thune
+		-une notoriété
+
+		peut :
+
+		-acheter des instrus
+		-créer des sons
+		-poster des sons
+		-gagne/perdre de la streecred (en fonction de l'explicité des derniers sons qu'il a sorti + de ses actions)
+
+
+
+	PLUME ->
+
+		Chaque plume te donne accès à des "phases", soit quand t'écris, soit à des moments aléatoires
+
+
+		possède :
+
+
+		-un pouvoir de street cred -> attribue la streetcred à ses phases
+		-une qualité (fixé au départ)
+		-un niveau (plus t'écris de phases plus le niveau augmente -> ça va jusqu'au niv100 puis après tu unlok une qualité de mieux)
+
+		peut faire :
+
+		-chercher des phases -> améliore le niveau de la plume
+
+
+	PHASE ->
+
+		possède :
+
+		-une qualité
+		-un thème
+		-une explicité
+
+		[-un contenu (le texte en clair)]
+
+
+
+	INSTRU ->
+
+		possède :
+
+		-une qualité
+		-un btmaker
+
+		[-un bpm]
+		[-une file audio]
+
+	SON ->
+
+		créé à partir de (minimum) 4 phases (et jusqu'à 10 phases) et d'une instru
+		lors de sa release ça engendre des conséquences :
+		- attire/rejete des fans
+		- augmente la streetcred de son artiste
+		- 
+
+		calcul de la qualité globale:
+			-dépend de la qualité de l'instru
+			-de la qualité des phases
+			-des themes communs des phases -> entraine bonus et malus
+
+		calcul du public (fans):
+			-30% du public global est gangsta -> attiré par la streetcred
+			-30% du public est bgfloli -> attiré par la non-streetcred
+
+
+
+		possède :
+
+		-des phases (de 4 à 10)
+		-une instru
+		-un artiste
+
+		-une qualité globale (calculée à partir des différents éléments)
+		-une explicité (celle de la phase la plus explicite)
+		-des thèmes (défini le public)
+
+		-un nb de stream
+
+
+	FAN ->
+
+		au fur et à mesure de l'agrandissement de la notoriété du rappeur, la ville gagne des potentiels fans
+		au début y'a 1000 fans potentiels
+
+
+		chaque son à sa sortie est écouté par tous les fans déjà gagnés + x% de nouveaux -> x dépend de la qualité du son
+		les fans aiment ton son si leur streetcred valide le son -> dépend de la sreetcred du son
+
+
+
+##############################################
+
+
+
+easter egg:
+
+	-seul moyen de voler la plume de 69 : aller en prison
+	-une plume secrète jamais indiquée par le radar à plume : plume du rappeur delta, vous permet d'écrire vos propres phases -> map générée procéduralement sauf pour la maison de delta, qui apparait une fois la ville suffisament grande
+	-combinaison de touche qui affiche les détails techniques sur les élements, notamment la qualité, ...
+
+
+idées pour plus tard:
+
+	-pouvoir "réécrire ses phases" -> machine à débloquer pour les améliorer encore plus
+	-qualité X > 0.9999

@@ -7,7 +7,7 @@ class Street():
     def __init__(self,text=(None,None),name='street1',box=box(-1400,-50,5120)):
 
         self.text = text
-        
+
         self.box = box
         self._x,self._y = self.box.xy
 

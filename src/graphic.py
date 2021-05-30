@@ -321,8 +321,11 @@ class LabelManager():
             self.labels[lblid].update(scale_x = scale[0],scale_y=scale[1])
             #self.labels[lblid].scale_x,self.labels[lblid].scale_y = scale
 
-        if pos != None and pos != (self.labels[lblid].x,self.labels[lblid].y):
-            self.labels[lblid].x,self.labels[lblid].y = pos
+        if pos != None:
+            if pos[0] != None and pos[0] != self.labels[lblid].x:
+                self.labels[lblid].x = pos[0]
+            if pos[1] != None and pos[1] != self.labels[lblid].y:
+                self.labels[lblid].y = pos[1]
 
         if color != None and color != self.labels[lblid].color:
             self.labels[lblid].color = color

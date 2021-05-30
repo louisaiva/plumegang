@@ -115,7 +115,7 @@ class App():
         ## ZONES
 
         zones = []
-        zones.append(o.Ordi(1990,150))
+        zones.append(o.Ordi(1990,150,self.perso))
         zones.append(o.Studio(2640,225))
         #o.ZONES['ELEM']['ordi'] = o.Ordi(1990,150)
         #o.ZONES['ELEM']['studio'] = o.Studio(2600,225)
@@ -126,6 +126,7 @@ class App():
 
         zones = []
         zones.append(o.Porte(box(3200,225,270,400),o2.CITY['street1'],o2.CITY['home']))
+        zones.append(o.Distrib(2900,225))
         o2.CITY['street1'].assign_zones(zones)
 
         self.street = 'home'
@@ -216,6 +217,7 @@ class App():
 
         ## huds
         g.TEXTIDS['studhud'] = g.tman.loadIm('studhud.png')
+        g.TEXTIDS['ordhud'] = g.tman.loadIm('ordhud.png')
 
     ### ONCE FUNCTIONS
 
@@ -315,6 +317,9 @@ class App():
             if zone == 'studio' and self.this_hud_caught_an_item == o2.CITY[self.street].zones['studio'].hud and o2.CITY[self.street].zones['studio'].hud.item_caught == None:
                 self.this_hud_caught_an_item = None
 
+            if zone == 'ordi' and self.this_hud_caught_an_item == o2.CITY[self.street].zones['ordi'].hud and o2.CITY[self.street].zones['ordi'].hud.item_caught == None:
+                self.this_hud_caught_an_item = None
+
             if o2.CITY[self.street].zones[zone].activated:
 
                 if zone == 'lit':
@@ -335,6 +340,20 @@ class App():
                     elif self.this_hud_caught_an_item == o2.CITY[self.street].zones['studio'].hud: #check si il a caught
                         if o2.CITY[self.street].zones['studio'].hud.item_caught != None:
                             ui = o2.CITY[self.street].zones['studio'].hud.item_caught
+                            ui.check_mouse(x,y)
+                            if ui.caught:
+                                    ui.move(x,y)
+
+                if zone == 'ordi':
+                    if self.this_hud_caught_an_item == None:
+                        for lab in o2.CITY[self.street].zones['ordi'].hud.uis:
+                            ui = o2.CITY[self.street].zones['ordi'].hud.uis[lab]
+                            if ui != None :
+                                ui.check_mouse(x,y)
+
+                    elif self.this_hud_caught_an_item == o2.CITY[self.street].zones['ordi'].hud: #check si il a caught
+                        if o2.CITY[self.street].zones['ordi'].hud.item_caught != None:
+                            ui = o2.CITY[self.street].zones['ordi'].hud.item_caught
                             ui.check_mouse(x,y)
                             if ui.caught:
                                     ui.move(x,y)

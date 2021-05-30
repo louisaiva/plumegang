@@ -54,7 +54,131 @@ with open('src/mots.json','r', encoding="utf-8") as f:
 THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','tristesse','notoriété','chill','rap']
 
 """""""""""""""""""""""""""""""""""
- CLASSES BASIK
+ USEFUL FUNCTIONS
+"""""""""""""""""""""""""""""""""""
+
+def test():
+
+    quality = r.random()
+    cred = r.randint(-100,100)
+
+    print(convert_quality(quality),convert_cred(cred))
+
+    plum = Plume('delta',quality,cred)
+    print('\n')
+    for i in range(20):
+        phaz = []
+        for i in range(4):
+            phaz.append(plum.drop_phase())
+        btmker = Btmaker(r.random())
+        Son(btmker.drop_instru(),phaz)
+
+    #return Plume(quality,cred)
+
+def test2():
+
+    for i in range(11):
+
+        qua = i/10
+
+        a = (qua**4)/10 * 1000 *qua
+        print(qua,a)
+        #x = (qua-self.qua_score) * self.nb_fans
+
+def test3(n=100000):
+
+    instrus = []
+    for i in range(n):
+        ins = rinstru(rbt())
+        instrus.append(ins)
+    instrus.sort(reverse=True)
+
+    for i in range(20):
+        ins = instrus[i]
+        print(ins.price,' : ',convert_quality(ins.quality),trunc(ins.quality,5),trunc(ins.author.quality,5))
+
+
+def rplum(owner):
+
+    quality = r.random()
+    cred = r.randint(-100,100)
+
+    #print(convert_quality(quality),convert_cred(cred))
+
+    return Plume(owner,quality,cred)
+
+def rinstru(bt=None):
+
+    if bt == None:
+        bt = r.choice(btmakers)
+
+    return bt.drop_instru()
+
+def rbt():
+    return Btmaker(rqua())
+
+def convert_quality(qua,test=(QUALITIES,QUALITIES_coeff)):
+
+
+    if qua < test[1][0]:
+        return test[0][0]
+    else:
+        return convert_quality(qua,(test[0][1:],test[1][1:]))
+
+def convert_cred(cred,test=(CRED,CRED_coeff)):
+
+    if cred < test[1][0]:
+        return test[0][0]
+    else:
+        return convert_cred(cred,(test[0][1:],test[1][1:]))
+
+def upgrade_qua(qua,bonus=True):
+
+    if bonus:
+        return qua + QUALITIES_up[convert_quality(qua)]
+    else:
+        return qua + QUALITIES_dwn[convert_quality(qua)]
+
+def aff_phase(phase):
+
+    print(phase.str())
+
+def rqua():
+    return r.random()
+
+def rcred():
+    return r.randint(-100,100)
+
+def a(qua):
+
+    basis = (qua)*10
+    bonus = 0
+
+    if qua > 0.6:
+        bonus += (qua-0.6)*15
+    if qua > 0.8:
+        bonus += (qua-0.8)*50
+    if qua > 0.92:
+        bonus += (qua-0.92)*200
+    if qua > 0.98:
+        bonus += (qua-0.98)*800
+    if qua > 0.995:
+        bonus += (qua-0.995)*8400
+
+    return int((basis + bonus)*10)
+
+def instru_price(ins):
+
+    bt_price = a(ins.author.quality)
+    ins_price = a(ins.quality)
+
+    p = 0.75
+    price = p*ins_price + (1-p)*bt_price
+
+    return int(price + (-0.1+r.random()/5)*price)
+
+"""""""""""""""""""""""""""""""""""
+ BASIK
 """""""""""""""""""""""""""""""""""
 
 class Fan(): #pagraphic
@@ -462,12 +586,16 @@ class Btmaker():
         x = 2
         qua = (self.quality*x + r.random())/(x+1)
 
-        instru = Instru(qua,self.name)
+        instru = Instru(qua,self)
         #print('instru '+convert_quality(qua))
         return instru
 
     def __lt__(self, other):
          return self.quality < other.quality
+
+btmakers = []
+for name in n.btmakers:
+    btmakers.append(Btmaker(rqua(),name))
 
 class Instru():
 
@@ -476,11 +604,13 @@ class Instru():
         self.quality = qua
         self.author = author
 
+        self.price = instru_price(self)
+
     def __lt__(self, other):
          return self.quality < other.quality
 
     def __str__(self):
-        return 'instru' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + self.author
+        return 'instru' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + self.author.name
 
     def type(self):
         return 'Instru'
@@ -545,7 +675,7 @@ class Son():
         return 'Son'
 
 """""""""""""""""""""""""""""""""""
- CLASSES GRAFIK
+ ZONES
 """""""""""""""""""""""""""""""""""
 
 class Zone():
@@ -691,14 +821,48 @@ class Zone_ACTIV(Zone_ELEM):
         self.activated = False
         perso.do()
 
-class Ordi(Zone_ELEM):
+class Distrib(Zone_ELEM):
 
     def __init__(self,x,y):
-        super(Ordi,self).__init__(box(x,y,230,260),'ordi','red','mid',makeCol=False)
+        super(Distrib,self).__init__(box(x,y,100,200),'ez cash','red','mid',makeCol=True)
+
+    def activate(self,perso):
+        super(Distrib,self).activate(perso)
+        perso.add_money(r.randint(20,230))
+
+class Ordi(Zone_ACTIV):
+
+    def __init__(self,x,y,perso):
+        super(Ordi,self).__init__(box(x,y,230,260),'ordi','red','mid',makeCol=False,long=True)
+
+        self.hud = MarketHUD(perso)
 
     def activate(self,perso):
         super(Ordi,self).activate(perso)
-        perso.add_money(r.randint(20,230))
+
+        g.lman.modify(self.hud.labids['market'],color=self.color)
+
+        if self.hud.visible:
+            perso.do('write')
+            perso.undo(0,'wait')
+
+        else:
+            perso.do('wait')
+            self.hud.unhide()
+            perso.invhud.eff_detail()
+            perso.invhud.autorize_deta = False
+
+    def deactivate(self,dt):
+        super(Ordi,self).deactivate(0)
+        if self.activated:
+            g.lman.modify(self.hud.labids['market'],color=c['white'])
+        else:
+            g.lman.modify(self.hud.labids['market'],color=(255,255,255,0))
+
+    def close(self,perso):
+        super(Ordi,self).close(perso)
+        self.hud.unhide(True)
+        perso.invhud.autorize_deta = True
 
 class Studio(Zone_ACTIV):
 
@@ -785,197 +949,10 @@ class Lit(Zone_ACTIV):
             #aff_phase(phase)
             self.hud.write(phase)
 
-#------# ui
 
-class Zone_UI(Zone):
-
-    ## HOOVER WITH MOVEMENT OF MOUSE
-
-    def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,longpress=False,colorlab=c['coral']):
-        super(Zone_UI,self).__init__(box2,textid,group,makeCol)
-        self.box = box2
-
-        self.lab_text=lab_text
-
-        self.longpress = longpress
-        self.visible = True
-        self._hoover = False
-
-        # label
-        pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
-        self.label = g.lman.addLab(lab_text,pos,vis=False,anchor = ('center','bottom'),font_size=20,color=colorlab,group=group)
-        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
-        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group=group+'-1',vis=False)
-
-    def hoover(self):
-        g.lman.unhide(self.label)
-        g.sman.unhide(self.label_bg)
-        self._hoover = True
-
-    def unhoover(self):
-        g.lman.unhide(self.label,True)
-        g.sman.unhide(self.label_bg,True)
-        self._hoover = False
-
-    def activate(self):
-        #print(self.lab_text,'activated')
-        pass
-
-    def delete(self):
-
-        if hasattr(self,'skin_id'):
-            g.sman.delete(self.skin_id)
-
-        g.sman.delete(self.label_bg)
-        g.lman.delete(self.label)
-
-    ##
-
-    def check_mouse(self,x,y):
-
-        if collisionAX(self.box.realbox,(x,y)):
-            self.hoover()
-            return True
-        else:
-            self.unhoover()
-            return False
-
-    def check_pressed(self):
-
-        if self._hoover:
-            self.activate()
-
-class Plume_UI(Zone_UI):
-
-    def __init__(self,box,plume):
-
-        lab_text = plume.owner+'\'s plume '#+convert_quality(plume.quality)
-
-        super(Plume_UI,self).__init__(box,lab_text,group='ui',makeCol=False,colorlab=c[convert_quality(plume.quality)[0]])
-
-        #self.plume = phase
-
-    def update(self):
-        pass
-
-class Item_UI(Zone_UI):
-
-    def __init__(self,box,lab_text,texture,spr_vis=False,colorlab=c['F'],scale=(0.25,0.25)):
-
-        super(Item_UI,self).__init__(box,lab_text,group='ui',colorlab=colorlab)
-
-        #self.text_id = texture
-        self.itemspr = g.sman.addSpr(texture,group='ui-2',vis=spr_vis)
-        self.scale = scale
-        g.sman.modify(self.itemspr,scale=scale)#,opacity=128)
-
-        pos = box.cx - g.sman.spr(self.itemspr).width/2 , box.cy - g.sman.spr(self.itemspr).height/2
-        g.sman.modify(self.itemspr,pos)
-
-        self.caught = False
-        self.dropped = False
-
-    def catch(self):
-        self.caught = True
-        self.dropped = False
-        g.sman.unhide(self.itemspr)
-        g.sman.modify(self.itemspr,scale=(0.5,0.5),group='ui')
-        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
-
-        pos = self.box.cx , self.box.fy + 20
-        g.lman.modify(self.label,pos)
-        pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
-        g.sman.modify(self.label_bg,pos)
-
-    def drop(self):
-        self.dropped = True
-        self.caught = False
-        g.sman.modify(self.itemspr,scale=self.scale,group='ui-2')
-        g.sman.unhide(self.itemspr,True)
-        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
-
-    def reset(self,hide=False):
-        self.dropped = False
-        self.caught = False
-        g.sman.unhide(self.itemspr,hide)
-
-    def move(self,x,y):
-        self.box.xy = x-g.sman.spr(self.itemspr).width/2,y-g.sman.spr(self.itemspr).height/2
-        self.update()
-
-    def update(self):
-
-        if self.caught:
-
-            # itemspr
-            g.sman.unhide(self.itemspr)
-        pos = self.box.cx - g.sman.spr(self.itemspr).width/2 , self.box.cy - g.sman.spr(self.itemspr).height/2
-        g.sman.modify(self.itemspr,pos)
-
-        # label
-        pos = self.box.cx , self.box.fy + 20
-        g.lman.modify(self.label,pos)
-        # labelbg
-        pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
-        g.sman.modify(self.label_bg,pos)
-
-    def delete(self):
-        super(Item_UI,self).delete()
-        g.sman.delete(self.itemspr)
-
-    def activate(self):
-        super(Item_UI,self).activate()
-        if self.caught:
-            self.drop()
-        else:
-            self.catch()
-
-    def unhide(self,hide=False):
-
-        g.sman.unhide(self.itemspr,hide)
-        if hide:
-            g.lman.unhide(self.label,hide)
-            g.sman.unhide(self.label_bg,hide)
-        self.visible = not hide
-
-class Writingphase_UI(Item_UI):
-
-    def __init__(self,box,phase):
-
-        lab_text = 'Phase '+convert_quality(phase.quality)+'\n' +phase.them
-
-        super(Writingphase_UI,self).__init__(box,lab_text,g.TEXTIDS['phase'][convert_quality(phase.quality)[0]],colorlab=c[convert_quality(phase.quality)[0]])
-
-        self.phase = phase
-
-class Invent_UI(Item_UI):
-
-    def __init__(self,box,item,spr_vis=False,scale=(0.25,0.25)):
-        #print(spr_vis)
-
-        cquecé = item.type()
-
-        lab_text = cquecé +' '+ convert_quality(item.quality)
-        col = c[convert_quality(item.quality)[0]]
-
-        if cquecé == 'Phase':
-            lab_text+='\n'+item.them
-
-        super(Invent_UI,self).__init__(box,lab_text,g.TEXTIDS[cquecé.lower()][convert_quality(item.quality)[0]],spr_vis=spr_vis,colorlab=col,scale=scale)
-
-        self.item = item
-
-        #self.boxdeta = box_details
-
-    def __lt__(self, other):
-         return self.item.quality < other.item.quality
-
-
-#ZONES = {}
-#ZONES['UI'] = {} # use ZONES['UI'] for ui
-#ZONES['Item'] = {} # use ZONES['UI'] for item ui
-#ZONES['ELEM'] = {} # use ZONES['ELEM'] for in-game graph element
-
+"""""""""""""""""""""""""""""""""""
+ HUD
+"""""""""""""""""""""""""""""""""""
 
 #------# hud
 
@@ -1249,7 +1226,7 @@ class StudHUD(HUD):
 
         ##
 
-        self.ui = None
+        #self.ui = None
 
         self.box = box(400,300,1200,650)
         self.padding = 50
@@ -1377,6 +1354,148 @@ class StudHUD(HUD):
             if ui != None:
                 ui.unhide(hide)
 
+class MarketHUD(HUD):
+
+    def __init__(self,perso):
+
+        super(MarketHUD, self).__init__(group='hud1',name='market',vis=False)
+
+        ##
+
+        self.ui = None
+
+        self.box = box(400,300,1000,650)
+        self.padding = 50
+
+        self.item_caught = None
+
+        self.uis = {}
+        self.uis['instru0'] = None
+        self.uis['instru1'] = None
+        self.uis['instru2'] = None
+        self.uis['instru3'] = None
+
+        """self.details = {}
+        self.details['instru0'] = None
+        self.details['instru1'] = None
+        self.details['instru2'] = None
+        self.details['instru3'] = None"""
+
+        self.boxs = {}
+        self.boxs['instru0'] = box( 400+40+11,300+476+11,128,128 )
+        self.boxs['instru1'] = box( 400+40+11,300+342+11,128,128 )
+        self.boxs['instru2'] = box( 400+40+11,300+208+11,128,128 )
+        self.boxs['instru3'] = box( 400+40+11,300+74+11,128,128 )
+
+        self.addSpr('bg',g.TEXTIDS['ordhud'],(400,300),'hud')
+
+        #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
+        self.addLab('longclick','longclick on an instru to buy --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_size=20,anchor=('center','center'))
+        self.addLab('market','Ordi - achat d\'instrus',(self.box.cx,self.box.y+self.box.h+self.padding),font_size=20,anchor=('center','center'))
+
+        self.instru = 0
+        self.perso = perso
+        self.add_instru(0)
+
+    def delete_ui(self,lab):
+
+        self.uis[lab].delete()
+        self.uis[lab] = None
+        if lab[:3] == 'ins':
+            self.instru -= 1
+            for lab2 in ['qua','bt','price']:
+                g.lman.delete(self.labids[lab+'_'+lab2])
+
+    def catch_or_drop(self,x,y,perso):
+
+        if self.item_caught != None:
+            ## on check kelui pour vwar si on l'drop
+
+            if collisionAX(self.box.realbox,(x,y)):
+                if self.item_caught.item.type() != 'Son':
+                    self.catch(self.item_caught.item)
+                    self.item_caught.delete()
+                    self.item_caught = None
+                else:
+                    return 0
+
+            elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+                perso.invhud.catch(self.item_caught.item)
+                self.item_caught.delete()
+                self.item_caught = None
+            else:
+                self.item_caught.delete()
+                self.item_caught = None
+            return -1
+        else:
+            ## on check touu pour vwar si on en catch
+
+            for lab in self.uis:
+                ui = self.uis[lab]
+                if ui != None:
+                    ui.check_pressed()
+                    if ui.caught:
+                        self.item_caught = Invent_UI(self.boxs[lab],ui.item,self.visible)
+                        self.item_caught.activate()
+                        self.delete_ui(lab)
+
+                        return 1
+        return 0
+
+    def add_instru(self,dt):
+
+        ins = rinstru()
+
+        # deleting last instru
+        if self.uis['instru3'] != None:
+            self.delete_ui('instru3')
+
+        # moving each instru and details to next box
+        for i in range(2,-1,-1):
+
+            # each instru
+            self.uis['instru'+str(i+1)] = self.uis['instru'+str(i)]
+            if self.uis['instru'+str(i+1)] != None:
+                self.uis['instru'+str(i+1)].upbox(self.boxs['instru'+str(i+1)])
+                #print(i,self.labids)
+
+                # each details
+                for lab in ['qua','bt','price']:
+                    self.labids['instru'+str(i+1)+'_'+lab] = self.labids['instru'+str(i)+'_'+lab]
+                    id = self.labids['instru'+str(i+1)+'_'+lab]
+                    g.lman.modify(id,pos=(None,self.boxs['instru'+str(i+1)].cy))
+                    if i==0:
+                        del self.labids['instru0'+'_'+lab]
+
+        # replacing the first box with the new instru
+        self.uis['instru0'] = Invent_UI(self.boxs['instru0'],ins,self.visible,(0.4,0.4))
+
+        # creating new details
+        self.addLab('instru0_qua',convert_quality(ins.quality),(self.box.cx-self.box.w/4,self.boxs['instru0'].cy),anchor=('center','center'),color=c['white'],font_size=50)
+        self.addLab('instru0_bt',ins.author.name,(self.box.cx,self.boxs['instru0'].cy),anchor=('center','center'),color=c['white'],font_size=30)
+        self.addLab('instru0_price',convert_huge_nb(ins.price),(self.box.cx+self.box.w/4,self.boxs['instru0'].cy),anchor=('right','center'),color=c['yellow'],font_size=30)
+        if self.instru < 4:
+            self.addSpr('instru'+str(self.instru)+'_price',g.TEXTIDS['item'][0],(self.box.cx+self.box.w/4,self.boxs['instru'+str(self.instru)].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+
+        self.instru += 1
+        # recalling this function
+        t = r.randint(2,10)
+        print('wow new instru :',ins,'next in',t,'secondes')
+        pyglet.clock.schedule_once(self.add_instru,t)
+
+    def unhide(self,hide=False):
+        super(MarketHUD,self).unhide(hide)
+
+        if hide and self.item_caught != None:
+            perso.invhud.catch(self.item_caught.item)
+            self.item_caught.delete()
+            self.item_caught = None
+
+        for lab in self.uis:
+            ui = self.uis[lab]
+            if ui != None:
+                ui.unhide(hide)
+
 class InventHUD(HUD):
 
     def __init__(self,perso):
@@ -1434,12 +1553,12 @@ class InventHUD(HUD):
 
         #self.update()
         for i in range(r.randint(2,10)):
-            self.catch(Instru(r.random(),'bokusan'))
+            self.catch(Instru(r.random(),r.choice(btmakers)))
         for i in range(r.randint(2,10)):
             ph = []
             for i in range(4):
                 ph.append(Phase(rqua(),rcred()))
-            instru = Instru(r.random(),'wesh')
+            instru = Instru(r.random(),r.choice(btmakers))
 
             self.catch(Son(instru,ph))
 
@@ -1677,7 +1796,7 @@ class InventHUD(HUD):
                 y = g.lman.labels[self.detaids['lab']['detail_cred']].y
 
             else:
-                self.addLab('detail_aut',ui.item.author, ( self.box3.cx , y - self.padding ), anchor = ('center','center'),font_size = 20,detail=True)
+                self.addLab('detail_aut',ui.item.author.name, ( self.box3.cx , y - self.padding ), anchor = ('center','center'),font_size = 20,detail=True)
                 #    self.detaids.append(self.detaids['lab']['detail_aut'])
                 y = g.lman.labels[self.detaids['lab']['detail_aut']].y
 
@@ -1711,92 +1830,194 @@ class InventHUD(HUD):
 
 
 """""""""""""""""""""""""""""""""""
- USEFUL FUNCTIONS
+ UI
 """""""""""""""""""""""""""""""""""
 
-def test():
+#------# ui
 
-    quality = r.random()
-    cred = r.randint(-100,100)
+class Zone_UI(Zone):
 
-    print(convert_quality(quality),convert_cred(cred))
+    ## HOOVER WITH MOVEMENT OF MOUSE
 
-    plum = Plume('delta',quality,cred)
-    print('\n')
-    for i in range(20):
-        phaz = []
-        for i in range(4):
-            phaz.append(plum.drop_phase())
-        btmker = Btmaker(r.random())
-        Son(btmker.drop_instru(),phaz)
+    def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,longpress=False,colorlab=c['coral']):
+        super(Zone_UI,self).__init__(box2,textid,group,makeCol)
+        self.box = box2
 
-    #return Plume(quality,cred)
+        self.lab_text=lab_text
 
-def test2():
+        self.longpress = longpress
+        self.visible = True
+        self._hoover = False
 
-    for i in range(11):
+        # label
+        pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
+        self.label = g.lman.addLab(lab_text,pos,vis=False,anchor = ('center','bottom'),font_size=20,color=colorlab,group=group)
+        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
+        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group=group+'-1',vis=False)
 
-        qua = i/10
+    def hoover(self):
+        g.lman.unhide(self.label)
+        g.sman.unhide(self.label_bg)
+        self._hoover = True
 
-        a = (qua**4)/10 * 1000 *qua
-        print(qua,a)
-        #x = (qua-self.qua_score) * self.nb_fans
+    def unhoover(self):
+        g.lman.unhide(self.label,True)
+        g.sman.unhide(self.label_bg,True)
+        self._hoover = False
 
-def rplum(owner):
+    def activate(self):
+        #print(self.lab_text,'activated')
+        pass
 
-    quality = r.random()
-    cred = r.randint(-100,100)
+    def delete(self):
 
-    #print(convert_quality(quality),convert_cred(cred))
+        if hasattr(self,'skin_id'):
+            g.sman.delete(self.skin_id)
 
-    return Plume(owner,quality,cred)
+        g.sman.delete(self.label_bg)
+        g.lman.delete(self.label)
 
-def convert_quality(qua,test=(QUALITIES,QUALITIES_coeff)):
+    ##
 
+    def check_mouse(self,x,y):
 
-    if qua < test[1][0]:
-        return test[0][0]
-    else:
-        return convert_quality(qua,(test[0][1:],test[1][1:]))
+        if collisionAX(self.box.realbox,(x,y)):
+            self.hoover()
+            return True
+        else:
+            self.unhoover()
+            return False
 
-def convert_cred(cred,test=(CRED,CRED_coeff)):
+    def check_pressed(self):
 
-    if cred < test[1][0]:
-        return test[0][0]
-    else:
-        return convert_cred(cred,(test[0][1:],test[1][1:]))
+        if self._hoover:
+            self.activate()
 
-def upgrade_qua(qua,bonus=True):
+class Plume_UI(Zone_UI):
 
-    if bonus:
-        return qua + QUALITIES_up[convert_quality(qua)]
-    else:
-        return qua + QUALITIES_dwn[convert_quality(qua)]
+    def __init__(self,box,plume):
 
-def aff_phase(phase):
+        lab_text = plume.owner+'\'s plume '#+convert_quality(plume.quality)
 
-    print(phase.str())
+        super(Plume_UI,self).__init__(box,lab_text,group='ui',makeCol=False,colorlab=c[convert_quality(plume.quality)[0]])
 
-def rqua():
-    return r.random()
+        #self.plume = phase
 
-def rcred():
-    return r.randint(-100,100)
+    def update(self):
+        pass
 
-def a(qua):
+class Item_UI(Zone_UI):
 
-    basis = (qua)*10
-    bonus = 0
+    def __init__(self,box,lab_text,texture,spr_vis=False,colorlab=c['F'],scale=(0.25,0.25)):
 
-    if qua > 0.6:
-        bonus += (qua-0.6)*15
-    if qua > 0.8:
-        bonus += (qua-0.8)*50
-    if qua > 0.92:
-        bonus += (qua-0.92)*200
-    if qua > 0.98:
-        bonus += (qua-0.98)*800
-    if qua > 0.995:
-        bonus += (qua-0.995)*8400
+        super(Item_UI,self).__init__(box,lab_text,group='ui',colorlab=colorlab)
 
-    return int((basis + bonus)*10)
+        #self.text_id = texture
+        self.itemspr = g.sman.addSpr(texture,group='ui-2',vis=spr_vis)
+        self.scale = scale
+        g.sman.modify(self.itemspr,scale=scale)#,opacity=128)
+
+        pos = box.cx - g.sman.spr(self.itemspr).width/2 , box.cy - g.sman.spr(self.itemspr).height/2
+        g.sman.modify(self.itemspr,pos)
+
+        self.caught = False
+        self.dropped = False
+
+    def catch(self):
+        self.caught = True
+        self.dropped = False
+        g.sman.unhide(self.itemspr)
+        g.sman.modify(self.itemspr,scale=(0.5,0.5),group='ui')
+        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
+
+        pos = self.box.cx , self.box.fy + 20
+        g.lman.modify(self.label,pos)
+        pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
+        g.sman.modify(self.label_bg,pos)
+
+    def drop(self):
+        self.dropped = True
+        self.caught = False
+        g.sman.modify(self.itemspr,scale=self.scale,group='ui-2')
+        g.sman.unhide(self.itemspr,True)
+        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
+
+    def reset(self,hide=False):
+        self.dropped = False
+        self.caught = False
+        g.sman.unhide(self.itemspr,hide)
+
+    def move(self,x,y):
+        self.box.xy = x-g.sman.spr(self.itemspr).width/2,y-g.sman.spr(self.itemspr).height/2
+        self.update()
+
+    def upbox(self,box):
+        self.box = box
+        self.update()
+
+    def update(self):
+
+        if self.caught:
+
+            # itemspr
+            g.sman.unhide(self.itemspr)
+        pos = self.box.cx - g.sman.spr(self.itemspr).width/2 , self.box.cy - g.sman.spr(self.itemspr).height/2
+        g.sman.modify(self.itemspr,pos)
+
+        # label
+        pos = self.box.cx , self.box.fy + 20
+        g.lman.modify(self.label,pos)
+        # labelbg
+        pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
+        g.sman.modify(self.label_bg,pos)
+
+    def delete(self):
+        super(Item_UI,self).delete()
+        g.sman.delete(self.itemspr)
+
+    def activate(self):
+        super(Item_UI,self).activate()
+        if self.caught:
+            self.drop()
+        else:
+            self.catch()
+
+    def unhide(self,hide=False):
+
+        g.sman.unhide(self.itemspr,hide)
+        if hide:
+            g.lman.unhide(self.label,hide)
+            g.sman.unhide(self.label_bg,hide)
+        self.visible = not hide
+
+class Writingphase_UI(Item_UI):
+
+    def __init__(self,box,phase):
+
+        lab_text = 'Phase '+convert_quality(phase.quality)+'\n' +phase.them
+
+        super(Writingphase_UI,self).__init__(box,lab_text,g.TEXTIDS['phase'][convert_quality(phase.quality)[0]],colorlab=c[convert_quality(phase.quality)[0]])
+
+        self.phase = phase
+
+class Invent_UI(Item_UI):
+
+    def __init__(self,box,item,spr_vis=False,scale=(0.25,0.25)):
+        #print(spr_vis)
+
+        cquecé = item.type()
+
+        lab_text = cquecé +' '+ convert_quality(item.quality)
+        col = c[convert_quality(item.quality)[0]]
+
+        if cquecé == 'Phase':
+            lab_text+='\n'+item.them
+
+        super(Invent_UI,self).__init__(box,lab_text,g.TEXTIDS[cquecé.lower()][convert_quality(item.quality)[0]],spr_vis=spr_vis,colorlab=col,scale=scale)
+
+        self.item = item
+
+        #self.boxdeta = box_details
+
+    def __lt__(self, other):
+         return self.item.quality < other.item.quality
