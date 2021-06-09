@@ -67,6 +67,11 @@ class App():
 
         self.create_organise_textures()
 
+        ## Cursor
+        #image = pyglet.image.load('cursor.png')
+        cursor = pyglet.window.ImageMouseCursor(g.tman.textures[g.TEXTIDS['utils'][1]])
+        self.window.set_mouse_cursor(cursor)
+
         ## SPRITES
 
         self.bgx,self.bgy = 0,250
@@ -180,6 +185,7 @@ class App():
         g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
         g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
         g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
+        g.TEXTIDS['utils'] = g.tman.loadImSeq('utils.png',(8,8))
 
         qua = ['F','D','C','B','A','S']
         g.TEXTIDS['plume'] = {}
@@ -385,7 +391,6 @@ class App():
             self.perso.plume.hud.ui.check_pressed()
 
         #phaseUI
-
         for zone in o2.CITY[self.street].zones:
             if o2.CITY[self.street].zones[zone].activated:
 
@@ -408,6 +413,17 @@ class App():
 
                         if caught_dropped == 1: # means caught
                             self.this_hud_caught_an_item = o2.CITY[self.street].zones['studio'].hud
+                        elif caught_dropped == -1: # means dropped
+                            letsbacktnothingcaught = True
+
+                        self.on_mouse_motion(x,y,0,0)
+
+                elif zone == 'ordi':
+                    if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['ordi'].hud) : #check si il peut catch
+                        caught_dropped = o2.CITY[self.street].zones['ordi'].hud.catch_or_drop(x,y)
+
+                        if caught_dropped == 1: # means caught
+                            self.this_hud_caught_an_item = o2.CITY[self.street].zones['ordi'].hud
                         elif caught_dropped == -1: # means dropped
                             letsbacktnothingcaught = True
 

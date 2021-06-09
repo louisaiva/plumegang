@@ -3,13 +3,13 @@
 
 
 import random,os,ctypes,time
-from ctypes import windll, Structure, c_long, byref
+
 from math import *
 #from win32gui import GetWindowRect, GetForegroundWindow, GetWindowText
-
-
-class POINT(Structure):
-    _fields_ = [("x", c_long), ("y", c_long)]
+if os.name == 'nt':
+    from ctypes import windll, Structure, c_long, byref
+    class POINT(Structure):
+        _fields_ = [("x", c_long), ("y", c_long)]
 
 class box():
 

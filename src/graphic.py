@@ -509,6 +509,10 @@ class Cycle():
     def update(self,day_percentage):
         pass
 
+class Cursor():
+    pass
+
+
 
 #### CAMERA
 
