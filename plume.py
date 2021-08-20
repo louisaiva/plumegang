@@ -69,7 +69,7 @@ class App():
 
         ## Cursor
         #image = pyglet.image.load('cursor.png')
-        cursor = pyglet.window.ImageMouseCursor(g.tman.textures[g.TEXTIDS['utils'][1]])
+        cursor = pyglet.window.ImageMouseCursor(g.tman.textures[g.TEXTIDS['utils'][1]],16,16)
         self.window.set_mouse_cursor(cursor)
 
         ## SPRITES
@@ -295,7 +295,7 @@ class App():
                     choiced_son = son.item
                     break
             if choiced_son != None:
-                self.perso.release_son(choiced_son,self.fans)
+                self.perso.release_son(choiced_son,self.fans,self.cycle.day)
 
     def on_key_release(self,symbol,modifiers):
 
