@@ -11,12 +11,14 @@ from src import obj as o
 from src import obj2 as o2
 from src import graphic as g
 from src import menu as m
+from src import clock
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__)) # fopatouché
 if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
     print('Changez le programme de place pour un path sans espace svp.')
 
+ESK_QUIT = True ## pour éviter d'avoir à passer par le menu
 
 class App():
 
@@ -70,8 +72,7 @@ class App():
 
         ## Cursor
         #image = pyglet.image.load('cursor.png')
-        cursor = pyglet.window.ImageMouseCursor(g.tman.textures[g.TEXTIDS['utils'][1]],16,16)
-        self.window.set_mouse_cursor(cursor)
+        g.Cur.init(self.window,g.TEXTIDS['utils'])
 
         ## SPRITES
 
@@ -270,6 +271,8 @@ class App():
         self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=200,color=c['darkkhaki'],group='up')
         self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=210,color=c['black'],group='up')
 
+        clock.bertran.set_speed(0,0)
+
     def get_out(self):
         self.playing = False
 
@@ -279,14 +282,16 @@ class App():
         if act == "pause":
             g.sman.unhide(self.sprids['effects'][size_scr])
             self.menu.unhide()
+            clock.bertran.set_speed(0,0)
         else:
             g.sman.unhide(self.sprids['effects'][size_scr],True)
             self.menu.unhide(True)
+            clock.bertran.set_speed(0,1)
 
         self.action = act
-        print('go',act)
+        #print('go',act)
 
-        self.perso.pause(act)
+        #self.perso.pause(act)
 
 
     ### PYGLET FUNCTIONS
@@ -300,9 +305,12 @@ class App():
             if symbol == key.ESCAPE:
                 if self.perso.element_colli != None and self.perso.element_colli.activated:
                     self.perso.element_colli.close(self.perso)
+                    return pyglet.event.EVENT_HANDLED
                 else:
                     self.change_action('pause')
-                return pyglet.event.EVENT_HANDLED
+                    if not ESK_QUIT:
+                        return pyglet.event.EVENT_HANDLED
+
 
 
             elif symbol == key.A:
@@ -363,7 +371,8 @@ class App():
                     self.menu_fonct[res](*self.menu_args[res])
                 elif res in self.menu_fonct:
                     self.menu_fonct[res]()
-                return pyglet.event.EVENT_HANDLED
+                if not ESK_QUIT:
+                    return pyglet.event.EVENT_HANDLED
 
             elif symbol == key.BACKSPACE:
                 res = self.menu.unclick()
@@ -399,6 +408,7 @@ class App():
         gs.save_files(self.path)
 
     def on_mouse_motion(self,x,y,dx,dy):
+        g.M = [x,y]
 
         if self.action == "play":
             ## CHECK ALL UI
@@ -513,6 +523,11 @@ class App():
 
                     elif zone == 'ordi':
                         if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['ordi'].hud) : #check si il peut catch
+
+                            if o2.CITY[self.street].zones['ordi'].hud.uis['main'] != None and self.perso not in o2.CITY[self.street].zones['ordi'].hud.uis['main'].item.owners:
+                                g.Cur.start_long_press(o2.CITY[self.street].zones['ordi'].hud.uis['main'].box,o2.CITY[self.street].zones['ordi'].hud.buy_instru)
+
+
                             caught_dropped = o2.CITY[self.street].zones['ordi'].hud.catch_or_drop(x,y)
 
                             if caught_dropped == 1: # means caught
@@ -539,9 +554,11 @@ class App():
             if letsbacktnothingcaught:
                 self.this_hud_caught_an_item = None
 
+    def on_mouse_release(self,x,y,button,modifiers):
+        g.Cur.reset()
+
     def on_mouse_drag(self,x, y, dx, dy, buttons, modifiers):
         self.on_mouse_motion(x,y,dx,dy)
-
 
 
     ### LOOP
@@ -577,7 +594,7 @@ class App():
 
     def refresh(self):
 
-        ## labels
+        ## FPS
         dt = time.time() - self.lab_fps_time
         self.lab_fps_time = time.time()
         self.lab_fps1.append(int(1/dt))
@@ -585,9 +602,11 @@ class App():
             del self.lab_fps1[0]
         moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
         g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
-        g.lman.set_text(self.lab_street,self.street)
 
         if self.action == "play":
+
+            # STREETS
+            g.lman.set_text(self.lab_street,self.street)
 
             # DAYS
             g.lman.set_text(self.lab_day,'DAY : '+str(self.cycle.day))
@@ -648,12 +667,6 @@ class App():
                 g.Cam.update(self.perso.realbox,o2.CITY[self.street])
 
             ## particles
-
-            """g.pman.addPart(g.TEXTIDS['steam'],(random.randint(-50,2000),self.bgy),group='back1',key='steam',opac=128)
-            if random.random() < 0.1:
-                g.pman.addPart(g.TEXTIDS['steam2'],(random.randint(-50,2000),self.bgy),group='back',key='steam2',opac=128)
-            g.pman.modify('steam',dy=0.5,dx=g.Cam.dx*0.4)
-            g.pman.modify('steam2',dy=0.2,dx=g.Cam.dx*0.2)"""
             g.pman.modify('icons',dy=0.1)
 
             ## fans are streaming
@@ -706,7 +719,6 @@ class App():
             gs.save_files(self.path)
 
             self.window.close()
-
 
 def main():
 

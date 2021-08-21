@@ -4,6 +4,7 @@
 
 import pyglet
 import src.utils as u
+from src import clock
 
 
 class ScreenManager():
@@ -396,7 +397,7 @@ class ParticleManager():
             group = gman.getGroup(group)
             self.sprites[key][id].group = group
 
-        pyglet.clock.schedule_once(self.delay_spr,duree*0.01,id,key)
+        clock.bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
                 ('center','center'),color=(255,255,255,255),key='normal',vis=True):
@@ -421,7 +422,7 @@ class ParticleManager():
 
         self.labels[key][id].x,self.labels[key][id].y = xy_pos
 
-        pyglet.clock.schedule_once(self.delay_lab,duree*0.01,id,key)
+        clock.bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
 
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         text = tman.addCol(*box.wh,col)
@@ -435,7 +436,7 @@ class ParticleManager():
             self.sprites[key][id].delete()
             del self.sprites[key][id]
         else:
-            pyglet.clock.schedule_once(self.delay_spr,dt,id,key)
+            clock.bertran.schedule_once(self.delay_spr,dt,id,key)
 
     def delay_lab(self,dt,id,key):
 
@@ -444,7 +445,7 @@ class ParticleManager():
             self.labels[key][id].delete()
             del self.labels[key][id]
         else:
-            pyglet.clock.schedule_once(self.delay_lab,dt,id,key)
+            clock.bertran.schedule_once(self.delay_lab,dt,id,key)
 
     def modify(self,key,dx=0,dy=0,setx=None,sety=None):
         if key in self.sprites:
@@ -516,19 +517,78 @@ class Cycle():
         #print(self.tick)
         if self.tick*self.dt > self.day*self.len:
             self.day += 1
+            #print('wow new day')
             self.perso.add_money(-10)
         day_percentage = (self.tick*self.dt - (self.day-1)*self.len )/self.len
         #print(day_percentage)
 
-        pyglet.clock.schedule_once(self.ticked,self.dt)
+        clock.bertran.schedule_once(self.ticked,self.dt)
 
     def update(self,day_percentage):
         pass
 
+M = [0,0]
+
 class Cursor():
-    pass
 
+    def __init__(self):
 
+        self.long_time = 0.5 #en secondes
+
+        ##
+        self.longbox = None
+        self.start_time = None
+        self.func = None
+
+    def init(self,window,textures):
+
+        self.window = window
+        self.text = textures
+
+        cursor = pyglet.window.ImageMouseCursor(tman.textures[self.text[1]],16,16)
+        self.window.set_mouse_cursor(cursor)
+
+    def start_long_press(self,box,func):
+
+        if u.collisionAX(box.realbox,M) and self.start_time == None:
+
+            self.longbox = box
+            self.start_time = clock.bertran.get_time()
+            self.func = func
+
+            #self.check_long_press(0,xy)
+            clock.bertran.schedule(self.check_long_press)
+
+    def check_long_press(self,dt=0):
+
+        #check si on a quitté le box:
+        if not u.collisionAX(self.longbox.realbox,M):
+            self.reset()
+            return 0
+
+        percentage = (clock.bertran.get_time()-self.start_time)/self.long_time
+        self.change_skin(percentage)
+        #print(percentage)
+
+        if percentage >= 1:
+            print('applying',self.func.__name__)
+            self.func() # on clique
+            self.reset()
+
+    def reset(self):
+        clock.bertran.unschedule(self.check_long_press)
+        cursor = pyglet.window.ImageMouseCursor(tman.textures[self.text[1]],16,16)
+        self.window.set_mouse_cursor(cursor)
+        self.longbox = None
+        self.start_time = None
+        self.func = None
+
+    def change_skin(self,per):
+        nb = int(per*8)
+        cursor = pyglet.window.ImageMouseCursor(tman.textures[self.text[nb+8]],16,16)
+        self.window.set_mouse_cursor(cursor)
+
+Cur = Cursor()
 
 #### CAMERA
 

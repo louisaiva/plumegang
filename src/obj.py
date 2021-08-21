@@ -6,6 +6,7 @@ from src.utils import *
 from src import graphic as g
 from src import names as n
 from src import obj2 as o2
+from src import clock
 
 """""""""""""""""""""""""""""""""""
  INIT
@@ -265,15 +266,15 @@ class Human(): #graphic
 
     def update_skin(self,dt=0.4,repeat=True):
 
-        if self.play == 'play':
-            g.sman.set_text(self.skin_id,self.textids[(self.doing[0],self.dir,self.roll_skin)])
-            if self.roll_skin:
-                self.roll_skin = 0
-            else:
-                self.roll_skin = 1
+
+        g.sman.set_text(self.skin_id,self.textids[(self.doing[0],self.dir,self.roll_skin)])
+        if self.roll_skin:
+            self.roll_skin = 0
+        else:
+            self.roll_skin = 1
 
         if repeat:
-            pyglet.clock.schedule_once(self.update_skin, 0.4)
+            clock.bertran.schedule_once(self.update_skin, 0.4)
 
     def add_money(self,qté):
         self.money += qté
@@ -291,7 +292,7 @@ class Human(): #graphic
                 self.doing.insert(0, action)
                 self.undo()
                 self.update_skin(repeat=False)
-                pyglet.clock.schedule_once(self.undo,0.1,'hit')
+                clock.bertran.schedule_once(self.undo,0.1,'hit')
 
             elif action == 'write':
                 self.doing.insert(0, action)
@@ -319,9 +320,9 @@ class Human(): #graphic
             if time.time()-self.time_last_move > 0.2:
                 self.do()
 
-    def pause(self,play='play'):
+    """def pause(self,play='play'):
         if self.play != play:
-            self.play = play
+            self.play = play"""
 
     ##
 
@@ -611,6 +612,10 @@ class Instru():
         self.author = author
 
         self.price = instru_price(self)
+        self.owners = []
+
+    def add_owner(self,owner):
+        self.owners.append(owner)
 
     def __lt__(self, other):
          return self.quality < other.quality
@@ -754,7 +759,7 @@ class Zone_ELEM(Zone):
         if hasattr(self,'label'):
             g.lman.modify(self.label,color=self.color)
 
-            pyglet.clock.schedule_once(self.deactivate,0.5)
+            clock.bertran.schedule_once(self.deactivate,0.5)
 
     def deactivate(self,dt):
         if hasattr(self,'label'):
@@ -1145,7 +1150,7 @@ class SonHUD(HUD):
         self.box = box(1650-820,20,800,64)
         self.padding = 20
 
-        self.addCol('bg',self.box,group='ui-1')
+        #self.addCol('bg',self.box,group='ui-1')
 
 
     def update(self):
@@ -1413,22 +1418,18 @@ class MarketHUD(HUD):
         self.item_caught = None
 
         self.uis = {}
+        self.uis['main'] = None
         self.uis['instru0'] = None
         self.uis['instru1'] = None
         self.uis['instru2'] = None
         self.uis['instru3'] = None
 
-        """self.details = {}
-        self.details['instru0'] = None
-        self.details['instru1'] = None
-        self.details['instru2'] = None
-        self.details['instru3'] = None"""
-
         self.boxs = {}
-        self.boxs['instru0'] = box( 400+40+11,300+476+11,128,128 )
-        self.boxs['instru1'] = box( 400+40+11,300+342+11,128,128 )
-        self.boxs['instru2'] = box( 400+40+11,300+208+11,128,128 )
-        self.boxs['instru3'] = box( 400+40+11,300+74+11,128,128 )
+        self.boxs['main'] = box( 400+230,300+222,256,256 )
+        self.boxs['instru0'] = box( 400+820+1,300+476+11,128,128 )
+        self.boxs['instru1'] = box( 400+820+1,300+342+11,128,128 )
+        self.boxs['instru2'] = box( 400+820+1,300+208+11,128,128 )
+        self.boxs['instru3'] = box( 400+820+1,300+74+11,128,128 )
 
         self.addSpr('bg',g.TEXTIDS['ordhud'],(400,300),'hud')
 
@@ -1446,7 +1447,8 @@ class MarketHUD(HUD):
         self.uis[lab] = None
         if lab[:3] == 'ins':
             self.instru -= 1
-            for lab2 in ['qua','bt','price']:
+        elif lab == 'main':
+            for lab2 in ['qua','bt','price','status']:
                 g.lman.delete(self.labids[lab+'_'+lab2])
                 del self.labids[lab+'_'+lab2]
 
@@ -1455,11 +1457,15 @@ class MarketHUD(HUD):
 
     def catch_or_drop(self,x,y):
 
+        #print("wesh")
+
         if self.item_caught != None:
             ## on check kelui pour vwar si on l'drop
 
             if collisionAX(self.box.realbox,(x,y)):
-                return 0
+
+                self.inspect(self.item_caught.item)
+                return -1
             elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
                 self.perso.invhud.catch(self.item_caught.item)
                 self.item_caught.delete()
@@ -1473,18 +1479,62 @@ class MarketHUD(HUD):
 
             for lab in self.uis:
                 ui = self.uis[lab]
-                if ui != None:
+
+                if ui != None and lab != 'main':
                     ui.check_pressed()
                     if ui.caught:
-                        self.item_caught = Invent_UI(self.boxs[lab],ui.item,self.visible)
-                        self.item_caught.activate()
-                        self.delete_ui(lab)
+                        self.inspect(ui.item)
+                        #self.delete_ui(lab)
+                        ui.reset()
 
-                        return 1
+                elif ui != None: # on est dans le main
+                    if self.perso in ui.item.owners:
+                        ui.check_pressed()
+                        if ui.caught:
+                            self.item_caught = Invent_UI(self.boxs[lab],ui.item,self.visible)
+                            self.item_caught.activate()
+                            self.delete_ui(lab)
+
+                            return 1
+
+                    """elif g.Cur.longpress:
+                        print('wow')
+                        ui.check_pressed()
+                        if ui.caught:
+                            self.item_caught = Invent_UI(self.boxs[lab],ui.item,self.visible)
+                            self.item_caught.activate()
+                            self.delete_ui(lab)
+
+                            return 1"""
+
+
+
         return 0
 
-    def check_buy(self,x,y):
-        pass
+    def inspect(self,ins):
+
+        if self.uis['main'] != None:
+
+            if self.perso in self.uis['main'].item.owners:
+                self.perso.invhud.catch(self.uis['main'].item)
+
+            self.delete_ui('main')
+
+        self.uis['main'] = Invent_UI(self.boxs['main'],ins,self.visible,(0.8,0.8))
+        padding = 150
+
+        # creating new details
+        self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),anchor=('center','center'),color=c['white'],font_size=50)
+        self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
+        self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),anchor=('right','center'),color=c['yellow'],font_size=30)
+        self.addSpr('main_price',g.TEXTIDS['item'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+
+        if self.perso in ins.owners:
+            status,color = "purchased",c['green']
+        else:
+            status,color = "on sale",c['red']
+
+        self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_size=30)
 
     def add_instru(self,dt):
 
@@ -1503,7 +1553,7 @@ class MarketHUD(HUD):
                 self.uis['instru'+str(i+1)].upbox(self.boxs['instru'+str(i+1)])
                 #print(i,self.labids)
 
-                # each details
+                """# each details
                 for lab in ['qua','bt','price']:
                     self.labids['instru'+str(i+1)+'_'+lab] = self.labids['instru'+str(i)+'_'+lab]
                     id = self.labids['instru'+str(i+1)+'_'+lab]
@@ -1515,25 +1565,51 @@ class MarketHUD(HUD):
                 id = self.sprids['instru'+str(i+1)+'_price']
                 g.sman.modify(id,pos=(None,self.boxs['instru'+str(i+1)].cy- g.tman.textures[g.TEXTIDS['item'][0]].height/2))
                 if i==0:
-                    del self.sprids['instru0_price']
+                    del self.sprids['instru0_price']"""
 
         # replacing the first box with the new instru
         self.uis['instru0'] = Invent_UI(self.boxs['instru0'],ins,self.visible,(0.4,0.4))
 
-        # creating new details
+        """# creating new details
         self.addLab('instru0_qua',convert_quality(ins.quality),(self.box.cx-self.box.w/4,self.boxs['instru0'].cy),anchor=('center','center'),color=c['white'],font_size=50)
         self.addLab('instru0_bt',ins.author.name,(self.box.cx,self.boxs['instru0'].cy),anchor=('center','center'),color=c['white'],font_size=30)
         self.addLab('instru0_price',convert_huge_nb(ins.price),(self.box.cx+self.box.w/4,self.boxs['instru0'].cy),anchor=('right','center'),color=c['yellow'],font_size=30)
-        self.addSpr('instru0_price',g.TEXTIDS['item'][0],(self.box.cx+self.box.w/4,self.boxs['instru0'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+        self.addSpr('instru0_price',g.TEXTIDS['item'][0],(self.box.cx+self.box.w/4,self.boxs['instru0'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))"""
 
         self.instru += 1
         # recalling this function
         t = r.randint(2,10)
         print('wow new instru :',ins,'next in',t,'secondes')
-        pyglet.clock.schedule_once(self.add_instru,t)
+        clock.bertran.schedule_once(self.add_instru,t)
 
-    def buy_instru(self,k):
-        print('u wanna buy instru n*'+str(k), 'it will cost'+convert_huge_nb(self.uis['instru'+str(k)].item.price),'$')
+    def actualise(self):
+
+        if self.uis['main'] != None:
+            ins = self.uis['main'].item
+
+            padding = 150
+
+            # creating new details
+            self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),anchor=('center','center'),color=c['white'],font_size=50)
+            self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
+            self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),anchor=('right','center'),color=c['yellow'],font_size=30)
+            self.addSpr('main_price',g.TEXTIDS['item'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+
+            if self.perso in ins.owners:
+                status,color = "purchased",c['green']
+            else:
+                status,color = "on sale",c['red']
+
+            self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_size=30)
+
+    def buy_instru(self):
+
+        if self.uis['main'] != None and self.perso.money >= self.uis['main'].item.price:
+            self.perso.add_money(-self.uis['main'].item.price)
+            self.uis['main'].item.add_owner(self.perso)
+            self.actualise()
+
+        #print('u wanna buy instru n*'+str(k), 'it will cost'+convert_huge_nb(self.uis['instru'+str(k)].item.price),'$')
 
     def unhide(self,hide=False):
         super(MarketHUD,self).unhide(hide)
@@ -1605,7 +1681,9 @@ class InventHUD(HUD):
 
         #self.update()
         for i in range(r.randint(2,10)):
-            self.catch(Instru(r.random(),r.choice(btmakers)))
+            ins = Instru(r.random(),r.choice(btmakers))
+            ins.add_owner(self.perso)
+            self.catch(ins)
         for i in range(r.randint(2,10)):
             ph = []
             for i in range(4):
@@ -1717,6 +1795,12 @@ class InventHUD(HUD):
 
                     if type(self.perso.element_colli) == Lit and self.item_caught.item.type() == 'Phase':
                         self.perso.element_colli.hud.write(self.item_caught.item)
+                        self.remove(self.item_caught)
+                        self.item_caught = None
+                        return -1
+
+                    elif type(self.perso.element_colli) == Ordi and self.item_caught.item.type() == 'Instru':
+                        self.perso.element_colli.hud.inspect(self.item_caught.item)
                         self.remove(self.item_caught)
                         self.item_caught = None
                         return -1
@@ -1998,6 +2082,7 @@ class Item_UI(Zone_UI):
         self.dropped = False
         self.caught = False
         g.sman.unhide(self.itemspr,hide)
+        g.sman.modify(self.itemspr,scale=self.scale,group='ui-2')
 
     def move(self,x,y):
         self.box.xy = x-g.sman.spr(self.itemspr).width/2,y-g.sman.spr(self.itemspr).height/2
