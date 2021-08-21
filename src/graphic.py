@@ -6,6 +6,19 @@ import pyglet
 import src.utils as u
 
 
+class ScreenManager():
+    def __init__(self):
+
+        self.display = pyglet.canvas.get_display()
+        self.screens = self.display.get_screens()
+
+    def current_screen(self):
+        return self.screens[0]
+
+    def size(self):
+        return (self.current_screen().width,self.current_screen().height)
+
+scr = ScreenManager()
 
 #manager who rules groups to draw things in the right order u know
 class GroupManager():
@@ -18,7 +31,7 @@ class GroupManager():
         self.names_wo = {} ## give the name with the order
         self.orders = {} ## give the order with the name
 
-        names = ['back-2','back-1','back','back1','mid-1','mid','mid1','front','perso-1','hud-1','hud','hud1','perso','midup','ui-2','ui-1','ui','up']
+        names = ['back-2','back-1','back','back1','mid-1','mid','mid1','front','perso-1','hud-1','hud','hud1','perso','midup','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 8
 
         for i in range(len(names)):
@@ -315,11 +328,14 @@ class LabelManager():
         print('\tforegroup :',self.labels[lblid].foreground_group)
         print('\tforegroupdeco :',self.labels[lblid].foreground_decoration_group)
 
-    def modify(self,lblid,pos=None,scale=None,color=None):
+    def modify(self,lblid,pos=None,size=None,scale=None,color=None):
 
         if scale != None and scale != (self.labels[lblid].scale_x,self.labels[lblid].scale_y):
             self.labels[lblid].update(scale_x = scale[0],scale_y=scale[1])
             #self.labels[lblid].scale_x,self.labels[lblid].scale_y = scale
+
+        if size != None:
+            self.labels[lblid].font_size = size
 
         if pos != None:
             if pos[0] != None and pos[0] != self.labels[lblid].x:
@@ -476,7 +492,7 @@ class Cycle():
 
         # general
 
-        self.len = 100 # longueur du cycle en secondes
+        self.len = 10 # longueur du cycle en secondes
         self.dt = 1 # dt avant chaque update
 
         self.tick = 0

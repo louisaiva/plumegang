@@ -236,6 +236,7 @@ class Human(): #graphic
 
         self.name = name
         self.speed = 12
+        self.play = 'play'
 
         self.gex = pos[0] # general x
         self.gey = pos[1] # general y
@@ -264,13 +265,14 @@ class Human(): #graphic
 
     def update_skin(self,dt=0.4,repeat=True):
 
-        g.sman.set_text(self.skin_id,self.textids[(self.doing[0],self.dir,self.roll_skin)])
-        if self.roll_skin:
-            self.roll_skin = 0
-        else:
-            self.roll_skin = 1
+        if self.play == 'play':
+            g.sman.set_text(self.skin_id,self.textids[(self.doing[0],self.dir,self.roll_skin)])
+            if self.roll_skin:
+                self.roll_skin = 0
+            else:
+                self.roll_skin = 1
 
-        if repeat :
+        if repeat:
             pyglet.clock.schedule_once(self.update_skin, 0.4)
 
     def add_money(self,qté):
@@ -317,6 +319,9 @@ class Human(): #graphic
             if time.time()-self.time_last_move > 0.2:
                 self.do()
 
+    def pause(self,play='play'):
+        if self.play != play:
+            self.play = play
 
     ##
 
