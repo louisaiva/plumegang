@@ -242,7 +242,7 @@ class Human(): #graphic
         self.gex = pos[0] # general x
         self.gey = pos[1] # general y
 
-        self.money = 100
+        self.money = 1000
 
         self.element_colli = None
 
@@ -319,10 +319,6 @@ class Human(): #graphic
         if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing:
             if time.time()-self.time_last_move > 0.2:
                 self.do()
-
-    """def pause(self,play='play'):
-        if self.play != play:
-            self.play = play"""
 
     ##
 
@@ -1424,6 +1420,8 @@ class MarketHUD(HUD):
         self.uis['instru2'] = None
         self.uis['instru3'] = None
 
+        self.old_main_pos = None
+
         self.boxs = {}
         self.boxs['main'] = box( 400+230,300+222,256,256 )
         self.boxs['instru0'] = box( 400+820+1,300+476+11,128,128 )
@@ -1463,16 +1461,11 @@ class MarketHUD(HUD):
             ## on check kelui pour vwar si on l'drop
 
             if collisionAX(self.box.realbox,(x,y)):
-
                 self.inspect(self.item_caught.item)
-                return -1
             elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
                 self.perso.invhud.catch(self.item_caught.item)
-                self.item_caught.delete()
-                self.item_caught = None
-            else:
-                self.item_caught.delete()
-                self.item_caught = None
+            self.item_caught.delete()
+            self.item_caught = None
             return -1
         else:
             ## on check touu pour vwar si on en catch
@@ -1483,9 +1476,9 @@ class MarketHUD(HUD):
                 if ui != None and lab != 'main':
                     ui.check_pressed()
                     if ui.caught:
-                        self.inspect(ui.item)
-                        #self.delete_ui(lab)
-                        ui.reset()
+                        self.inspect(ui.item,int(lab[-1]))
+                        self.delete_ui(lab)
+                        #ui.reset()
 
                 elif ui != None: # on est dans le main
                     if self.perso in ui.item.owners:
@@ -1497,28 +1490,19 @@ class MarketHUD(HUD):
 
                             return 1
 
-                    """elif g.Cur.longpress:
-                        print('wow')
-                        ui.check_pressed()
-                        if ui.caught:
-                            self.item_caught = Invent_UI(self.boxs[lab],ui.item,self.visible)
-                            self.item_caught.activate()
-                            self.delete_ui(lab)
-
-                            return 1"""
-
-
-
         return 0
 
-    def inspect(self,ins):
+    def inspect(self,ins,pos=None):
 
         if self.uis['main'] != None:
 
             if self.perso in self.uis['main'].item.owners:
                 self.perso.invhud.catch(self.uis['main'].item)
-
+            elif self.old_main_pos != None and self.old_main_pos <= 3:
+                self.uis['instru'+str(self.old_main_pos)] = Invent_UI(self.boxs['instru'+str(self.old_main_pos)],self.uis['main'].item,self.visible,(0.4,0.4))
             self.delete_ui('main')
+
+        self.old_main_pos = pos
 
         self.uis['main'] = Invent_UI(self.boxs['main'],ins,self.visible,(0.8,0.8))
         padding = 150
@@ -1551,31 +1535,11 @@ class MarketHUD(HUD):
             self.uis['instru'+str(i+1)] = self.uis['instru'+str(i)]
             if self.uis['instru'+str(i+1)] != None:
                 self.uis['instru'+str(i+1)].upbox(self.boxs['instru'+str(i+1)])
-                #print(i,self.labids)
-
-                """# each details
-                for lab in ['qua','bt','price']:
-                    self.labids['instru'+str(i+1)+'_'+lab] = self.labids['instru'+str(i)+'_'+lab]
-                    id = self.labids['instru'+str(i+1)+'_'+lab]
-                    g.lman.modify(id,pos=(None,self.boxs['instru'+str(i+1)].cy))
-                    if i==0:
-                        del self.labids['instru0'+'_'+lab]
-
-                self.sprids['instru'+str(i+1)+'_price'] = self.sprids['instru'+str(i)+'_price']
-                id = self.sprids['instru'+str(i+1)+'_price']
-                g.sman.modify(id,pos=(None,self.boxs['instru'+str(i+1)].cy- g.tman.textures[g.TEXTIDS['item'][0]].height/2))
-                if i==0:
-                    del self.sprids['instru0_price']"""
+        if self.old_main_pos != None:
+            self.old_main_pos += 1
 
         # replacing the first box with the new instru
         self.uis['instru0'] = Invent_UI(self.boxs['instru0'],ins,self.visible,(0.4,0.4))
-
-        """# creating new details
-        self.addLab('instru0_qua',convert_quality(ins.quality),(self.box.cx-self.box.w/4,self.boxs['instru0'].cy),anchor=('center','center'),color=c['white'],font_size=50)
-        self.addLab('instru0_bt',ins.author.name,(self.box.cx,self.boxs['instru0'].cy),anchor=('center','center'),color=c['white'],font_size=30)
-        self.addLab('instru0_price',convert_huge_nb(ins.price),(self.box.cx+self.box.w/4,self.boxs['instru0'].cy),anchor=('right','center'),color=c['yellow'],font_size=30)
-        self.addSpr('instru0_price',g.TEXTIDS['item'][0],(self.box.cx+self.box.w/4,self.boxs['instru0'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))"""
-
         self.instru += 1
         # recalling this function
         t = r.randint(2,10)
