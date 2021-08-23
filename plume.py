@@ -18,7 +18,7 @@ if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
     print('Changez le programme de place pour un path sans espace svp.')
 
-ESK_QUIT = True ## pour éviter d'avoir à passer par le menu
+ESK_QUIT = False ## pour éviter d'avoir à passer par le menu
 
 class App():
 
@@ -508,7 +508,7 @@ class App():
                                 elif caught_dropped == -1: # means dropped
                                     letsbacktnothingcaught = True
 
-                                self.on_mouse_motion(x,y,0,0)
+                                #self.on_mouse_motion(x,y,0,0)
 
                     elif zone == 'studio':
                         if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['studio'].hud) : #check si il peut catch
@@ -519,7 +519,7 @@ class App():
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
 
-                            self.on_mouse_motion(x,y,0,0)
+                            #self.on_mouse_motion(x,y,0,0)
 
                     elif zone == 'ordi':
                         if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['ordi'].hud) : #check si il peut catch
@@ -535,12 +535,13 @@ class App():
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
 
-                            self.on_mouse_motion(x,y,0,0)
+                            #self.on_mouse_motion(x,y,0,0)
 
             # inventUI
             if self.perso.invhud.visible:
 
                 if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.invhud) : #check si il peut catch
+                    print('wesh')
 
                     caught_dropped = self.perso.invhud.catch_or_drop(x,y)
 
@@ -666,16 +667,18 @@ class App():
 
                 g.Cam.update(self.perso.realbox,o2.CITY[self.street])
 
-            ## particles
-            g.pman.modify('icons',dy=0.1)
+            if clock.bertran.speed > 0:
 
-            ## fans are streaming
+                ## particles
+                g.pman.modify('icons',dy=0.1)
 
-            for i in range(len(self.perso.disco)):
-                chance = random.randint(0,int(60*moyfps))
-                malus = 1-i*0.2
-                if chance < self.perso.nb_fans*malus:
-                    random.choice(self.fans).stream(self.perso.disco[i])
+                ## fans are streaming
+
+                for i in range(len(self.perso.disco)):
+                    chance = random.randint(0,int(60*moyfps))
+                    malus = 1-i*0.2
+                    if chance < self.perso.nb_fans*malus:
+                        random.choice(self.fans).stream(self.perso.disco[i])
 
 
             ## perso
