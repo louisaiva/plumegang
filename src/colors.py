@@ -71,6 +71,7 @@ c = {
 "lawngreen" : (124, 252, 0,255),
 "lemonchiffon" : (255, 250, 205,255),
 "lightblue" : (173, 216, 230,255),
+"lightred" : (235, 98, 85,255),
 "lightcoral" : (240, 128, 128,255),
 "lightcyan" : (224, 255, 255,255),
 "lightgoldenrodyellow" : (250, 250, 210,255),

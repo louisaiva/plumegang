@@ -40,7 +40,7 @@ class Menu:
         ## labels
 
         self.labids = {}
-        (w,h) = g.scr.size()
+        (w,h) = g.scr.size
         padding = 100
         self.size = 30
         x = w/2

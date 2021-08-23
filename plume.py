@@ -35,7 +35,7 @@ class App():
 
         ### windows
 
-        self.window = pyglet.window.Window(screen=g.scr.current_screen())
+        self.window = pyglet.window.Window(screen=g.scr.screen)
 
         self.window.set_fullscreen()
 
@@ -129,7 +129,7 @@ class App():
 
         self.ai = []
         n = random.randint(200,1500)
-        n = 50
+        n = 15
         for i in range(n):
             pos = (random.randint(-2000,8000),175)
             name = random.choice(names.names)
@@ -164,8 +164,8 @@ class App():
         zones.append(o.Distrib(2900,225))
         o2.CITY['street1'].assign_zones(zones)
 
-        self.street = 'home'
-        o2.CITY['home'].load()
+        self.street = self.perso.street
+        o2.CITY[self.street].load()
 
 
         ## items
@@ -188,8 +188,8 @@ class App():
         # labels
 
         self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
-        self.lab_day = g.lman.addLab('DAY : 0',(20,20),group='up',font_size=32,anchor=('left','bottom'))
-        self.lab_street = g.lman.addLab('home',(20,60),group='up',font_size=20,anchor=('left','bottom'))
+        self.lab_day = g.lman.addLab('DAY : 0',(20,20+32),group='up',font_size=32,anchor=('left','bottom'))
+        self.lab_street = g.lman.addLab('home',(20,60+32),group='up',font_size=20,anchor=('left','bottom'))
 
 
 
@@ -220,6 +220,7 @@ class App():
         g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
         g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
         g.TEXTIDS['utils'] = g.tman.loadImSeq('utils.png',(8,8))
+        #g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(8,8))
 
         qua = ['F','D','C','B','A','S']
         g.TEXTIDS['plume'] = {}
@@ -348,8 +349,11 @@ class App():
                 if self.perso.element_colli != None:
 
                     if type(self.perso.element_colli) in [p.Human,p.Rappeur,p.Perso]:
-                        self.perso.element_colli.be_hit(self.perso)
+                        if self.perso.element_colli.alive:
+                            self.perso.element_colli.do('hit')
+                            self.perso.be_hit(self.perso.element_colli)
                         self.perso.do('hit')
+                        self.perso.element_colli.be_hit(self.perso)
                     else:
                         if not self.perso.element_colli.longpress:
                             if type(self.perso.element_colli) == o.Porte:
@@ -593,6 +597,11 @@ class App():
                 if self.keys[key.D]:
                     self.perso.move('R',o2.CITY[self.street])
 
+                if self.keys[key.Z]:
+                    self.perso.move('up',o2.CITY[self.street])
+                if self.keys[key.S]:
+                    self.perso.move('down',o2.CITY[self.street])
+
                 ## moving freeze Corleone
                 if self.street == self.ai[0].street:
                     if self.keys[key.K]:
@@ -711,11 +720,10 @@ class App():
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()
 
-            if self.perso.money <= 0:
+            if self.perso.money <= 0 or not self.perso.alive:
                 #print('game over')
                 self.gameover = True
                 self.game_over()
-                #self.perso.nb_fans += random.randint(1*(self.perso.money//1000),10*(self.perso.money//1000))
 
     def gameloop(self,dt):
 

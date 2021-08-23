@@ -10,6 +10,7 @@ from src.utils import *
 from src import graphic as g
 from src import names as n
 from src import obj as o
+from src import obj2 as o2
 
 #graphic
 
@@ -20,11 +21,13 @@ class Human():
 
         self.name = name
         self.speed = 12
+        self.yspeed = 5
         self.play = 'play'
 
         #life
         self.life = 100
-        self.damage = 34
+        self.max_life = 100
+        self.damage = r.randint(10, 110)
 
         #pos
         self.gex = pos[0] # general x
@@ -124,24 +127,35 @@ class Human():
     def move(self,dir,street):
 
         maxx=street.xxf
-        if 'write' not in self.doing and 'wait' not in self.doing:
+        maxy = 100,175
+        if 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
 
             moved = False
             if dir == 'R' :
                 if (maxx[1] == None or maxx[1] > self.gex+self.speed+g.sman.spr(self.skin_id).width ):
                     self.gex+=self.speed
                     moved = True
+
             elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-self.speed ):
                 self.gex-=self.speed
+                moved = True
 
+            elif dir == 'up' and maxy[1] > self.gey+self.yspeed:
+                self.gey+=self.yspeed
+                moved = True
+
+            elif dir == 'down' and maxy[0] < self.gey-self.yspeed :
+                self.gey-=self.yspeed
                 moved = True
 
             if moved :
-
-                if self.dir != dir:
-                    self.dir = dir
-                    self.do('move')
-                    self.update_skin(repeat=False)
+                if dir in ['R','L']:
+                    if self.dir != dir:
+                        self.dir = dir
+                        self.do('move')
+                        self.update_skin(repeat=False)
+                    else:
+                        self.do('move')
                 else:
                     self.do('move')
                 self.update_lab()
@@ -164,12 +178,26 @@ class Human():
         if self.life <= 0:
             self.die()
 
+        s=convert_huge_nb(hitter.damage)
+        pos = self.box.cx +r.randint(-10,10),self.box.fy
+        g.pman.addLabPart(s,pos,color=c['lightred'],key='icons',anchor=('center','center'),group='up-1',vis=True)
+
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
             g.sman.filter(self.skin_id,(255,255,255))
 
     def die(self):
         self.do('die')
+        self.damage = 0
+        self.speed = 0
+        self.yspeed = 0
+
+        g.bertran.schedule_once(self.delete,4)
+
+    def delete(self,dt=0):
+
+        #self.deload()
+        o2.CITY[self.street].del_hum(self)
 
 
     ## hoover
@@ -197,7 +225,7 @@ class Human():
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
             self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
 
-        print('loaded',self.name)
+        #print('loaded',self.name)
 
     def deload(self):
         g.bertran.unschedule(self.update_skin)
@@ -209,14 +237,25 @@ class Human():
             g.lman.delete(self.label)
             del self.label
 
-        print('deloaded',self.name)
+        #print('deloaded',self.name)
 
     ##
 
+    def _box(self):
+        x,y,xf,yf = self.realbox
+        w,h=xf-x,yf-y
+        return box(x,y,w,h)
+    box = property(_box)
+
     def _realbox(self):
         return g.sman.box(self.skin_id)
-
     realbox = property(_realbox)
+
+    def _alive(self):
+        if self.life > 0:
+            return True
+        return False
+    alive = property(_alive)
 
 class Rappeur(Human):
 
@@ -297,8 +336,13 @@ class Perso(Rappeur):
 
         super(Perso,self).__init__(textids,pos,name,street=street)
 
+        self.max_life = 800
+        self.life = self.max_life
+        self.speed = g.SPEED
+
         # hud
         self.hud = o.PersoHUD(self)
+        self.lifehud = o.LifeHUD(self)
         self.plumhud = o.PlumHUD(self.plume)
         self.invhud = o.InventHUD(self)
         self.sonhud = o.SonHUD(self)
@@ -317,6 +361,25 @@ class Perso(Rappeur):
         if self.plume != None:
             self.plumhud.delete()
         super(Perso,self).drop_plume()
+
+    def be_hit(self,hitter):
+        print(self.name,'hit by',hitter.name)
+        g.sman.filter(self.skin_id)
+        g.bertran.unschedule(self.un_hit)
+        g.bertran.schedule_once(self.un_hit, 0.4)
+
+        self.life -= hitter.damage
+
+        if self.life <= 0:
+            self.life = 0
+        self.lifehud.update()
+
+        if self.life <= 0:
+            self.die()
+
+        s=convert_huge_nb(hitter.damage)
+        pos = self.box.cx +r.randint(-10,10),self.box.fy
+        g.pman.addLabPart(s,pos,color=c['lightred'],key='icons',anchor=('center','center'),group='up-1',vis=True)
 
     ## particles
 

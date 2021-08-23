@@ -18,11 +18,13 @@ class ScreenManager():
         self.display = pyglet.canvas.get_display()
         self.screens = self.display.get_screens()
 
-    def current_screen(self):
+    def _screen(self):
         return self.screens[0]
+    screen = property(_screen)
 
-    def size(self):
-        return (self.current_screen().width,self.current_screen().height)
+    def _size(self):
+        return self.screen.width,self.screen.height
+    size = property(_size)
 
 scr = ScreenManager()
 
@@ -631,6 +633,8 @@ Cur = Cursor()
 
 #### CAMERA
 
+SPEED = 30
+
 class Camera():
 
     def __init__(self):
@@ -641,26 +645,27 @@ class Camera():
 
         self.d = 0.2
 
-        self.speed = 12
+        self.speed = SPEED
 
     def update(self,persobox,street):
 
-        scr = (1920,1080)
+        #scr = (1920,1080)
+        #scr = scr.size
         moved = [False,False]
 
         x,xf = street.xxf
         #print(x,xf)
 
         #X
-        if persobox[2] > 4*scr[0]/5 and (xf == None or street.rxf > scr[0] +self.speed):
+        if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +self.speed):
             self.lessx()
             moved[0] = True
 
-        elif persobox[0] < scr[0]/5 and (x == None or street.x < -self.speed):
+        elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -self.speed):
             self.morex()
             moved[0] = True
 
-        if xf != None and street.rxf < scr[0]:
+        if xf != None and street.rxf < scr.size[0]:
             self.morex()
             moved[0] = True
         elif x != None and street.x > 0:
@@ -670,10 +675,10 @@ class Camera():
         #print(street.x,street.rxf)
 
         #Y
-        if persobox[3] > 7*scr[1]/8:
+        if persobox[3] > 19*scr.size[1]/20:
             self.lessy()
             moved[1] = True
-        elif persobox[1] < scr[1]/8:
+        elif persobox[1] < scr.size[1]/20:
             self.morey()
             moved[1] = True
 

@@ -836,6 +836,39 @@ class PersoHUD(HUD):
         g.pman.unhide('icons',hide)
         self.visible = not hide
 
+class LifeHUD(HUD):
+
+    def __init__(self,perso):
+
+        super(LifeHUD, self).__init__(group='ui',name='life')
+        #print(self.group)
+
+        self.perso = perso
+
+        #self.box = box(1700,460+150,200,400)
+        self.anc = (20,20)
+
+        size_lifebar = 400
+        size_fill = (self.perso.life*size_lifebar)/self.perso.max_life
+
+
+        self.addSpr('l',g.TEXTIDS['utils'][4],self.anc,group='ui')
+        self.addSpr('r',g.TEXTIDS['utils'][4],(self.anc[0]+size_lifebar,self.anc[1]),group='ui')
+        self.addSpr('mid',g.TEXTIDS['utils'][3],self.anc,group='ui')
+        g.sman.modify(self.sprids['mid'],scale=(size_lifebar/32,1))
+
+        self.addSpr('fill',g.TEXTIDS['utils'][5],self.anc,group='ui-1')
+        g.sman.modify(self.sprids['fill'],scale=(size_fill/32,1))
+
+    def update(self):
+
+        size_lifebar = 400
+        size_fill = (self.perso.life*size_lifebar)/self.perso.max_life
+        g.sman.modify(self.sprids['r'],(self.anc[0]+size_lifebar,self.anc[1]))
+        g.sman.modify(self.sprids['mid'],scale=(size_lifebar/32,1))
+        g.sman.modify(self.sprids['fill'],scale=(size_fill/32,1))
+
+
 class PlumHUD(HUD):
 
     def __init__(self,plum):
