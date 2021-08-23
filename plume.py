@@ -12,6 +12,7 @@ from src.utils import *
 from src.colors import *
 import src.getsave as gs
 from src import obj as o
+from src import perso as p
 from src import obj2 as o2
 from src import graphic as g
 from src import menu as m
@@ -121,11 +122,15 @@ class App():
 
         ## PERSOS
 
-        self.perso = o.Rappeur(g.TEXTIDS['persos'])
+        self.perso = p.Perso(g.TEXTIDS['persos'])
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         self.ai = []
+        self.ai.append(p.Rappeur(g.TEXTIDS['persos']))
+
+        for hum in self.ai:# + [self.perso]:
+            o2.CITY[hum.street].add_hum(hum)
 
         self.fans = []
         nbfans = 1000
@@ -314,8 +319,6 @@ class App():
                     if not ESK_QUIT:
                         return pyglet.event.EVENT_HANDLED
 
-
-
             elif symbol == key.A:
                 self.perso.drop_plume()
 
@@ -418,8 +421,8 @@ class App():
             #print(self.this_hud_caught_an_item)
 
             # plumUI
-            if self.perso.plume != None and self.perso.plume.hud.ui.visible and self.this_hud_caught_an_item == None:
-                self.perso.plume.hud.ui.check_mouse(x,y)
+            if self.perso.plume != None and self.perso.plumhud.ui.visible and self.this_hud_caught_an_item == None:
+                self.perso.plumhud.ui.check_mouse(x,y)
 
             #phaseUI
 
@@ -493,8 +496,8 @@ class App():
             ## CHECK ALL UI
 
             # plumUI
-            if self.perso.plume != None and self.perso.plume.hud.ui.visible and self.this_hud_caught_an_item == None:
-                self.perso.plume.hud.ui.check_pressed()
+            if self.perso.plume != None and self.perso.plumhud.ui.visible and self.this_hud_caught_an_item == None:
+                self.perso.plumhud.ui.check_pressed()
 
             #phaseUI
             for zone in o2.CITY[self.street].zones:
@@ -573,10 +576,18 @@ class App():
 
             if not self.gameover:
 
+                ## moving perso
                 if self.keys[key.Q]:
                     self.perso.move('L',o2.CITY[self.street])
                 if self.keys[key.D]:
                     self.perso.move('R',o2.CITY[self.street])
+
+                ## moving freeze Corleone
+                if self.street == self.ai[0].street:
+                    if self.keys[key.K]:
+                        self.ai[0].move('L',o2.CITY[self.street])
+                    if self.keys[key.M]:
+                        self.ai[0].move('R',o2.CITY[self.street])
 
                 if self.keys[key.E]:
                     if self.perso.element_colli != None:
@@ -597,6 +608,7 @@ class App():
         g.tman.draw()
 
     def refresh(self):
+
 
         ## FPS
         dt = time.time() - self.lab_fps_time
@@ -629,15 +641,14 @@ class App():
                     zone.move(x_r,y_r)
 
                 #--# persos
-                x_r = self.perso.gex + g.Cam.X
+                """x_r = self.perso.gex + g.Cam.X
                 y_r = self.perso.gey + g.Cam.Y
-                g.sman.modify(self.perso.skin_id,(x_r,y_r))
+                g.sman.modify(self.perso.skin_id,(x_r,y_r))"""
 
-                #--# ai
-                for ai in self.ai:
-                    x_r = ai.gex + g.Cam.X
-                    y_r = ai.gey + g.Cam.Y
-                    g.sman.modify(ai.skin_id,(x_r,y_r))
+                for hum in o2.CITY[self.street].humans + [self.perso]:
+                    x_r = hum.gex + g.Cam.X
+                    y_r = hum.gey + g.Cam.Y
+                    g.sman.modify(hum.skin_id,(x_r,y_r))
 
 
                 #--# bg
@@ -686,7 +697,8 @@ class App():
 
             ## perso
 
-            self.perso.check_do()
+            for hum in o2.CITY[self.street].humans + [self.perso]:
+                hum.check_do()
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()
 

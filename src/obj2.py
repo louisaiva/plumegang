@@ -18,6 +18,9 @@ class Street():
         self.name = name
 
         self.zones = {}
+        self.humans = []
+
+        self.visible = False
 
     def modify(self,x=None,y=None):
         if x != None:
@@ -26,9 +29,25 @@ class Street():
             self.y = y+self.box.xy[1]
 
     def assign_zones(self,zones):
-
         for zone in zones:
             self.zones[zone.name] = zone
+
+    def add_hum(self,hum):
+        if type(hum) == type([]):
+            for h in hum:
+                self.humans.append(h)
+                if self.visible:
+                    h.load()
+        else:
+            self.humans.append(hum)
+            if self.visible:
+                hum.load()
+
+    def del_hum(self,hum):
+        if hum in self.humans:
+            self.humans.remove(hum)
+            if self.visible:
+                hum.deload()
 
     def deload(self):
         if hasattr(self,'streetbg'):
@@ -41,7 +60,13 @@ class Street():
         for zone in self.zones:
             self.zones[zone].deload()
 
+        for h in self.humans:
+            h.deload()
+
+        self.visible = False
+
     def load(self):
+
         if self.text[0] != None:
             self.streetbg = g.sman.addSpr(self.text[0],self.box.xy,group='mid-1')
         if self.text[1] != None:
@@ -49,6 +74,11 @@ class Street():
 
         for zone in self.zones:
             self.zones[zone].load()
+
+        for h in self.humans:
+            h.load()
+
+        self.visible = True
     #
 
     def _x(self):
