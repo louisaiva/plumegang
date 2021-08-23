@@ -1,3 +1,7 @@
+"""
+CODED by deltasfer
+enjoy
+"""
 
 
 import pyglet,time,random
@@ -11,7 +15,6 @@ from src import obj as o
 from src import obj2 as o2
 from src import graphic as g
 from src import menu as m
-from src import clock
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__)) # fopatouché
 if ' ' in CURRENT_PATH:
@@ -271,7 +274,7 @@ class App():
         self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=200,color=c['darkkhaki'],group='up')
         self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=210,color=c['black'],group='up')
 
-        clock.bertran.set_speed(0,0)
+        g.bertran.set_speed(0,0)
 
     def get_out(self):
         self.playing = False
@@ -282,11 +285,11 @@ class App():
         if act == "pause":
             g.sman.unhide(self.sprids['effects'][size_scr])
             self.menu.unhide()
-            clock.bertran.set_speed(0,0)
+            g.bertran.set_speed(0,0)
         else:
             g.sman.unhide(self.sprids['effects'][size_scr],True)
             self.menu.unhide(True)
-            clock.bertran.set_speed(0,1)
+            g.bertran.set_speed(0,1)
 
         self.action = act
         #print('go',act)
@@ -667,7 +670,7 @@ class App():
 
                 g.Cam.update(self.perso.realbox,o2.CITY[self.street])
 
-            if clock.bertran.speed > 0:
+            if g.bertran.speed > 0:
 
                 ## particles
                 g.pman.modify('icons',dy=0.1)

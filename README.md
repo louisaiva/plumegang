@@ -37,7 +37,9 @@ Stuff working :
 
 *Plumoir* - long press **E** to get a new random plume
 
-*Ordi* - short press **E** to earn some money *(dev hack to simplify my life -- won't work like that in the future)*
+*Ordi* - short mouse click on an instru to see details, long click on the detailed instru to buy it
+
+*EasyCash* - short press **E** to earn some money *(dev hack to simplify my life -- won't work like that in the future)*
 
 
 
@@ -50,7 +52,11 @@ Stuff working :
 
 ***E*** - to use the things in your house (long or short press)
 
-***ESC***  - to close the hud of the thing you are using OR to quit the game
+***ESC***  - to close the hud of the thing you are using OR to pause the game
+
+***up***/***down*** - (in the menu) to control menu
+
+***ENTER***  - (in the menu) to activate action
 
 ***<-***/***->*** - to control camera
 

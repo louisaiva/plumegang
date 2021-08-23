@@ -1,3 +1,7 @@
+"""
+CODED by deltasfer
+enjoy
+"""
 
 from src.utils import *
 from src import graphic as g

@@ -1,4 +1,6 @@
 """""
+CODED by deltasfer
+enjoy
 programme sauvegarde de fichiers sources
 """""
 

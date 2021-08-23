@@ -1,3 +1,8 @@
+"""
+CODED by deltasfer
+enjoy
+"""
+
 from src import graphic as g
 from src.colors import *
 from collections import OrderedDict

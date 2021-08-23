@@ -1,11 +1,16 @@
-
+"""
+CODED by deltasfer
+enjoy
+"""
 
 
 
 import pyglet
 import src.utils as u
-from src import clock
 
+"""""""""""""""""""""""""""""""""""
+ PART ONE : GRAPHIC STUFF
+"""""""""""""""""""""""""""""""""""
 
 class ScreenManager():
     def __init__(self):
@@ -397,7 +402,7 @@ class ParticleManager():
             group = gman.getGroup(group)
             self.sprites[key][id].group = group
 
-        clock.bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
+        bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
                 ('center','center'),color=(255,255,255,255),key='normal',vis=True):
@@ -422,7 +427,7 @@ class ParticleManager():
 
         self.labels[key][id].x,self.labels[key][id].y = xy_pos
 
-        clock.bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
+        bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
 
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         text = tman.addCol(*box.wh,col)
@@ -436,7 +441,7 @@ class ParticleManager():
             self.sprites[key][id].delete()
             del self.sprites[key][id]
         else:
-            clock.bertran.schedule_once(self.delay_spr,dt,id,key)
+            bertran.schedule_once(self.delay_spr,dt,id,key)
 
     def delay_lab(self,dt,id,key):
 
@@ -445,7 +450,7 @@ class ParticleManager():
             self.labels[key][id].delete()
             del self.labels[key][id]
         else:
-            clock.bertran.schedule_once(self.delay_lab,dt,id,key)
+            bertran.schedule_once(self.delay_lab,dt,id,key)
 
     def modify(self,key,dx=0,dy=0,setx=None,sety=None):
         if key in self.sprites:
@@ -486,6 +491,12 @@ pman = ParticleManager()
 
 TEXTIDS = {}
 
+
+"""""""""""""""""""""""""""""""""""
+ PART TWO : CCCC STUFF
+"""""""""""""""""""""""""""""""""""
+
+
 #### CYCLE -> rules day/night cycle
 class Cycle():
 
@@ -522,12 +533,37 @@ class Cycle():
         day_percentage = (self.tick*self.dt - (self.day-1)*self.len )/self.len
         #print(day_percentage)
 
-        clock.bertran.schedule_once(self.ticked,self.dt)
+        bertran.schedule_once(self.ticked,self.dt)
 
     def update(self,day_percentage):
         pass
 
 M = [0,0]
+
+#### CLOCK
+
+class Clock(pyglet.clock.Clock):
+
+    def __init__(self):
+        self.__time = 0
+        self.speed = 1.0
+        pyglet.clock.Clock.__init__(self, time_function=self.get_time)
+        pyglet.clock.schedule(self.advance)
+
+    def advance(self, time):
+        self.__time += time * self.speed
+        self.tick()
+
+    def get_time(self):
+        return self.__time
+
+    def set_speed(self, dt=0, speed=1.0):
+        self.speed = speed
+
+bertran = Clock() # bertran c'est le S
+
+
+#### CURSOR
 
 class Cursor():
 
@@ -553,11 +589,11 @@ class Cursor():
         if u.collisionAX(box.realbox,M) and self.start_time == None:
 
             self.longbox = box
-            self.start_time = clock.bertran.get_time()
+            self.start_time = bertran.get_time()
             self.func = func
 
             #self.check_long_press(0,xy)
-            clock.bertran.schedule(self.check_long_press)
+            bertran.schedule(self.check_long_press)
 
     def check_long_press(self,dt=0):
 
@@ -566,7 +602,7 @@ class Cursor():
             self.reset()
             return 0
 
-        percentage = (clock.bertran.get_time()-self.start_time)/self.long_time
+        percentage = (bertran.get_time()-self.start_time)/self.long_time
         self.change_skin(percentage)
         #print(percentage)
 
@@ -576,7 +612,7 @@ class Cursor():
             self.reset()
 
     def reset(self):
-        clock.bertran.unschedule(self.check_long_press)
+        bertran.unschedule(self.check_long_press)
         cursor = pyglet.window.ImageMouseCursor(tman.textures[self.text[1]],16,16)
         self.window.set_mouse_cursor(cursor)
         self.longbox = None

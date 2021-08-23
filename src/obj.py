@@ -1,3 +1,7 @@
+"""
+CODED by deltasfer
+enjoy
+"""
 
 import random as r
 import json,time,pyglet
@@ -6,7 +10,6 @@ from src.utils import *
 from src import graphic as g
 from src import names as n
 from src import obj2 as o2
-from src import clock
 
 """""""""""""""""""""""""""""""""""
  INIT
@@ -274,7 +277,7 @@ class Human(): #graphic
             self.roll_skin = 1
 
         if repeat:
-            clock.bertran.schedule_once(self.update_skin, 0.4)
+            g.bertran.schedule_once(self.update_skin, 0.4)
 
     def add_money(self,qté):
         self.money += qté
@@ -292,7 +295,7 @@ class Human(): #graphic
                 self.doing.insert(0, action)
                 self.undo()
                 self.update_skin(repeat=False)
-                clock.bertran.schedule_once(self.undo,0.1,'hit')
+                g.bertran.schedule_once(self.undo,0.1,'hit')
 
             elif action == 'write':
                 self.doing.insert(0, action)
@@ -755,7 +758,7 @@ class Zone_ELEM(Zone):
         if hasattr(self,'label'):
             g.lman.modify(self.label,color=self.color)
 
-            clock.bertran.schedule_once(self.deactivate,0.5)
+            g.bertran.schedule_once(self.deactivate,0.5)
 
     def deactivate(self,dt):
         if hasattr(self,'label'):
@@ -1544,7 +1547,7 @@ class MarketHUD(HUD):
         # recalling this function
         t = r.randint(2,10)
         print('wow new instru :',ins,'next in',t,'secondes')
-        clock.bertran.schedule_once(self.add_instru,t)
+        g.bertran.schedule_once(self.add_instru,t)
 
     def actualise(self):
 
