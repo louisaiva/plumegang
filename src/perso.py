@@ -180,7 +180,7 @@ class Human():
 
         s=convert_huge_nb(hitter.damage)
         pos = self.box.cx +r.randint(-10,10),self.box.fy
-        g.pman.addLabPart(s,pos,color=c['lightred'],key='icons',anchor=('center','center'),group='up-1',vis=True)
+        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',anchor=('center','center'),group='up-1',vis=True)
 
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
@@ -332,11 +332,11 @@ class Rappeur(Human):
 
 class Perso(Rappeur):
 
-    def __init__(self,textids,pos=(400,175),name='Delta',street='street1'):
+    def __init__(self,textids,pos=(400,175),name='Delta',street='home'):
 
         super(Perso,self).__init__(textids,pos,name,street=street)
 
-        self.max_life = 800
+        self.max_life = 4800
         self.life = self.max_life
         self.speed = g.SPEED
 
@@ -379,7 +379,7 @@ class Perso(Rappeur):
 
         s=convert_huge_nb(hitter.damage)
         pos = self.box.cx +r.randint(-10,10),self.box.fy
-        g.pman.addLabPart(s,pos,color=c['lightred'],key='icons',anchor=('center','center'),group='up-1',vis=True)
+        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',anchor=('center','center'),group='up-1',vis=True)
 
     ## particles
 
@@ -387,19 +387,19 @@ class Perso(Rappeur):
         super(Perso,self).addfan(fan)
         s = '+1'
         pos = g.lman.labels[self.hud.labids['fan_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['fan_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'),group='up',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     def addfans(self,fans):
         super(Perso,self).addfans(fans)
         s = '+'+str(len(fans))
         pos = g.lman.labels[self.hud.labids['fan_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['fan_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'),group='up',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     def addstream(self):
         super(Perso,self).addstream()
         s = '+1'
         pos = g.lman.labels[self.hud.labids['stream_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['stream_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightblue'],key='icons',anchor=('right','center'),group='up',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['lightblue'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     def add_money(self,qté):
         super(Perso,self).add_money(qté)
@@ -408,7 +408,7 @@ class Perso(Rappeur):
         else:
             s='+' + convert_huge_nb(qté)
         pos = g.lman.labels[self.hud.labids['coin_lab']].x +r.randint(-2,2),g.lman.labels[self.hud.labids['coin_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',anchor=('right','center'),group='up',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     ## colli hoover
 
@@ -418,15 +418,29 @@ class Perso(Rappeur):
 
     def check_colli(self,street):
 
-        colli_elem = None
+        collis = []
 
         for hum in street.humans:
             if collisionAB(self.realbox,hum.realbox) :
-                    colli_elem = hum
+                collis.append(hum)
 
         for elem in street.zones:
             if collisionAB(self.realbox,street.zones[elem].realbox) :
-                    colli_elem = street.zones[elem]
+                collis.append(street.zones[elem])
+
+        if len(collis) > 0:
+            k = 0
+            distmin = module(self.box.cx-collis[0].box.cx,self.box.cy-collis[0].box.cy)
+            for i in range(1,len(collis)):
+                dist = module(self.box.cx-collis[i].box.cx,self.box.cy-collis[i].box.cy)
+                if dist < distmin:
+                    distmin = dist
+                    k = i
+
+            colli_elem = collis[k]
+        else:
+            colli_elem = None
+
 
         if self.element_colli != None:
             if colli_elem != None:

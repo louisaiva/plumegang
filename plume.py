@@ -129,9 +129,9 @@ class App():
 
         self.ai = []
         n = random.randint(200,1500)
-        n = 15
+        n = 150
         for i in range(n):
-            pos = (random.randint(-2000,8000),175)
+            pos = (random.randint(-2000,8000),random.randint(105,175))
             name = random.choice(names.names)
             self.ai.append(p.Rappeur(g.TEXTIDS['persos'],pos,name))
 
@@ -325,10 +325,6 @@ class App():
                     self.change_action('pause')
                     if not ESK_QUIT:
                         return pyglet.event.EVENT_HANDLED
-
-            elif symbol == key.A:
-                self.perso.drop_plume()
-
             #affiche les différents OrderedGroup d'affichage
             elif symbol == key.G:
 
@@ -345,44 +341,49 @@ class App():
                     print(say)
                 print('')
 
-            elif symbol == key.E:
-                if self.perso.element_colli != None:
-
-                    if type(self.perso.element_colli) in [p.Human,p.Rappeur,p.Perso]:
-                        if self.perso.element_colli.alive:
-                            self.perso.element_colli.do('hit')
-                            self.perso.be_hit(self.perso.element_colli)
-                        self.perso.do('hit')
-                        self.perso.element_colli.be_hit(self.perso)
-                    else:
-                        if not self.perso.element_colli.longpress:
-                            if type(self.perso.element_colli) == o.Porte:
-                                self.street = self.perso.element_colli.activate(self.perso)
-                            else:
-                                self.perso.element_colli.activate(self.perso)
-                            self.perso.do('hit')
-                else:
-                    self.perso.do('hit')
-
-            elif symbol == key.X:
-                self.perso.hud.rollhide()
-
             elif symbol == key.B:
                 print(self.perso.invhud)
                 print(self.perso.plume)
 
-            elif symbol == key.I:
-                self.perso.invhud.rollhide()
+            if self.perso.alive:
 
-            elif symbol == key.F:
+                if symbol == key.A:
+                    self.perso.drop_plume()
 
-                choiced_son = None
-                for son in self.perso.invhud.inventory['son']:
-                    if not son.item._released:
-                        choiced_son = son.item
-                        break
-                if choiced_son != None:
-                    self.perso.release_son(choiced_son,self.fans,self.cycle.day)
+                elif symbol == key.E:
+                    if self.perso.element_colli != None:
+
+                        if type(self.perso.element_colli) in [p.Human,p.Rappeur,p.Perso]:
+                            if self.perso.element_colli.alive:
+                                self.perso.element_colli.do('hit')
+                                self.perso.be_hit(self.perso.element_colli)
+                            self.perso.do('hit')
+                            self.perso.element_colli.be_hit(self.perso)
+                        else:
+                            if not self.perso.element_colli.longpress:
+                                if type(self.perso.element_colli) == o.Porte:
+                                    self.street = self.perso.element_colli.activate(self.perso)
+                                else:
+                                    self.perso.element_colli.activate(self.perso)
+                                self.perso.do('hit')
+                    else:
+                        self.perso.do('hit')
+
+                elif symbol == key.X:
+                    self.perso.hud.rollhide()
+
+                elif symbol == key.I:
+                    self.perso.invhud.rollhide()
+
+                elif symbol == key.F:
+
+                    choiced_son = None
+                    for son in self.perso.invhud.inventory['son']:
+                        if not son.item._released:
+                            choiced_son = son.item
+                            break
+                    if choiced_son != None:
+                        self.perso.release_son(choiced_son,self.fans,self.cycle.day)
 
         elif self.action == 'pause':
 
@@ -703,6 +704,7 @@ class App():
 
                 ## particles
                 g.pman.modify('icons',dy=0.1)
+                g.pman.modify('dmg',dy=0.1,dx=g.Cam.dx)
 
                 ## fans are streaming
 
