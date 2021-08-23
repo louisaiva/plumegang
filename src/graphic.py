@@ -198,6 +198,9 @@ class SpriteManager():
         # final updating positon and scale
         self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
 
+    def filter(self,sprid,color=(255,0,0)):
+        self.sprites[sprid].color = color
+
     def spr(self,id):
         if id in self.sprites:
             return self.sprites[id]

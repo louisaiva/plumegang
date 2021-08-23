@@ -11,8 +11,9 @@ from src import graphic as g
 from src import names as n
 from src import obj as o
 
+#graphic
 
-class Human(): #graphic
+class Human():
 
     def __init__(self,textids,pos=(400,200),name='John',group='perso-1',street='street1'):
         # general
@@ -21,6 +22,11 @@ class Human(): #graphic
         self.speed = 12
         self.play = 'play'
 
+        #life
+        self.life = 100
+        self.damage = 34
+
+        #pos
         self.gex = pos[0] # general x
         self.gey = pos[1] # general y
         self.street = street
@@ -41,12 +47,18 @@ class Human(): #graphic
                         , ('hit','R',0):textids[6+2] , ('hit','R',1):textids[6+2] , ('hit','L',0):textids[7+2] , ('hit','L',1):textids[7+2]
                         , ('write','R',0):textids[10] , ('write','R',1):textids[11] , ('write','L',0):textids[12] , ('write','L',1):textids[13]
                         , ('wait','R',0):textids[0] , ('wait','R',1):textids[0] , ('wait','L',0):textids[0+2] , ('wait','L',1):textids[0+2]
+                        , ('die','R',0):textids[14] , ('die','R',1):textids[14] , ('die','L',0):textids[14] , ('die','L',1):textids[14]
                          }
         self.grp = group
         #self.roll_skin = 0
         #self.skin_id = g.sman.addSpr(self.textids[(self.doing[0],self.dir,0)],pos,group=group)
 
         #self.update_skin()
+
+        ##### HOOOOVER
+
+        self._hoover = False
+        self.color = c['coral']
 
     def update_skin(self,dt=0.4,repeat=True):
 
@@ -91,6 +103,11 @@ class Human(): #graphic
                 self.undo()
                 self.update_skin(repeat=False)
 
+            elif action == 'die':
+                self.doing.insert(0, action)
+                self.undo()
+                self.update_skin(repeat=False)
+
     def undo(self,dt=0,action='nothing'):
 
         if action in self.doing:
@@ -100,7 +117,7 @@ class Human(): #graphic
 
     def check_do(self):
 
-        if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing:
+        if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
             if time.time()-self.time_last_move > 0.2:
                 self.do()
 
@@ -127,8 +144,45 @@ class Human(): #graphic
                     self.update_skin(repeat=False)
                 else:
                     self.do('move')
+                self.update_lab()
 
                 self.time_last_move = time.time()
+
+    def update_lab(self):
+        if hasattr(self,'label'):
+            # label
+            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
+            g.lman.modify(self.label,pos)
+
+    def be_hit(self,hitter):
+        print(self.name,'hit by',hitter.name)
+        g.sman.filter(self.skin_id)
+        g.bertran.unschedule(self.un_hit)
+        g.bertran.schedule_once(self.un_hit, 0.4)
+
+        self.life -= hitter.damage
+        if self.life <= 0:
+            self.die()
+
+    def un_hit(self,dt):
+        if hasattr(self,'skin_id'):
+            g.sman.filter(self.skin_id,(255,255,255))
+
+    def die(self):
+        self.do('die')
+
+
+    ## hoover
+
+    def hoover(self):
+        if hasattr(self,'label'):
+            g.lman.unhide(self.label)
+            self._hoover = True
+
+    def unhoover(self):
+        if hasattr(self,'label'):
+            g.lman.unhide(self.label,True)
+            self._hoover = False
 
     ## load deload
 
@@ -138,7 +192,12 @@ class Human(): #graphic
             self.skin_id = g.sman.addSpr(self.textids[(self.doing[0],self.dir,0)],(self.gex,self.gey),group=self.grp)
 
             self.update_skin()
-            print('loaded',self.name)
+
+        if not hasattr(self,'label'):
+            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
+            self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
+
+        print('loaded',self.name)
 
     def deload(self):
         g.bertran.unschedule(self.update_skin)
@@ -146,7 +205,11 @@ class Human(): #graphic
         if hasattr(self,'skin_id'):
             g.sman.delete(self.skin_id)
             del self.skin_id
-            print('deloaded',self.name)
+        if hasattr(self,'label'):
+            g.lman.delete(self.label)
+            del self.label
+
+        print('deloaded',self.name)
 
     ##
 
@@ -230,7 +293,7 @@ class Rappeur(Human):
 
 class Perso(Rappeur):
 
-    def __init__(self,textids,pos=(400,175),name='Delta',street='home'):
+    def __init__(self,textids,pos=(400,175),name='Delta',street='street1'):
 
         super(Perso,self).__init__(textids,pos,name,street=street)
 
@@ -251,8 +314,9 @@ class Perso(Rappeur):
         self.plumhud = o.PlumHUD(self.plume)
 
     def drop_plume(self):
+        if self.plume != None:
+            self.plumhud.delete()
         super(Perso,self).drop_plume()
-        self.plumhud.delete()
 
     ## particles
 
@@ -292,6 +356,11 @@ class Perso(Rappeur):
     def check_colli(self,street):
 
         colli_elem = None
+
+        for hum in street.humans:
+            if collisionAB(self.realbox,hum.realbox) :
+                    colli_elem = hum
+
         for elem in street.zones:
             if collisionAB(self.realbox,street.zones[elem].realbox) :
                     colli_elem = street.zones[elem]

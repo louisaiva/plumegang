@@ -1282,7 +1282,7 @@ class MarketHUD(HUD):
         self.instru += 1
         # recalling this function
         t = r.randint(2,10)
-        print('wow new instru :',ins,'next in',t,'secondes')
+        #print('wow new instru :',ins,'next in',t,'secondes')
         g.bertran.schedule_once(self.add_instru,t)
 
     def actualise(self):

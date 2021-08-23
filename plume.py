@@ -10,6 +10,7 @@ import pyglet.gl as gl
 
 from src.utils import *
 from src.colors import *
+import src.names as names
 import src.getsave as gs
 from src import obj as o
 from src import perso as p
@@ -127,7 +128,12 @@ class App():
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         self.ai = []
-        self.ai.append(p.Rappeur(g.TEXTIDS['persos']))
+        n = random.randint(200,1500)
+        n = 50
+        for i in range(n):
+            pos = (random.randint(-2000,8000),175)
+            name = random.choice(names.names)
+            self.ai.append(p.Rappeur(g.TEXTIDS['persos'],pos,name))
 
         for hum in self.ai:# + [self.perso]:
             o2.CITY[hum.street].add_hum(hum)
@@ -311,7 +317,7 @@ class App():
             self.longpress[symbol] = time.time()
 
             if symbol == key.ESCAPE:
-                if self.perso.element_colli != None and self.perso.element_colli.activated:
+                if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Rappeur,p.Perso] and self.perso.element_colli.activated:
                     self.perso.element_colli.close(self.perso)
                     return pyglet.event.EVENT_HANDLED
                 else:
@@ -340,12 +346,17 @@ class App():
 
             elif symbol == key.E:
                 if self.perso.element_colli != None:
-                    if not self.perso.element_colli.longpress:
-                        if type(self.perso.element_colli) == o.Porte:
-                            self.street = self.perso.element_colli.activate(self.perso)
-                        else:
-                            self.perso.element_colli.activate(self.perso)
+
+                    if type(self.perso.element_colli) in [p.Human,p.Rappeur,p.Perso]:
+                        self.perso.element_colli.be_hit(self.perso)
                         self.perso.do('hit')
+                    else:
+                        if not self.perso.element_colli.longpress:
+                            if type(self.perso.element_colli) == o.Porte:
+                                self.street = self.perso.element_colli.activate(self.perso)
+                            else:
+                                self.perso.element_colli.activate(self.perso)
+                            self.perso.do('hit')
                 else:
                     self.perso.do('hit')
 
@@ -514,7 +525,7 @@ class App():
                                 elif caught_dropped == -1: # means dropped
                                     letsbacktnothingcaught = True
 
-                                #self.on_mouse_motion(x,y,0,0)
+                                self.on_mouse_motion(x,y,0,0)
 
                     elif zone == 'studio':
                         if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.CITY[self.street].zones['studio'].hud) : #check si il peut catch
@@ -590,7 +601,7 @@ class App():
                         self.ai[0].move('R',o2.CITY[self.street])
 
                 if self.keys[key.E]:
-                    if self.perso.element_colli != None:
+                    if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Rappeur,p.Perso]:
                         if self.perso.element_colli.longpress:
                             if time.time() - self.longpress[key.E] > self.cooldown:
                                 self.longpress[key.E] = time.time()
@@ -641,14 +652,12 @@ class App():
                     zone.move(x_r,y_r)
 
                 #--# persos
-                """x_r = self.perso.gex + g.Cam.X
-                y_r = self.perso.gey + g.Cam.Y
-                g.sman.modify(self.perso.skin_id,(x_r,y_r))"""
-
                 for hum in o2.CITY[self.street].humans + [self.perso]:
                     x_r = hum.gex + g.Cam.X
                     y_r = hum.gey + g.Cam.Y
                     g.sman.modify(hum.skin_id,(x_r,y_r))
+                    hum.update_lab()
+                self.perso.check_colli(o2.CITY[self.street])
 
 
                 #--# bg
