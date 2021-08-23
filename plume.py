@@ -129,7 +129,7 @@ class App():
 
         self.ai = []
         n = random.randint(200,1500)
-        n = 150
+        n = 15
         for i in range(n):
             pos = (random.randint(-2000,8000),random.randint(105,175))
             name = random.choice(names.names)
