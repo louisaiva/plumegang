@@ -12,11 +12,14 @@ from src import names as n
 from src import obj as o
 from src import obj2 as o2
 
+
+BOTS = []
+
 #graphic
 
 class Human():
 
-    def __init__(self,textids,pos=(400,200),name='John',group='perso-1',street='street1'):
+    def __init__(self,textids,pos,name='John',group='perso-1',street='street1'):
         # general
 
         self.name = name
@@ -175,7 +178,7 @@ class Human():
         g.bertran.schedule_once(self.un_hit, 0.4)
 
         self.life -= hitter.damage
-        if self.life <= 0:
+        if self.life <= 0 and 'die' not in self.doing:
             self.die()
 
         s=convert_huge_nb(hitter.damage)
@@ -196,8 +199,8 @@ class Human():
 
     def delete(self,dt=0):
 
-        #self.deload()
         o2.CITY[self.street].del_hum(self)
+        BOTS.remove(self)
 
 
     ## hoover
@@ -257,15 +260,68 @@ class Human():
         return False
     alive = property(_alive)
 
-class Rappeur(Human):
+class Fan(Human):
 
-    def __init__(self,textids,pos=(2000,175),name=None,street='street1'):
+    def __init__(self,textids,pos,name=None,street='street1'):
+
+        if name == None:
+            name = r.choice(n.names)
+
+        super(Fan,self).__init__(textids,pos,name,group='perso',street=street)
+
+
+        rge = [ r.randint(-100,100),r.randint(-100,100) ]
+        self.cred_range = [ min(rge),max(rge) ]
+
+        self.streams = {}
+        self.likes = {}
+
+    def like(self,son,direct=True):
+        if son.cred >= self.cred_range[0] and son.cred <= self.cred_range[1]:
+            if son not in self.likes:
+                self.likes[son] = True
+                if not self in son.perso.fans:
+                    print(self.name + ' aime ce son !')
+
+                    if direct: son.perso.addfan(self)
+                    else: return self
+
+                else:
+                    print(self.name + ' aime deja un autre son !')
+            else:
+                print(self.name + ' aime deja ce son !')
+        else:
+            print(self.name + ' cheh')
+        return None
+
+    def stream(self,son):
+        son.stream()
+        if son not in self.streams:
+            self.streams[son] = 0
+        self.streams[son] += 1
+        if self.streams[son] > 1:
+            self.like(son)
+
+    def __str__(self):
+        s = '-100 '
+        for i in range(-10,11):
+            if i*10 >= self.cred_range[0] and i*10 <= self.cred_range[1]:
+                s+='#'
+            else:
+                s+='_'
+        s+= ' 100'
+
+        return s + ' ' + self.name
+
+class Rappeur(Fan):
+
+    def __init__(self,textids,pos,name=None,street='street1'):
 
         if name == None:
             name = r.choice(n.rappeurs)
             n.rappeurs.remove(name)
 
-        super(Rappeur,self).__init__(textids,pos,name,group='perso',street=street)
+        super(Rappeur,self).__init__(textids,pos,name,street=street)
 
         self.cred_score = 0
         self.qua_score = 0
@@ -371,7 +427,6 @@ class Rappeur(Human):
             sc = g.lman.labels[self.label].content_height
             w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
             g.sman.modify(self.label_plume,scale=(sc/w,sc/h))
-
 
     def hoover(self):
         super(Rappeur,self).hoover()

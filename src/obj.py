@@ -185,54 +185,6 @@ def instru_price(ins):
  BASIK
 """""""""""""""""""""""""""""""""""
 
-class Fan(): #pagraphic
-
-    def __init__(self):
-
-        self.name = r.choice(n.names)
-        rge = [ r.randint(-100,100),r.randint(-100,100) ]
-        self.cred_range = [ min(rge),max(rge) ]
-
-        self.streams = {}
-        self.likes = {}
-
-    def like(self,son,direct=True):
-        if son.cred >= self.cred_range[0] and son.cred <= self.cred_range[1]:
-            if son not in self.likes:
-                self.likes[son] = True
-                if not self in son.perso.fans:
-                    print(self.name + ' aime ce son !')
-
-                    if direct: son.perso.addfan(self)
-                    else: return self
-
-                else:
-                    print(self.name + ' aime deja un autre son !')
-            else:
-                print(self.name + ' aime deja ce son !')
-        else:
-            print(self.name + ' cheh')
-        return None
-
-    def stream(self,son):
-        son.stream()
-        if son not in self.streams:
-            self.streams[son] = 0
-        self.streams[son] += 1
-        if self.streams[son] > 1:
-            self.like(son)
-
-    def __str__(self):
-        s = '-100 '
-        for i in range(-10,11):
-            if i*10 >= self.cred_range[0] and i*10 <= self.cred_range[1]:
-                s+='#'
-            else:
-                s+='_'
-        s+= ' 100'
-
-        return s + ' ' + self.name
-
 #------# plum
 class Plume():
 

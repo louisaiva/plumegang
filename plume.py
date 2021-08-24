@@ -23,8 +23,10 @@ if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
     print('Changez le programme de place pour un path sans espace svp.')
 
-ESK_QUIT = False ## pour éviter d'avoir à passer par le menu
-FILL_INV = False ## pour remplir ou non l'inventaire au debut
+ESK_QUIT = 0
+## pour éviter d'avoir à passer par le menu
+FILL_INV = 1
+## pour remplir ou non l'inventaire au debut
 
 class App():
 
@@ -70,7 +72,6 @@ class App():
         #self.aff_cmd = False
 
     def init(self):
-
 
         ##  TEXTURES
 
@@ -121,6 +122,7 @@ class App():
         #self.city = {}
         o2.CITY['home'] = o2.Street((g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']),'home')
         o2.CITY['street1'] = o2.Street((g.TEXTIDS['street1_bg'],None),'street1',box(2730,-50,None))
+        o2.CITY['street2'] = o2.Street((None,None),'street2',box(0,-50,None))
 
         ## PERSOS
 
@@ -128,21 +130,23 @@ class App():
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
-        self.ai = []
-        #n = random.randint(200,1500)
-        n = len(names.rappeurs)
+        #p.BOTS = []
+        n = 1000
         for i in range(n):
-            pos = (random.randint(-n*1000/2,n*1000/2),random.randint(105,175))
+            pos = (random.randint(-n*150/2,n*150/2),random.randint(105,175))
             #name = random.choice(names.names)
-            self.ai.append(p.Rappeur(g.TEXTIDS['persos'],pos))
 
-        for hum in self.ai:# + [self.perso]:
+            street = 'street1'
+            if len(p.BOTS) > 150:
+                street = 'street2'
+
+            if random.random() < 1/8 and len(names.rappeurs) > 0:
+                p.BOTS.append(p.Rappeur(g.TEXTIDS['persos'],pos,street=street))
+            else:
+                p.BOTS.append(p.Fan(g.TEXTIDS['persos'],pos,street=street))
+
+        for hum in p.BOTS:
             o2.CITY[hum.street].add_hum(hum)
-
-        self.fans = []
-        nbfans = 1000
-        for _ in range(nbfans):
-            self.fans.append(o.Fan())
 
         ## cycle
 
@@ -319,7 +323,7 @@ class App():
             self.longpress[symbol] = time.time()
 
             if symbol == key.ESCAPE:
-                if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Rappeur,p.Perso] and self.perso.element_colli.activated:
+                if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso] and self.perso.element_colli.activated:
                     self.perso.element_colli.close(self.perso)
                     return pyglet.event.EVENT_HANDLED
                 else:
@@ -354,7 +358,7 @@ class App():
                 elif symbol == key.E:
                     if self.perso.element_colli != None:
 
-                        if type(self.perso.element_colli) in [p.Human,p.Rappeur,p.Perso]:
+                        if type(self.perso.element_colli) in [p.Human,p.Fan,p.Rappeur,p.Perso]:
                             if self.perso.element_colli.alive:
                                 self.perso.element_colli.do('hit')
                                 self.perso.be_hit(self.perso.element_colli)
@@ -384,7 +388,7 @@ class App():
                             choiced_son = son.item
                             break
                     if choiced_son != None:
-                        self.perso.release_son(choiced_son,self.fans,self.cycle.day)
+                        self.perso.release_son(choiced_son,p.BOTS,self.cycle.day)
 
         elif self.action == 'pause':
 
@@ -605,14 +609,14 @@ class App():
                     self.perso.move('down',o2.CITY[self.street])
 
                 ## moving freeze Corleone
-                if self.street == self.ai[0].street:
+                if self.street == p.BOTS[0].street:
                     if self.keys[key.K]:
-                        self.ai[0].move('L',o2.CITY[self.street])
+                        p.BOTS[0].move('L',o2.CITY[self.street])
                     if self.keys[key.M]:
-                        self.ai[0].move('R',o2.CITY[self.street])
+                        p.BOTS[0].move('R',o2.CITY[self.street])
 
                 if self.keys[key.E]:
-                    if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Rappeur,p.Perso]:
+                    if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso]:
                         if self.perso.element_colli.longpress:
                             if time.time() - self.longpress[key.E] > self.cooldown:
                                 self.longpress[key.E] = time.time()
@@ -721,7 +725,7 @@ class App():
                     chance = random.randint(0,int(60*moyfps))
                     malus = 1-i*0.2
                     if chance < self.perso.nb_fans*malus:
-                        random.choice(self.fans).stream(self.perso.disco[i])
+                        random.choice(p.BOTS).stream(self.perso.disco[i])
 
 
             ## perso
