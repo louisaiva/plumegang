@@ -19,6 +19,7 @@ class Street():
 
         self.zones = {}
         self.humans = []
+        self.items = []
 
         self.visible = False
 
@@ -31,6 +32,23 @@ class Street():
     def assign_zones(self,zones):
         for zone in zones:
             self.zones[zone.name] = zone
+
+    def add_item(self,item):
+        if type(item) == type([]):
+            for ite in item:
+                self.items.append(ite)
+                if self.visible:
+                    ite.load()
+        else:
+            self.items.append(item)
+            if self.visible:
+                item.load()
+
+    def del_item(self,item):
+        if item in self.items:
+            self.items.remove(item)
+            if self.visible:
+                item.deload()
 
     def add_hum(self,hum):
         if type(hum) == type([]):
@@ -63,6 +81,9 @@ class Street():
         for h in self.humans:
             h.deload()
 
+        for item in self.items:
+            item.deload()
+
         self.visible = False
 
     def load(self):
@@ -77,6 +98,9 @@ class Street():
 
         for h in self.humans:
             h.load()
+
+        for item in self.items:
+            item.load()
 
         self.visible = True
     #

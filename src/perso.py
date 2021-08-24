@@ -259,7 +259,11 @@ class Human():
 
 class Rappeur(Human):
 
-    def __init__(self,textids,pos=(2000,175),name='Freeze Corleone',street='street1'):
+    def __init__(self,textids,pos=(2000,175),name=None,street='street1'):
+
+        if name == None:
+            name = r.choice(n.rappeurs)
+            n.rappeurs.remove(name)
 
         super(Rappeur,self).__init__(textids,pos,name,group='perso',street=street)
 
@@ -281,7 +285,20 @@ class Rappeur(Human):
 
     def drop_plume(self):
         if self.plume != None:
+            w,h = self.box.wh
+            x,y = self.gex,self.gey
+            dx = 0
+            if self.dir == 'R':
+                dx += 150
+            else:
+                dx -= 150
+            o.Item(self.plume,(x+w/2+dx,y),self.street)
             self.plume = self.plume.delete()
+
+    def grab_plume(self,plume):
+        if self.plume != None:
+            self.plume.delete()
+        self.plume = plume
 
     def release_son(self,son,fans,day):
         self.disco.append(son)
@@ -305,6 +322,66 @@ class Rappeur(Human):
 
 
         self.update_scores()
+
+    def die(self):
+        self.drop_plume()
+        super(Rappeur,self).die()
+
+    ##
+
+    def load(self):
+        super(Rappeur,self).load()
+        if not hasattr(self,'label_plume') and self.plume != None:
+            x = g.lman.labels[self.label].x
+            y = g.lman.labels[self.label].y
+
+            self.label_plume = g.sman.addSpr(g.TEXTIDS[self.plume.type().lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
+
+            sc = g.lman.labels[self.label].content_height
+            w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
+            g.sman.modify(self.label_plume,scale=(sc/w,sc/h))
+
+        #print('loaded',self.name)
+
+    def deload(self):
+        super(Rappeur,self).deload()
+        if hasattr(self,'label_plume'):
+            g.sman.delete(self.label_plume)
+            del self.label_plume
+
+        #print('deloaded',self.name)
+
+    def update_lab(self):
+        super(Rappeur,self).update_lab()
+        if hasattr(self,'label_plume'):
+            if self.plume != None:
+                x = g.lman.labels[self.label].x+g.lman.labels[self.label].content_width/2+5
+                y = g.lman.labels[self.label].y
+                g.sman.modify(self.label_plume,(x,y))
+            else:
+                g.sman.delete(self.label_plume)
+                del self.label_plume
+
+        elif self.plume != None:
+            x = g.lman.labels[self.label].x
+            y = g.lman.labels[self.label].y
+
+            self.label_plume = g.sman.addSpr(g.TEXTIDS[self.plume.type().lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
+
+            sc = g.lman.labels[self.label].content_height
+            w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
+            g.sman.modify(self.label_plume,scale=(sc/w,sc/h))
+
+
+    def hoover(self):
+        super(Rappeur,self).hoover()
+        if hasattr(self,'label_plume'):
+            g.sman.unhide(self.label_plume)
+
+    def unhoover(self):
+        super(Rappeur,self).unhoover()
+        if hasattr(self,'label_plume'):
+            g.sman.unhide(self.label_plume,True)
 
     ##
 
@@ -332,7 +409,7 @@ class Rappeur(Human):
 
 class Perso(Rappeur):
 
-    def __init__(self,textids,pos=(400,175),name='Delta',street='home'):
+    def __init__(self,textids,pos=(400,175),name='Delta',street='street1',fill=True):
 
         super(Perso,self).__init__(textids,pos,name,street=street)
 
@@ -344,7 +421,7 @@ class Perso(Rappeur):
         self.hud = o.PersoHUD(self)
         self.lifehud = o.LifeHUD(self)
         self.plumhud = o.PlumHUD(self.plume)
-        self.invhud = o.InventHUD(self)
+        self.invhud = o.InventHUD(self,fill)
         self.sonhud = o.SonHUD(self)
 
         self.load()
@@ -355,6 +432,12 @@ class Perso(Rappeur):
         if self.plume != None:
             self.plumhud.delete()
         super(Perso,self).rplum()
+        self.plumhud = o.PlumHUD(self.plume)
+
+    def grab_plume(self,plume):
+        if self.plume != None:
+            self.plumhud.delete()
+        super(Perso,self).grab_plume(plume)
         self.plumhud = o.PlumHUD(self.plume)
 
     def drop_plume(self):
@@ -427,6 +510,10 @@ class Perso(Rappeur):
         for elem in street.zones:
             if collisionAB(self.realbox,street.zones[elem].realbox) :
                 collis.append(street.zones[elem])
+
+        for item in street.items:
+            if collisionAB(self.realbox,item.realbox) :
+                collis.append(item)
 
         if len(collis) > 0:
             k = 0

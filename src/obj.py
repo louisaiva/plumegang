@@ -269,6 +269,9 @@ class Plume():
 
         return phase
 
+    def type(self):
+        return 'Plume'
+
     def __lt__(self, other):
          return self.quality < other.quality
 
@@ -437,6 +440,8 @@ class Zone():
             else:
                 self.text_id = g.tman.addCol(*box.wh,c[textid])
             self.skin_id = g.sman.addSpr(self.text_id,box.xy,group)
+            w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
+            g.sman.modify(self.skin_id,scale=(box.w/w,box.h/h))
 
         self.gex,self.gey = box.xy
         self.x,self.y = 0,0
@@ -466,7 +471,7 @@ class Zone_ELEM(Zone):
 
         # label
         pos = box.x + box.w/2 , box.y + box.h + 20
-        self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
+        self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=group)
 
         self.color = c['coral']
 
@@ -521,6 +526,9 @@ class Zone_ELEM(Zone):
         if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
             #g.sman.delete(self.skin_id)
             self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group)
+            w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
+            g.sman.modify(self.skin_id,scale=(self.box.w/w,self.box.h/h))
+
         if not hasattr(self,'label'):
             # label
             pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
@@ -552,8 +560,31 @@ class Porte(Zone_ELEM):
 
         self.street.deload()
         self.destination.load()
+        perso.street = self.destination.name
         perso.check_colli(self.destination)
         return self.destination.name
+
+#------# elements item
+
+class Item(Zone_ELEM):
+
+    def __init__(self,item,poscentrale,street,size=100):
+        nom = str(item.owner)+'\'s plume'
+
+        pos = poscentrale[0]-size/2,poscentrale[1]
+
+        super(Item,self).__init__(box(*pos,size,size),nom,g.TEXTIDS[item.type().lower()][convert_quality(item.quality)[0]],group='perso')
+        o2.CITY[street].add_item(self)
+        self.item = item
+        self.street = street
+
+    def activate(self,perso):
+
+        print(perso.name,'took',self.name)
+        o2.CITY[self.street].del_item(self)
+        perso.drop_plume()
+        perso.grab_plume(self.item)
+
 
 #------# active elements
 
@@ -1362,7 +1393,7 @@ class MarketHUD(HUD):
 
 class InventHUD(HUD):
 
-    def __init__(self,perso):
+    def __init__(self,perso,fill=True):
 
         super(InventHUD, self).__init__(group='hud1',name='inv',vis=False)
 
@@ -1415,18 +1446,19 @@ class InventHUD(HUD):
         ### LABEL inv
         self.addLab('inv_lab','inventory',(self.box.cx,self.box.fy-50),anchor=('center','center'))
 
-        #self.update()
-        for i in range(r.randint(2,10)):
-            ins = Instru(r.random(),r.choice(btmakers))
-            ins.add_owner(self.perso)
-            self.catch(ins)
-        for i in range(r.randint(2,10)):
-            ph = []
-            for i in range(4):
-                ph.append(Phase(rqua(),rcred()))
-            instru = Instru(r.random(),r.choice(btmakers))
+        if fill:
+            #self.update()
+            for i in range(r.randint(2,10)):
+                ins = Instru(r.random(),r.choice(btmakers))
+                ins.add_owner(self.perso)
+                self.catch(ins)
+            for i in range(r.randint(2,10)):
+                ph = []
+                for i in range(4):
+                    ph.append(Phase(rqua(),rcred()))
+                instru = Instru(r.random(),r.choice(btmakers))
 
-            self.catch(Son(instru,ph))
+                self.catch(Son(instru,ph))
 
     def catch(self,item):
 

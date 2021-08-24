@@ -24,6 +24,7 @@ if ' ' in CURRENT_PATH:
     print('Changez le programme de place pour un path sans espace svp.')
 
 ESK_QUIT = False ## pour éviter d'avoir à passer par le menu
+FILL_INV = False ## pour remplir ou non l'inventaire au debut
 
 class App():
 
@@ -123,17 +124,17 @@ class App():
 
         ## PERSOS
 
-        self.perso = p.Perso(g.TEXTIDS['persos'])
+        self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         self.ai = []
-        n = random.randint(200,1500)
-        n = 15
+        #n = random.randint(200,1500)
+        n = len(names.rappeurs)
         for i in range(n):
-            pos = (random.randint(-2000,8000),random.randint(105,175))
-            name = random.choice(names.names)
-            self.ai.append(p.Rappeur(g.TEXTIDS['persos'],pos,name))
+            pos = (random.randint(-n*1000/2,n*1000/2),random.randint(105,175))
+            #name = random.choice(names.names)
+            self.ai.append(p.Rappeur(g.TEXTIDS['persos'],pos))
 
         for hum in self.ai:# + [self.perso]:
             o2.CITY[hum.street].add_hum(hum)
@@ -661,6 +662,14 @@ class App():
                     #g.sman.modify(zone.skin_id,(x_r,y_r))
                     zone.move(x_r,y_r)
 
+                #--# zones elem item
+                for item in o2.CITY[self.street].items:
+                    #item=o2.CITY[self.street].items[item]
+                    x_r = item.gex + g.Cam.X
+                    y_r = item.gey + g.Cam.Y
+                    #g.sman.modify(item.skin_id,(x_r,y_r))
+                    item.move(x_r,y_r)
+
                 #--# persos
                 for hum in o2.CITY[self.street].humans + [self.perso]:
                     x_r = hum.gex + g.Cam.X
@@ -721,6 +730,7 @@ class App():
                 hum.check_do()
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()
+            #print(self.perso.gex,self.perso.gey)
 
             if self.perso.money <= 0 or not self.perso.alive:
                 #print('game over')
