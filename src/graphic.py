@@ -689,6 +689,45 @@ class Camera():
         if not moved[1]:
             self._dy = 0
 
+    # eclatax à travailler
+    def tp(self,persobox,street):
+
+        moved = [False,False]
+
+        x,xf = street.xxf
+
+        #X
+        if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +self.speed):
+            self.lessx()
+            moved[0] = True
+
+        elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -self.speed):
+            self.morex()
+            moved[0] = True
+
+        if xf != None and street.rxf < scr.size[0]:
+            self.morex()
+            moved[0] = True
+        elif x != None and street.x > 0:
+            self.lessx()
+            moved[0] = True
+
+        #print(street.x,street.rxf)
+
+        #Y
+        if persobox[3] > 19*scr.size[1]/20:
+            self.lessy()
+            moved[1] = True
+        elif persobox[1] < scr.size[1]/20:
+            self.morey()
+            moved[1] = True
+
+        #moved
+        if not moved[0]:
+            self._dx = 0
+        if not moved[1]:
+            self._dy = 0
+
     ##
 
     def morex(self):

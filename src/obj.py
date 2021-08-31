@@ -497,24 +497,30 @@ class Market(Zone_ELEM):
 
 class Porte(Zone_ELEM):
 
-    def __init__(self,box,street,destination):
+    def __init__(self,street,box,destination,xdest):
         super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=False)
         self.destination = destination
         self.street = street
+        self.xdest = xdest
 
     def assign_door_tp(self,door):
         self.porte_tp = door
 
     def activate(self,perso):
         super(Porte,self).activate(perso)
-        #perso.add_money(r.randint(20,230))
-        perso.element_colli = None
 
-        self.street.deload()
-        self.destination.load()
-        perso.street = self.destination.name
-        perso.check_colli(self.destination)
-        return self.destination.name
+        if type(self.destination) in [o2.Street] or self.destination.openable(perso):
+
+            #perso.add_money(r.randint(20,230))
+            perso.element_colli = None
+
+            self.street.deload()
+            self.destination.load()
+            perso.tp(x=self.xdest,street=self.destination)
+            perso.check_colli(self.destination)
+            return self.destination.name
+        else:
+            print('You can\'t go here !' )
 
 #------# elements item
 

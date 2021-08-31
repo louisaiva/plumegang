@@ -5,10 +5,12 @@ enjoy
 
 from src.utils import *
 from src import graphic as g
+from src import obj as o
+
 
 class Street():
 
-    def __init__(self,text=(None,None),name='street1',box=box(-1400,-50,5120)):
+    def __init__(self,name='street1',text=(None,None),box=box(2730,-50,None)):
 
         self.text = text
 
@@ -139,5 +141,37 @@ class Street():
             return (self.box.xy[0],self.box.xy[0]+self.box.w)
     xxf = property(_xxf)
 
+class House(Street):
+
+    def __init__(self,name='house1',text=(None,None),box=box(-1400,-50,5120)):
+        super(House,self).__init__(name,text,box)
+
+        #self.name = owner.name+'\'s House'
+        self.owners = []
+
+    def set_owner(self,owner):
+        self.owners.append(owner)
+
+    def openable(self,perso):
+        return perso in self.owners
+
 
 CITY = {}
+CITY['STREET'] = {}
+CITY['HOUSE'] = {}
+
+
+def generate_map():
+    pass
+
+def connect(street1,x1,street2,x2):
+
+    ## crée 2 portes :
+    ##      -une à x1 dans la street1 pour passer dans la street2
+    ##      -une à x2 dans la street2 pour passer dans la street1
+
+    door1 = o.Porte(street1,box(x1,225,270,400),street2,x2)
+    street1.assign_zones([door1])
+
+    door2 = o.Porte(street2,box(x2,225,270,400),street1,x1)
+    street2.assign_zones([door2])

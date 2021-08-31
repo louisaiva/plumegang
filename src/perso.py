@@ -165,6 +165,20 @@ class Human():
 
                 self.time_last_move = time.time()
 
+    def tp(self,x=None,y=None,street=None):
+
+        if x != None:
+            self.gex = x
+            self.update_lab()
+
+        if y != None:
+            self.gey = y
+            self.update_lab()
+
+        if street != None:
+            self.street = street.name
+
+
     def update_lab(self):
         if hasattr(self,'label'):
             # label
@@ -464,7 +478,7 @@ class Rappeur(Fan):
 
 class Perso(Rappeur):
 
-    def __init__(self,textids,pos=(400,175),name='Delta',street='street1',fill=True):
+    def __init__(self,textids,pos=(400,175),name='Delta',street='home',fill=True):
 
         super(Perso,self).__init__(textids,pos,name,street=street)
 

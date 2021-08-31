@@ -25,7 +25,7 @@ if ' ' in CURRENT_PATH:
 
 ESK_QUIT = 0
 ## pour éviter d'avoir à passer par le menu
-FILL_INV = 1
+FILL_INV = 0
 ## pour remplir ou non l'inventaire au debut
 
 class App():
@@ -120,13 +120,14 @@ class App():
         ## STREETS
 
         #self.city = {}
-        o2.CITY['home'] = o2.Street((g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']),'home')
-        o2.CITY['street1'] = o2.Street((g.TEXTIDS['street1_bg'],None),'street1',box(2730,-50,None))
-        o2.CITY['street2'] = o2.Street((None,None),'street2',box(0,-50,None))
+        o2.CITY['home'] = o2.House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']))
+        o2.CITY['street1'] = o2.Street('street1',(g.TEXTIDS['street1_bg'],None))
+        o2.CITY['street2'] = o2.Street('street2',(None,None),box(0,-50,None))
 
         ## PERSOS
 
         self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
+        o2.CITY['home'].set_owner(self.perso)
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
@@ -161,11 +162,11 @@ class App():
         #o.ZONES['ELEM']['studio'] = o.Studio(2600,225)
         zones.append(o.Market(450,210))
         zones.append(o.Lit(-600,225))
-        zones.append(o.Porte(box(3200,225,270,400),o2.CITY['home'],o2.CITY['street1']))
         o2.CITY['home'].assign_zones(zones)
+        o2.connect(o2.CITY['home'],3200,o2.CITY['street1'],3200)
+        o2.connect(o2.CITY['street1'],4200,o2.CITY['street2'],0)
 
         zones = []
-        zones.append(o.Porte(box(3200,225,270,400),o2.CITY['street1'],o2.CITY['home']))
         zones.append(o.Distrib(2900,225))
         o2.CITY['street1'].assign_zones(zones)
 
@@ -367,7 +368,9 @@ class App():
                         else:
                             if not self.perso.element_colli.longpress:
                                 if type(self.perso.element_colli) == o.Porte:
-                                    self.street = self.perso.element_colli.activate(self.perso)
+                                    street = self.perso.element_colli.activate(self.perso)
+                                    if street != None:
+                                        self.street = street
                                 else:
                                     self.perso.element_colli.activate(self.perso)
                                 self.perso.do('hit')
@@ -568,8 +571,6 @@ class App():
             if self.perso.invhud.visible:
 
                 if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.invhud) : #check si il peut catch
-                    print('wesh')
-
                     caught_dropped = self.perso.invhud.catch_or_drop(x,y)
 
                     if caught_dropped == 1: # means caught
