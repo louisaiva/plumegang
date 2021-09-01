@@ -41,5 +41,7 @@ def test2():
         b = a(qua)
         print(qua,b)
 
-import src.obj as o
-o.test3()
+import src.obj2 as o2
+
+o2.generate_map()
+o2.draw_lines()

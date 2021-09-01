@@ -25,7 +25,7 @@ if ' ' in CURRENT_PATH:
 
 ESK_QUIT = 1
 ## pour éviter d'avoir à passer par le menu
-FILL_INV = 0
+FILL_INV = 1
 ## pour remplir ou non l'inventaire au debut
 
 class App():
@@ -120,9 +120,9 @@ class App():
         ## STREETS
 
         #self.city = {}
-        o2.CITY['home'] = o2.House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']))
-        o2.CITY['street1'] = o2.Street('street1',(g.TEXTIDS['street1_bg'],None))
-        o2.CITY['street2'] = o2.Street('street2',(None,None),box(0,-50,None))
+        #o2.CITY['home'] = o2.House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']))
+        #o2.CITY['street1'] = o2.Street('street1',(g.TEXTIDS['street1_bg'],None))
+        #o2.CITY['street2'] = o2.Street('street2',(None,None),box(0,-50,None))
 
         o2.generate_map()
 
@@ -134,14 +134,14 @@ class App():
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         #p.BOTS = []
-        n = 1000
+        n = 10*len(o2.CITY)
+        print(n,'bots in this game !')
         for i in range(n):
-            pos = (random.randint(-n*150/2,n*150/2),random.randint(105,175))
+            street = random.choice(list(o2.CITY.keys()))
+            pos = (random.randint(0,o2.CITY[street].rxf),random.randint(105,175))
             #name = random.choice(names.names)
 
-            street = 'street1'
-            if len(p.BOTS) > 150:
-                street = 'street2'
+            #street = 'street'+str(random.randint(0,len(o2.CITY)-1))
 
             if random.random() < 1/8 and len(names.rappeurs) > 0:
                 p.BOTS.append(p.Rappeur(g.TEXTIDS['persos'],pos,street=street))
@@ -160,17 +160,15 @@ class App():
         zones = []
         zones.append(o.Ordi(1990,150,self.perso))
         zones.append(o.Studio(2640,225))
-        #o.ZONES['ELEM']['ordi'] = o.Ordi(1990,150)
-        #o.ZONES['ELEM']['studio'] = o.Studio(2600,225)
         zones.append(o.Market(450,210))
         zones.append(o.Lit(-600,225))
         o2.CITY['home'].assign_zones(zones)
-        o2.connect(o2.CITY['home'],3200,o2.CITY['street1'],0)
-        #o2.connect(o2.CITY['street1'],20,o2.CITY['street2'],0)
 
         zones = []
         zones.append(o.Distrib(2900,225))
-        o2.CITY['street1'].assign_zones(zones)
+        street = random.choice(list(o2.CITY.keys()))
+        o2.CITY[street].assign_zones(zones)
+        print('let\'s find the',street,'!')
 
         self.street = self.perso.street
         o2.CITY[self.street].load()

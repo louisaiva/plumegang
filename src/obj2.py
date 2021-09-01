@@ -8,7 +8,33 @@ from src import graphic as g
 from src import obj as o
 import random as r
 
+class preStreet():
 
+    def __init__(self,name,xd,yd,xf,yf):
+
+        self.name = name
+
+        self.xd = xd
+        self.yd = yd
+        self.xf = xf
+        self.yf = yf
+        self.vert = self.line[0][0] == self.line[1][0]
+
+        self.connex = []
+
+    def add_conn(self,street,x):
+        self.connex.append((street.name,x))
+
+    def _line(self):
+        return ( (self.xd,self.yd) , (self.xf,self.yf) )
+    line = property(_line)
+
+    def _w(self):
+        if self.vert:
+            return self.yf-self.yd
+        else:
+            return self.xf-self.xd
+    w = property(_w)
 
 class Street():
 
@@ -159,44 +185,75 @@ class House(Street):
 
 
 CITY = {}
-CITY['STREET'] = {}
-CITY['HOUSE'] = {}
+"""CITY['STREET'] = {}
+CITY['HOUSE'] = {}"""
+
+LINES = []
 
 
-MAP = 5,5
+MAP = 50,50
 
 def generate_map():
 
-    nb_streets = 5
-    streets = []
+    nb_lines = 50
+    lines = []
     connexions = []
 
     ## street longueur 1 => 10k => de 0 à 10000
     ## longueur 2 => 20k
     ## ...
 
-    for i in range(nb_streets):
+    for i in range(nb_lines):
 
-        line = rand_line()
+        line = rand_line(i)
 
-        for j in range(len(streets)):
-            X,Z = line_intersection(line,streets[j])
-            if X != None:
-                if is_vert(line) :
-                    x1 = Z-line[0][1]
-                    x2 = X-streets[j][0][0]
+        for j in range(len(lines)):
+            R = line_intersection2(line.line,lines[j].line)
+            #print(R)
+            if R:
+                X,Z = R
+                if line.vert :
+                    x1 = Z-line.line[0][1]
+                    x2 = X-lines[j].line[0][0]
 
                 else:
-                    x1 = X-line[0][0]
-                    x2 = Z-streets[j][0][1]
+                    x1 = X-line.line[0][0]
+                    x2 = Z-lines[j].line[0][1]
 
-                connexions.append((len(streets),x1,j,x2))
-        streets.append(line)
+                connexions.append((line.name,x1,lines[j].name,x2))
+                line.add_conn(lines[j],x1)
+                lines[j].add_conn(line,x2)
 
-    print(connexions)
-    print(streets)
+        lines.append(line)
 
-def rand_line():
+    global LINES
+
+    todel = []
+    for line in lines:
+        if len(line.connex) == 0:
+            todel.append(line)
+    for line in todel:
+        lines.remove(line)
+
+    line_home = r.choice(lines)
+
+    for line in lines:
+        CITY[line.name] = Street(line.name,box=box(0,-50,line.w*1000+1000))
+        if line == line_home:
+            CITY['home'] = House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']))
+            connect(CITY['home'],3200,CITY[line.name],500)
+            LINES.append(preStreet('home',line.xd,line.yd,line.xd,line.yd))
+
+    for conn in connexions:
+        line1,x1,line2,x2 = conn
+        connect(CITY[line1],x1*1000,CITY[line2],x2*1000)
+
+    LINES += lines[:]
+
+    #print(CITY)
+    draw_lines()
+
+def rand_line(i):
 
     vert = r.choice([True,False])
 
@@ -214,10 +271,7 @@ def rand_line():
         xfin = r.randint(xdep+1,MAP[1])
         yfin = ydep
 
-    return (xdep,ydep),(xfin,yfin)
-
-def is_vert(line):
-    return line[0][0] == line[1][0]
+    return preStreet('street'+str(i),xdep,ydep,xfin,yfin)
 
 def connect(street1,x1,street2,x2):
 
@@ -230,3 +284,43 @@ def connect(street1,x1,street2,x2):
 
     door2 = o.Porte(street2,box(x2,225,270,400),street1,x1)
     street2.assign_zones([door2])
+
+def draw_lines():
+
+    map = [[ ' ' for i in range(MAP[0]+1)] for i in range(MAP[1]+1)]
+
+    xhome,yhome = 0,0
+    for street in LINES:
+        if street.name == 'home':
+            xhome,yhome = street.xd,street.yd
+        else:
+            if street.vert:
+                street=street.line
+                # same x
+                x = street[0][0]
+                for y in range(street[0][1],street[1][1]):
+                    map[y][x] = '|'
+
+            else:
+                street=street.line
+                # same y
+                y = street[0][1]
+                for x in range(street[0][0],street[1][0]):
+                    map[y][x] = '='
+
+    map[yhome][xhome] = 'X'
+
+
+    s=' '
+
+    for x in range(len(map[0])):
+        s+=' '+str(x)
+    s+='\n'
+
+    for y in range(len(map)):
+        s+=str(y)+' '
+        for x in range(len(map[y])):
+            s+=map[y][x]+' '
+        s+='\n'
+
+    print('map'+'\n\n'+s)

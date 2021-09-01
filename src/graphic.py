@@ -634,7 +634,7 @@ Cur = Cursor()
 
 #### CAMERA
 
-SPEED = 12
+SPEED = 100
 
 class Camera():
 

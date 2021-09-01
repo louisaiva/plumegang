@@ -6,6 +6,7 @@ enjoy
 
 
 import random,os,ctypes,time
+#from __future__ import division
 
 from math import *
 #from win32gui import GetWindowRect, GetForegroundWindow, GetWindowText
@@ -262,7 +263,6 @@ def line_intersection(line1, line2):
     ## line 2 : [ (xdep,zdep) , (xfinal,zfinal) ]
     ## sortie : (xinter,zinter)
 
-
     xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
     ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
 
@@ -277,3 +277,41 @@ def line_intersection(line1, line2):
     x = det(d, xdiff) / div
     y = det(d, ydiff) / div
     return int(x), int(y)
+
+
+def util_line(line):
+    A = (line[0][1] - line[1][1])
+    B = (line[1][0] - line[0][0])
+    C = (line[0][0]*line[1][1] - line[1][0]*line[0][1])
+    return A, B, -C
+
+def line_intersection2(line1, line2):
+
+    L1 = util_line(line1)
+    L2 = util_line(line2)
+
+    D  = L1[0] * L2[1] - L1[1] * L2[0]
+    Dx = L1[2] * L2[1] - L1[1] * L2[2]
+    Dy = L1[0] * L2[2] - L1[2] * L2[0]
+    if D != 0:
+        x = Dx / D
+        y = Dy / D
+
+
+
+        if point_in_segment((x,y),line1) and point_in_segment((x,y),line2):
+            return x,y
+            
+    return False
+
+def point_in_segment(C,line):
+    A,B = line
+    AB = B[0]-A[0],B[1]-A[1]
+    AC = C[0]-A[0],C[1]-A[1]
+
+    Kac = AB[0]*AC[0] + AB[1]*AC[1]
+    Kab = AB[0]*AB[0] + AB[1]*AB[1]
+
+    if Kac >= 0 and Kac <= Kab:
+        return True
+    return False
