@@ -167,9 +167,13 @@ class Human():
 
     def tp(self,x=None,y=None,street=None):
 
+
+
         if x != None:
+            oldx = self.box.x
             self.gex = x
             self.update_lab()
+            g.Cam.tp(self.gex,oldx)
 
         if y != None:
             self.gey = y

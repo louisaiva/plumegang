@@ -498,10 +498,13 @@ class Market(Zone_ELEM):
 class Porte(Zone_ELEM):
 
     def __init__(self,street,box,destination,xdest):
-        super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=False)
+        
+        super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=True)
         self.destination = destination
         self.street = street
         self.xdest = xdest
+
+        self.deload()
 
     def assign_door_tp(self,door):
         self.porte_tp = door

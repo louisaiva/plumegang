@@ -6,11 +6,13 @@ enjoy
 from src.utils import *
 from src import graphic as g
 from src import obj as o
+import random as r
+
 
 
 class Street():
 
-    def __init__(self,name='street1',text=(None,None),box=box(2730,-50,None)):
+    def __init__(self,name='street1',text=(None,None),box=box(0,-50,None)):
 
         self.text = text
 
@@ -161,8 +163,61 @@ CITY['STREET'] = {}
 CITY['HOUSE'] = {}
 
 
+MAP = 5,5
+
 def generate_map():
-    pass
+
+    nb_streets = 5
+    streets = []
+    connexions = []
+
+    ## street longueur 1 => 10k => de 0 à 10000
+    ## longueur 2 => 20k
+    ## ...
+
+    for i in range(nb_streets):
+
+        line = rand_line()
+
+        for j in range(len(streets)):
+            X,Z = line_intersection(line,streets[j])
+            if X != None:
+                if is_vert(line) :
+                    x1 = Z-line[0][1]
+                    x2 = X-streets[j][0][0]
+
+                else:
+                    x1 = X-line[0][0]
+                    x2 = Z-streets[j][0][1]
+
+                connexions.append((len(streets),x1,j,x2))
+        streets.append(line)
+
+    print(connexions)
+    print(streets)
+
+def rand_line():
+
+    vert = r.choice([True,False])
+
+    if vert:
+        ## x reste le meme
+        xdep = r.randint(0, MAP[0])
+        ydep = r.randint(0, MAP[1]-1)
+        xfin = xdep
+        yfin = r.randint(ydep+1,MAP[1])
+
+    else:
+        ## y reste le meme
+        xdep = r.randint(0, MAP[0]-1)
+        ydep = r.randint(0, MAP[1])
+        xfin = r.randint(xdep+1,MAP[1])
+        yfin = ydep
+
+    return (xdep,ydep),(xfin,yfin)
+
+def is_vert(line):
+    return line[0][0] == line[1][0]
 
 def connect(street1,x1,street2,x2):
 

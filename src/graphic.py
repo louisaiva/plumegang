@@ -690,43 +690,13 @@ class Camera():
             self._dy = 0
 
     # eclatax à travailler
-    def tp(self,persobox,street):
+    def tp(self,ge_x,real_x):
 
-        moved = [False,False]
+        ## ge_x -> position générale du perso après passage par la porte
+        ## real_x -> position réelle à l'écran du perso AVANT passage par la porte
 
-        x,xf = street.xxf
+        self._X = - ge_x + real_x
 
-        #X
-        if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +self.speed):
-            self.lessx()
-            moved[0] = True
-
-        elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -self.speed):
-            self.morex()
-            moved[0] = True
-
-        if xf != None and street.rxf < scr.size[0]:
-            self.morex()
-            moved[0] = True
-        elif x != None and street.x > 0:
-            self.lessx()
-            moved[0] = True
-
-        #print(street.x,street.rxf)
-
-        #Y
-        if persobox[3] > 19*scr.size[1]/20:
-            self.lessy()
-            moved[1] = True
-        elif persobox[1] < scr.size[1]/20:
-            self.morey()
-            moved[1] = True
-
-        #moved
-        if not moved[0]:
-            self._dx = 0
-        if not moved[1]:
-            self._dy = 0
 
     ##
 

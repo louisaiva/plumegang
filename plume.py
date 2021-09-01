@@ -23,7 +23,7 @@ if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
     print('Changez le programme de place pour un path sans espace svp.')
 
-ESK_QUIT = 0
+ESK_QUIT = 1
 ## pour éviter d'avoir à passer par le menu
 FILL_INV = 0
 ## pour remplir ou non l'inventaire au debut
@@ -124,6 +124,8 @@ class App():
         o2.CITY['street1'] = o2.Street('street1',(g.TEXTIDS['street1_bg'],None))
         o2.CITY['street2'] = o2.Street('street2',(None,None),box(0,-50,None))
 
+        o2.generate_map()
+
         ## PERSOS
 
         self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
@@ -163,8 +165,8 @@ class App():
         zones.append(o.Market(450,210))
         zones.append(o.Lit(-600,225))
         o2.CITY['home'].assign_zones(zones)
-        o2.connect(o2.CITY['home'],3200,o2.CITY['street1'],3200)
-        o2.connect(o2.CITY['street1'],4200,o2.CITY['street2'],0)
+        o2.connect(o2.CITY['home'],3200,o2.CITY['street1'],0)
+        #o2.connect(o2.CITY['street1'],20,o2.CITY['street2'],0)
 
         zones = []
         zones.append(o.Distrib(2900,225))
@@ -635,6 +637,8 @@ class App():
         g.tman.draw()
 
     def refresh(self):
+
+        #print(g.Cam.X)
 
 
         ## FPS
