@@ -535,14 +535,14 @@ class Item(Zone_ELEM):
         pos = poscentrale[0]-size/2,poscentrale[1]
 
         super(Item,self).__init__(box(*pos,size,size),nom,g.TEXTIDS[item.type().lower()][convert_quality(item.quality)[0]],group='perso')
-        o2.CITY[street].add_item(self)
+        o2.NY.CITY[street].add_item(self)
         self.item = item
         self.street = street
 
     def activate(self,perso):
 
         print(perso.name,'took',self.name)
-        o2.CITY[self.street].del_item(self)
+        o2.NY.CITY[self.street].del_item(self)
         perso.drop_plume()
         perso.grab_plume(self.item)
 

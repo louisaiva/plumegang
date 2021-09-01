@@ -217,7 +217,7 @@ class Human():
 
     def delete(self,dt=0):
 
-        o2.CITY[self.street].del_hum(self)
+        o2.NY.CITY[self.street].del_hum(self)
         BOTS.remove(self)
 
 

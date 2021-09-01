@@ -8,6 +8,9 @@ from src import graphic as g
 from src import obj as o
 import random as r
 
+
+# lines
+
 class preStreet():
 
     def __init__(self,name,xd,yd,xf,yf):
@@ -35,6 +38,8 @@ class preStreet():
         else:
             return self.xf-self.xd
     w = property(_w)
+
+## streets
 
 class Street():
 
@@ -132,6 +137,8 @@ class Street():
         for item in self.items:
             item.load()
 
+        print(len(list(self.zones)),'zones ---',len(self.humans),'humans ---',len(self.items),'items loaded')
+
         self.visible = True
     #
 
@@ -169,6 +176,10 @@ class Street():
             return (self.box.xy[0],self.box.xy[0]+self.box.w)
     xxf = property(_xxf)
 
+    def _w(self):
+        return self.box.w
+    w = property(_w)
+
 class House(Street):
 
     def __init__(self,name='house1',text=(None,None),box=box(-1400,-50,5120)):
@@ -183,25 +194,67 @@ class House(Street):
     def openable(self,perso):
         return perso in self.owners
 
+## CITY
 
-CITY = {}
-"""CITY['STREET'] = {}
-CITY['HOUSE'] = {}"""
+class CITY():
+
+    def __init__(self):
+        self.width = 0
+        self.CITY = {}
+
+        self.Ghost = Street('ghost',box=box(0,-50,50))
+
+    def add_streets(self,street):
+        if type(street) == []:
+            for stree in street:
+                self.add_streets(stee)
+        else:
+            self.CITY[street.name] = street
+            self.width += street.w
+
+    def percentage(self,street):
+        return street.w / self.w
+
+    def rand_street(self):
+
+        k = r.random()
+        d = 0
+
+        for street in list(self.CITY.values()):
+            if type(street) != House and k > d and k <= d+self.percentage(street):
+                return street
+            d+=self.percentage(street)
+        return self.Ghost
+
+
+    #
+
+    def _w(self):
+        return self.width
+    w = property(_w)
+
+NY = CITY()
 
 LINES = []
 
 
-MAP = 50,50
+MAP = 20,20
+nb_lines = 20
 
 def generate_map():
 
-    nb_lines = 50
+    global LINES
+
     lines = []
     connexions = []
 
     ## street longueur 1 => 10k => de 0 à 10000
     ## longueur 2 => 20k
     ## ...
+
+
+
+    ## CREATION OF LINES
 
     for i in range(nb_lines):
 
@@ -226,7 +279,8 @@ def generate_map():
 
         lines.append(line)
 
-    global LINES
+
+    ## WE DELETE ALONE LINES
 
     todel = []
     for line in lines:
@@ -235,22 +289,29 @@ def generate_map():
     for line in todel:
         lines.remove(line)
 
+
+    ### TRANSFORMATION LINES IN STREETS
+
     line_home = r.choice(lines)
 
+    width_between_streets = 5000
+
+    # we create streets + home
     for line in lines:
-        CITY[line.name] = Street(line.name,box=box(0,-50,line.w*1000+1000))
+        NY.add_streets(Street(line.name,box=box(-width_between_streets,-50,line.w*width_between_streets+width_between_streets)))
         if line == line_home:
-            CITY['home'] = House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']))
-            connect(CITY['home'],3200,CITY[line.name],500)
+            NY.add_streets(House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup'])))
+            connect(NY.CITY['home'],3200,NY.CITY[line.name],500)
             LINES.append(preStreet('home',line.xd,line.yd,line.xd,line.yd))
 
+    # we make connexions -> creations of doors
     for conn in connexions:
         line1,x1,line2,x2 = conn
-        connect(CITY[line1],x1*1000,CITY[line2],x2*1000)
+        connect(NY.CITY[line1],x1*width_between_streets,NY.CITY[line2],x2*width_between_streets)
 
     LINES += lines[:]
 
-    #print(CITY)
+    # we draw the whole NY.CITY
     draw_lines()
 
 def rand_line(i):
