@@ -634,7 +634,7 @@ Cur = Cursor()
 
 #### CAMERA
 
-SPEED = 100
+SPEED = 20
 
 class Camera():
 
@@ -648,46 +648,49 @@ class Camera():
 
         self.speed = SPEED
 
+        self.activate = True
+
     def update(self,persobox,street):
 
-        #scr = (1920,1080)
-        #scr = scr.size
-        moved = [False,False]
+        if self.activate:
+            #scr = (1920,1080)
+            #scr = scr.size
+            moved = [False,False]
 
-        x,xf = street.xxf
-        #print(x,xf)
+            x,xf = street.xxf
+            #print(x,xf)
 
-        #X
-        if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +self.speed):
-            self.lessx()
-            moved[0] = True
+            #X
+            if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +self.speed):
+                self.lessx()
+                moved[0] = True
 
-        elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -self.speed):
-            self.morex()
-            moved[0] = True
+            elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -self.speed):
+                self.morex()
+                moved[0] = True
 
-        if xf != None and street.rxf < scr.size[0]:
-            self.morex()
-            moved[0] = True
-        elif x != None and street.x > 0:
-            self.lessx()
-            moved[0] = True
+            if xf != None and street.rxf < scr.size[0]:
+                self.morex()
+                moved[0] = True
+            elif x != None and street.x > 0:
+                self.lessx()
+                moved[0] = True
 
-        #print(street.x,street.rxf)
+            #print(street.x,street.rxf)
 
-        #Y
-        if persobox[3] > 19*scr.size[1]/20:
-            self.lessy()
-            moved[1] = True
-        elif persobox[1] < scr.size[1]/20:
-            self.morey()
-            moved[1] = True
+            #Y
+            if persobox[3] > 19*scr.size[1]/20:
+                self.lessy()
+                moved[1] = True
+            elif persobox[1] < scr.size[1]/20:
+                self.morey()
+                moved[1] = True
 
-        #moved
-        if not moved[0]:
-            self._dx = 0
-        if not moved[1]:
-            self._dy = 0
+            #moved
+            if not moved[0]:
+                self._dx = 0
+            if not moved[1]:
+                self._dy = 0
 
     # eclatax à travailler
     def tp(self,ge_x,real_x):
@@ -745,3 +748,56 @@ class Camera():
     dy = property(_dy)
 
 Cam = Camera()
+
+class LilCamera():
+
+    def __init__(self):
+
+        self._X,self._Y = 0,0
+        self._dx,self._dy = 0,0
+
+        #self.d = 0.2
+
+        self.speed = 30
+
+    def activate(self,dir='L'):
+
+        if dir == 'L':
+            self.X += self.speed
+        else:
+            self.X -= self.speed
+
+        Cam.activate = False
+
+    def unactivate(self):
+
+        self.X,self.Y = 0,0
+        Cam.activate = True
+
+    ###
+
+    def _setX(self,X):
+        if X != self._X:
+            self._dx = self._X-X
+            self._X = X
+            #self.BGX = self.d*X
+    def _X(self):
+        return self._X
+    def _setY(self,Y):
+        if Y != self._Y:
+            self._dy = self._Y-Y
+            self._Y = Y
+            #self.BGY = self.d*Y
+    def _Y(self):
+        return self._Y
+    X = property(_X,_setX)
+    Y = property(_Y,_setY)
+
+    def _dx(self):
+        return self._dx
+    def _dy(self):
+        return self._dy
+    dx = property(_dx)
+    dy = property(_dy)
+
+LilCam = LilCamera()

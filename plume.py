@@ -627,11 +627,13 @@ class App():
                                 self.perso.element_colli.activate(self.perso)
                                 self.perso.do('hit')
 
-            if self.keys[key.LEFT]:
-                g.Cam.morex()
-
-            if self.keys[key.RIGHT]:
-                g.Cam.lessx()
+            if self.keys[key.LEFT] or self.keys[key.RIGHT]:
+                if self.keys[key.RIGHT]:
+                    g.LilCam.activate('R')
+                else:
+                    g.LilCam.activate()
+            else:
+                g.LilCam.unactivate()
 
     def draw(self):
 
@@ -667,7 +669,7 @@ class App():
                 #--# zones elem
                 for zone in o2.NY.CITY[self.street].zones:
                     zone=o2.NY.CITY[self.street].zones[zone]
-                    x_r = zone.gex + g.Cam.X
+                    x_r = zone.gex + g.Cam.X + g.LilCam.X
                     y_r = zone.gey + g.Cam.Y
                     #g.sman.modify(zone.skin_id,(x_r,y_r))
                     zone.move(x_r,y_r)
@@ -675,14 +677,14 @@ class App():
                 #--# zones elem item
                 for item in o2.NY.CITY[self.street].items:
                     #item=o2.NY.CITY[self.street].items[item]
-                    x_r = item.gex + g.Cam.X
+                    x_r = item.gex + g.Cam.X + g.LilCam.X
                     y_r = item.gey + g.Cam.Y
                     #g.sman.modify(item.skin_id,(x_r,y_r))
                     item.move(x_r,y_r)
 
                 #--# persos
                 for hum in o2.NY.CITY[self.street].humans + [self.perso]:
-                    x_r = hum.gex + g.Cam.X
+                    x_r = hum.gex + g.Cam.X + g.LilCam.X
                     y_r = hum.gey + g.Cam.Y
                     g.sman.modify(hum.skin_id,(x_r,y_r))
                     hum.update_lab()
@@ -691,8 +693,8 @@ class App():
 
                 #--# bg
                 w = g.sman.spr(self.sprids['bg.1']).width
-                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.2 +self.bgdx ,g.Cam.Y*0.2 +self.bgy
-                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.2 +w +self.bgdx,g.Cam.Y*0.2 +self.bgy
+                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.2 +self.bgdx + g.LilCam.X,g.Cam.Y*0.2 +self.bgy
+                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.2 +w +self.bgdx+ g.LilCam.X,g.Cam.Y*0.2 +self.bgy
 
                 if x_bg1 >= 0:
                     self.bgdx -= w
@@ -704,8 +706,8 @@ class App():
 
                 #bg1
                 w = g.sman.spr(self.sprids['bg1.1']).width
-                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.4 +self.bg1dx ,g.Cam.Y*0.4 +self.bgy
-                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.4 +w +self.bg1dx,g.Cam.Y*0.4 +self.bgy
+                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.4 +self.bg1dx + g.LilCam.X,g.Cam.Y*0.4 +self.bgy
+                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.4 +w +self.bg1dx+ g.LilCam.X,g.Cam.Y*0.4 +self.bgy
 
                 if x_bg1 >= 0:
                     self.bg1dx -= w
@@ -714,7 +716,7 @@ class App():
 
                 g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
                 g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
-                o2.NY.CITY[self.street].modify(g.Cam.X,g.Cam.Y)
+                o2.NY.CITY[self.street].modify(g.Cam.X+ g.LilCam.X,g.Cam.Y)
                 #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
                 g.Cam.update(self.perso.realbox,o2.NY.CITY[self.street])
@@ -723,10 +725,9 @@ class App():
 
                 ## particles
                 g.pman.modify('icons',dy=0.1)
-                g.pman.modify('dmg',dy=0.1,dx=g.Cam.dx)
+                g.pman.modify('dmg',dy=0.1,dx=g.Cam.dx + g.LilCam.X)
 
                 ## fans are streaming
-
                 for i in range(len(self.perso.disco)):
                     chance = random.randint(0,int(60*moyfps))
                     malus = 1-i*0.2

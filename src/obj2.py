@@ -11,52 +11,38 @@ import random as r
 
 # lines
 
-class preStreet():
+class preStreet(line):
 
     def __init__(self,name,xd,yd,xf,yf):
 
+        super(preStreet,self).__init__(xd,yd,xf,yf)
         self.name = name
-
-        self.xd = xd
-        self.yd = yd
-        self.xf = xf
-        self.yf = yf
-        self.vert = self.line[0][0] == self.line[1][0]
 
         self.connex = []
 
     def add_conn(self,street,x):
         self.connex.append((street.name,x))
 
-    def _line(self):
-        return ( (self.xd,self.yd) , (self.xf,self.yf) )
-    line = property(_line)
-
-    def _w(self):
-        if self.vert:
-            return self.yf-self.yd
-        else:
-            return self.xf-self.xd
-    w = property(_w)
-
 ## streets
 
 class Street():
 
-    def __init__(self,name='street1',text=(None,None),box=box(0,-50,None)):
+    def __init__(self,preStreet,text=(None,None),box=box(0,-50,None)):
 
         self.text = text
 
         self.box = box
         self._x,self._y = self.box.xy
 
-        self.name = name
+        self.name = preStreet.name
+        self.line = preStreet.line
 
         self.zones = {}
         self.humans = []
         self.items = []
 
         self.visible = False
+
 
     def modify(self,x=None,y=None):
         if x != None:
@@ -180,6 +166,37 @@ class Street():
         return self.box.w
     w = property(_w)
 
+    ##
+
+    def _range(self):
+        if self.w:
+            return self.x,self.x+self.w
+        else:
+            return self.x,infini
+    range = property(_range)
+
+    def __str__(self):
+
+        s = '\n\n'+'\n\n'+'\n ---'+self.name+'---' +   str(self.line)   + '\n'
+        s+= 'range : '+str(self.range)
+
+        s+='-zones\n'
+        for zone in self.zones:
+            zone = self.zones[zone]
+            s+= '        '+zone.name+' : '+str((zone.box.x,zone.box.fx))+'\n'
+
+        s+='-humains\n'
+        for hum in self.humans:
+            s+= '        '+hum.name+' : '+str((hum.box.x,hum.box.fx))+'\n'
+
+        s+='-items\n'
+        for item in self.items:
+            s+= '        '+item.name+' : '+str((item.box.x,item.box.fx))+'\n'
+
+        s+='\n'+ str(len(list(self.zones))) + ' zones ---'+str(len(self.humans)) + ' humans ---' + str(len(self.items)) + ' items'
+
+        return s
+
 class House(Street):
 
     def __init__(self,name='house1',text=(None,None),box=box(-1400,-50,5120)):
@@ -202,7 +219,7 @@ class CITY():
         self.width = 0
         self.CITY = {}
 
-        self.Ghost = Street('ghost',box=box(0,-50,50))
+        self.Ghost = Street(preStreet('ghost',1,1,2,1),box=box(0,-50,50))
 
     def add_streets(self,street):
         if type(street) == []:
@@ -238,8 +255,8 @@ NY = CITY()
 LINES = []
 
 
-MAP = 20,20
-nb_lines = 20
+MAP = 10,10
+nb_lines = 5
 
 def generate_map():
 
@@ -251,8 +268,6 @@ def generate_map():
     ## street longueur 1 => 10k => de 0 à 10000
     ## longueur 2 => 20k
     ## ...
-
-
 
     ## CREATION OF LINES
 
@@ -298,11 +313,12 @@ def generate_map():
 
     # we create streets + home
     for line in lines:
-        NY.add_streets(Street(line.name,box=box(-width_between_streets,-50,line.w*width_between_streets+width_between_streets)))
+        NY.add_streets(Street(line,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
         if line == line_home:
-            NY.add_streets(House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup'])))
+            prestr = preStreet('home',line.x,line.y,line.x,line.y)
+            NY.add_streets(House(prestr,(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup'])))
             connect(NY.CITY['home'],3200,NY.CITY[line.name],500)
-            LINES.append(preStreet('home',line.xd,line.yd,line.xd,line.yd))
+            LINES.append(prestr)
 
     # we make connexions -> creations of doors
     for conn in connexions:
@@ -353,7 +369,7 @@ def draw_lines():
     xhome,yhome = 0,0
     for street in LINES:
         if street.name == 'home':
-            xhome,yhome = street.xd,street.yd
+            xhome,yhome = street.x,street.y
         else:
             if street.vert:
                 street=street.line
@@ -385,3 +401,7 @@ def draw_lines():
         s+='\n'
 
     print('map'+'\n\n'+s)
+
+def print_lines():
+    for street in NY.CITY:
+        print(NY.CITY[street])

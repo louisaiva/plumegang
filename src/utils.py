@@ -24,7 +24,6 @@ class box():
         self.x = x
         self.y = y
 
-
     def _wh(self):
         return self.w,self.h
 
@@ -67,6 +66,64 @@ class box():
     fx = property(_fx)
     fy = property(_fy)
     realbox = property(_realbox)
+
+class line():
+
+    def __init__(self,x=0,y=0,xf=0,yf=0):
+
+        self.x = x
+        self.y = y
+
+        self.vert = x == xf
+
+        if self.vert:
+            self.w = yf-y
+        else:
+            self.w = xf-x
+
+    def _xf(self):
+        if self.vert:
+            return self.x
+        return self.x + self.w
+    def _yf(self):
+        if self.vert:
+            return self.y + self.w
+        return self.y
+    def _vert(self):
+        return self.x == self.xf
+
+    def _xy(self):
+        return self.x,self.y
+    def _setxy(self,xy):
+        self.x,self.y = xy
+    def _line(self):
+        return ( (self.x,self.y) , (self.xf,self.yf) )
+
+    #w = property(_w)
+    #vert = property(_vert)
+    xf = property(_xf)
+    yf = property(_yf)
+
+    xy = property(_xy,_setxy)
+    line = property(_line)
+
+
+    def _centerx(self):
+        if self.vert:
+            return self.x
+        return self.x + self.w/2
+
+    def _centery(self):
+        if self.vert:
+            return self.y + self.w/2
+        return self.y
+
+    def _center(self):
+        return self.cx,self.cy
+
+    cx = property(_centerx)
+    cy = property(_centery)
+    cxy = property(_center)
 
 ## partie SCREEN
 
@@ -296,12 +353,9 @@ def line_intersection2(line1, line2):
     if D != 0:
         x = Dx / D
         y = Dy / D
-
-
-
         if point_in_segment((x,y),line1) and point_in_segment((x,y),line2):
             return x,y
-            
+
     return False
 
 def point_in_segment(C,line):
