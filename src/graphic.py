@@ -26,6 +26,10 @@ class ScreenManager():
         return self.screen.width,self.screen.height
     size = property(_size)
 
+    def _w(self):
+        return self.screen.width
+    w = property(_w)
+
 scr = ScreenManager()
 
 #manager who rules groups to draw things in the right order u know
@@ -692,14 +696,12 @@ class Camera():
             if not moved[1]:
                 self._dy = 0
 
-    # eclatax à travailler
     def tp(self,ge_x,real_x):
 
         ## ge_x -> position générale du perso après passage par la porte
         ## real_x -> position réelle à l'écran du perso AVANT passage par la porte
 
         self._X = - ge_x + real_x
-
 
     ##
 
@@ -769,10 +771,12 @@ class LilCamera():
 
         Cam.activate = False
 
-    def unactivate(self):
+    def unactivate(self,perso):
 
-        self.X,self.Y = 0,0
-        Cam.activate = True
+        if not Cam.activate:
+            self.X,self.Y = 0,0
+            Cam.tp(perso.gex,scr.w/2)
+            Cam.activate = True
 
     ###
 

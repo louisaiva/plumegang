@@ -633,7 +633,7 @@ class App():
                 else:
                     g.LilCam.activate()
             else:
-                g.LilCam.unactivate()
+                g.LilCam.unactivate(self.perso)
 
     def draw(self):
 

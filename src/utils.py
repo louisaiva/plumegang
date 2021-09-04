@@ -283,14 +283,10 @@ def compt(bigpath,path = ['/.','/src']):
     long = 0
 
     for chem in path:
-        try:
-            for file in os.listdir(bigpath+chem):
-                if file[-3:] == '.py':
-                    with open(bigpath+chem+'/'+file,'r') as f:
-                        long += len(f.readlines())
-        except :
-            jsghd=0
-            #print('no path',bigpath+chem,':',os.listdir(bigpath+chem))
+        for file in os.listdir('.'+chem):
+            if file[-3:] == '.py':
+                with open('.'+chem+'/'+file,'r', encoding="utf8") as f:
+                    long += len(f.readlines())
 
     return long
 

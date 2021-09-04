@@ -269,6 +269,42 @@ def generate_map():
     ## longueur 2 => 20k
     ## ...
 
+    a=0
+    while len(lines) == 0:
+        a+=1
+        print(a,'try')
+        lines,connexions = create_rand_lines()
+
+    ### TRANSFORMATION LINES IN STREETS
+
+    line_home = r.choice(lines)
+
+    width_between_streets = 5000
+
+    # we create streets + home
+    for line in lines:
+        NY.add_streets(Street(line,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
+        if line == line_home:
+            prestr = preStreet('home',line.x,line.y,line.x,line.y)
+            NY.add_streets(House(prestr,(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup'])))
+            connect(NY.CITY['home'],3200,NY.CITY[line.name],500)
+            LINES.append(prestr)
+
+    # we make connexions -> creations of doors
+    for conn in connexions:
+        line1,x1,line2,x2 = conn
+        connect(NY.CITY[line1],x1*width_between_streets,NY.CITY[line2],x2*width_between_streets)
+
+    LINES += lines[:]
+
+    # we draw the whole NY.CITY
+    draw_lines()
+
+def create_rand_lines():
+
+    lines = []
+    connexions = []
+
     ## CREATION OF LINES
 
     for i in range(nb_lines):
@@ -304,31 +340,7 @@ def generate_map():
     for line in todel:
         lines.remove(line)
 
-
-    ### TRANSFORMATION LINES IN STREETS
-
-    line_home = r.choice(lines)
-
-    width_between_streets = 5000
-
-    # we create streets + home
-    for line in lines:
-        NY.add_streets(Street(line,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
-        if line == line_home:
-            prestr = preStreet('home',line.x,line.y,line.x,line.y)
-            NY.add_streets(House(prestr,(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup'])))
-            connect(NY.CITY['home'],3200,NY.CITY[line.name],500)
-            LINES.append(prestr)
-
-    # we make connexions -> creations of doors
-    for conn in connexions:
-        line1,x1,line2,x2 = conn
-        connect(NY.CITY[line1],x1*width_between_streets,NY.CITY[line2],x2*width_between_streets)
-
-    LINES += lines[:]
-
-    # we draw the whole NY.CITY
-    draw_lines()
+    return lines,connexions
 
 def rand_line(i):
 
