@@ -559,6 +559,10 @@ class Perso(Rappeur):
         pos = self.box.cx +r.randint(-10,10),self.box.fy
         g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',anchor=('center','center'),group='up-1',vis=True)
 
+    def release_son(self,son,fans,day):
+        super(Perso,self).release_son(son,fans,day)
+        self.credhud.update()
+
     ## particles
 
     def addfan(self,fan):
