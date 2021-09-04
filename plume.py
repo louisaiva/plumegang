@@ -23,7 +23,7 @@ if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
     print('Changez le programme de place pour un path sans espace svp.')
 
-ESK_QUIT = 1
+ESK_QUIT = 0
 ## pour éviter d'avoir à passer par le menu
 FILL_INV = 1
 ## pour remplir ou non l'inventaire au debut
@@ -118,12 +118,6 @@ class App():
 
 
         ## STREETS
-
-        #self.city = {}
-        #o2.NY.CITY['home'] = o2.House('home',(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup']))
-        #o2.NY.CITY['street1'] = o2.Street('street1',(g.TEXTIDS['street1_bg'],None))
-        #o2.NY.CITY['street2'] = o2.Street('street2',(None,None),box(0,-50,None))
-
         o2.generate_map()
 
         ## PERSOS
@@ -139,9 +133,6 @@ class App():
         for i in range(n):
             street = o2.NY.rand_street()
             pos = (random.randint(0,street.rxf),random.randint(105,175))
-            #name = random.choice(names.names)
-
-            #street = 'street'+str(random.randint(0,len(o2.NY.CITY)-1))
 
             if random.random() < 1/8 and len(names.rappeurs) > 0:
                 p.BOTS.append(p.Rappeur(g.TEXTIDS['persos'],pos,street=street.name))
@@ -169,20 +160,15 @@ class App():
 
         zones = []
         zones.append(o.Distrib(2900,225))
-        street = random.choice(list(o2.NY.CITY.keys()))
+        street = o2.NY.rand_street().name
         o2.NY.CITY[street].assign_zones(zones)
         print('let\'s find the',street,'!')
 
-        self.street = self.perso.street
-        o2.NY.CITY[self.street].load()
+        o2.NY.CITY[self.perso.street].load()
 
 
         ## items
         self.this_hud_caught_an_item = None
-
-        ## ANCHOR
-
-        #self.X,self.Y = 0,0
 
         ## END
 
@@ -213,7 +199,7 @@ class App():
         self.clicks = {'L':False,'R':False,'M':[0,0]}
         self.mouse_speed = 0
 
-
+        # final
         self.action = "play" # play pause
         self.playing = True
 
@@ -284,8 +270,22 @@ class App():
     def create_menu(self):
 
         self.menu = m.Menu()
-        self.menu_fonct = {'play':self.change_action,'quit':self.get_out}
-        self.menu_args = {'play':['play']}
+        self.menu_fonct = {'play':self.change_action,'quit':self.get_out,'go home':self.perso.tp}
+        self.menu_args = {'play':['play'],'go home':[0,None,o2.NY.CITY['home']]}
+
+    def apply_menu(self,res):
+
+        if res:
+            if type(res) == type((0,1)):
+                for thg in res:
+                    self.apply_menu(thg)
+            else:
+                if res in self.menu_fonct and res in self.menu_args:
+                    self.menu_fonct[res](*self.menu_args[res])
+                elif res in self.menu_fonct:
+                    self.menu_fonct[res]()
+                else:
+                    print('click',res)
 
 
     ### ONCE FUNCTIONS
@@ -371,9 +371,7 @@ class App():
                         else:
                             if not self.perso.element_colli.longpress:
                                 if type(self.perso.element_colli) == o.Porte:
-                                    street = self.perso.element_colli.activate(self.perso)
-                                    if street != None:
-                                        self.street = street
+                                    self.perso.element_colli.activate(self.perso)
                                 else:
                                     self.perso.element_colli.activate(self.perso)
                                 self.perso.do('hit')
@@ -400,29 +398,18 @@ class App():
 
             if symbol == key.ESCAPE:
                 res = self.menu.unclick()
-                if res in self.menu_fonct and res in self.menu_args:
-                    self.menu_fonct[res](*self.menu_args[res])
-                elif res in self.menu_fonct:
-                    self.menu_fonct[res]()
+                self.apply_menu(res)
                 if not ESK_QUIT:
                     return pyglet.event.EVENT_HANDLED
 
             elif symbol == key.BACKSPACE:
                 res = self.menu.unclick()
-                if res in self.menu_fonct and res in self.menu_args:
-                    self.menu_fonct[res](*self.menu_args[res])
-                elif res in self.menu_fonct:
-                    self.menu_fonct[res]()
+                self.apply_menu(res)
                 return pyglet.event.EVENT_HANDLED
 
             elif symbol == key.ENTER:
                 res = self.menu.click()
-                if res in self.menu_fonct and res in self.menu_args:
-                    self.menu_fonct[res](*self.menu_args[res])
-                elif res in self.menu_fonct:
-                    self.menu_fonct[res]()
-                else:
-                    print('click',res)
+                self.apply_menu(res)
 
             elif symbol == key.UP:
                 self.menu.up()
@@ -453,48 +440,48 @@ class App():
 
             #phaseUI
 
-            for zone in o2.NY.CITY[self.street].zones:
+            for zone in o2.NY.CITY[self.perso.street].zones:
 
-                if zone == 'studio' and self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['studio'].hud and o2.NY.CITY[self.street].zones['studio'].hud.item_caught == None:
+                if zone == 'studio' and self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['studio'].hud and o2.NY.CITY[self.perso.street].zones['studio'].hud.item_caught == None:
                     self.this_hud_caught_an_item = None
 
-                if zone == 'ordi' and self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['ordi'].hud and o2.NY.CITY[self.street].zones['ordi'].hud.item_caught == None:
+                if zone == 'ordi' and self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['ordi'].hud and o2.NY.CITY[self.perso.street].zones['ordi'].hud.item_caught == None:
                     self.this_hud_caught_an_item = None
 
-                if o2.NY.CITY[self.street].zones[zone].activated:
+                if o2.NY.CITY[self.perso.street].zones[zone].activated:
 
                     if zone == 'lit':
-                        if o2.NY.CITY[self.street].zones['lit'].hud.ui != None :
-                            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['lit'].hud) : #check si il a caught
+                        if o2.NY.CITY[self.perso.street].zones['lit'].hud.ui != None :
+                            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['lit'].hud) : #check si il a caught
 
-                                o2.NY.CITY[self.street].zones['lit'].hud.ui.check_mouse(x,y)
-                                if o2.NY.CITY[self.street].zones['lit'].hud.ui.caught:
-                                        o2.NY.CITY[self.street].zones['lit'].hud.ui.move(x,y)
+                                o2.NY.CITY[self.perso.street].zones['lit'].hud.ui.check_mouse(x,y)
+                                if o2.NY.CITY[self.perso.street].zones['lit'].hud.ui.caught:
+                                        o2.NY.CITY[self.perso.street].zones['lit'].hud.ui.move(x,y)
 
                     if zone == 'studio':
                         if self.this_hud_caught_an_item == None:
-                            for lab in o2.NY.CITY[self.street].zones['studio'].hud.uis:
-                                ui = o2.NY.CITY[self.street].zones['studio'].hud.uis[lab]
+                            for lab in o2.NY.CITY[self.perso.street].zones['studio'].hud.uis:
+                                ui = o2.NY.CITY[self.perso.street].zones['studio'].hud.uis[lab]
                                 if ui != None :
                                     ui.check_mouse(x,y)
 
-                        elif self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['studio'].hud: #check si il a caught
-                            if o2.NY.CITY[self.street].zones['studio'].hud.item_caught != None:
-                                ui = o2.NY.CITY[self.street].zones['studio'].hud.item_caught
+                        elif self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['studio'].hud: #check si il a caught
+                            if o2.NY.CITY[self.perso.street].zones['studio'].hud.item_caught != None:
+                                ui = o2.NY.CITY[self.perso.street].zones['studio'].hud.item_caught
                                 ui.check_mouse(x,y)
                                 if ui.caught:
                                         ui.move(x,y)
 
                     if zone == 'ordi':
                         if self.this_hud_caught_an_item == None:
-                            for lab in o2.NY.CITY[self.street].zones['ordi'].hud.uis:
-                                ui = o2.NY.CITY[self.street].zones['ordi'].hud.uis[lab]
+                            for lab in o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis:
+                                ui = o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis[lab]
                                 if ui != None :
                                     ui.check_mouse(x,y)
 
-                        elif self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['ordi'].hud: #check si il a caught
-                            if o2.NY.CITY[self.street].zones['ordi'].hud.item_caught != None:
-                                ui = o2.NY.CITY[self.street].zones['ordi'].hud.item_caught
+                        elif self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['ordi'].hud: #check si il a caught
+                            if o2.NY.CITY[self.perso.street].zones['ordi'].hud.item_caught != None:
+                                ui = o2.NY.CITY[self.perso.street].zones['ordi'].hud.item_caught
                                 ui.check_mouse(x,y)
                                 if ui.caught:
                                         ui.move(x,y)
@@ -527,44 +514,44 @@ class App():
                 self.perso.plumhud.ui.check_pressed()
 
             #phaseUI
-            for zone in o2.NY.CITY[self.street].zones:
-                if o2.NY.CITY[self.street].zones[zone].activated:
+            for zone in o2.NY.CITY[self.perso.street].zones:
+                if o2.NY.CITY[self.perso.street].zones[zone].activated:
 
                     if zone == 'lit':
-                        if o2.NY.CITY[self.street].zones['lit'].hud.ui != None :
-                            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['lit'].hud) : #check si il peut catch
+                        if o2.NY.CITY[self.perso.street].zones['lit'].hud.ui != None :
+                            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['lit'].hud) : #check si il peut catch
 
-                                caught_dropped = o2.NY.CITY[self.street].zones['lit'].hud.catch_or_drop(x,y,self.perso)
+                                caught_dropped = o2.NY.CITY[self.perso.street].zones['lit'].hud.catch_or_drop(x,y,self.perso)
 
                                 if caught_dropped == 1: # means caught
-                                    self.this_hud_caught_an_item = o2.NY.CITY[self.street].zones['lit'].hud
+                                    self.this_hud_caught_an_item = o2.NY.CITY[self.perso.street].zones['lit'].hud
                                 elif caught_dropped == -1: # means dropped
                                     letsbacktnothingcaught = True
 
                                 self.on_mouse_motion(x,y,0,0)
 
                     elif zone == 'studio':
-                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['studio'].hud) : #check si il peut catch
-                            caught_dropped = o2.NY.CITY[self.street].zones['studio'].hud.catch_or_drop(x,y,self.perso)
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['studio'].hud) : #check si il peut catch
+                            caught_dropped = o2.NY.CITY[self.perso.street].zones['studio'].hud.catch_or_drop(x,y,self.perso)
 
                             if caught_dropped == 1: # means caught
-                                self.this_hud_caught_an_item = o2.NY.CITY[self.street].zones['studio'].hud
+                                self.this_hud_caught_an_item = o2.NY.CITY[self.perso.street].zones['studio'].hud
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
 
                             #self.on_mouse_motion(x,y,0,0)
 
                     elif zone == 'ordi':
-                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.street].zones['ordi'].hud) : #check si il peut catch
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['ordi'].hud) : #check si il peut catch
 
-                            if o2.NY.CITY[self.street].zones['ordi'].hud.uis['main'] != None and self.perso not in o2.NY.CITY[self.street].zones['ordi'].hud.uis['main'].item.owners:
-                                g.Cur.start_long_press(o2.NY.CITY[self.street].zones['ordi'].hud.uis['main'].box,o2.NY.CITY[self.street].zones['ordi'].hud.buy_instru)
+                            if o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis['main'] != None and self.perso not in o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis['main'].item.owners:
+                                g.Cur.start_long_press(o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis['main'].box,o2.NY.CITY[self.perso.street].zones['ordi'].hud.buy_instru)
 
 
-                            caught_dropped = o2.NY.CITY[self.street].zones['ordi'].hud.catch_or_drop(x,y)
+                            caught_dropped = o2.NY.CITY[self.perso.street].zones['ordi'].hud.catch_or_drop(x,y)
 
                             if caught_dropped == 1: # means caught
-                                self.this_hud_caught_an_item = o2.NY.CITY[self.street].zones['ordi'].hud
+                                self.this_hud_caught_an_item = o2.NY.CITY[self.perso.street].zones['ordi'].hud
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
 
@@ -603,21 +590,21 @@ class App():
 
                 ## moving perso
                 if self.keys[key.Q]:
-                    self.perso.move('L',o2.NY.CITY[self.street])
+                    self.perso.move('L',o2.NY.CITY[self.perso.street])
                 if self.keys[key.D]:
-                    self.perso.move('R',o2.NY.CITY[self.street])
+                    self.perso.move('R',o2.NY.CITY[self.perso.street])
 
                 if self.keys[key.Z]:
-                    self.perso.move('up',o2.NY.CITY[self.street])
+                    self.perso.move('up',o2.NY.CITY[self.perso.street])
                 if self.keys[key.S]:
-                    self.perso.move('down',o2.NY.CITY[self.street])
+                    self.perso.move('down',o2.NY.CITY[self.perso.street])
 
                 ## moving freeze Corleone
-                if self.street == p.BOTS[0].street:
+                if self.perso.street == p.BOTS[0].street:
                     if self.keys[key.K]:
-                        p.BOTS[0].move('L',o2.NY.CITY[self.street])
+                        p.BOTS[0].move('L',o2.NY.CITY[self.perso.street])
                     if self.keys[key.M]:
-                        p.BOTS[0].move('R',o2.NY.CITY[self.street])
+                        p.BOTS[0].move('R',o2.NY.CITY[self.perso.street])
 
                 if self.keys[key.E]:
                     if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso]:
@@ -629,11 +616,11 @@ class App():
 
             if self.keys[key.LEFT] or self.keys[key.RIGHT]:
                 if self.keys[key.RIGHT]:
-                    g.LilCam.activate('R')
+                    g.GodCam.activate('R')
                 else:
-                    g.LilCam.activate()
+                    g.GodCam.activate()
             else:
-                g.LilCam.unactivate(self.perso)
+                g.GodCam.unactivate(self.perso)
 
     def draw(self):
 
@@ -656,7 +643,7 @@ class App():
         if self.action == "play":
 
             # STREETS
-            g.lman.set_text(self.lab_street,self.street)
+            g.lman.set_text(self.lab_street,self.perso.street)
 
             # DAYS
             g.lman.set_text(self.lab_day,'DAY : '+str(self.cycle.day))
@@ -667,34 +654,34 @@ class App():
             if True:
 
                 #--# zones elem
-                for zone in o2.NY.CITY[self.street].zones:
-                    zone=o2.NY.CITY[self.street].zones[zone]
-                    x_r = zone.gex + g.Cam.X + g.LilCam.X
+                for zone in o2.NY.CITY[self.perso.street].zones:
+                    zone=o2.NY.CITY[self.perso.street].zones[zone]
+                    x_r = zone.gex + g.Cam.X + g.GodCam.X
                     y_r = zone.gey + g.Cam.Y
                     #g.sman.modify(zone.skin_id,(x_r,y_r))
                     zone.move(x_r,y_r)
 
                 #--# zones elem item
-                for item in o2.NY.CITY[self.street].items:
-                    #item=o2.NY.CITY[self.street].items[item]
-                    x_r = item.gex + g.Cam.X + g.LilCam.X
+                for item in o2.NY.CITY[self.perso.street].items:
+                    #item=o2.NY.CITY[self.perso.street].items[item]
+                    x_r = item.gex + g.Cam.X + g.GodCam.X
                     y_r = item.gey + g.Cam.Y
                     #g.sman.modify(item.skin_id,(x_r,y_r))
                     item.move(x_r,y_r)
 
                 #--# persos
-                for hum in o2.NY.CITY[self.street].humans + [self.perso]:
-                    x_r = hum.gex + g.Cam.X + g.LilCam.X
+                for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
+                    x_r = hum.gex + g.Cam.X + g.GodCam.X
                     y_r = hum.gey + g.Cam.Y
                     g.sman.modify(hum.skin_id,(x_r,y_r))
                     hum.update_lab()
-                self.perso.check_colli(o2.NY.CITY[self.street])
+                self.perso.check_colli(o2.NY.CITY[self.perso.street])
 
 
                 #--# bg
                 w = g.sman.spr(self.sprids['bg.1']).width
-                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.2 +self.bgdx + g.LilCam.X,g.Cam.Y*0.2 +self.bgy
-                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.2 +w +self.bgdx+ g.LilCam.X,g.Cam.Y*0.2 +self.bgy
+                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.2 +self.bgdx + g.GodCam.X,g.Cam.Y*0.2 +self.bgy
+                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.2 +w +self.bgdx+ g.GodCam.X,g.Cam.Y*0.2 +self.bgy
 
                 if x_bg1 >= 0:
                     self.bgdx -= w
@@ -706,8 +693,8 @@ class App():
 
                 #bg1
                 w = g.sman.spr(self.sprids['bg1.1']).width
-                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.4 +self.bg1dx + g.LilCam.X,g.Cam.Y*0.4 +self.bgy
-                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.4 +w +self.bg1dx+ g.LilCam.X,g.Cam.Y*0.4 +self.bgy
+                x_bg1,y_bg1 = self.bgx+g.Cam.X*0.4 +self.bg1dx + g.GodCam.X,g.Cam.Y*0.4 +self.bgy
+                x_bg2,y_bg2 = self.bgx+g.Cam.X*0.4 +w +self.bg1dx+ g.GodCam.X,g.Cam.Y*0.4 +self.bgy
 
                 if x_bg1 >= 0:
                     self.bg1dx -= w
@@ -716,16 +703,16 @@ class App():
 
                 g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
                 g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
-                o2.NY.CITY[self.street].modify(g.Cam.X+ g.LilCam.X,g.Cam.Y)
+                o2.NY.CITY[self.perso.street].modify(g.Cam.X+ g.GodCam.X,g.Cam.Y)
                 #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
-                g.Cam.update(self.perso.realbox,o2.NY.CITY[self.street])
+                g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street])
 
             if g.bertran.speed > 0:
 
                 ## particles
                 g.pman.modify('icons',dy=0.1)
-                g.pman.modify('dmg',dy=0.1,dx=g.Cam.dx + g.LilCam.X)
+                g.pman.modify('dmg',dy=0.1,dx=g.Cam.dx + g.GodCam.X)
 
                 ## fans are streaming
                 for i in range(len(self.perso.disco)):
@@ -737,7 +724,7 @@ class App():
 
             ## perso
 
-            for hum in o2.NY.CITY[self.street].humans + [self.perso]:
+            for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
                 hum.check_do()
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()

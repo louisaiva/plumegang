@@ -751,7 +751,7 @@ class Camera():
 
 Cam = Camera()
 
-class LilCamera():
+class GodCamera():
 
     def __init__(self):
 
@@ -804,4 +804,4 @@ class LilCamera():
     dx = property(_dx)
     dy = property(_dy)
 
-LilCam = LilCamera()
+GodCam = GodCamera()

@@ -167,8 +167,6 @@ class Human():
 
     def tp(self,x=None,y=None,street=None):
 
-
-
         if x != None:
             oldx = self.box.x
             self.gex = x
@@ -180,7 +178,14 @@ class Human():
             self.update_lab()
 
         if street != None:
-            self.street = street.name
+            if self.street != street.name:
+                self.element_colli = None
+                o2.NY.CITY[self.street].deload()
+                o2.NY.CITY[street.name].load()
+                self.street = street.name
+                self.check_colli(street)
+
+        #print('tp : x',x,'y',y,'street',street,'\n')
 
 
     def update_lab(self):
@@ -269,7 +274,10 @@ class Human():
     box = property(_box)
 
     def _realbox(self):
-        return g.sman.box(self.skin_id)
+        if hasattr(self,'skin_id'):
+            return g.sman.box(self.skin_id)
+        else:
+            return 0,0,0,0
     realbox = property(_realbox)
 
     def _alive(self):

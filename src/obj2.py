@@ -178,7 +178,7 @@ class Street():
     def __str__(self):
 
         s = '\n\n'+'\n\n'+'\n ---'+self.name+'---' +   str(self.line)   + '\n'
-        s+= 'range : '+str(self.range)
+        s+= 'range : '+str(self.range)+'\n\n'
 
         s+='-zones\n'
         for zone in self.zones:

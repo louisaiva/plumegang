@@ -14,13 +14,14 @@ class Menu:
         self.arb = OrderedDict()
 
         self.arb['play']='play'
+        self.arb['go home']='go home','play'
         param = OrderedDict()
         param['cheh'] = None
         param['lezgo'] = None
         self.arb['param'] = param
         self.arb['quit'] = 'quit'
 
-        self.max_len = 3
+        self.max_len = 4
 
         """
             play

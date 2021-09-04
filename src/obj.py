@@ -498,7 +498,7 @@ class Market(Zone_ELEM):
 class Porte(Zone_ELEM):
 
     def __init__(self,street,box,destination,xdest):
-        
+
         super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=True)
         self.destination = destination
         self.street = street
@@ -515,12 +515,12 @@ class Porte(Zone_ELEM):
         if type(self.destination) in [o2.Street] or self.destination.openable(perso):
 
             #perso.add_money(r.randint(20,230))
-            perso.element_colli = None
+            #perso.element_colli = None
 
-            self.street.deload()
-            self.destination.load()
+            #self.street.deload()
+            #self.destination.load()
             perso.tp(x=self.xdest,street=self.destination)
-            perso.check_colli(self.destination)
+            #perso.check_colli(self.destination)
             return self.destination.name
         else:
             print('You can\'t go here !' )
