@@ -32,6 +32,10 @@ class Human():
         self.max_life = 100
         self.damage = r.randint(10, 110)
 
+        #cred
+        self.cred = r.randint(-50,50)
+
+
         #pos
         self.gex = pos[0] # general x
         self.gey = pos[1] # general y
@@ -195,13 +199,19 @@ class Human():
             g.lman.modify(self.label,pos)
 
     def be_hit(self,hitter):
+
+        ## attention faut réécrire dans Perso aussi
+
         print(self.name,'hit by',hitter.name)
         g.sman.filter(self.skin_id)
         g.bertran.unschedule(self.un_hit)
         g.bertran.schedule_once(self.un_hit, 0.4)
 
         self.life -= hitter.damage
-        if self.life <= 0 and 'die' not in self.doing:
+        hitter.cred += 1
+        self.cred += 1
+
+        if (self.life <= 0 or self.cred > 100 or self.cred < -100) and 'die' not in self.doing:
             self.die()
 
         s=convert_huge_nb(hitter.damage)
@@ -214,6 +224,7 @@ class Human():
 
     def die(self):
         self.do('die')
+        self.life = 0
         self.damage = 0
         self.speed = 0
         self.yspeed = 0
@@ -349,7 +360,6 @@ class Rappeur(Fan):
 
         super(Rappeur,self).__init__(textids,pos,name,street=street)
 
-        self.cred_score = 0
         self.qua_score = 0
 
         self.disco = []
@@ -470,7 +480,7 @@ class Rappeur(Fan):
 
         sons = self.disco[-2:]
         qua_score = sum([ i.quality for i in sons])/len(sons)
-        self.cred_score = max([ i.cred for i in sons])
+        self.cred = max([ i.cred for i in sons])
 
         self.qua_score = qua_score
 
@@ -501,6 +511,7 @@ class Perso(Rappeur):
         # hud
         self.hud = o.PersoHUD(self)
         self.lifehud = o.LifeHUD(self)
+        self.credhud = o.CredHUD(self)
         self.plumhud = o.PlumHUD(self.plume)
         self.invhud = o.InventHUD(self,fill)
         self.sonhud = o.SonHUD(self)
@@ -533,12 +544,15 @@ class Perso(Rappeur):
         g.bertran.schedule_once(self.un_hit, 0.4)
 
         self.life -= hitter.damage
+        hitter.cred += 1
+        self.cred += 1
+        self.credhud.update()
 
         if self.life <= 0:
             self.life = 0
         self.lifehud.update()
 
-        if self.life <= 0:
+        if (self.life <= 0 or self.cred > 100 or self.cred < -100) and 'die' not in self.doing:
             self.die()
 
         s=convert_huge_nb(hitter.damage)

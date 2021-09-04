@@ -128,7 +128,7 @@ class App():
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         #p.BOTS = []
-        n = 100*len(o2.NY.CITY)
+        n = 30*len(o2.NY.CITY)
         print(n,'bots in this game !')
         for i in range(n):
             street = o2.NY.rand_street()
@@ -183,8 +183,8 @@ class App():
         # labels
 
         self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
-        self.lab_day = g.lman.addLab('DAY : 0',(20,20+32),group='up',font_size=32,anchor=('left','bottom'))
-        self.lab_street = g.lman.addLab('home',(20,60+32),group='up',font_size=20,anchor=('left','bottom'))
+        self.lab_day = g.lman.addLab('DAY : 0',(20,1060-50),group='up',font_size=32,anchor=('left','top'))
+        self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_size=20,anchor=('left','top'))
 
 
 
@@ -437,6 +437,14 @@ class App():
             # plumUI
             if self.perso.plume != None and self.perso.plumhud.ui.visible and self.this_hud_caught_an_item == None:
                 self.perso.plumhud.ui.check_mouse(x,y)
+
+            # lifeUI
+            if self.perso.lifehud.ui.visible and self.this_hud_caught_an_item == None:
+                self.perso.lifehud.ui.check_mouse(x,y)
+
+            # credUI
+            if self.perso.credhud.ui.visible and self.this_hud_caught_an_item == None:
+                self.perso.credhud.ui.check_mouse(x,y)
 
             #phaseUI
 

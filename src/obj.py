@@ -832,7 +832,7 @@ class LifeHUD(HUD):
 
     def __init__(self,perso):
 
-        super(LifeHUD, self).__init__(group='ui',name='life')
+        super(LifeHUD, self).__init__(group='hud2',name='life')
         #print(self.group)
 
         self.perso = perso
@@ -844,13 +844,16 @@ class LifeHUD(HUD):
         size_fill = (self.perso.life*size_lifebar)/self.perso.max_life
 
 
-        self.addSpr('l',g.TEXTIDS['utils'][4],self.anc,group='ui')
-        self.addSpr('r',g.TEXTIDS['utils'][4],(self.anc[0]+size_lifebar,self.anc[1]),group='ui')
-        self.addSpr('mid',g.TEXTIDS['utils'][3],self.anc,group='ui')
+        self.addSpr('l',g.TEXTIDS['utils'][4],self.anc,group='hud2')
+        self.addSpr('r',g.TEXTIDS['utils'][4],(self.anc[0]+size_lifebar,self.anc[1]),group='hud2')
+        self.addSpr('mid',g.TEXTIDS['utils'][3],self.anc,group='hud2')
         g.sman.modify(self.sprids['mid'],scale=(size_lifebar/32,1))
 
-        self.addSpr('fill',g.TEXTIDS['utils'][5],self.anc,group='ui-1')
+        self.addSpr('fill',g.TEXTIDS['utils'][5],self.anc,group='hud2-1')
         g.sman.modify(self.sprids['fill'],scale=(size_fill/32,1))
+
+        ### UI
+        self.ui = Life_UI(box(*self.anc,self.spr('fill').width,self.spr('fill').height),self.perso)
 
     def update(self):
 
@@ -859,13 +862,67 @@ class LifeHUD(HUD):
         g.sman.modify(self.sprids['r'],(self.anc[0]+size_lifebar,self.anc[1]))
         g.sman.modify(self.sprids['mid'],scale=(size_lifebar/32,1))
         g.sman.modify(self.sprids['fill'],scale=(size_fill/32,1))
+        self.ui.update()
 
+    def delete(self):
+        super(LifeHUD,self).delete()
+        self.ui.delete()
+
+class CredHUD(HUD):
+
+    def __init__(self,perso):
+
+        super(CredHUD, self).__init__(group='hud2',name='cred')
+        #print(self.group)
+
+        self.perso = perso
+
+        self.anc = (20,20+40)
+
+        size_lifebar = 400
+        size_fill = (abs(self.perso.cred)*size_lifebar/2)/100
+
+        if self.perso.cred >=0:
+            ancmid = self.anc[0]+size_lifebar/2,self.anc[1]
+        else:
+            ancmid = self.anc[0]+size_lifebar/2-size_fill,self.anc[1]
+
+        self.addSpr('l',g.TEXTIDS['utils'][4],self.anc,group='hud2')
+        self.addSpr('r',g.TEXTIDS['utils'][4],(self.anc[0]+size_lifebar,self.anc[1]),group='hud2')
+        self.addSpr('mid',g.TEXTIDS['utils'][3],self.anc,group='hud2')
+        g.sman.modify(self.sprids['mid'],scale=(size_lifebar/32,1))
+
+
+        self.addSpr('fill',g.TEXTIDS['utils'][6],ancmid,group='hud2-1')
+        g.sman.modify(self.sprids['fill'],scale=(size_fill/32,1))
+
+        ### UI
+        self.ui = Cred_UI(box(*self.anc,self.spr('mid').width,self.spr('mid').height),self.perso)
+
+    def update(self):
+
+        size_lifebar = 400
+        size_fill = (abs(self.perso.cred)*size_lifebar/2)/100
+
+        if self.perso.cred >=0:
+            ancmid = self.anc[0]+size_lifebar/2,self.anc[1]
+        else:
+            ancmid = self.anc[0]+size_lifebar/2-size_fill,self.anc[1]
+
+        g.sman.modify(self.sprids['r'],(self.anc[0]+size_lifebar,self.anc[1]))
+        g.sman.modify(self.sprids['mid'],scale=(size_lifebar/32,1))
+        g.sman.modify(self.sprids['fill'],pos=ancmid,scale=(size_fill/32,1))
+        self.ui.update()
+
+    def delete(self):
+        super(CredHUD,self).delete()
+        self.ui.delete()
 
 class PlumHUD(HUD):
 
     def __init__(self,plum):
 
-        super(PlumHUD, self).__init__(group='ui',name='plum')
+        super(PlumHUD, self).__init__(group='hud2',name='plum')
 
         self.plum = plum
 
@@ -873,7 +930,7 @@ class PlumHUD(HUD):
         self.box = box(1650,20,250,150)
         self.padding = 50
 
-        self.addCol('bg',self.box,group='ui-1')
+        self.addCol('bg',self.box,group='hud2-1')
 
         self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
 
@@ -1770,6 +1827,36 @@ class Plume_UI(Zone_UI):
 
     def update(self):
         pass
+
+class Life_UI(Zone_UI):
+
+    def __init__(self,box,perso):
+        self.perso = perso
+
+        lab_text = 'vie : '+str(perso.life)+'/'+str(perso.max_life)
+
+        super(Life_UI,self).__init__(box,lab_text,group='ui',makeCol=False,colorlab=c['lightred'])
+
+    def update(self):
+        g.lman.set_text(self.label,'vie : '+str(self.perso.life)+'/'+str(self.perso.max_life))
+        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
+        g.sman.delete(self.label_bg)
+        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group='ui-1',vis=self._hoover)
+
+class Cred_UI(Zone_UI):
+
+    def __init__(self,box,perso):
+        self.perso = perso
+
+        lab_text = 'cred : '+str(perso.cred)
+
+        super(Cred_UI,self).__init__(box,lab_text,group='ui',makeCol=False,colorlab=c['lightblue'])
+
+    def update(self):
+        g.lman.set_text(self.label,'cred : '+str(self.perso.cred))
+        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
+        g.sman.delete(self.label_bg)
+        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group='ui-1',vis=self._hoover)
 
 class Item_UI(Zone_UI):
 

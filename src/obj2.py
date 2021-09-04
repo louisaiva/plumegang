@@ -255,8 +255,8 @@ NY = CITY()
 LINES = []
 
 
-MAP = 10,10
-nb_lines = 5
+MAP = 20,20
+nb_lines = 20
 
 def generate_map():
 
