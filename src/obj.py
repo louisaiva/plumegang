@@ -770,6 +770,62 @@ class HUD():
     def lab(self,key):
         return g.lman.labels[self.labids[key]]
 
+class Map(HUD):
+
+    def __init__(self,perso):
+
+        super(Map, self).__init__(group='hud2',name='map',vis=False)
+
+        self.perso = perso
+
+        scrw,scrh=g.scr.size
+        area = box(scrw//2-2*scrh//6,scrh//6,2*scrh//3,2*scrh//3)
+
+        self.pad = 25
+        self.box = box(area.x+self.pad,area.y+self.pad,area.w-2*self.pad,area.h-2*self.pad)
+
+        self.larg_street = int((self.box.w/3)/o2.MAP[0])
+        w = self.larg_street*3*o2.MAP[0]
+        self.box = box(scrw/2-w/2,scrh/2-w/2,w,w)
+
+        print(area.xywh,self.larg_street)
+
+        self.addCol('bg',area,group='hud2-1')
+
+        self.create_map()
+
+    def create_map(self):
+
+        for street in o2.NY.CITY:
+            street = o2.NY.CITY[street]
+
+            if type(street) == o2.Street:
+
+                vert = street.pre.vert
+
+
+                if vert:
+                    x = self.box.x + street.line[0][0]*3*self.larg_street+self.larg_street
+                    y = self.box.fy - street.line[1][1]*3*self.larg_street
+                else:
+                    x = self.box.x + street.line[0][0]*3*self.larg_street
+                    y = self.box.fy - street.line[0][1]*3*self.larg_street-self.larg_street
+
+                if vert:
+                    w,h=self.larg_street,street.pre.w*3*self.larg_street+self.larg_street
+                else:
+                    h,w=self.larg_street,street.pre.w*3*self.larg_street+self.larg_street
+                #print(street.name)
+                self.addCol(street.name,box(x,y,w,h),color=c['darkblue'],group='hud2')
+
+            else:
+                w,h=self.larg_street,self.larg_street
+
+                x=self.box.x + street.line[0][0]*3*self.larg_street
+                y = self.box.fy - street.line[1][1]*3*self.larg_street
+                self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud2')
+
+
 class PersoHUD(HUD):
 
     def __init__(self,perso):

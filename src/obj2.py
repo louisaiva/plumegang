@@ -36,6 +36,7 @@ class Street():
 
         self.name = preStreet.name
         self.line = preStreet.line
+        self.pre = preStreet
 
         self.zones = {}
         self.humans = []
@@ -257,6 +258,15 @@ LINES = []
 
 MAP = 20,20
 nb_lines = 20
+
+#-------------------------------#
+
+
+
+
+
+#-------------------------------#
+#-------------------------------#
 
 def generate_map():
 

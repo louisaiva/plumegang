@@ -23,7 +23,7 @@ if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
     print('Changez le programme de place pour un path sans espace svp.')
 
-ESK_QUIT = 0
+ESK_QUIT = 1
 ## pour éviter d'avoir à passer par le menu
 FILL_INV = 1
 ## pour remplir ou non l'inventaire au debut
@@ -393,6 +393,10 @@ class App():
                             break
                     if choiced_son != None:
                         self.perso.release_son(choiced_son,p.BOTS,self.cycle.day)
+
+
+                elif symbol == key.M:
+                    self.perso.bigmap.rollhide()
 
         elif self.action == 'pause':
 

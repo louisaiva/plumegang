@@ -516,6 +516,8 @@ class Perso(Rappeur):
         self.invhud = o.InventHUD(self,fill)
         self.sonhud = o.SonHUD(self)
 
+        self.bigmap = o.Map(self)
+
         self.load()
 
     # huds
