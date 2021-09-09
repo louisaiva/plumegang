@@ -25,6 +25,7 @@ class Human():
         self.name = name
         self.speed = 12
         self.yspeed = 5
+        self.runspeed = 100
         self.play = 'play'
 
         #life
@@ -131,20 +132,26 @@ class Human():
             if time.time()-self.time_last_move > 0.2:
                 self.do()
 
-    def move(self,dir,street):
+    def move(self,dir,street,run=False):
 
         maxx=street.xxf
         maxy = 100,175
+
+        if run:
+            speed = self.runspeed
+        else:
+            speed = self.speed
+
         if 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
 
             moved = False
             if dir == 'R' :
-                if (maxx[1] == None or maxx[1] > self.gex+self.speed+g.sman.spr(self.skin_id).width ):
-                    self.gex+=self.speed
+                if (maxx[1] == None or maxx[1] > self.gex+speed+g.sman.spr(self.skin_id).width ):
+                    self.gex+=speed
                     moved = True
 
-            elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-self.speed ):
-                self.gex-=self.speed
+            elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-speed ):
+                self.gex-=speed
                 moved = True
 
             elif dir == 'up' and maxy[1] > self.gey+self.yspeed:
@@ -507,6 +514,7 @@ class Perso(Rappeur):
         self.max_life = 4800
         self.life = self.max_life
         self.speed = g.SPEED
+        self.runspeed = g.RSPEED
 
         # hud
         self.hud = o.PersoHUD(self)
@@ -596,8 +604,8 @@ class Perso(Rappeur):
 
     ## colli hoover
 
-    def move(self,dir,street):
-        super(Perso,self).move(dir,street)
+    def move(self,dir,street,run=False):
+        super(Perso,self).move(dir,street,run)
         self.check_colli(street)
 
     def check_colli(self,street):

@@ -44,7 +44,6 @@ class Street():
 
         self.visible = False
 
-
     def modify(self,x=None,y=None):
         if x != None:
             self.x = x+self.box.xy[0]

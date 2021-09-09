@@ -639,6 +639,7 @@ Cur = Cursor()
 #### CAMERA
 
 SPEED = 20
+RSPEED = 100
 
 class Camera():
 
@@ -651,10 +652,11 @@ class Camera():
         self.d = 0.2
 
         self.speed = SPEED
+        self.runspeed = RSPEED
 
         self.activate = True
 
-    def update(self,persobox,street):
+    def update(self,persobox,street,run=False):
 
         if self.activate:
             #scr = (1920,1080)
@@ -664,20 +666,37 @@ class Camera():
             x,xf = street.xxf
             #print(x,xf)
 
+            if run:
+                speed = self.runspeed
+            else:
+                speed = self.speed
+
             #X
-            if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +self.speed):
-                self.lessx()
+            if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +speed):
+                if run:
+                    self.rlessx()
+                else:
+                    self.lessx()
                 moved[0] = True
 
-            elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -self.speed):
-                self.morex()
+            elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -speed):
+                if run:
+                    self.rmorex()
+                else:
+                    self.morex()
                 moved[0] = True
 
             if xf != None and street.rxf < scr.size[0]:
-                self.morex()
+                if run:
+                    self.rmorex()
+                else:
+                    self.morex()
                 moved[0] = True
             elif x != None and street.x > 0:
-                self.lessx()
+                if run:
+                    self.rlessx()
+                else:
+                    self.lessx()
                 moved[0] = True
 
             #print(street.x,street.rxf)
@@ -705,6 +724,7 @@ class Camera():
 
     ##
 
+    # if perso walks
     def morex(self):
         self._X += self.speed
         self._dx = self.speed
@@ -721,6 +741,16 @@ class Camera():
         self._Y -= self.speed
         self._dy = -self.speed
         #self.BGY = self._Y*self.d
+
+    # if perso runs
+    def rmorex(self):
+        self._X += self.runspeed
+        self._dx = self.runspeed
+        #self.BGX = self._X*self.d
+    def rlessx(self):
+        self._X -= self.runspeed
+        self._dx = -self.runspeed
+        #self.BGX = self._X*self.d
 
 
     ##

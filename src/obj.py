@@ -774,7 +774,7 @@ class Map(HUD):
 
     def __init__(self,perso):
 
-        super(Map, self).__init__(group='hud2',name='map',vis=False)
+        super(Map, self).__init__(group='hud2',name='map',vis=True)
 
         self.perso = perso
 
@@ -790,7 +790,10 @@ class Map(HUD):
 
         print(area.xywh,self.larg_street)
 
-        self.addCol('bg',area,group='hud2-1')
+        col = (*c['delta_blue'][:3],150)
+        #print(col)
+        self.addCol('bg',area,group='hud2-1',color=col)
+        self.addCol('bg2',area,group='hud2-1',color=col)
 
         self.create_map()
 
@@ -816,7 +819,7 @@ class Map(HUD):
                 else:
                     h,w=self.larg_street,street.pre.w*3*self.larg_street+self.larg_street
                 #print(street.name)
-                self.addCol(street.name,box(x,y,w,h),color=c['darkblue'],group='hud2')
+                self.addCol(street.name,box(x,y,w,h),color=c['delta_purple'],group='hud2')
 
             else:
                 w,h=self.larg_street,self.larg_street

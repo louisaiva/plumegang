@@ -600,11 +600,15 @@ class App():
 
             if not self.gameover:
 
+                run = False
+                if self.keys[key.LSHIFT]:
+                    run = True
+
                 ## moving perso
                 if self.keys[key.Q]:
-                    self.perso.move('L',o2.NY.CITY[self.perso.street])
+                    self.perso.move('L',o2.NY.CITY[self.perso.street],run)
                 if self.keys[key.D]:
-                    self.perso.move('R',o2.NY.CITY[self.perso.street])
+                    self.perso.move('R',o2.NY.CITY[self.perso.street],run)
 
                 if self.keys[key.Z]:
                     self.perso.move('up',o2.NY.CITY[self.perso.street])
@@ -718,7 +722,7 @@ class App():
                 o2.NY.CITY[self.perso.street].modify(g.Cam.X+ g.GodCam.X,g.Cam.Y)
                 #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
-                g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street])
+                g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street],self.keys[key.LSHIFT])
 
             if g.bertran.speed > 0:
 
