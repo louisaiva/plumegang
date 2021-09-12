@@ -12,6 +12,8 @@ import os
 
 def save_files(bigpath,path = ['/.','/src'],save_path = '/autosav/'):
 
+
+
     autosav = ''
 
     for chem in path:
@@ -40,10 +42,26 @@ def save_files(bigpath,path = ['/.','/src'],save_path = '/autosav/'):
         with open(bigpath+save_path+'version','w') as f:
             f.write(version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
 
+    ### POSITIONNE LE CHEMIN POUR SAV
+
+    mylaptop = False
+
+    try:
+        name = os.path.basename(bigpath)
+        if name not in os.listdir('Z:\\DESKTOP\\CODING\\SAV'):
+            os.makedirs('Z:\\DESKTOP\\CODING\\SAV\\'+name)
+        save_path = 'SAV\\'+name+'\\'
+        bigpath = 'Z:\\DESKTOP\\CODING\\'
+        mylaptop = True
+    except: pass
+
     with open(bigpath+save_path+'saved_'+version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:]+'.savd','w') as f:
         f.write(autosav)
 
-    print('files saved, version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
+    if mylaptop:
+        print('files saved on Z:\\DESKTOP\\CODING\\SAV, version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
+    else:
+        print('files saved locally, version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
 
 def get_version(bigpath,save_path = '/autosav/'):
     version = ['alpha',10001]

@@ -254,18 +254,14 @@ NY = CITY()
 
 LINES = []
 
-
-MAP = 20,20
-nb_lines = 20
-
-#-------------------------------#
-
-
-
-
-
 #-------------------------------#
 #-------------------------------#
+
+k = 20
+
+MAP = k,k
+nb_lines = k
+
 
 def generate_map():
 
@@ -281,7 +277,7 @@ def generate_map():
     a=0
     while len(lines) == 0:
         a+=1
-        print(a,'try')
+        #print(a,'try')
         lines,connexions = create_rand_lines()
 
     ### TRANSFORMATION LINES IN STREETS
@@ -307,7 +303,7 @@ def generate_map():
     LINES += lines[:]
 
     # we draw the whole NY.CITY
-    draw_lines()
+    #draw_lines()
 
 def create_rand_lines():
 

@@ -788,13 +788,15 @@ class Map(HUD):
         w = self.larg_street*3*o2.MAP[0]
         self.box = box(scrw/2-w/2,scrh/2-w/2,w,w)
 
-        print(area.xywh,self.larg_street)
+        #print(area.xywh,self.larg_street)
 
-        col = (*c['delta_blue'][:3],150)
+        col = (*c['delta_blue'][:3],170)
         #print(col)
         self.addCol('bg',area,group='hud2-1',color=col)
         self.addCol('bg2',area,group='hud2-1',color=col)
 
+        ## name
+        self.addLab('name','MAP OF NY CITY',(area.cx,area.fy-self.pad),anchor=('center','center'),group='hud2')
         self.create_map()
 
     def create_map(self):

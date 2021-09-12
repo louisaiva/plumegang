@@ -23,7 +23,7 @@ if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
     print('Changez le programme de place pour un path sans espace svp.')
 
-ESK_QUIT = 1
+ESK_QUIT = 0
 ## pour éviter d'avoir à passer par le menu
 FILL_INV = 1
 ## pour remplir ou non l'inventaire au debut
