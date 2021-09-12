@@ -830,6 +830,38 @@ class Map(HUD):
                 y = self.box.fy - street.line[1][1]*3*self.larg_street
                 self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud2')
 
+    def update(self):
+
+        street = o2.NY.CITY[self.perso.street]
+
+        # get pos
+        if type(street) == o2.Street:
+
+            perc = self.perso.gex/street.xxf[1]
+
+            vert = street.pre.vert
+            if vert:
+                x = g.sman.spr(self.sprids[street.name]).x + self.larg_street/2
+                y = g.sman.spr(self.sprids[street.name]).y + g.sman.spr(self.sprids[street.name]).height + self.larg_street/2 - perc*g.sman.spr(self.sprids[street.name]).height
+            else:
+                y = g.sman.spr(self.sprids[street.name]).y + self.larg_street/2
+                x = g.sman.spr(self.sprids[street.name]).x + self.larg_street/2 + perc*g.sman.spr(self.sprids[street.name]).width
+
+
+        else:
+            x,y = g.sman.spr(self.sprids[street.name]).position
+            x += self.larg_street/2
+            y += self.larg_street/2
+
+        # create and or change pos
+        if not 'perso_spr' in self.sprids:
+            self.addSpr('perso_spr',g.TEXTIDS['persos'][0],(x,y), group='hud21')
+            scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
+            g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
+        else:
+            g.sman.modify(self.sprids['perso_spr'],pos=(x,y),anchor='center')
+
+
 
 class PersoHUD(HUD):
 

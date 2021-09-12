@@ -45,7 +45,7 @@ class GroupManager():
 
         names = ['back-2','back-1','back','back1','mid-1','mid','mid1','front','perso-1','hud-1','hud','hud1']
         names += ['perso'] + ['perso'+str(i) for i in range(1,15)]
-        names += ['midup','hud2-1','hud2','ui-2','ui-1','ui','up-1','up']
+        names += ['midup','hud2-1','hud2','hud21','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 8
 
         for i in range(len(names)):
@@ -179,7 +179,7 @@ class SpriteManager():
         if self.sprites[sprid].image != tman.textures[textid]:
             self.sprites[sprid].image = tman.textures[textid]
 
-    def modify(self,sprid,pos=None,scale=None,group=None,opacity=None):
+    def modify(self,sprid,pos=None,scale=None,group=None,opacity=None,anchor=None):
 
         # position
         x,y = None,None
@@ -205,6 +205,13 @@ class SpriteManager():
 
         # final updating positon and scale
         self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
+
+        if anchor:
+            if anchor == 'center':
+                x,y = self.sprites[sprid].position
+                x -= self.sprites[sprid].width/2
+                y -= self.sprites[sprid].width/2
+                self.sprites[sprid].update(x=x,y=y)
 
     def filter(self,sprid,color=(255,0,0)):
         self.sprites[sprid].color = color

@@ -744,6 +744,7 @@ class App():
                 hum.check_do()
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()
+            self.perso.bigmap.update()
             #print(self.perso.gex,self.perso.gey)
 
             if self.perso.money <= 0 or not self.perso.alive:
