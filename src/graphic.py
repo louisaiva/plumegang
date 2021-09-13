@@ -407,6 +407,7 @@ class ParticleManager():
         self.labels['normal'] = {}
         self.labels['icons'] = {}
         self.labels['dmg'] = {}
+        self.labels['say'] = {}
 
     def addPart(self,textid,xy_pos=(0,0),duree=5,group=None,key='normal',opac=255,vis=True):
 

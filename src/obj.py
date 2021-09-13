@@ -774,7 +774,7 @@ class Map(HUD):
 
     def __init__(self,perso):
 
-        super(Map, self).__init__(group='hud2',name='map',vis=True)
+        super(Map, self).__init__(group='hud2',name='map',vis=False)
 
         self.perso = perso
 
@@ -860,8 +860,6 @@ class Map(HUD):
             g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
         else:
             g.sman.modify(self.sprids['perso_spr'],pos=(x,y),anchor='center')
-
-
 
 class PersoHUD(HUD):
 
@@ -1080,7 +1078,6 @@ class SonHUD(HUD):
         g.lman.unhide(self.labids,hide)
         g.pman.unhide('icons',hide)"""
         self.visible = not hide
-
 
 class WriteHUD(HUD):
 

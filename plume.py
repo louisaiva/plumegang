@@ -398,6 +398,10 @@ class App():
                 elif symbol == key.M:
                     self.perso.bigmap.rollhide()
 
+                elif symbol == key.K:
+                    self.perso.speak()
+
+
         elif self.action == 'pause':
 
             if symbol == key.ESCAPE:

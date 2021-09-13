@@ -11,6 +11,7 @@ from src import graphic as g
 from src import names as n
 from src import obj as o
 from src import obj2 as o2
+from src import voc as v
 
 
 BOTS = []
@@ -36,6 +37,8 @@ class Human():
         #cred
         self.cred = r.randint(-50,50)
 
+        #voc
+        self.voc = v.dic
 
         #pos
         self.gex = pos[0] # general x
@@ -70,6 +73,7 @@ class Human():
 
         self._hoover = False
         self.color = c['coral']
+        self.rspeak()
 
     def update_skin(self,dt=0.4,repeat=True):
 
@@ -198,7 +202,6 @@ class Human():
 
         #print('tp : x',x,'y',y,'street',street,'\n')
 
-
     def update_lab(self):
         if hasattr(self,'label'):
             # label
@@ -243,6 +246,25 @@ class Human():
         o2.NY.CITY[self.street].del_hum(self)
         BOTS.remove(self)
 
+    ## SPEAKING
+
+    def say(self,exp):
+
+        pos = self.box.cx +r.randint(-10,10),self.box.fy
+        g.pman.addLabPart(exp,pos,color=c['white'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
+
+
+    def rspeak(self,dt=0):
+        if hasattr(self,'skin_id'):
+            exp = self.voc.random()
+            self.say(exp)
+        g.bertran.schedule_once(self.rspeak, r.randint(20,100))
+        #print(self.name,'said',exp)
+
+    def speak(self,dt=0):
+        if hasattr(self,'skin_id'):
+            exp = self.voc.random()
+            self.say(exp)
 
     ## hoover
 
