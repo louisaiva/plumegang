@@ -654,11 +654,14 @@ class App():
         ## FPS
         dt = time.time() - self.lab_fps_time
         self.lab_fps_time = time.time()
-        self.lab_fps1.append(int(1/dt))
-        if len(self.lab_fps1) > 10:
-            del self.lab_fps1[0]
-        moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
-        g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
+        try:
+            self.lab_fps1.append(int(1/dt))
+
+            if len(self.lab_fps1) > 10:
+                del self.lab_fps1[0]dqdqd
+            moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
+            g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
+        except : pass
 
         if self.action == "play":
 
@@ -695,6 +698,7 @@ class App():
                     y_r = hum.gey + g.Cam.Y
                     g.sman.modify(hum.skin_id,(x_r,y_r))
                     hum.update_lab()
+                    hum.update()
                 self.perso.check_colli(o2.NY.CITY[self.perso.street])
 
 
@@ -746,6 +750,7 @@ class App():
 
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
                 hum.check_do()
+                #hum.update()
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()
             self.perso.bigmap.update()

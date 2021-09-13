@@ -425,7 +425,7 @@ class ParticleManager():
         bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
-                ('center','center'),color=(255,255,255,255),key='normal',vis=True):
+                ('center','center'),color=(255,255,255,255),key='normal',vis=True,max_width=None):
 
         id = u.get_id('lab_part')
 
@@ -438,16 +438,36 @@ class ParticleManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
+
+        ## check multi
+        multi,width = False,False
+        if max_width and len(contenu)>max_width:
+            words = contenu.split(' ')
+            contenu = ''
+            line = ''
+            for word in words:
+                if len(word) + len(line) + 1 <= max_width:
+                    line+= word + ' '
+                else:
+                    contenu += line + '\n'
+                    line = word +' '
+            if line not in contenu :
+                contenu += line +'\n'
+            multi = True
+            #print(contenu)
+            width = (max_width+1)*font_size
+
         anchor_x,anchor_y= anchor
 
         if group != None:
             group = gman.getGroup(group)
         self.labels[key][id] = pyglet.text.Label(contenu,font_name=font_name,font_size=font_size,group=group, \
-                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color)
+                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,width=width)
 
         self.labels[key][id].x,self.labels[key][id].y = xy_pos
 
         bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
+        return key,id
 
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         text = tman.addCol(*box.wh,col)
@@ -465,12 +485,13 @@ class ParticleManager():
 
     def delay_lab(self,dt,id,key):
 
-        self.labels[key][id].color = (*self.labels[key][id].color[:3]  , int(self.labels[key][id].color[3]-(0.1*255)))
-        if self.labels[key][id].color[3] <= 0:
-            self.labels[key][id].delete()
-            del self.labels[key][id]
-        else:
-            bertran.schedule_once(self.delay_lab,dt,id,key)
+        if key in self.labels and id in self.labels[key]:
+            self.labels[key][id].color = (*self.labels[key][id].color[:3]  , int(self.labels[key][id].color[3]-(0.1*255)))
+            if self.labels[key][id].color[3] <= 0:
+                self.labels[key][id].delete()
+                del self.labels[key][id]
+            else:
+                bertran.schedule_once(self.delay_lab,dt,id,key)
 
     def modify(self,key,dx=0,dy=0,setx=None,sety=None):
         if key in self.sprites:
@@ -494,6 +515,28 @@ class ParticleManager():
                 else:
                     self.labels[key][id].y = sety
 
+    def modify_single(self,keyid,dx=0,dy=0,setx=None,sety=None):
+        key,id = keyid
+        if key in self.labels and id in self.labels[key]:
+            if setx == None:
+                self.labels[key][id].x += dx
+            else:
+                self.labels[key][id].x = setx
+            if sety == None:
+                self.labels[key][id].y += dy
+            else:
+                self.labels[key][id].y = sety
+
+        elif key in self.sprites and id in self.sprites[key]:
+            if setx == None:
+                self.sprites[key][id].x += dx
+            else:
+                self.sprites[key][id].x = setx
+            if sety == None:
+                self.sprites[key][id].y += dy
+            else:
+                self.sprites[key][id].y = sety
+
     def unhide(self,key,hide=False):
         if key in self.sprites:
             for id in self.sprites[key]:
@@ -505,6 +548,16 @@ class ParticleManager():
                     self.labels[key][id].color = [*self.labels[key][id].color[:3],255]
                 elif hide == True and self.labels[key][id].color[3] != 0:
                     self.labels[key][id].color = [*self.labels[key][id].color[:3],0]
+
+    def delete(self,keyid):
+        key,id = keyid
+        if key in self.labels and id in self.labels[key]:
+            self.labels[key][id].delete()
+            del self.labels[key][id]
+
+        elif key in self.sprites and id in self.sprites[key]:
+            self.sprites[key][id].delete()
+            del self.sprites[key][id]
 
 
 pman = ParticleManager()

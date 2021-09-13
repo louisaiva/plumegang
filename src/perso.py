@@ -39,6 +39,7 @@ class Human():
 
         #voc
         self.voc = v.dic
+        self.keyids_voc = None
 
         #pos
         self.gex = pos[0] # general x
@@ -177,6 +178,7 @@ class Human():
                 else:
                     self.do('move')
                 self.update_lab()
+                self.update()
 
                 self.time_last_move = time.time()
 
@@ -250,21 +252,35 @@ class Human():
 
     def say(self,exp):
 
-        pos = self.box.cx +r.randint(-10,10),self.box.fy
-        g.pman.addLabPart(exp,pos,color=c['white'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
+        if self.keyids_voc:
+            g.pman.delete(self.keyids_voc)
 
+        x,y = self.box.cx+200,self.box.fy + 40
+        self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
+                            ,group='up-1',vis=True,duree=20,max_width=20)
+        g.bertran.schedule_once(self.remove_speak_lab, 21)
+
+    def update(self):
+        if self.keyids_voc:
+            x,y = self.box.cx+200,self.box.fy + 40
+            #print(x,y)
+            g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
+            #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
 
     def rspeak(self,dt=0):
-        if hasattr(self,'skin_id'):
+        if hasattr(self,'skin_id') and 'die' not in self.doing:
             exp = self.voc.random()
             self.say(exp)
-        g.bertran.schedule_once(self.rspeak, r.randint(20,100))
+        g.bertran.schedule_once(self.rspeak, 23)
         #print(self.name,'said',exp)
 
     def speak(self,dt=0):
         if hasattr(self,'skin_id'):
             exp = self.voc.random()
             self.say(exp)
+
+    def remove_speak_lab(self,dt=0):
+        self.keyids_voc = None
 
     ## hoover
 
