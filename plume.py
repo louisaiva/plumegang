@@ -122,7 +122,7 @@ class App():
 
         ## PERSOS
 
-        self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
+        self.perso = p.Perso(g.TEXTIDS['perso2'],fill=FILL_INV)
         o2.NY.CITY['home'].set_owner(self.perso)
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
@@ -135,7 +135,7 @@ class App():
             pos = (random.randint(0,street.rxf),random.randint(105,175))
 
             if random.random() < 1/8 and len(names.rappeurs) > 0:
-                p.BOTS.append(p.Rappeur(g.TEXTIDS['persos'],pos,street=street.name))
+                p.BOTS.append(p.Rappeur(g.TEXTIDS['perso2'],pos,street=street.name))
             else:
                 p.BOTS.append(p.Fan(g.TEXTIDS['persos'],pos,street=street.name))
 
@@ -209,6 +209,7 @@ class App():
     def create_organise_textures(self):
 
         g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(4,6))
+        g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,4))
         g.TEXTIDS['_son'] = g.tman.loadImSeq('son.png',(1,6))
         g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
         g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
@@ -658,7 +659,7 @@ class App():
             self.lab_fps1.append(int(1/dt))
 
             if len(self.lab_fps1) > 10:
-                del self.lab_fps1[0]dqdqd
+                del self.lab_fps1[0]
             moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
             g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
         except : pass

@@ -855,7 +855,7 @@ class Map(HUD):
 
         # create and or change pos
         if not 'perso_spr' in self.sprids:
-            self.addSpr('perso_spr',g.TEXTIDS['persos'][0],(x,y), group='hud21')
+            self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(x,y), group='hud21')
             scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
             g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
         else:

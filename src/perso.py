@@ -13,7 +13,7 @@ from src import obj as o
 from src import obj2 as o2
 from src import voc as v
 
-
+SIZE_SPR = 256
 BOTS = []
 
 #graphic
@@ -57,18 +57,34 @@ class Human():
         self.dir = r.choice(('R','L'))
 
         # skins
-        self.textids = { ('nothing','R',0):textids[0] , ('nothing','R',1):textids[1] , ('nothing','L',0):textids[0+2] , ('nothing','L',1):textids[1+2]
-                        , ('move','R',0):textids[2+2] , ('move','R',1):textids[3+2] , ('move','L',0):textids[4+2] , ('move','L',1):textids[5+2]
-                        , ('hit','R',0):textids[6+2] , ('hit','R',1):textids[6+2] , ('hit','L',0):textids[7+2] , ('hit','L',1):textids[7+2]
-                        , ('write','R',0):textids[10] , ('write','R',1):textids[11] , ('write','L',0):textids[12] , ('write','L',1):textids[13]
-                        , ('wait','R',0):textids[0] , ('wait','R',1):textids[0] , ('wait','L',0):textids[0+2] , ('wait','L',1):textids[0+2]
-                        , ('die','R',0):textids[14] , ('die','R',1):textids[14] , ('die','L',0):textids[14] , ('die','L',1):textids[14]
-                         }
-        self.grp = group
-        #self.roll_skin = 0
-        #self.skin_id = g.sman.addSpr(self.textids[(self.doing[0],self.dir,0)],pos,group=group)
+        if type(self) in [Human,Fan]:
 
-        #self.update_skin()
+            self.textids = {}
+            self.textids['nothing'] = {}
+            self.textids['nothing']['R'] = [textids[0],textids[1]]
+            self.textids['nothing']['L'] = [textids[2],textids[3]]
+
+            self.textids['move'] = {}
+            self.textids['move']['R'] = [textids[4],textids[5]]
+            self.textids['move']['L'] = [textids[6],textids[7]]
+
+            self.textids['hit'] = {}
+            self.textids['hit']['R'] = [textids[8]]
+            self.textids['hit']['L'] = [textids[9]]
+
+            self.textids['write'] = {}
+            self.textids['write']['R'] = [textids[10],textids[11]]
+            self.textids['write']['L'] = [textids[12],textids[13]]
+
+            self.textids['wait'] = {}
+            self.textids['wait']['R'] = [textids[0]]
+            self.textids['wait']['L'] = [textids[2]]
+
+            self.textids['die'] = {}
+            self.textids['die']['R'] = [textids[14]]
+            self.textids['die']['L'] = [textids[14]]
+
+        self.grp = group
 
         ##### HOOOOVER
 
@@ -78,15 +94,22 @@ class Human():
 
     def update_skin(self,dt=0.4,repeat=True):
 
-
-        g.sman.set_text(self.skin_id,self.textids[(self.doing[0],self.dir,self.roll_skin)])
-        if self.roll_skin:
+        max_roll = len(self.textids[self.doing[0]][self.dir])
+        if self.roll_skin >= max_roll:
             self.roll_skin = 0
-        else:
-            self.roll_skin = 1
+
+
+        g.sman.set_text(self.skin_id,self.textids[self.doing[0]][self.dir][self.roll_skin])
+        if g.sman.spr(self.skin_id).width != SIZE_SPR:
+            sc = SIZE_SPR//g.sman.spr(self.skin_id).width
+            g.sman.modify(self.skin_id,scale=(sc,sc))
+
+        self.roll_skin += 1
+        if self.roll_skin >= max_roll:
+            self.roll_skin = 0
 
         if repeat:
-            g.bertran.schedule_once(self.update_skin, 0.4)
+            g.bertran.schedule_once(self.update_skin, 0.2)
 
     def add_money(self,qté):
         self.money += qté
@@ -299,7 +322,7 @@ class Human():
     def load(self):
         if not hasattr(self,'skin_id'):
             self.roll_skin = 0
-            self.skin_id = g.sman.addSpr(self.textids[(self.doing[0],self.dir,0)],(self.gex,self.gey),group=self.grp)
+            self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
 
             self.update_skin()
 
@@ -404,6 +427,33 @@ class Rappeur(Fan):
             n.rappeurs.remove(name)
 
         super(Rappeur,self).__init__(textids,pos,name,street=street)
+
+        # skins
+        self.textids = {}
+        self.textids['nothing'] = {}
+        self.textids['nothing']['R'] = [textids[0],textids[1],textids[2],textids[3]]
+        self.textids['nothing']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+
+        self.textids['move'] = {}
+        self.textids['move']['R'] = [textids[0]]
+        self.textids['move']['L'] = [textids[0]]
+
+        self.textids['hit'] = {}
+        self.textids['hit']['R'] = [textids[0],textids[1],textids[2],textids[3]]
+        self.textids['hit']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+
+        self.textids['write'] = {}
+        self.textids['write']['R'] = [textids[0],textids[1],textids[2],textids[3]]
+        self.textids['write']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+
+        self.textids['wait'] = {}
+        self.textids['wait']['R'] = [textids[0]]
+        self.textids['wait']['L'] = [textids[0]]
+
+        self.textids['die'] = {}
+        self.textids['die']['R'] = [textids[0]]
+        self.textids['die']['L'] = [textids[0]]
+
 
         self.qua_score = 0
 
