@@ -88,13 +88,15 @@ class App():
         self.bgdx = 0
 
         self.sprids = {}
-        self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'back-1')
+        self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'back-3')
         g.sman.modify(self.sprids['bg-1'],scale=(0.75,0.75))
         self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'back')
         g.sman.modify(self.sprids['bg.1'],scale=(0.75,0.75))
         self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'back')
         g.sman.modify(self.sprids['bg.2'],scale=(0.75,0.75))
 
+        rect = box(0,0,g.scr.w,250)
+        self.sprids['ground'] = g.sman.addCol(c['grey'],rect,'back1')
         self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'back1')
         g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
         self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'back1')
@@ -150,8 +152,9 @@ class App():
         tabcolor = [(self.sprids['bg-1'],1),
                     (self.sprids['bg.1'],0.9),
                     (self.sprids['bg.2'],0.9),
-                    (self.sprids['bg1.1'],0.8),
-                    (self.sprids['bg1.2'],0.8)]
+                    (self.sprids['bg1.1'],0.7),
+                    (self.sprids['bg1.2'],0.7),
+                    (self.sprids['ground'],0.7)]
 
         self.cycle = g.Cycle(self.perso,tabcolor)
 
@@ -246,12 +249,18 @@ class App():
         del g.TEXTIDS['_son']
 
         g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
-        g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/bg-1'+'.png')
+        g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/sky.png')
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
         g.TEXTIDS['bgmid'] = g.tman.loadIm('bg/bg2'+'.png')
         g.TEXTIDS['bgup'] = g.tman.loadIm('bg/bg3'+'.png')
         g.TEXTIDS['street1_bg'] = g.tman.loadIm('bg/street1_bg'+'.png')
+
+        ## sun moon stars
+        g.TEXTIDS['moon'] = g.tman.loadIm('bg/moon.png')
+        g.TEXTIDS['sun'] = g.tman.loadIm('bg/sun.png')
+        g.TEXTIDS['stars'] = g.tman.loadIm('bg/stars.png')
+
 
         ##
 

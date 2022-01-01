@@ -31,6 +31,10 @@ class ScreenManager():
         return self.screen.width
     w = property(_w)
 
+    def _h(self):
+        return self.screen.height
+    h = property(_h)
+
 scr = ScreenManager()
 
 #manager who rules groups to draw things in the right order u know
@@ -44,7 +48,7 @@ class GroupManager():
         self.names_wo = {} ## give the name with the order
         self.orders = {} ## give the order with the name
 
-        names = ['back-2','back-1','back','back1','mid-1','mid','mid1','front','perso-1','hud-1','hud','hud1']
+        names = ['back-3','back-2','back-1','back','back1','mid-1','mid','mid1','front','perso-1','hud-1','hud','hud1']
         names += ['perso'] + ['perso'+str(i) for i in range(1,15)]
         names += ['midup','hud2-1','hud2','hud21','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 8
@@ -583,11 +587,11 @@ TEXTIDS = {}
 #### CYCLE -> rules day/night cycle
 class Cycle():
 
-    def __init__(self,perso,sky):
+    def __init__(self,perso,bg):
 
         # general
 
-        self.len = 60 # longueur du cycle en secondes
+        self.len = 120 # longueur du cycle en secondes
         self.dt = 1 # dt avant chaque update
 
         self.tick = 0
@@ -599,8 +603,16 @@ class Cycle():
 
         # sprites
 
-        self.sprids = sky # tableau contenant les ids des sprites à colorer et le pourcentage d'effectif que le cycle a sur lui
+        self.ext_sprids = bg # tableau contenant les ids des sprites à colorer et le pourcentage d'effectif que le cycle a sur lui
         # (plus ce pourcentage se rapporche de 1 plus ça va devenir noir)
+
+        self.sprids = {} # en plus on crée un dic qui va contenir les spr controlés directement par le cycle : type soleil, lune, etoile et meme weather ?
+        self.sprids['sun'] = sman.addSpr(TEXTIDS['sun'],(scr.w/2,0),'back-1')
+        sman.modify(self.sprids['sun'],scale=(0.75,0.75))
+        self.sprids['moon'] = sman.addSpr(TEXTIDS['moon'],(scr.w/4,0),'back-1')
+        sman.modify(self.sprids['moon'],scale=(0.75,0.75))
+        self.sprids['stars'] = sman.addSpr(TEXTIDS['stars'],(0,0),'back-2')
+        sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=0)
 
         self.ticked()
 
@@ -613,19 +625,46 @@ class Cycle():
             #print('wow new day')
             self.perso.add_money(-10)
         day_percentage = (self.tick*self.dt - (self.day-1)*self.len )/self.len
-        print(day_percentage)
+        #print(day_percentage)
         self.update(day_percentage)
 
         bertran.schedule_once(self.ticked,self.dt)
 
     def update(self,day_percentage):
-        r,g,b = R(day_percentage),G(day_percentage),B(day_percentage)
+        ## color
+        p=day_percentage
+        r,g,b = R(p),G(p),B(p)
 
-        for id,prc in self.sprids:
+        ## bg
+        for id,prc in self.ext_sprids:
             rr= 255-255*prc*r
             gg= 255-255*prc*g
             bb= 255-255*prc*b
             sman.filter(id,[rr,gg,bb])
+
+        ## sun
+        ysun = p*1.2*scr.h
+        sman.modify(self.sprids['sun'],pos=(None,ysun))
+        sman.filter(self.sprids['sun'],[255-255*r,255-255*g,255-255*b])
+
+        ## moon
+        pm = p-0.5
+        if pm < 0:
+            pm = 1+pm
+        ymoon = pm*1.2*scr.h
+        sman.modify(self.sprids['moon'],pos=(None,ymoon))
+        sman.filter(self.sprids['moon'],[255-255*0.5*r,255-255*0.5*g,255-255*0.5*b])
+
+        ## stars
+        if p >= 0.8:
+            ps = (p-0.8)*5
+            sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=ps*255)
+        elif p < 0.2:
+            ps = (1-p)*5
+            sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=ps*255)
+        else:
+            sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=0)
+
 
 def R(dayperc):
     p = (dayperc*2-1)**2
