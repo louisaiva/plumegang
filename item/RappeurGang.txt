@@ -162,7 +162,7 @@ OBJECTS :
 		calcul de la qualité globale:
 			-dépend de la qualité de l'instru
 			-de la qualité des phases
-			-des themes communs des phases -> entraine bonus et malus
+			-des themes communs des phases -> entraine bonus et maluss
 
 		calcul du public (fans):
 			-30% du public global est gangsta -> attiré par la streetcred
@@ -209,3 +209,4 @@ idées pour plus tard:
 
 	-pouvoir "réécrire ses phases" -> machine à débloquer pour les améliorer encore plus
 	-qualité X > 0.9999
+	-faire mix de plumes -> fait la moyenne de la qualité ET de la streedcredpowa -> avantageux pour la cred mais désavantageux pour la qualité héhé

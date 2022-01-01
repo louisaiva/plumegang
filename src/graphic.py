@@ -5,7 +5,8 @@ enjoy
 
 
 
-import pyglet
+import pyglet,random
+from math import *
 import src.utils as u
 
 """""""""""""""""""""""""""""""""""
@@ -214,7 +215,16 @@ class SpriteManager():
                 self.sprites[sprid].update(x=x,y=y)
 
     def filter(self,sprid,color=(255,0,0)):
-        self.sprites[sprid].color = color
+
+        if type(sprid) == type([]):
+            for id in sprid:
+                self.filter(id,color)
+
+        elif type(sprid) == type({}):
+            for id in sprid:
+                self.filter(sprid[id],color)
+        else:
+            self.sprites[sprid].color = color
 
     def spr(self,id):
         if id in self.sprites:
@@ -573,11 +583,11 @@ TEXTIDS = {}
 #### CYCLE -> rules day/night cycle
 class Cycle():
 
-    def __init__(self,perso):
+    def __init__(self,perso,sky):
 
         # general
 
-        self.len = 10 # longueur du cycle en secondes
+        self.len = 60 # longueur du cycle en secondes
         self.dt = 1 # dt avant chaque update
 
         self.tick = 0
@@ -586,12 +596,11 @@ class Cycle():
 
         self.perso = perso
 
+
         # sprites
 
-        """self.sprids = {}
-        self.sprids['sun'] ="""
-
-
+        self.sprids = sky # tableau contenant les ids des sprites à colorer et le pourcentage d'effectif que le cycle a sur lui
+        # (plus ce pourcentage se rapporche de 1 plus ça va devenir noir)
 
         self.ticked()
 
@@ -604,12 +613,45 @@ class Cycle():
             #print('wow new day')
             self.perso.add_money(-10)
         day_percentage = (self.tick*self.dt - (self.day-1)*self.len )/self.len
-        #print(day_percentage)
+        print(day_percentage)
+        self.update(day_percentage)
 
         bertran.schedule_once(self.ticked,self.dt)
 
     def update(self,day_percentage):
-        pass
+        r,g,b = R(day_percentage),G(day_percentage),B(day_percentage)
+
+        for id,prc in self.sprids:
+            rr= 255-255*prc*r
+            gg= 255-255*prc*g
+            bb= 255-255*prc*b
+            sman.filter(id,[rr,gg,bb])
+
+def R(dayperc):
+    p = (dayperc*2-1)**2
+    p=p+(random.random()-0.5)*0.05
+    if p <0:
+        return 0
+    return p
+
+def G(dayperc):
+    p = 1-sin(dayperc*pi)
+    p=p+(random.random()-0.5)*0.05
+    if p <0:
+        return 0
+    return p
+
+def B(dayperc):
+    if dayperc < 0.5:
+        p=1-dayperc*2
+    else:
+        p=(dayperc-0.5)*2
+    p=p+(random.random()-0.5)*0.05
+    if p <0:
+        return 0
+    return p
+
+
 
 M = [0,0]
 

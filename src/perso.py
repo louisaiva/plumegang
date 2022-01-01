@@ -57,7 +57,7 @@ class Human():
         self.dir = r.choice(('R','L'))
 
         # skins
-        if type(self) in [Human,Fan]:
+        if type(self) in [Human,Fan,Perso]:
 
             self.textids = {}
             self.textids['nothing'] = {}
@@ -97,7 +97,6 @@ class Human():
         max_roll = len(self.textids[self.doing[0]][self.dir])
         if self.roll_skin >= max_roll:
             self.roll_skin = 0
-
 
         g.sman.set_text(self.skin_id,self.textids[self.doing[0]][self.dir][self.roll_skin])
         if g.sman.spr(self.skin_id).width != SIZE_SPR:
@@ -294,7 +293,7 @@ class Human():
         if hasattr(self,'skin_id') and 'die' not in self.doing:
             exp = self.voc.random()
             self.say(exp)
-        g.bertran.schedule_once(self.rspeak, 23)
+        g.bertran.schedule_once(self.rspeak, r.randint(30,100))
         #print(self.name,'said',exp)
 
     def speak(self,dt=0):
@@ -428,32 +427,32 @@ class Rappeur(Fan):
 
         super(Rappeur,self).__init__(textids,pos,name,street=street)
 
-        # skins
-        self.textids = {}
-        self.textids['nothing'] = {}
-        self.textids['nothing']['R'] = [textids[0],textids[1],textids[2],textids[3]]
-        self.textids['nothing']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+        if type(self) != Perso:
+            # skins
+            self.textids = {}
+            self.textids['nothing'] = {}
+            self.textids['nothing']['R'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['nothing']['L'] = [textids[0],textids[1],textids[2],textids[3]]
 
-        self.textids['move'] = {}
-        self.textids['move']['R'] = [textids[0]]
-        self.textids['move']['L'] = [textids[0]]
+            self.textids['move'] = {}
+            self.textids['move']['R'] = [textids[0]]
+            self.textids['move']['L'] = [textids[0]]
 
-        self.textids['hit'] = {}
-        self.textids['hit']['R'] = [textids[0],textids[1],textids[2],textids[3]]
-        self.textids['hit']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['hit'] = {}
+            self.textids['hit']['R'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['hit']['L'] = [textids[0],textids[1],textids[2],textids[3]]
 
-        self.textids['write'] = {}
-        self.textids['write']['R'] = [textids[0],textids[1],textids[2],textids[3]]
-        self.textids['write']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['write'] = {}
+            self.textids['write']['R'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['write']['L'] = [textids[0],textids[1],textids[2],textids[3]]
 
-        self.textids['wait'] = {}
-        self.textids['wait']['R'] = [textids[0]]
-        self.textids['wait']['L'] = [textids[0]]
+            self.textids['wait'] = {}
+            self.textids['wait']['R'] = [textids[0]]
+            self.textids['wait']['L'] = [textids[0]]
 
-        self.textids['die'] = {}
-        self.textids['die']['R'] = [textids[0]]
-        self.textids['die']['L'] = [textids[0]]
-
+            self.textids['die'] = {}
+            self.textids['die']['R'] = [textids[0]]
+            self.textids['die']['L'] = [textids[0]]
 
         self.qua_score = 0
 

@@ -101,7 +101,6 @@ def test3(n=100000):
         ins = instrus[i]
         print(ins.price,' : ',convert_quality(ins.quality),trunc(ins.quality,5),trunc(ins.author.quality,5))
 
-
 def rplum(owner):
 
     quality = r.random()
@@ -808,7 +807,6 @@ class Map(HUD):
 
                 vert = street.pre.vert
 
-
                 if vert:
                     x = self.box.x + street.line[0][0]*3*self.larg_street+self.larg_street
                     y = self.box.fy - street.line[1][1]*3*self.larg_street
@@ -835,7 +833,7 @@ class Map(HUD):
         street = o2.NY.CITY[self.perso.street]
 
         # get pos
-        if type(street) == o2.Street:
+        if type(street) == o2.Street: # si le perso se trouve dans une rue
 
             perc = self.perso.gex/street.xxf[1]
 
@@ -845,10 +843,9 @@ class Map(HUD):
                 y = g.sman.spr(self.sprids[street.name]).y + g.sman.spr(self.sprids[street.name]).height + self.larg_street/2 - perc*g.sman.spr(self.sprids[street.name]).height
             else:
                 y = g.sman.spr(self.sprids[street.name]).y + self.larg_street/2
-                x = g.sman.spr(self.sprids[street.name]).x + self.larg_street/2 + perc*g.sman.spr(self.sprids[street.name]).width
+                x = g.sman.spr(self.sprids[street.name]).x + perc*g.sman.spr(self.sprids[street.name]).width
 
-
-        else:
+        else: # si le perso se trouve dans une maison
             x,y = g.sman.spr(self.sprids[street.name]).position
             x += self.larg_street/2
             y += self.larg_street/2

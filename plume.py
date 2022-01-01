@@ -122,7 +122,7 @@ class App():
 
         ## PERSOS
 
-        self.perso = p.Perso(g.TEXTIDS['perso2'],fill=FILL_INV)
+        self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
         o2.NY.CITY['home'].set_owner(self.perso)
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
@@ -147,7 +147,13 @@ class App():
 
         ## cycle
 
-        self.cycle = g.Cycle(self.perso)
+        tabcolor = [(self.sprids['bg-1'],1),
+                    (self.sprids['bg.1'],0.9),
+                    (self.sprids['bg.2'],0.9),
+                    (self.sprids['bg1.1'],0.8),
+                    (self.sprids['bg1.2'],0.8)]
+
+        self.cycle = g.Cycle(self.perso,tabcolor)
 
         ## ZONES
 
