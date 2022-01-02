@@ -24,7 +24,7 @@ class Human():
         # general
 
         self.name = name
-        self.speed = 12
+        self.speed = r.randint(10,25)
         self.yspeed = 5
         self.runspeed = 100
         self.play = 'play'
@@ -49,6 +49,7 @@ class Human():
         self.money = 1000
 
         self.element_colli = None
+        self.environ = []
 
         # track of time
         self.time_last_move = 0
@@ -113,6 +114,10 @@ class Human():
     def add_money(self,qté):
         self.money += qté
 
+    def update_env(self):
+        if self.alive:
+            self.environ = o2.NY.CITY[self.street].environ(self)
+
     ##
 
     def do(self,action='nothing'):
@@ -161,8 +166,8 @@ class Human():
 
     def move(self,dir,street,run=False):
 
-        maxx=street.xxf
-        maxy = 100,175
+        maxx = street.xxf
+        maxy = street.yyf
 
         if run:
             speed = self.runspeed
@@ -236,7 +241,8 @@ class Human():
 
         ## attention faut réécrire dans Perso aussi
 
-        print(self.name,'hit by',hitter.name)
+        #print(self.name,'hit by',hitter.name)
+        self.rsay('aled')
         g.sman.filter(self.skin_id)
         g.bertran.unschedule(self.un_hit)
         g.bertran.schedule_once(self.un_hit, 0.4)
@@ -270,20 +276,74 @@ class Human():
         o2.NY.CITY[self.street].del_hum(self)
         BOTS.remove(self)
 
+
+    ## BOTS
+
+    def being_bot(self):
+        if type(self) not in [Rappeur,Perso] and 'die' not in self.doing:
+
+            if r.random() > 0.99995:
+                self.rspeak()
+
+            if self.doing == ['nothing'] and r.random()>0.999:
+                x,y = self.gex + r.randint(-2000,2000), self.gey + r.randint(-20,20)
+
+
+                if x > o2.NY.CITY[self.street].rxf :
+                    x = o2.NY.CITY[self.street].rxf
+                elif x < o2.NY.CITY[self.street].x:
+                    x = o2.NY.CITY[self.street].x
+
+                """if type(self) == Perso:
+                    print('omg new direction',x,y)"""
+                #print(self.name,'moving from',(self.gex,self.gey),'to',objective)
+                self.move_until(0,(x,y))
+
+    def move_until(self,dt=0,objective=(0,0)):
+
+        reached = False,False
+        x,y = objective
+
+        #x
+        if self.gex + self.speed >= x and self.gex <= x:
+            reached = True,reached[1]
+        elif self.gex > x:
+            self.move('L',o2.NY.CITY[self.street])
+        elif self.gex < x:
+            self.move('R',o2.NY.CITY[self.street])
+
+        #y
+        if self.gey + self.speed >= y and self.gey <= y:
+            reached = reached[0],True
+        elif self.gey > y:
+            self.move('down',o2.NY.CITY[self.street])
+        elif self.gey < y:
+            self.move('up',o2.NY.CITY[self.street])
+
+        if reached != (True,True) and self.alive and not 'nothing' in self.doing:
+            g.bertran.schedule_once(self.move_until,0.01,objective)
+
     ## SPEAKING
 
-    def say(self,exp):
+    def say(self,exp,duree=20):
 
-        if self.keyids_voc:
-            g.pman.delete(self.keyids_voc)
 
-        x,y = self.box.cx,self.box.fy + 40
-        self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                            ,group='up-1',vis=True,duree=20,max_width=20)
+        if self.alive:
+            if self.keyids_voc:
+                g.pman.delete(self.keyids_voc)
+
+            # gaffe faut modifier aussi dans l'update
+            x,y = self.box.cx,self.box.fy + 100
+            self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
+                                ,group='up-1',vis=True,duree=duree,max_width=20)
+
+    def rsay(self,type,duree=20):
+        exp = self.voc.exp(type)
+        self.say(exp,duree)
 
     def update(self):
         if self.keyids_voc:
-            x,y = self.box.cx,self.box.fy + 40
+            x,y = self.box.cx,self.box.fy + 100
             #print(x,y)
             g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
             #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
@@ -292,7 +352,7 @@ class Human():
         if hasattr(self,'skin_id') and 'die' not in self.doing:
             exp = self.voc.random()
             self.say(exp)
-        g.bertran.schedule_once(self.rspeak, r.randint(30,100))
+        #g.bertran.schedule_once(self.rspeak, r.randint(30,100))
         #print(self.name,'said',exp)
 
     def speak(self,dt=0):
@@ -332,6 +392,7 @@ class Human():
 
     def deload(self):
         g.bertran.unschedule(self.update_skin)
+        g.bertran.unschedule(self.move_until)
 
         if hasattr(self,'skin_id'):
             g.sman.delete(self.skin_id)
@@ -378,23 +439,29 @@ class Fan(Human):
 
         self.streams = {}
         self.likes = {}
+        self.artists = []
 
     def like(self,son,direct=True):
         if son.cred >= self.cred_range[0] and son.cred <= self.cred_range[1]:
             if son not in self.likes:
                 self.likes[son] = True
                 if not self in son.perso.fans:
-                    print(self.name + ' aime ce son !')
+                    #print(self.name + ' aime ce son !')
 
                     if direct: son.perso.addfan(self)
                     else: return self
+                if not son.perso in self.artists:
+                    self.artists.append(son.perso)
 
                 else:
-                    print(self.name + ' aime deja un autre son !')
+                    #print(self.name + ' aime deja un autre son !')
+                    pass
             else:
-                print(self.name + ' aime deja ce son !')
+                #print(self.name + ' aime deja ce son !')
+                pass
         else:
-            print(self.name + ' cheh')
+            #print(self.name + ' cheh')
+            pass
         return None
 
     def stream(self,son):
@@ -404,6 +471,19 @@ class Fan(Human):
         self.streams[son] += 1
         if self.streams[son] > 1:
             self.like(son)
+
+    def update_env(self):
+        super(Fan,self).update_env()
+        #print( list(map( lambda x:x.get('nom'),   list(filter(lambda x:x.get('type')=='hum',self.environ))  )) )
+        if self.artists != [] and not self.keyids_voc:
+            #print(self.name,'est fan de',list(map(lambda x:x.name,self.artists)))
+            for hum in list(filter(lambda x:x.get('type')=='hum',self.environ)):
+                #print(hum.get('nom'),list(map(lambda x:x.name,self.artists)))
+                if hum.get('nom') in list(map(lambda x:x.name,self.artists)):
+                    exp = self.voc.omg_c_delta(hum.get('nom'))
+                    print(self.name,':',exp)
+                    self.say(exp,60)
+
 
     def __str__(self):
         s = '-100 '
@@ -614,6 +694,13 @@ class Perso(Rappeur):
 
         self.load()
 
+    # cheat
+    def cheat(self):
+        self.life = self.max_life
+        self.cred = 0
+        self.lifehud.update()
+        self.credhud.update()
+
     # huds
 
     def rplum(self):
@@ -634,7 +721,7 @@ class Perso(Rappeur):
         super(Perso,self).drop_plume()
 
     def be_hit(self,hitter):
-        print(self.name,'hit by',hitter.name)
+        #print(self.name,'hit by',hitter.name)
         g.sman.filter(self.skin_id)
         g.bertran.unschedule(self.un_hit)
         g.bertran.schedule_once(self.un_hit, 0.4)
@@ -711,15 +798,22 @@ class Perso(Rappeur):
                 collis.append(item)
 
         if len(collis) > 0:
-            k = 0
-            distmin = module(self.box.cx-collis[0].box.cx,self.box.cy-collis[0].box.cy)
-            for i in range(1,len(collis)):
-                dist = module(self.box.cx-collis[i].box.cx,self.box.cy-collis[i].box.cy)
-                if dist < distmin:
-                    distmin = dist
-                    k = i
+            collis.sort(key=lambda x:x.gey)
+            #print(list(map(lambda x:x.name,collis)))
 
+            y,yf = street.yyf
+            d = yf-y
+            yranges = [y]
+            for i in range(len(collis)):
+                yranges.append(y+(i+1)*(d/len(collis)))
+            #print(yranges)
+
+            k=0
+            for i in range(len(collis)):
+                if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
+                    k=i
             colli_elem = collis[k]
+
         else:
             colli_elem = None
 

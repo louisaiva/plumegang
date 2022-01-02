@@ -8,7 +8,6 @@ from src import graphic as g
 from src import obj as o
 import random as r
 
-
 # lines
 
 class preStreet(line):
@@ -43,6 +42,9 @@ class Street():
         self.items = []
 
         self.visible = False
+
+        self.catalog = [] ## ce tableau est un tableau ordonné selon les X contenant tous les éléments et leurs détails:
+                            # x y type nom
 
     def modify(self,x=None,y=None):
         if x != None:
@@ -126,7 +128,58 @@ class Street():
         print(len(list(self.zones)),'zones ---',len(self.humans),'humans ---',len(self.items),'items loaded')
 
         self.visible = True
-    #
+        self.update_catalog()
+
+    def update_catalog(self,perso=None):
+        self.catalog = []
+        for zone in self.zones:
+            self.catalog.append( {'x':self.zones[zone].box.cx,'y':self.zones[zone].box.cy,'type':'zone','nom':self.zones[zone].name} )
+        for hum in self.humans:
+            self.catalog.append( {'x':hum.gex,'y':hum.gey,'type':'hum','nom':hum.name} )
+        for item in self.items:
+            self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name} )
+        if perso != None:
+            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name} )
+
+
+        self.catalog.sort(key=lambda x:x.get('x'))
+
+    # bots
+    def rand_pos(self):
+        return (r.randint(self.x,self.x+self.w),self.y)
+
+    def environ_lr(self,xl,xr):
+        if xl > xr :
+            xr,xl=xl,xr
+
+        il,ir = len(self.catalog)-1,0
+        while self.catalog[il].get('x') > xl and il > 0:
+            il-=1
+        while self.catalog[ir].get('x') < xr and ir > len(self.catalog)-1:
+            ir+=1
+
+        elem = []
+        for i in range(il,ir+1):
+            elem.append(self.catalog[i])
+        return elem
+
+    def environ(self,elem):
+        #tab = self.environ_lr()
+        xl,xr=elem.gex-1000,elem.gex+1000
+
+        il,ir = len(self.catalog)-1,0
+        while il > 0 and self.catalog[il-1].get('x') > xl :
+            il-=1
+        while ir < len(self.catalog)-1 and self.catalog[ir+1].get('x') < xr :
+            ir+=1
+
+        elems = []
+        for i in range(il,ir+1):
+            #if self.catalog[i].get('nom') != elem.name:
+            elems.append(self.catalog[i])
+        return elems
+
+    ###
 
     def _x(self):
         return self._x
@@ -161,6 +214,10 @@ class Street():
         else:
             return (self.box.xy[0],self.box.xy[0]+self.box.w)
     xxf = property(_xxf)
+
+    def _yyf(self):
+        return 100,175
+    yyf = property(_yyf)
 
     def _w(self):
         return self.box.w

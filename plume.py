@@ -279,6 +279,7 @@ class App():
                         ,'scr0':self.change_screen
                         ,'scr1':self.change_screen
                         ,'reset':self.menu.reset
+                        ,'cheat':self.perso.cheat
                         ,'roll_color':self.cycle.roll_mode}
         self.menu_args = {'play':['play'],'go home':[0,None,o2.NY.CITY['home']],'scr0':[0],'scr1':[1]}
 
@@ -293,8 +294,8 @@ class App():
                     self.menu_fonct[res](*self.menu_args[res])
                 elif res in self.menu_fonct:
                     self.menu_fonct[res]()
-                else:
-                    print('click',res)
+                """else:
+                    print('click',res)"""
 
 
     ### ONCE FUNCTIONS
@@ -689,6 +690,7 @@ class App():
             if len(self.lab_fps1) > 10:
                 del self.lab_fps1[0]
             moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
+            g.FPS = moyfps
             g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
         except : pass
 
@@ -699,7 +701,6 @@ class App():
 
             # DAYS
             g.lman.set_text(self.lab_day,'DAY : '+str(self.cycle.day))
-
 
             ## anchor / moving sprites
 
@@ -774,16 +775,26 @@ class App():
                     if chance < self.perso.nb_fans*malus:
                         random.choice(p.BOTS).stream(self.perso.disco[i])
 
-
             ## perso
 
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
+                hum.being_bot()
                 hum.check_do()
                 #hum.update()
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()
             self.perso.bigmap.update()
             #print(self.perso.gex,self.perso.gey)
+
+            ## update catalog:
+            o2.NY.CITY[self.perso.street].update_catalog(self.perso)
+            for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
+                hum.update_env()
+
+            #print(list(map(lambda x:x.get('nom'),o2.NY.CITY[self.perso.street].catalog)))
+            #print(list(map(lambda x:int(x.get('x')),self.perso.environ)))
+            #print(list(map(lambda x:x.get('nom'),self.perso.environ)))
+            #print(o2.NY.CITY[self.perso.street].catalog)
 
             if self.perso.money <= 0 or not self.perso.alive:
                 #print('game over')

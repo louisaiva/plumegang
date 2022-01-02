@@ -13,13 +13,15 @@ import src.utils as u
  PART ONE : GRAPHIC STUFF
 """""""""""""""""""""""""""""""""""
 
+FPS = 0
+
 class ScreenManager():
     def __init__(self):
 
         self.display = pyglet.canvas.get_display()
         self.screens = self.display.get_screens()
 
-        self.current_screen = self.screens[0]
+        self.current_screen = self.screens[1]
 
     def update_screen(self,window):
         if window.screen in self.screens:
@@ -614,7 +616,7 @@ class Cycle():
 
         # general
 
-        self.len = 2*60 # longueur du cycle en secondes
+        self.len = 20 # longueur du cycle en secondes
         self.dt = 0.05 # dt avant chaque update
 
         self.tick = 0

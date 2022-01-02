@@ -15,8 +15,9 @@ class Menu:
 
         self.arb['play']='play'
         param = OrderedDict()
-        param['go home']='go home','play','reset'
-        param['nuits colorées'] = 'roll_color','play','reset'
+        param['go home']='reset','go home','play'
+        param['cheat']='reset','cheat','play'
+        param['nuits colorées'] = 'reset','roll_color','play'
         param['écran'] = OrderedDict()
         for i in range(len(g.scr.screens)):
             scr = g.scr.screens[i]
@@ -96,7 +97,7 @@ class Menu:
 
     def unclick(self):
         if self.point == '':
-            return 'play'
+            return 'play','reset'
         else:
             self.point = ','.join(self.point.split(',')[:-1])
             print(self.point)
@@ -136,3 +137,4 @@ class Menu:
         ## unhide(True) N'AFFICHE PAS le menu
 
         g.lman.unhide(self.labids,hide)
+        self.actualise()

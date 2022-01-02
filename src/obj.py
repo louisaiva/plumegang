@@ -1040,7 +1040,7 @@ class PlumHUD(HUD):
         self.ui = Plume_UI(box(xplum,yplum,self.spr('plum_spr').width,self.spr('plum_spr').height),plum)
 
     def delete(self):
-        
+
         super(PlumHUD,self).delete()
         self.ui.delete()
 
