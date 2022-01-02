@@ -273,7 +273,13 @@ class App():
     def create_menu(self):
 
         self.menu = m.Menu()
-        self.menu_fonct = {'play':self.change_action,'quit':self.get_out,'go home':self.perso.tp,'scr0':self.change_screen,'scr1':self.change_screen}
+        self.menu_fonct = {'play':self.change_action
+                        ,'quit':self.get_out
+                        ,'go home':self.perso.tp
+                        ,'scr0':self.change_screen
+                        ,'scr1':self.change_screen
+                        ,'reset':self.menu.reset
+                        ,'roll_color':self.cycle.roll_mode}
         self.menu_args = {'play':['play'],'go home':[0,None,o2.NY.CITY['home']],'scr0':[0],'scr1':[1]}
 
     def apply_menu(self,res):
@@ -342,11 +348,6 @@ class App():
 
     def on_key_press(self,symbol,modifiers):
 
-        if symbol == key.F1:
-            self.change_screen(0)
-        elif symbol == key.F2:
-            self.change_screen(1)
-
         if self.action == "play":
 
             self.longpress[symbol] = time.time()
@@ -405,6 +406,10 @@ class App():
 
                 elif symbol == key.X:
                     self.perso.hud.rollhide()
+                    self.perso.lifehud.rollhide()
+                    self.perso.credhud.rollhide()
+                    if self.perso.plume != None:
+                        self.perso.plumhud.rollhide()
 
                 elif symbol == key.I:
                     self.perso.invhud.rollhide()

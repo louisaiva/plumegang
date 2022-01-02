@@ -20,7 +20,6 @@ class ScreenManager():
         self.screens = self.display.get_screens()
 
         self.current_screen = self.screens[0]
-        print(str(self.current_screen))
 
     def update_screen(self,window):
         if window.screen in self.screens:
@@ -606,6 +605,8 @@ TEXTIDS = {}
 """""""""""""""""""""""""""""""""""
 
 
+MODE_COLOR = 1 ## 1 pour avoir des couleurs wtf et 0 pour la "réalité"
+
 #### CYCLE -> rules day/night cycle
 class Cycle():
 
@@ -613,15 +614,14 @@ class Cycle():
 
         # general
 
-        self.len = 20*60 # longueur du cycle en secondes
-        self.dt = 1 # dt avant chaque update
+        self.len = 2*60 # longueur du cycle en secondes
+        self.dt = 0.05 # dt avant chaque update
 
         self.tick = 0
 
         self.day = 1 # nb de jour
 
         self.perso = perso
-
 
         # sprites
 
@@ -636,6 +636,9 @@ class Cycle():
         self.sprids['stars'] = sman.addSpr(TEXTIDS['stars'],(0,0),'back-2')
         sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=0)
 
+        #COLORS
+        self.newteinte()
+
         self.ticked()
 
     def ticked(self,dt=0):
@@ -643,9 +646,7 @@ class Cycle():
         self.tick += 1
         #print(self.tick)
         if self.tick*self.dt > self.day*self.len:
-            self.day += 1
-            #print('wow new day')
-            self.perso.add_money(-10)
+            self.day_update()
         day_percentage = (self.tick*self.dt - (self.day-1)*self.len )/self.len
         #print(day_percentage)
         self.update(day_percentage)
@@ -655,7 +656,7 @@ class Cycle():
     def update(self,day_percentage):
         ## color
         p=day_percentage
-        r,g,b = R(p),G(p),B(p)
+        r,g,b = self.R(p),self.G(p),self.B(p)
 
         ## bg
         for id,prc in self.ext_sprids:
@@ -665,7 +666,7 @@ class Cycle():
             sman.filter(id,[rr,gg,bb])
 
         ## sun
-        ysun = p*1.2*scr.h
+        ysun = p*4*scr.h-0.6*scr.h
         sman.modify(self.sprids['sun'],pos=(None,ysun))
         sman.filter(self.sprids['sun'],[255-255*r,255-255*g,255-255*b])
 
@@ -673,45 +674,69 @@ class Cycle():
         pm = p-0.5
         if pm < 0:
             pm = 1+pm
-        ymoon = pm*1.2*scr.h
+        ymoon = pm*4*scr.h-1.2*scr.h
         sman.modify(self.sprids['moon'],pos=(None,ymoon))
         sman.filter(self.sprids['moon'],[255-255*0.5*r,255-255*0.5*g,255-255*0.5*b])
 
         ## stars
         if p >= 0.8:
             ps = (p-0.8)*5
-            sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=ps*255)
+            sman.modify(self.sprids['stars'],opacity=ps*255)
         elif p < 0.2:
-            ps = (1-p)*5
-            sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=ps*255)
+            ps = (1-p-0.8)*5
+            sman.modify(self.sprids['stars'],opacity=ps*255)
         else:
-            sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=0)
+            sman.modify(self.sprids['stars'],opacity=0)
 
-def R(dayperc):
-    p = (dayperc*2-1)**2
-    p=p+(random.random()-0.5)*0.05
-    if p <0:
-        return 0
-    return p
+    def day_update(self):
 
-def G(dayperc):
-    p = 1-sin(dayperc*pi)
-    p=p+(random.random()-0.5)*0.05
-    if p <0:
-        return 0
-    return p
+        #general
+        self.day += 1
+        self.perso.add_money(-10)
 
-def B(dayperc):
-    if dayperc < 0.5:
-        p=1-dayperc*2
-    else:
-        p=(dayperc-0.5)*2
-    p=p+(random.random()-0.5)*0.05
-    if p <0:
-        return 0
-    return p
+        #teinte
+        self.newteinte()
 
+    def newteinte(self):
 
+        self.rr = (random.random()-0.5)
+        self.gg = (random.random()-0.5)
+        self.bb = (random.random()-0.5)
+
+        if not MODE_COLOR:
+            self.rr*=0.1
+            self.gg*=0.1
+            self.bb*=0.1
+
+        #print('nouvelle teinte :',(self.rr,self.gg,self.bb))
+
+    def roll_mode(self):
+        global MODE_COLOR
+        MODE_COLOR = not MODE_COLOR
+        self.newteinte()
+
+    #rgb
+    def R(self,dayperc):
+        p = (dayperc*2-1)**2
+        p=p+self.rr
+        if p <0:
+            return 0
+        return p
+    def G(self,dayperc):
+        p = 1-sin(dayperc*pi)
+        p=p+self.gg
+        if p <0:
+            return 0
+        return p
+    def B(self,dayperc):
+        if dayperc < 0.5:
+            p=1-dayperc*2
+        else:
+            p=(dayperc-0.5)*2
+        p=p+self.bb
+        if p <0:
+            return 0
+        return p
 
 M = [0,0]
 

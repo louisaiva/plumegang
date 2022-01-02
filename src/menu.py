@@ -14,17 +14,16 @@ class Menu:
         self.arb = OrderedDict()
 
         self.arb['play']='play'
-        self.arb['go home']='go home','play'
         param = OrderedDict()
+        param['go home']='go home','play','reset'
+        param['nuits colorées'] = 'roll_color','play','reset'
         param['écran'] = OrderedDict()
         for i in range(len(g.scr.screens)):
             scr = g.scr.screens[i]
             nom = scr.get_device_name()
             param['écran'][nom] = 'scr'+str(i)
 
-        #param['cheh'] = None
-        #param['lezgo'] = None
-        self.arb['param'] = param
+        self.arb['...'] = param
         self.arb['quit'] = 'quit'
 
         self.max_len = 4
@@ -73,6 +72,10 @@ class Menu:
             else:
                 g.lman.modify(self.labids[i],size=self.size,color=list(c["white"])[:3]+[vis])
 
+    def reset(self):
+        self.point = ''
+        self.cursor = 0
+        self.actualise()
 
     ##
 
