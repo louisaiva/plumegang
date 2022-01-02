@@ -185,9 +185,6 @@ class App():
         self.lab_day = g.lman.addLab('DAY : 0',(20,1060-50),group='up',font_name=1,font_size=32,anchor=('left','top'))
         self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
 
-
-
-
         # keys
         self.keys = key.KeyStateHandler()
         self.window.push_handlers(self.keys)
@@ -276,8 +273,8 @@ class App():
     def create_menu(self):
 
         self.menu = m.Menu()
-        self.menu_fonct = {'play':self.change_action,'quit':self.get_out,'go home':self.perso.tp}
-        self.menu_args = {'play':['play'],'go home':[0,None,o2.NY.CITY['home']]}
+        self.menu_fonct = {'play':self.change_action,'quit':self.get_out,'go home':self.perso.tp,'scr0':self.change_screen,'scr1':self.change_screen}
+        self.menu_args = {'play':['play'],'go home':[0,None,o2.NY.CITY['home']],'scr0':[0],'scr1':[1]}
 
     def apply_menu(self,res):
 
@@ -323,10 +320,32 @@ class App():
 
         #self.perso.pause(act)
 
+    def change_screen(self,screen_nb):
+
+        screens = g.scr.screens
+        screen = screens[screen_nb]
+
+        # on recrée
+        newwin = pyglet.window.Window(screen=screen)
+        newwin.set_fullscreen()
+        newwin.push_handlers(self)
+        newwin.push_handlers(self.keys)
+
+        # on supprime l'ancienne window
+        self.window.close()
+        self.window = newwin
+
+        #on update g.scr
+        g.scr.update_screen(self.window)
 
     ### PYGLET FUNCTIONS
 
     def on_key_press(self,symbol,modifiers):
+
+        if symbol == key.F1:
+            self.change_screen(0)
+        elif symbol == key.F2:
+            self.change_screen(1)
 
         if self.action == "play":
 
@@ -406,7 +425,6 @@ class App():
 
                 elif symbol == key.K:
                     self.perso.speak()
-
 
         elif self.action == 'pause':
 

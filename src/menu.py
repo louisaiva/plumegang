@@ -16,8 +16,14 @@ class Menu:
         self.arb['play']='play'
         self.arb['go home']='go home','play'
         param = OrderedDict()
-        param['cheh'] = None
-        param['lezgo'] = None
+        param['écran'] = OrderedDict()
+        for i in range(len(g.scr.screens)):
+            scr = g.scr.screens[i]
+            nom = scr.get_device_name()
+            param['écran'][nom] = 'scr'+str(i)
+
+        #param['cheh'] = None
+        #param['lezgo'] = None
         self.arb['param'] = param
         self.arb['quit'] = 'quit'
 

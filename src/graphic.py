@@ -19,8 +19,16 @@ class ScreenManager():
         self.display = pyglet.canvas.get_display()
         self.screens = self.display.get_screens()
 
+        self.current_screen = self.screens[0]
+        print(str(self.current_screen))
+
+    def update_screen(self,window):
+        if window.screen in self.screens:
+            #print('yeaas screen bien dans screens')
+            self.current_screen = window.screen
+
     def _screen(self):
-        return self.screens[0]
+        return self.current_screen
     screen = property(_screen)
 
     def _size(self):
@@ -605,7 +613,7 @@ class Cycle():
 
         # general
 
-        self.len = 120 # longueur du cycle en secondes
+        self.len = 20*60 # longueur du cycle en secondes
         self.dt = 1 # dt avant chaque update
 
         self.tick = 0
