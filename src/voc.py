@@ -43,7 +43,13 @@ voc['random'] = [
                 'je hais les rappeurs',
                 'j\'adore jouer à la pétanque',
                 'bon antoine daniel cquand tu fais clyde vanilla 2 ?',
-                'aaa'
+                'aaa',
+                'trop d\'la boule j\'débarque comme roucool',
+                'sku',
+                'ç\'cu',
+                'ptain envie d\'caner',
+                '*scof scof*',
+                'nan mé wesh drake d\'où tu refuses mon feat',
                 ]
 
 dic = Dico(voc)

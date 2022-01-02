@@ -1426,7 +1426,7 @@ class MarketHUD(HUD):
         else:
             status,color = "on sale",c['red']
 
-        self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_name=1,font_size=30)
+        self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_size=30)
 
     def add_instru(self,dt):
 
@@ -1472,7 +1472,7 @@ class MarketHUD(HUD):
             else:
                 status,color = "on sale",c['red']
 
-            self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_name=1,font_size=30)
+            self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_size=30)
 
     def buy_instru(self):
 
