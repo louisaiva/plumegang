@@ -15,6 +15,10 @@ def Exp():
 """
 
 import random as r
+from src import graphic as g
+from src import obj as o
+from src import perso as p
+from src.utils import *
 
 class Dico():
     def __init__(self,voc):
@@ -32,8 +36,11 @@ class Dico():
     def random(self):
         return r.choice(self.voc['random'])
 
+    def roll(self):
+        return self.voc['roll']
 
 voc = {}
+voc['roll'] = ['oui','non','nik','yo','t ki ?','file ma thune']
 voc['oui'] = [   'c\'est cela meme','vous avez bien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
 voc['non'] = [   'c\'est ma foi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','non frr'   ]
 voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki degage','tu fais quoi la','arrhrh je fuis','deso frero mé tape paas','pas bien la violence'
@@ -63,3 +70,77 @@ voc['random'] = [
                 ]
 
 dic = Dico(voc)
+
+
+
+
+
+###
+# TEST GRAPHIQUE
+###
+
+class Roll_exp():
+
+    def __init__(self,pos,perso,exps):
+
+        self.exps = exps
+        self.perso = perso
+
+        self.pos = pos
+
+        self.cur = None
+
+        # calcul pos
+        self.ray = 200
+        self.pts,self.angs = points_on_circle(pos,self.ray,len(self.exps))
+
+        # create labels
+        self.labids = []
+        for i in range(len(self.exps)):
+            exp = self.exps[i]
+            pt = self.pts[i]
+            size = 20
+
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,200,255),font_size=size,anchor = ('center','center'),group='hud1'))
+
+        # create bg circle
+        self.bg = g.sman.addCircle(pos,self.ray*1.5,(80,80,120,160),group='hud-1')
+
+    def update(self):
+
+        if distance(g.M,self.pos) < 20:
+            self.cur = None
+            for i in range(len(self.labids)):
+                g.lman.modify(self.labids[i],size=20,color=(255,255,200,255))
+        else:
+            ang = ang_from_pos(g.M,self.pos)
+            for i in range(len(self.angs)):
+                if i==0:
+                    if ang <= self.angs[i+1] or ang >= self.angs[0]:
+                        self.cur = 0
+                        break
+                elif i != len(self.angs)-1:
+                    if ang >= self.angs[i] and ang <= self.angs[i+1]:
+                        self.cur = i
+                        break
+                else:
+                    if ang >= self.angs[i] and ang <= self.angs[0]:
+                        self.cur = i
+                        break
+
+            for i in range(len(self.labids)):
+                if self.cur == i:
+                    g.lman.modify(self.labids[i],size=30,color=(255,255,0,255))
+                else:
+                    g.lman.modify(self.labids[i],size=20,color=(255,255,200,255))
+
+    def admit(self):
+        self.delete()
+        print(self.cur)
+        if self.cur != None:
+            return self.exps[self.cur]
+        return None
+
+    def delete(self):
+        g.lman.delete(self.labids)
+        g.sman.delete(self.bg)

@@ -187,8 +187,15 @@ def getMousePos():
     windll.user32.GetCursorPos(byref(pt))
     return pt.x,pt.y
 
+# partie math
+
 def module(x,y):
     return sqrt(x**2+y**2)
+
+def distance(X,Y):
+    x,y = X
+    a,b = Y
+    return module(x-a,y-b)
 
 def int_rd(dec):
     if dec < int(dec)+0.5:
@@ -239,7 +246,35 @@ def convert_huge_nb(n,letters = True):
                     return str(int(f))
                 return trunc(f,1)+tab[i-1]
 
+def points_on_circle(center,rayon,nb):
+    cx,cy = center
 
+    angles = []
+    ang_min = 2*pi/nb
+    for i in range(nb):
+        angles.append(i*ang_min)
+
+    pts = []
+    for ang in angles:
+        x = cx + sin(ang)*rayon
+        y = cy + cos(ang)*rayon
+        pts.append((x,y))
+
+    for i in range(len(angles)):
+        angles[i] -= ang_min/2
+        if angles[i] < 0 :
+            angles[i] += 2*pi
+
+    return pts,angles
+
+def ang_from_pos(pos,center):
+    x,y = pos
+    cx,cy = center
+    ray = distance(pos,center)
+    ang = atan2(x-cx,y-cy)
+    if ang < 0:
+        ang+= 2*pi
+    return ang
 
 # partie ids
 

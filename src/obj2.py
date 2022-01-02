@@ -3,21 +3,24 @@ CODED by deltasfer
 enjoy
 """
 
+import json,os
 from src.utils import *
 from src import graphic as g
 from src import obj as o
 import random as r
 
+
+
 # lines
 
 class preStreet(line):
 
-    def __init__(self,name,xd,yd,xf,yf):
+    def __init__(self,name,xd,yd,xf,yf,connex=[]):
 
         super(preStreet,self).__init__(xd,yd,xf,yf)
         self.name = name
 
-        self.connex = []
+        self.connex = connex
 
     def add_conn(self,street,x):
         self.connex.append((street.name,x))
@@ -259,7 +262,6 @@ class House(Street):
     def __init__(self,name='house1',text=(None,None),box=box(-1400,-50,5120)):
         super(House,self).__init__(name,text,box)
 
-        #self.name = owner.name+'\'s House'
         self.owners = []
 
     def set_owner(self,owner):
@@ -267,6 +269,14 @@ class House(Street):
 
     def openable(self,perso):
         return perso in self.owners
+
+class Shop(House):
+
+    def __init__(self,name='shop1',text=(None,None),box=box(0,-50,5120)):
+        super(Shop,self).__init__(name,text,box)
+
+    def openable(self,perso):
+        return True
 
 ## CITY
 
@@ -311,6 +321,11 @@ NY = CITY()
 
 LINES = []
 
+LOAD = 1
+# permet de conserver une map si y'en a une bien (1) ou d'en recreer une à chaque fois (0)
+MAP_NAME = 'ny'
+# key à transmettre à la fonction de chargement pour selectionner une map créée
+
 #-------------------------------#
 #-------------------------------#
 
@@ -318,7 +333,6 @@ k = 20
 
 MAP = k,k
 nb_lines = k
-
 
 def generate_map():
 
@@ -331,26 +345,43 @@ def generate_map():
     ## longueur 2 => 20k
     ## ...
 
-    a=0
-    while len(lines) == 0:
-        a+=1
-        #print(a,'try')
-        lines,connexions = create_rand_lines()
+    if LOAD == 1:
+        lines,connexions = load_lines(MAP_NAME)
+    else:
+        a=0
+        while len(lines) == 0:
+            a+=1
+            #print(a,'try')
+            lines,connexions = create_rect_lines()
 
     ### TRANSFORMATION LINES IN STREETS
 
     line_home = r.choice(lines)
+    line_distro = r.choice(lines)
 
     width_between_streets = 5000
 
     # we create streets + home
     for line in lines:
         NY.add_streets(Street(line,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
+
         if line == line_home:
             prestr = preStreet('home',line.x,line.y,line.x,line.y)
             NY.add_streets(House(prestr,(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup'])))
-            connect(NY.CITY['home'],3200,NY.CITY[line.name],500)
+            connect(NY.CITY['home'],3200,NY.CITY[line.name],500,(False,True))
             LINES.append(prestr)
+
+            #elif line == line_distro:
+            prestr = preStreet('distrokid',line.x,line.y,line.x,line.y)
+            NY.add_streets(Shop(prestr,(g.TEXTIDS['distrokid']['mid'],None)))
+            connect(NY.CITY['distrokid'],4215,NY.CITY[line.name],1500,(False,True))
+            LINES.append(prestr)
+
+            prestr = preStreet('maison de drake',line.x,line.y,line.x,line.y)
+            NY.add_streets(House(prestr,(g.TEXTIDS['bgmid'],None)))
+            connect(NY.CITY['maison de drake'],3200,NY.CITY[line.name],2500,(False,True))
+            LINES.append(prestr)
+
 
     # we make connexions -> creations of doors
     for conn in connexions:
@@ -402,6 +433,77 @@ def create_rand_lines():
     for line in todel:
         lines.remove(line)
 
+    save_lines((lines,connexions))
+    return lines,connexions
+
+def create_rect_lines():
+
+    lines = []
+    connexions = []
+
+    ## CREATION OF LINES
+
+    print( [*range(0,k,2)] )
+
+    # verticales
+    for i in range(0,k,2):
+
+        ## x reste le meme
+        xdep = i
+        ydep = 0
+        xfin = i
+        yfin = MAP[1]
+        line = preStreet('street'+str(i),xdep,ydep,xfin,yfin)
+
+        for j in range(len(lines)):
+            R = line_intersection2(line.line,lines[j].line)
+            #print(R)
+            if R:
+                X,Z = R
+                if line.vert :
+                    x1 = Z-line.line[0][1]
+                    x2 = X-lines[j].line[0][0]
+
+                else:
+                    x1 = X-line.line[0][0]
+                    x2 = Z-lines[j].line[0][1]
+
+                connexions.append((line.name,x1,lines[j].name,x2))
+                line.add_conn(lines[j],x1)
+                lines[j].add_conn(line,x2)
+
+        lines.append(line)
+
+    # horiz
+    for i in range(0,k,2):
+
+        ## y reste le meme
+        xdep = 0
+        ydep = i
+        xfin = MAP[1]
+        yfin = i
+        line = preStreet('street'+str(i+1),xdep,ydep,xfin,yfin)
+
+        for j in range(len(lines)):
+            R = line_intersection2(line.line,lines[j].line)
+            #print(R)
+            if R:
+                X,Z = R
+                if line.vert :
+                    x1 = Z-line.line[0][1]
+                    x2 = X-lines[j].line[0][0]
+
+                else:
+                    x1 = X-line.line[0][0]
+                    x2 = Z-lines[j].line[0][1]
+
+                connexions.append((line.name,x1,lines[j].name,x2))
+                line.add_conn(lines[j],x1)
+                lines[j].add_conn(line,x2)
+
+        lines.append(line)
+
+    save_lines((lines,connexions))
     return lines,connexions
 
 def rand_line(i):
@@ -424,16 +526,16 @@ def rand_line(i):
 
     return preStreet('street'+str(i),xdep,ydep,xfin,yfin)
 
-def connect(street1,x1,street2,x2):
+def connect(street1,x1,street2,x2,col=(True,True)):
 
     ## crée 2 portes :
     ##      -une à x1 dans la street1 pour passer dans la street2
     ##      -une à x2 dans la street2 pour passer dans la street1
 
-    door1 = o.Porte(street1,box(x1,225,270,400),street2,x2)
+    door1 = o.Porte(street1,box(x1,225,270,400),street2,x2,makeCol=col[0])
     street1.assign_zones([door1])
 
-    door2 = o.Porte(street2,box(x2,225,270,400),street1,x1)
+    door2 = o.Porte(street2,box(x2,225,270,400),street1,x1,makeCol=col[1])
     street2.assign_zones([door2])
 
 def draw_lines():
@@ -479,3 +581,35 @@ def draw_lines():
 def print_lines():
     for street in NY.CITY:
         print(NY.CITY[street])
+
+def save_lines(tab):
+
+    # on transforme les prestr et les connexions en str
+    prestr,connex = tab
+    lines = []
+    for str in prestr:
+        lines.append((str.name,str.x,str.y,str.xf,str.yf))
+
+    tab = lines,connex
+
+    # on dump
+    if not 'maps' in os.listdir():
+        os.makedirs('maps')
+
+    with open('maps/map','w') as f:
+        json.dump(tab,f)
+
+def load_lines(name='map'):
+
+    # on load
+    with open('maps/'+name,'r') as f:
+        tab = json.load(f)
+
+    # on transforme les str en prestr
+    lines,connex = tab
+    prestr = []
+    for line in lines:
+        name,xd,yd,xf,yf = line
+        prestr.append(preStreet(name,xd,yd,xf,yf))
+
+    return prestr,connex

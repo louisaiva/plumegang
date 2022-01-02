@@ -3,7 +3,7 @@
 idée jeu : RappeurGang
 
 Synopsis général du jeu:
-	
+
 	-vous vous réveillez un matin avec une terrible maladie qui vous procure des super pouvoirs !
 	-vous pouvez à présent voler la plume d'autres rappeurs afin de récuperer des phases à écrire !
 	-Le but du jeu est d'accumuler un maaax de fans et pour cela on créé des musiques avec les paroles qu'on a volé (en volant la plume d'un autre rappeur).
@@ -33,7 +33,21 @@ idées comme ça:
 	-des punchlines légendaires peuvent rameuter plus de public
 	-les instrus aussi ont des catégories et de la lourdeur -> fonctionne pareil que les paroles
 	-au bout d'un moment dans le jeu va être créé un hopital pour soigner les rappeurs sans plume : on peut le détruire (extremement illégal) ou alors rien faire et certains rappeurs seront soignés et alors ils se mettront à vouloir recuperer leur plume à tout prix, attention à aps se faire bouillav
-	
+
+
+PUBLIER UN SON (bonne idée):
+
+	pour publier un son tu as 2 moyens différents:
+	-soit tu passes par un label (coute cher)
+	-soit tu vas voir distrokid (coute pas cher)
+
+	les labels c'est bien parce que tu auras la possibilité de choisir des plans de com : plus tu payes cher plus tu auras de la promo
+				-> on peut voir afficher dans la rue des affiches "delta nouvel ep" et meme sur les batiments au loin
+	distrokid ça fait le taf (tu paye genre 2 euros pour mettre en ligne 1 son) mais t'as aucune com
+
+	c'est auprès de ces 2 bails que tu vas pouvoir récup ta thune après en fonction de tes streams:
+		-labels tu récup 50% voir moins (ça dépend de ton contrat, encore une fois plus tu paye cher plus tu gagnes)
+		-distrokid tu gagnes 100%
 
 
 Détails techniques:
@@ -46,7 +60,7 @@ Détails techniques:
 		fans
 		thune
 		barre de street cred -> si yen a trop la police débarque et vs allez en prison, si yen a pas assez : aucune streetcred
-		
+
 ##############################################
 
 
@@ -157,7 +171,7 @@ OBJECTS :
 		lors de sa release ça engendre des conséquences :
 		- attire/rejete des fans
 		- augmente la streetcred de son artiste
-		- 
+		-
 
 		calcul de la qualité globale:
 			-dépend de la qualité de l'instru

@@ -494,11 +494,20 @@ class Market(Zone_ELEM):
         super(Market,self).activate(perso)
         perso.rplum()
 
+class Releaser(Zone_ELEM):
+
+    def __init__(self,x,y):
+        super(Releaser,self).__init__(box(x,y,300,320),'releaser','pink','mid',True,False)
+
+    def activate(self,perso):
+        super(Releaser,self).activate(perso)
+        perso.auto_release()
+
 class Porte(Zone_ELEM):
 
-    def __init__(self,street,box,destination,xdest):
+    def __init__(self,street,box,destination,xdest,makeCol=True):
 
-        super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=True)
+        super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=makeCol)
         self.destination = destination
         self.street = street
         self.xdest = xdest
@@ -522,7 +531,8 @@ class Porte(Zone_ELEM):
             #perso.check_colli(self.destination)
             return self.destination.name
         else:
-            print('You can\'t go here !' )
+            g.pman.alert('you can\'t go here !')
+            #print('You can\'t go here !' )
 
 #------# elements item
 

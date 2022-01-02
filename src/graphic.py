@@ -40,9 +40,21 @@ class ScreenManager():
         return self.screen.width
     w = property(_w)
 
+    def _cx(self):
+        return self.screen.width/2
+    cx = property(_cx)
+
+    def _cy(self):
+        return self.screen.height/2
+    cy = property(_cy)
+
     def _h(self):
         return self.screen.height
     h = property(_h)
+
+    def _c(self):
+        return self.cx,self.cy
+    c = property(_c)
 
 scr = ScreenManager()
 
@@ -164,6 +176,26 @@ class SpriteManager():
     def addCol(self,col=(255,255,255,255),box=u.box(),group=None,alr_id=-1,vis=True):
         text = tman.addCol(*box.wh,col)
         return self.addSpr(text,box.xy,group,alr_id,vis)
+
+    def addCircle(self,pos,ray,col=(255,255,255,255),group=None,alr_id=-1,vis=True):
+
+        if alr_id == -1:
+            id = u.get_id('spr')
+            self.ids.append(id)
+        else:
+            id =alr_id
+
+        if group != None:
+            group = gman.getGroup(group)
+
+        x,y = pos
+        opac = col[3]
+        col = col[0],col[1],col[2]
+        self.sprites[id] = pyglet.shapes.Circle(x,y,ray,color=col,batch=tman.batch,group=group)
+        self.sprites[id].opacity = opac
+        self.sprites[id].visible = vis
+
+        return id
 
     def addToGroup(self,id,group_name='back'):
 
@@ -384,9 +416,9 @@ class LabelManager():
 
     def modify(self,lblid,pos=None,size=None,scale=None,color=None):
 
-        if scale != None and scale != (self.labels[lblid].scale_x,self.labels[lblid].scale_y):
-            self.labels[lblid].update(scale_x = scale[0],scale_y=scale[1])
-            #self.labels[lblid].scale_x,self.labels[lblid].scale_y = scale
+        if scale != None :
+            newsize = self.labels[lblid].font_size*scale
+            self.labels[lblid].font_size = int(newsize)
 
         if size != None:
             self.labels[lblid].font_size = size
@@ -504,6 +536,13 @@ class ParticleManager():
         bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
         return key,id
 
+    def alert(self,contenu):
+        xy_pos = scr.cx,3*scr.cy/2
+        color = (255,20,20,255)
+        duree = 10
+        size = 40
+        self.addLabPart(contenu,xy_pos,duree,font_size=size,color=color)
+
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         text = tman.addCol(*box.wh,col)
         self.addPart(text,box.xy,duree,group,key)
@@ -612,7 +651,7 @@ MODE_COLOR = 1 ## 1 pour avoir des couleurs wtf et 0 pour la "réalité"
 #### CYCLE -> rules day/night cycle
 class Cycle():
 
-    def __init__(self,perso,bg):
+    def __init__(self,perso=None,bg=None):
 
         # general
 
@@ -622,6 +661,8 @@ class Cycle():
         self.tick = 0
 
         self.day = 1 # nb de jour
+
+    def launch(self,perso,bg):
 
         self.perso = perso
 
@@ -740,6 +781,7 @@ class Cycle():
             return 0
         return p
 
+Cyc = Cycle()
 M = [0,0]
 
 #### CLOCK
@@ -831,7 +873,7 @@ Cur = Cursor()
 #### CAMERA
 
 SPEED = 20
-RSPEED = 100
+RSPEED = 1000
 
 class Camera():
 
@@ -901,11 +943,14 @@ class Camera():
                 self.morey()
                 moved[1] = True
 
-            #moved
-            if not moved[0]:
-                self._dx = 0
             if not moved[1]:
                 self._dy = 0
+            if not moved[0]:
+                if run:
+                    self.update(persobox,street)
+                else:
+                    self._dx = 0
+
 
     def tp(self,ge_x,real_x):
 

@@ -40,6 +40,7 @@ class Human():
         #voc
         self.voc = v.dic
         self.keyids_voc = None
+        self.roll = None
 
         #pos
         self.gex = pos[0] # general x
@@ -208,6 +209,8 @@ class Human():
                 self.update()
 
                 self.time_last_move = time.time()
+            elif run:
+                self.move(dir,street)
 
     def tp(self,x=None,y=None,street=None):
 
@@ -326,8 +329,6 @@ class Human():
     ## SPEAKING
 
     def say(self,exp,duree=20):
-
-
         if self.alive:
             if self.keyids_voc:
                 g.pman.delete(self.keyids_voc)
@@ -359,6 +360,18 @@ class Human():
         if hasattr(self,'skin_id'):
             exp = self.voc.random()
             self.say(exp)
+
+    def rollspeak(self,pos):
+        if self.roll != None:
+            self.roll.delete()
+
+        self.roll = v.Roll_exp(pos,self,self.voc.roll())
+
+    def unroll(self):
+        exp = self.roll.admit()
+        if exp != None:
+            self.say(exp)
+        self.roll = None
 
     def remove_speak_lab(self,dt=0):
         self.keyids_voc = None
@@ -745,6 +758,16 @@ class Perso(Rappeur):
     def release_son(self,son,fans,day):
         super(Perso,self).release_son(son,fans,day)
         self.credhud.update()
+
+    def auto_release(self):
+
+        choiced_son = None
+        for son in self.invhud.inventory['son']:
+            if not son.item._released:
+                choiced_son = son.item
+                break
+        if choiced_son != None:
+            self.release_son(choiced_son,BOTS,g.Cyc.day)
 
     ## particles
 
