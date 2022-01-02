@@ -47,8 +47,8 @@ class App():
 
         ### loading fonts
         font_path = 'item/fonts/'
-        self.fonts = ['RaubFont']
-        self.font = ['RaubFont']
+        self.fonts = ['RaubFont','Bitter-Bold']
+        self.font = ['Bitter','RaubFont']
         for ft in self.fonts:
             try:
                 pyglet.resource.add_font(font_path+ft+'.otf')
@@ -56,20 +56,10 @@ class App():
                 try:
                     pyglet.resource.add_font(font_path+ft+'.ttf')
                 except :
-                    pyglet.resource.add_font('arial.ttf')
-
-        #pyglet.clock.set_fps_limit(None)
+                    pass
 
         ### managers
-
-        #g.init_managers(CURRENT_PATH,self.font)
-
-        g.lman.updateman(self.font[0])
-
-        #self.cmd = graphic.CmdManager((20 , self.size_fullscr[1] - 50))
-        #self.specMan = graphic.SpecialManager(g.tman,self.current_size_scr)
-
-        #self.aff_cmd = False
+        g.lman.updateman(self.font)
 
     def init(self):
 
@@ -191,9 +181,9 @@ class App():
 
         # labels
 
-        self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_size=32,anchor=('left','top'))
-        self.lab_day = g.lman.addLab('DAY : 0',(20,1060-50),group='up',font_size=32,anchor=('left','top'))
-        self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_size=20,anchor=('left','top'))
+        self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_name=1,font_size=32,anchor=('left','top'))
+        self.lab_day = g.lman.addLab('DAY : 0',(20,1060-50),group='up',font_name=1,font_size=32,anchor=('left','top'))
+        self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
 
 
 
@@ -308,8 +298,8 @@ class App():
 
     def game_over(self):
 
-        self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=200,color=c['darkkhaki'],group='up')
-        self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_size=210,color=c['black'],group='up')
+        self.label_gameover = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_name=1,font_size=200,color=c['darkkhaki'],group='up')
+        self.label_gameover2 = g.lman.addLab('GAME OVER',(1920/2,1080/2),anchor=('center','center'),font_name=1,font_size=210,color=c['black'],group='up')
 
         g.bertran.set_speed(0,0)
 

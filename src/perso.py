@@ -250,7 +250,7 @@ class Human():
 
         s=convert_huge_nb(hitter.damage)
         pos = self.box.cx +r.randint(-10,10),self.box.fy
-        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',anchor=('center','center'),group='up-1',vis=True)
+        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=True)
 
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
@@ -277,14 +277,13 @@ class Human():
         if self.keyids_voc:
             g.pman.delete(self.keyids_voc)
 
-        x,y = self.box.cx+200,self.box.fy + 40
+        x,y = self.box.cx,self.box.fy + 40
         self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
                             ,group='up-1',vis=True,duree=20,max_width=20)
-        g.bertran.schedule_once(self.remove_speak_lab, 21)
 
     def update(self):
         if self.keyids_voc:
-            x,y = self.box.cx+200,self.box.fy + 40
+            x,y = self.box.cx,self.box.fy + 40
             #print(x,y)
             g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
             #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
@@ -654,7 +653,7 @@ class Perso(Rappeur):
 
         s=convert_huge_nb(hitter.damage)
         pos = self.box.cx +r.randint(-10,10),self.box.fy
-        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',anchor=('center','center'),group='up-1',vis=True)
+        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=True)
 
     def release_son(self,son,fans,day):
         super(Perso,self).release_son(son,fans,day)
@@ -666,19 +665,19 @@ class Perso(Rappeur):
         super(Perso,self).addfan(fan)
         s = '+1'
         pos = g.lman.labels[self.hud.labids['fan_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['fan_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     def addfans(self,fans):
         super(Perso,self).addfans(fans)
         s = '+'+str(len(fans))
         pos = g.lman.labels[self.hud.labids['fan_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['fan_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     def addstream(self):
         super(Perso,self).addstream()
         s = '+1'
         pos = g.lman.labels[self.hud.labids['stream_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['stream_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['lightblue'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['lightblue'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     def add_money(self,qté):
         super(Perso,self).add_money(qté)
@@ -687,7 +686,7 @@ class Perso(Rappeur):
         else:
             s='+' + convert_huge_nb(qté)
         pos = g.lman.labels[self.hud.labids['coin_lab']].x +r.randint(-2,2),g.lman.labels[self.hud.labids['coin_lab']].y+20
-        g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',anchor=('right','center'),group='up-1',vis=self.hud.visible)
+        g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
     ## colli hoover
 

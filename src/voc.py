@@ -42,7 +42,8 @@ voc['random'] = [
                 'casse couille de pas percer là',
                 'je hais les rappeurs',
                 'j\'adore jouer à la pétanque',
-                'bon antoine daniel cquand tu fais clyde vanilla 2 ?'
+                'bon antoine daniel cquand tu fais clyde vanilla 2 ?',
+                'aaa'
                 ]
 
 dic = Dico(voc)

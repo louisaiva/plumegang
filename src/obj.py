@@ -733,7 +733,7 @@ class HUD():
             textid = g.tman.addCol(*box.wh,c[color])
         self.addSpr(key,textid,box.xy,group=group)
 
-    def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_size=30,anchor=('left','bottom'),color=(255,255,255,255)):
+    def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_name=0,font_size=30,anchor=('left','bottom'),color=(255,255,255,255)):
 
         if key in self.labids:
             g.lman.delete(self.labids[key])
@@ -741,7 +741,7 @@ class HUD():
         if group == None:
             group = self.group
 
-        self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_size=font_size,anchor=anchor,color=color,vis=self.visible)
+        self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_name=font_name,font_size=font_size,anchor=anchor,color=color,vis=self.visible)
 
         #print(xy_pos)
 
@@ -795,7 +795,7 @@ class Map(HUD):
         self.addCol('bg2',area,group='hud2-1',color=col)
 
         ## name
-        self.addLab('name','MAP OF NY CITY',(area.cx,area.fy-self.pad),anchor=('center','center'),group='hud2')
+        self.addLab('name','MAP OF NY CITY',(area.cx,area.fy-self.pad),font_name=1,anchor=('center','center'),group='hud2')
         self.create_map()
 
     def create_map(self):
@@ -881,7 +881,7 @@ class PersoHUD(HUD):
         ycoin = self.lab('name').y  - self.padding
 
         self.addSpr('coin_spr',g.TEXTIDS['item'][0],(xcoin,ycoin - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
-        self.addLab('coin_lab',convert_huge_nb(self.perso.money),(xcoin ,ycoin),font_size=20,color=c['yellow'],anchor=('right','center'))
+        self.addLab('coin_lab',convert_huge_nb(self.perso.money),(xcoin ,ycoin),font_name=1,font_size=20,color=c['yellow'],anchor=('right','center'))
 
         ## fans
 
@@ -889,7 +889,7 @@ class PersoHUD(HUD):
         yfan = self.lab('coin_lab').y - self.padding
 
         self.addSpr('fan_spr',g.TEXTIDS['item'][1],(xfan,yfan - g.tman.textures[g.TEXTIDS['item'][1]].height/2))
-        self.addLab('fan_lab',convert_huge_nb(self.perso.nb_fans),(xfan ,yfan),font_size=20,color=c['lightgreen'],anchor=('right','center'))
+        self.addLab('fan_lab',convert_huge_nb(self.perso.nb_fans),(xfan ,yfan),font_name=1,font_size=20,color=c['lightgreen'],anchor=('right','center'))
 
         ## fans
 
@@ -897,11 +897,11 @@ class PersoHUD(HUD):
         ystream = self.lab('fan_lab').y - self.padding
 
         self.addSpr('stream_spr',g.TEXTIDS['item'][2],(xstream,ystream - g.tman.textures[g.TEXTIDS['item'][2]].height/2))
-        self.addLab('stream_lab',convert_huge_nb(self.perso.nb_streams),(xstream ,ystream),font_size=20,color=c['lightblue'],anchor=('right','center'))
+        self.addLab('stream_lab',convert_huge_nb(self.perso.nb_streams),(xstream ,ystream),font_name=1,font_size=20,color=c['lightblue'],anchor=('right','center'))
 
 
         ## pressX
-        self.addLab('pressX','X to hide',(self.box.cx,self.box.y+20),font_size=10,color=c['black'],anchor=('center','center'))
+        self.addLab('pressX','X to hide',(self.box.cx,self.box.y+20),font_name=1,font_size=10,color=c['black'],anchor=('center','center'))
 
     def update(self):
 
@@ -1020,7 +1020,7 @@ class PlumHUD(HUD):
 
         self.addCol('bg',self.box,group='hud2-1')
 
-        self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
+        self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),font_name=1,anchor=('center','center'))
 
         self.addSpr('plum_spr',g.TEXTIDS['plume'][convert_quality(self.plum.quality)[0]])
         g.sman.modify(self.sprids['plum_spr'],scale=(0.4,0.4))
@@ -1033,7 +1033,7 @@ class PlumHUD(HUD):
 
         x = (xplum +  (self.box.x) )/2
 
-        self.addLab('cred',convert_cred(self.plum.cred),(x ,self.box.cy),font_size=20,anchor=('center','center'))
+        self.addLab('cred',convert_cred(self.plum.cred),(x ,self.box.cy),font_name=1,font_size=20,anchor=('center','center'))
 
 
         ### UI
@@ -1096,8 +1096,8 @@ class WriteHUD(HUD):
         self.addCol('bg2',self.box2,color=c['delta_blue'],group='hud')
 
         #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
-        self.addLab('pressE','E to write --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_size=20,anchor=('center','center'))
-        self.addLab('lit','LIT - zone d\'ecriture',(self.box.cx,self.box.y+self.box.h+self.padding),font_size=20,anchor=('center','center'))
+        self.addLab('pressE','E to write --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_name=1,font_size=20,anchor=('center','center'))
+        self.addLab('lit','LIT - zone d\'ecriture',(self.box.cx,self.box.y+self.box.h+self.padding),font_name=1,font_size=20,anchor=('center','center'))
 
     def delete_phase(self,ui=True):
 
@@ -1137,10 +1137,10 @@ class WriteHUD(HUD):
         self.addLab('phaz_content',phase.content,(self.box2.cx,y),anchor=('center','center'),color=c['black'])
 
         x = (self.box2.cx + self.spr('phaz_spr').width/2  +  (self.box2.x + self.box2.w) )/2
-        self.addLab('phaz_qua',convert_quality(phase.quality),(x,self.box2.cy),anchor=('center','center'),color=c['black'],font_size=100)
+        self.addLab('phaz_qua',convert_quality(phase.quality),(x,self.box2.cy),anchor=('center','center'),color=c['black'],font_name=1,font_size=100)
 
         x = (self.box2.cx - self.spr('phaz_spr').width/2  +  (self.box2.x) )/2
-        self.addLab('phaz_cred',convert_cred(phase.cred),(x,self.box2.cy),anchor=('center','center'),color=c['black'],font_size=100)
+        self.addLab('phaz_cred',convert_cred(phase.cred),(x,self.box2.cy),anchor=('center','center'),color=c['black'],font_name=1,font_size=100)
 
         #y = (( self.box2.cy - self.spr('phaz_spr').height/2 )  +  (self.box2.y) )/2
         y = ( self.box2.cy - self.spr('phaz_spr').height/2 ) - 30
@@ -1204,8 +1204,8 @@ class StudHUD(HUD):
         self.addSpr('bg',g.TEXTIDS['studhud'],(400,300),'hud')
 
         #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
-        self.addLab('pressE','E to assemble a song --- ESC to leave',(400+462.5,self.box.y+self.padding),font_size=20,anchor=('center','center'))
-        self.addLab('stud','STUD - zone d\'enregistrement',(self.box.cx,self.box.y+self.box.h+self.padding),font_size=20,anchor=('center','center'))
+        self.addLab('pressE','E to assemble a song --- ESC to leave',(400+462.5,self.box.y+self.padding),font_name=1,font_size=20,anchor=('center','center'))
+        self.addLab('stud','STUD - zone d\'enregistrement',(self.box.cx,self.box.y+self.box.h+self.padding),font_name=1,font_size=20,anchor=('center','center'))
 
         self.instru = 0
         self.phases = 0
@@ -1340,8 +1340,8 @@ class MarketHUD(HUD):
         self.addSpr('bg',g.TEXTIDS['ordhud'],(400,300),'hud')
 
         #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
-        self.addLab('longclick','longclick on an instru to buy --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_size=20,anchor=('center','center'))
-        self.addLab('market','Ordi - achat d\'instrus',(self.box.cx,self.box.y+self.box.h+self.padding),font_size=20,anchor=('center','center'))
+        self.addLab('longclick','longclick on an instru to buy --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_name=1,font_size=20,anchor=('center','center'))
+        self.addLab('market','Ordi - achat d\'instrus',(self.box.cx,self.box.y+self.box.h+self.padding),font_name=1,font_size=20,anchor=('center','center'))
 
         self.instru = 0
         self.perso = perso
@@ -1416,9 +1416,9 @@ class MarketHUD(HUD):
         padding = 150
 
         # creating new details
-        self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),anchor=('center','center'),color=c['white'],font_size=50)
+        self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),font_name=1,anchor=('center','center'),color=c['white'],font_size=50)
         self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
-        self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),anchor=('right','center'),color=c['yellow'],font_size=30)
+        self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),font_name=1,anchor=('right','center'),color=c['yellow'],font_size=30)
         self.addSpr('main_price',g.TEXTIDS['item'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
 
         if self.perso in ins.owners:
@@ -1426,7 +1426,7 @@ class MarketHUD(HUD):
         else:
             status,color = "on sale",c['red']
 
-        self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_size=30)
+        self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_name=1,font_size=30)
 
     def add_instru(self,dt):
 
@@ -1462,9 +1462,9 @@ class MarketHUD(HUD):
             padding = 150
 
             # creating new details
-            self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),anchor=('center','center'),color=c['white'],font_size=50)
+            self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),anchor=('center','center'),color=c['white'],font_name=1,font_size=50)
             self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
-            self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),anchor=('right','center'),color=c['yellow'],font_size=30)
+            self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),anchor=('right','center'),color=c['yellow'],font_name=1,font_size=30)
             self.addSpr('main_price',g.TEXTIDS['item'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
 
             if self.perso in ins.owners:
@@ -1472,7 +1472,7 @@ class MarketHUD(HUD):
             else:
                 status,color = "on sale",c['red']
 
-            self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_size=30)
+            self.addLab('main_status',status,(self.box.x+609,self.boxs['main'].cy),anchor=('center','center'),color=color,font_name=1,font_size=30)
 
     def buy_instru(self):
 
@@ -1549,7 +1549,7 @@ class InventHUD(HUD):
 
 
         ### LABEL inv
-        self.addLab('inv_lab','inventory',(self.box.cx,self.box.fy-50),anchor=('center','center'))
+        self.addLab('inv_lab','inventory',(self.box.cx,self.box.fy-50),font_name=1,anchor=('center','center'))
 
         if fill:
             #self.update()
@@ -1580,7 +1580,7 @@ class InventHUD(HUD):
 
         #sons
         if self.inventory['son'] != []:
-            self.addLab('sons_lab','sons',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            self.addLab('sons_lab','sons',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
             yf -= self.padding2*2
 
             self.inventory['son'].sort(reverse=True)
@@ -1599,7 +1599,7 @@ class InventHUD(HUD):
 
         #instrus
         if self.inventory['instru'] != []:
-            self.addLab('instrus_lab','instrus',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            self.addLab('instrus_lab','instrus',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
             yf -= self.padding2*2
 
             self.inventory['instru'].sort(reverse=True)
@@ -1618,7 +1618,7 @@ class InventHUD(HUD):
 
         #phases
         if self.inventory['phase'] != []:
-            self.addLab('phases_lab','phases',(self.box.cx,yf-self.padding2),color=c['black'],font_size=20,anchor=('center','center'))
+            self.addLab('phases_lab','phases',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
             yf -= self.padding2*2
 
             self.inventory['phase'].sort(reverse=True)
@@ -1753,8 +1753,8 @@ class InventHUD(HUD):
             self.detaids['bg'][key]=self.sprids[key]
             del self.sprids[key]
 
-    def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_size=30,anchor=('left','bottom'),color=(255,255,255,255),detail=False):
-        super(InventHUD,self).addLab(key,contenu,xy_pos,group,font_size,anchor,color)
+    def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_name=1,font_size=30,anchor=('left','bottom'),color=(255,255,255,255),detail=False):
+        super(InventHUD,self).addLab(key,contenu,xy_pos,group,font_name,font_size,anchor,color)
         if detail:
             self.detaids['lab'][key]=self.labids[key]
             del self.labids[key]
@@ -1805,7 +1805,7 @@ class InventHUD(HUD):
                 y = g.lman.labels[self.detaids['lab']['detail_cred']].y
 
             else:
-                self.addLab('detail_aut',ui.item.author.name, ( self.box3.cx , y - self.padding ), anchor = ('center','center'),font_size = 20,detail=True)
+                self.addLab('detail_aut',ui.item.author.name, ( self.box3.cx , y - self.padding ),font_name=0, anchor = ('center','center'),font_size = 20,detail=True)
                 #    self.detaids.append(self.detaids['lab']['detail_aut'])
                 y = g.lman.labels[self.detaids['lab']['detail_aut']].y
 
@@ -1815,7 +1815,7 @@ class InventHUD(HUD):
                 tab = ui.item.content.split(' ')
                 #content = tab[0] + ' ' + tab[1] + '\n' + ' '.join(tab[2:])
 
-                self.addLab('detail_cont','\n'.join(tab), ( self.box3.cx , y - self.padding ), anchor = ('center','center'),font_size = 15,detail=True,color=c['black'])
+                self.addLab('detail_cont','\n'.join(tab), ( self.box3.cx , y - self.padding ),font_name=0, anchor = ('center','center'),font_size = 15,detail=True,color=c['black'])
                 #    self.detaids.append(self.detaids['lab']['detail_aut'])
                 y = g.lman.labels[self.detaids['lab']['detail_cont']].y
 

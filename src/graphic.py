@@ -266,21 +266,26 @@ class SpriteManager():
 #manager who rules normal labels
 class LabelManager():
 
-    def __init__(self,font=None):
+    def __init__(self,fonts=None):
 
-        if font != None:
-            self.font = font
+        if fonts != None:
+            self.fonts = fonts
+            self.font = fonts[0]
         else:
+            self.fonts = ['arial']
             self.font = 'arial'
+        ## RaubFont
 
         self.labels = {}
         self.ids = []
 
-    def updateman(self,font=None):
+    def updateman(self,fonts=None):
 
-        if font != None:
-            self.font = font
+        if fonts != None:
+            self.fonts = fonts
+            self.font = fonts[0]
         else:
+            self.fonts = ['arial']
             self.font = 'arial'
 
     def addLab(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group='hud',anchor = ('left','bottom'),color=(255,255,255,255)):
@@ -291,8 +296,10 @@ class LabelManager():
         else:
             id =alr_id
 
-        if not font_name:
+        if font_name == None:
             font_name = self.font
+        elif type(font_name) == int:
+            font_name = self.fonts[font_name]
 
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
@@ -443,8 +450,10 @@ class ParticleManager():
 
         id = u.get_id('lab_part')
 
-        if not font_name:
+        if font_name == None:
             font_name = lman.font
+        elif type(font_name) == int:
+            font_name = lman.fonts[font_name]
 
         if not vis:
             color = [*color[:3],0]
@@ -468,10 +477,13 @@ class ParticleManager():
             if line not in contenu :
                 contenu += line +'\n'
             multi = True
-            #print(contenu)
             width = (max_width+1)*font_size
 
         anchor_x,anchor_y= anchor
+
+        if anchor_x=='center' and multi:
+            x,y = xy_pos
+            xy_pos = x+width/4,y
 
         if group != None:
             group = gman.getGroup(group)
@@ -535,6 +547,8 @@ class ParticleManager():
             if setx == None:
                 self.labels[key][id].x += dx
             else:
+                if self.labels[key][id].multiline:
+                    setx += self.labels[key][id].width/4
                 self.labels[key][id].x = setx
             if sety == None:
                 self.labels[key][id].y += dy
@@ -664,7 +678,6 @@ class Cycle():
             sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=ps*255)
         else:
             sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=0)
-
 
 def R(dayperc):
     p = (dayperc*2-1)**2
