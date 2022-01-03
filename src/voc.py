@@ -23,6 +23,7 @@ from src.utils import *
 class Dico():
     def __init__(self,voc):
         self.voc = voc
+        self.roll_exp = ['oui','non','yo','~','file ta thune']
 
     def exp(self,sign='oui',cred=0):
         return r.choice(self.voc[sign])
@@ -37,19 +38,42 @@ class Dico():
         return r.choice(self.voc['random'])
 
     def roll(self):
-        return self.voc['roll']
+        return self.roll_exp
+
+    # understanding
+    def extract_meaning(self,exp):
+        for meaning in self.voc:
+            if exp.lower() == meaning or exp in self.voc[meaning]:
+                return meaning
+
+    def answer(self,voice):
+
+        meaning = voice['meaning']
+        if meaning == 'bonjour':
+            return self.exp(meaning)
+        elif meaning == 'au revoir':
+            return self.exp(meaning)
+        elif meaning == 'veut thune':
+            return self.exp('non')
+        elif meaning == 'random':
+            if r.random() > 0.5:
+                return self.exp('oui')
+            else:
+                return self.exp('non')
+
 
 voc = {}
-voc['roll'] = ['oui','non','nik','yo','t ki ?','file ma thune']
 voc['oui'] = [   'c\'est cela meme','vous avez bien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
-voc['non'] = [   'c\'est ma foi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','non frr'   ]
+voc['non'] = [   'c\'est ma foi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','nik','non frr'   ]
 voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki degage','tu fais quoi la','arrhrh je fuis','deso frero mé tape paas','pas bien la violence'
                     ,'t essaie de mourir frr ?','A L AIDE APPELEZ LA POLICE !'   ]
-voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki'   ]
+voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
+                        ,'wsh il fait beau la',   ]
 voc['au revoir'] = [   'que votre voyage continue agréablement','à une prochaine fois','au revoir','salut','à toute','la bise','bye','a+','ouai degage ouai'   ]
 voc['omgcdelta'] = [   'omg tema c est delta','whaaa delta stp fais moi l amour','oh ptn je t aime delta'
                         ,'oh wow le rappeur le plus fort de france !','trop cools tes sons le reuf','delta fais moi des gosses stp','delta le s t bo', 'oh wow delta je suis joie',
                         'oh god file un autographe stp','oh chut regarde c est delta','ptainnn delta jtm']
+voc['veut thune'] = [   'file ma thune','file ta thune','enculé file moi mes sous','tu mdois du flouz gars','t\'as ma thune ?' ]
 voc['random'] = [
                 'wow le developpeur est si beau c\'est incroyable',
                 'humm le createur est si séduisant tu trouves pas ?',
@@ -138,7 +162,10 @@ class Roll_exp():
         self.delete()
         #print(self.cur)
         if self.cur != None:
-            return self.exps[self.cur]
+            if self.exps[self.cur] == '~':
+                return self.perso.voc.random()
+            else:
+                return self.exps[self.cur]
         return None
 
     def delete(self):

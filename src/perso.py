@@ -19,6 +19,45 @@ BOTS = []
 #graphic
 
 
+"""""""""""""""""""""""""""""""""""
+ METIERS
+"""""""""""""""""""""""""""""""""""
+
+
+class Metier():
+    def __init__(self,name='chomeur'):
+        self.meanings = ['veut thune']
+        self.name = name
+
+    def answer(self,voice):
+        meaning = voice['meaning']
+        if meaning == 'veut thune':
+            return 'jsuis au chomdu'
+
+class Distroguy(Metier):
+    def __init__(self):
+        super(Distroguy,self).__init__('distroguy')
+
+        self.meanings.append('veut thune')
+
+    def answer(self,voice):
+        meaning = voice['meaning']
+        if meaning == 'veut thune':
+            hum = voice['h']
+            #print(hum,'veut thune')
+            if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
+                if o.distro.caisse[hum] > 0:
+                    exp = 'tu as ' + trunc(o.distro.caisse[hum],2) + ' $ de côté, tu les veux ?'
+                elif o.distro.caisse[hum] < 0:
+                    exp = 'mdr non tu nous dois '+str(int(-o.distro.caisse[hum]))+ ' balles batard'
+                else:
+                    exp = 'fais de la thune d\'abord mdr'
+                return exp
+
+
+"""""""""""""""""""""""""""""""""""
+ HUMAINS
+"""""""""""""""""""""""""""""""""""
 
 class Human():
 
@@ -43,6 +82,11 @@ class Human():
         self.voc = v.dic
         self.keyids_voc = None
         self.roll = None
+
+        #listener
+        self.ear = []
+        self.selfear = []
+        self.delay_earin = 1
 
         #pos
         self.gex = pos[0] # general x
@@ -340,16 +384,15 @@ class Human():
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
                                 ,group='up-1',vis=True,duree=duree,max_width=20)
 
+            ## on dit un truc -> l'environnement l'entend
+            #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
+            for hum in list(filter( lambda x:x.get('type') == 'hum' , self.environ)):
+                hum = hum.get('hum')
+                hum.listen(self,exp)
+
     def rsay(self,type,duree=20):
         exp = self.voc.exp(type)
         self.say(exp,duree)
-
-    def update(self):
-        if self.keyids_voc:
-            x,y = self.box.cx,self.box.fy + 100
-            #print(x,y)
-            g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
-            #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
 
     def rspeak(self,dt=0):
         if hasattr(self,'skin_id') and 'die' not in self.doing:
@@ -377,6 +420,67 @@ class Human():
 
     def remove_speak_lab(self,dt=0):
         self.keyids_voc = None
+
+
+    ## LISTENING
+
+    def listen(self,hum,exp):
+
+        ## voice : ( time , perso , exp )
+        voice = {'t':time.time(),'h':hum,'exp':exp}
+
+        if hum != self:
+            self.ear.append( voice )
+            print(self.name,'heard',hum.name)
+
+            #self.understand(voice)
+            g.bertran.schedule_once(self.understand, r.randint(3,6)/10,voice)
+        else:
+            voice['meaning'] = self.voc.extract_meaning(exp)
+            self.selfear.append( voice )
+
+    def understand(self,dt,voice):
+        t,h,exp = voice.values()
+        meaning = self.voc.extract_meaning(exp)
+
+        if meaning and meaning not in list(map( lambda x:x.get('meaning') , self.selfear )):
+            voice = {'t':t,'h':h,'exp':exp,'meaning':meaning}
+            self.answer(voice)
+
+    def answer(self,voice):
+        ## ATTENTION CHANGER DANS GUY asussi
+        exp = self.voc.answer(voice)
+        if exp:
+            self.say(exp)
+
+
+    def update(self):
+
+        #speaking
+        if self.keyids_voc:
+            x,y = self.box.cx,self.box.fy + 100
+            #print(x,y)
+            g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
+            #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
+
+        #listening
+        todel = []
+        for voice in self.ear:
+            if time.time()-voice['t'] > self.delay_earin:
+                todel.append(voice)
+        for voice in todel:
+            self.ear.remove(voice)
+
+        todel = []
+        for voice in self.selfear:
+            if time.time()-voice['t'] > 5*self.delay_earin:
+                todel.append(voice)
+        for voice in todel:
+            self.selfear.remove(voice)
+
+        if self.name == 'Delta':
+            pass
+            #print(self.ear,self.selfear)
 
     ## hoover
 
@@ -514,39 +618,60 @@ class Fan(Human):
 # travaille dans un shop ou autre
 class Guy(Fan):
 
-    def __init__(self,textids,pos,name='Alphonse',street='street1'):
+    def __init__(self,textids,pos,name='Alphonse',metier=Metier,street='street1'):
 
         super(Guy,self).__init__(textids,pos,name,street=street)
 
-        # skins
-        self.textids = {}
-        self.textids['nothing'] = {}
-        self.textids['nothing']['R'] = [textids[0]]
-        self.textids['nothing']['L'] = [textids[0]]
+        if 1:
+            # skins
+            self.textids = {}
+            self.textids['nothing'] = {}
+            self.textids['nothing']['R'] = [textids[0]]
+            self.textids['nothing']['L'] = [textids[0]]
 
-        self.textids['move'] = {}
-        self.textids['move']['R'] = [textids[0]]
-        self.textids['move']['L'] = [textids[0]]
+            self.textids['move'] = {}
+            self.textids['move']['R'] = [textids[0]]
+            self.textids['move']['L'] = [textids[0]]
 
-        self.textids['hit'] = {}
-        self.textids['hit']['R'] = [textids[0]]
-        self.textids['hit']['L'] = [textids[0]]
+            self.textids['hit'] = {}
+            self.textids['hit']['R'] = [textids[0]]
+            self.textids['hit']['L'] = [textids[0]]
 
-        self.textids['write'] = {}
-        self.textids['write']['R'] = [textids[0]]
-        self.textids['write']['L'] = [textids[0]]
+            self.textids['write'] = {}
+            self.textids['write']['R'] = [textids[0]]
+            self.textids['write']['L'] = [textids[0]]
 
-        self.textids['wait'] = {}
-        self.textids['wait']['R'] = [textids[0]]
-        self.textids['wait']['L'] = [textids[0]]
+            self.textids['wait'] = {}
+            self.textids['wait']['R'] = [textids[0]]
+            self.textids['wait']['L'] = [textids[0]]
 
-        self.textids['die'] = {}
-        self.textids['die']['R'] = [textids[0]]
-        self.textids['die']['L'] = [textids[0]]
+            self.textids['die'] = {}
+            self.textids['die']['R'] = [textids[0]]
+            self.textids['die']['L'] = [textids[0]]
 
         ## check if in BOTS (souvent les guys sont ajoutés directement depuis leur shop)
         if self not in BOTS:
             BOTS.append(self)
+
+        ## crée son metier:
+        self.metier = metier()
+
+    def answer(self,voice):
+
+        meaning = voice['meaning']
+        #print(meaning)
+        exp = None
+
+        # on check si le metier donne un comportement metier
+        if meaning in self.metier.meanings:
+            exp = self.metier.answer(voice)
+
+        # sinon on fait un comportement d'humain
+        if exp == None:
+            exp = self.voc.answer(voice)
+
+        if exp:
+            self.say(exp)
 
 # les rappeurs
 class Rappeur(Fan):

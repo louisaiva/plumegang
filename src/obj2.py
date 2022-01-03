@@ -140,12 +140,11 @@ class Street():
         for zone in self.zones:
             self.catalog.append( {'x':self.zones[zone].box.cx,'y':self.zones[zone].box.cy,'type':'zone','nom':self.zones[zone].name} )
         for hum in self.humans:
-            self.catalog.append( {'x':hum.gex,'y':hum.gey,'type':'hum','nom':hum.name} )
+            self.catalog.append( {'x':hum.gex,'y':hum.gey,'type':'hum','nom':hum.name,'hum':hum} )
         for item in self.items:
             self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name} )
         if perso != None:
-            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name} )
-
+            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name,'hum':perso} )
 
         self.catalog.sort(key=lambda x:x.get('x'))
 
@@ -279,7 +278,7 @@ class Shop(House):
         super(Shop,self).__init__(name,text,box)
 
         self.guys = []
-        self.guys.append( p.Guy(g.TEXTIDS['guys'],self.rand_pos(),street=self.name) )
+        self.guys.append( p.Guy(g.TEXTIDS['guys'],self.rand_pos(),metier=p.Distroguy,street=self.name) )
 
     def openable(self,perso):
         return True
