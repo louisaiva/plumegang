@@ -69,6 +69,7 @@ voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki degage','tu fais quoi l
                     ,'t essaie de mourir frr ?','A L AIDE APPELEZ LA POLICE !'   ]
 voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
                         ,'wsh il fait beau la',   ]
+voc['merci'] = [   'merci','merce','thx','merci beaucoup','mercee','tu régales','ça fait zizir','oh merce','merci le zin','tu fais plaaiz','thanks broo'   ]
 voc['au revoir'] = [   'que votre voyage continue agréablement','à une prochaine fois','au revoir','salut','à toute','la bise','bye','a+','ouai degage ouai'   ]
 voc['omgcdelta'] = [   'omg tema c est delta','whaaa delta stp fais moi l amour','oh ptn je t aime delta'
                         ,'oh wow le rappeur le plus fort de france !','trop cools tes sons le reuf','delta fais moi des gosses stp','delta le s t bo', 'oh wow delta je suis joie',
@@ -105,9 +106,11 @@ dic = Dico(voc)
 
 class Roll_exp():
 
-    def __init__(self,pos,perso,exps):
+    def __init__(self,pos,perso):
 
-        self.exps = exps
+        self.exps = perso.voc.roll()
+        self.acts = perso.acts
+
         self.perso = perso
 
         self.pos = pos
@@ -116,16 +119,25 @@ class Roll_exp():
 
         # calcul pos
         self.ray = 200
-        self.pts,self.angs = points_on_circle(pos,self.ray,len(self.exps))
+        self.pts,self.angs = points_on_circle(pos,self.ray,len(self.acts+self.exps))
 
         # create labels
         self.labids = []
-        for i in range(len(self.exps)):
-            exp = self.exps[i]
+        #acts
+        for i in range(len(self.acts)):
+            exp = self.acts[i]['exp']
             pt = self.pts[i]
             size = 20
 
-            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,200,255),font_size=size,anchor = ('center','center'),group='ui'))
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui'))
+        j = len(self.acts)
+        #exps
+        for i in range(len(self.exps)):
+            exp = self.exps[i]
+            pt = self.pts[i+j]
+            size = 20
+
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,100,150),font_size=size,anchor = ('center','center'),group='ui'))
 
         # create bg circle
         self.bg = g.sman.addCircle(pos,self.ray*1.5,(80,80,120,160),group='ui-1')
@@ -135,7 +147,10 @@ class Roll_exp():
         if distance(g.M,self.pos) < 20:
             self.cur = None
             for i in range(len(self.labids)):
-                g.lman.modify(self.labids[i],color=(255,255,200,255))
+                if i >= len(self.acts):
+                    g.lman.modify(self.labids[i],color=(255,255,100,150))
+                else:
+                    g.lman.modify(self.labids[i],color=(255,100,100,150))
         else:
             ang = ang_from_pos(g.M,self.pos)
             for i in range(len(self.angs)):
@@ -153,21 +168,51 @@ class Roll_exp():
                         break
 
             for i in range(len(self.labids)):
-                if self.cur == i:
-                    g.lman.modify(self.labids[i],color=(255,255,0,255))
+                if i >= len(self.acts):
+                    if self.cur == i:
+                        g.lman.modify(self.labids[i],color=(255,255,0,255))
+                    else:
+                        g.lman.modify(self.labids[i],color=(255,255,100,150))
                 else:
-                    g.lman.modify(self.labids[i],color=(255,255,200,255))
+                    if self.cur == i:
+                        g.lman.modify(self.labids[i],color=(255,0,0,255))
+                    else:
+                        g.lman.modify(self.labids[i],color=(255,100,100,150))
 
     def admit(self):
         self.delete()
         #print(self.cur)
         if self.cur != None:
-            if self.exps[self.cur] == '~':
-                return self.perso.voc.random()
+
+            if self.cur >= len(self.acts):
+                ## on est dans les exps
+                if self.exps[self.cur-len(self.acts)] == '~':
+                    return self.perso.voc.random()
+                else:
+                    return self.exps[self.cur-len(self.acts)]
             else:
-                return self.exps[self.cur]
+                ## on est dans les acts
+                return self.act()
+
         return None
 
     def delete(self):
         g.lman.delete(self.labids)
         g.sman.delete(self.bg)
+
+    def act(self):
+
+        ## si on est là c'est que le joueur a reçu une proposition à répondre (accepter ou autre)
+        ## et qu'il la suit
+
+        ## le rôle de la roll est de faire cette action puis de renvoyer un msg (ou r) que le perso va dire
+
+        # ACT : { 't':float  ,  'giver':hum  ,  'recever':hum  ,  'exp':str  ,  'fct':funct  ,  'param':[]  ,  'answer':str }
+
+        act = self.acts[self.cur]
+
+        act['fct'](*act['param'])
+
+        self.perso.del_act(act)
+
+        return self.perso.voc.exp(act['answer'])

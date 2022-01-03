@@ -422,17 +422,17 @@ class Distrokid(Label):
         self.caisse = {}
         self.streams = {}
 
-        self.price_stream = 0.01
+        self.price_stream = 1
         # 0.1 dollar le stream
         self.daily_abo = 1
         # 1 euro l'abonnement par jour à distro
 
-    def sign(self,rappeur):
-        self.rappeurs.append(rappeur)
-        self.caisse[rappeur] = 0
-        self.streams[rappeur] = 0
+    def sign(self,rapper):
+        self.rappeurs.append(rapper)
+        self.caisse[rapper] = 0
+        self.streams[rapper] = 0
 
-        print(rappeur.name,'a signé chez distro !')
+        print(rapper.name,'a signé chez distro !')
 
     def update(self):
         for rapper in self.rappeurs:
@@ -443,6 +443,12 @@ class Distrokid(Label):
             self.caisse[rapper] -= self.daily_abo
             self.caisse[rapper] = float(f'{self.caisse[rapper]:.2f}')
             print(rapper.name,':\n\t','daily streams :',daystream,'\n\t','caisse :',self.caisse[rapper])
+
+    def cashback(self,rapper):
+        if rapper in self.rappeurs and self.caisse[rapper] > 0:
+            rapper.add_money(self.caisse[rapper])
+            self.caisse[rapper] = 0
+
 
 distro = Distrokid()
 

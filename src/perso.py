@@ -25,7 +25,8 @@ BOTS = []
 
 
 class Metier():
-    def __init__(self,name='chomeur'):
+    def __init__(self,perso,name='chomeur'):
+        self.perso = perso
         self.meanings = ['veut thune']
         self.name = name
 
@@ -35,8 +36,8 @@ class Metier():
             return 'jsuis au chomdu'
 
 class Distroguy(Metier):
-    def __init__(self):
-        super(Distroguy,self).__init__('distroguy')
+    def __init__(self,perso):
+        super(Distroguy,self).__init__(perso,'distroguy')
 
         self.meanings.append('veut thune')
 
@@ -48,11 +49,19 @@ class Distroguy(Metier):
             if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
                 if o.distro.caisse[hum] > 0:
                     exp = 'tu as ' + trunc(o.distro.caisse[hum],2) + ' $ de côté, tu les veux ?'
+                    self.act_cashback(hum)
                 elif o.distro.caisse[hum] < 0:
                     exp = 'mdr non tu nous dois '+str(int(-o.distro.caisse[hum]))+ ' balles batard'
                 else:
                     exp = 'fais de la thune d\'abord mdr'
                 return exp
+
+    def act_cashback(self,rapper):
+
+        act = { 't':time.time() , 'giver':self.perso , 'recever':rapper , 'exp':'prendre'
+                    , 'fct':o.distro.cashback , 'param':[rapper] , 'answer':'merci' }
+
+        rapper.add_act(act)
 
 
 """""""""""""""""""""""""""""""""""
@@ -87,6 +96,8 @@ class Human():
         self.ear = []
         self.selfear = []
         self.delay_earin = 1
+        self.acts = []
+        self.delay_actin = 10
 
         #pos
         self.gex = pos[0] # general x
@@ -410,7 +421,7 @@ class Human():
         if self.roll != None:
             self.roll.delete()
 
-        self.roll = v.Roll_exp(pos,self,self.voc.roll())
+        self.roll = v.Roll_exp(pos,self)
 
     def unroll(self):
         exp = self.roll.admit()
@@ -453,6 +464,15 @@ class Human():
         if exp:
             self.say(exp)
 
+    ## ACTS
+
+    def add_act(self,act):
+        if not act in self.acts:
+            self.acts.append(act)
+
+    def del_act(self,act):
+        if act in self.acts:
+            self.acts.remove(act)
 
     def update(self):
 
@@ -481,6 +501,15 @@ class Human():
         if self.name == 'Delta':
             pass
             #print(self.ear,self.selfear)
+
+        #acting
+        todel = []
+        for act in self.acts:
+            if time.time()-act['t'] > self.delay_actin:
+                todel.append(act)
+        for act in todel:
+            self.acts.remove(act)
+
 
     ## hoover
 
@@ -654,7 +683,7 @@ class Guy(Fan):
             BOTS.append(self)
 
         ## crée son metier:
-        self.metier = metier()
+        self.metier = metier(self)
 
     def answer(self,voice):
 
