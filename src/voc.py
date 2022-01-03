@@ -40,43 +40,46 @@ class Dico():
     def roll(self):
         return self.roll_exp
 
+    def bienouquoi(self,perc):
+        if perc > 0.8:
+            return self.exp('cavabien')
+        elif perc < 0.2:
+            return self.exp('cavapabien')
+        else:
+            return self.exp('cavaboarf')
+
     # understanding
     def extract_meaning(self,exp):
         for meaning in self.voc:
             if exp.lower() == meaning or exp in self.voc[meaning]:
                 return meaning
 
-    def answer(self,voice):
-
-        meaning = voice['meaning']
-        if meaning == 'bonjour':
-            return self.exp(meaning)
-        elif meaning == 'au revoir':
-            return self.exp(meaning)
-        elif meaning == 'veut thune':
-            return self.exp('non')
-        elif meaning == 'random':
-            if r.random() > 0.5:
-                return self.exp('oui')
-            else:
-                return self.exp('non')
-
 
 voc = {}
-voc['oui'] = [   'c\'est cela meme','vous avez\nbien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
-voc['non'] = [   'c\'est ma\nfoi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','nik','non frr'   ]
-voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki\ndegage','tu fais quoi la','arrhrh je fuis','deso frero\nmé tape paas','pas bien la violence'
-                    ,'t essaie de\nmourir frr ?','A L AIDE APPELEZ\nLA POLICE !'   ]
-voc['bonjour'] = [   'mes plus sincères\nsalutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
-                        ,'wsh il fait\nbeau la',   ]
+voc['oui'] = [   'c\'est cela meme','vous avez bien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
+voc['non'] = [   'c\'est ma foi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','nik','non frr'   ]
+voc['bien?'] = [   'bien ou quoi frr','comment ça va ?','sku ?','ça baigne ?','bien le reuf ?','ça dit quoi','u good ?','quoi de neuf ?','bien ?','\'sup ?'   ]
+voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki degage','tu fais quoi la','arrhrh je fuis','deso frero mé tape paas','pas bien la violence'
+                    ,'t essaie de mourir frr ?','A L AIDE APPELEZ LA POLICE !'   ]
+voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
+                        ,'wsh le gang',   ]
 voc['merci'] = [   'merci','merce','thx','merci beaucoup','mercee','tu régales','ça fait zizir','oh merce','merci le zin','tu fais plaaiz','thanks broo'   ]
-voc['au revoir'] = [   'que votre voyage\ncontinue agréablement','à une prochaine fois','au revoir','salut','à toute','la bise','bye','a+','ouai degage ouai'   ]
-voc['omgcdelta'] = [   'omg tema\nc est delta','whaaa delta stp\nfais moi l amour','oh ptn je\nt aime delta'
-                        ,'oh wow le rappeur\nle plus fort de france !','trop cools tes\nsons le reuf','delta fais moi\ndes gosses stp','delta le s t bo', 'oh wow delta\nje suis joie',
-                        'oh god file un\nautographe stp','oh chut regarde\nc est delta','ptainnn delta jtm']
-voc['veut thune'] = [   'file ma thune','file ta thune','enculé file\nmoi mes sous','tu mdois du\nflouz gars','t\'as ma thune ?' ]
-voc['parle seul'] = [   'ptdr je parle\ntout seul','pk jparle frr\nya personne','mdrr je parle\non dirait c\'est pas\nmoi qui parle j\'ai juré'
-                            ,'jparle vraiment\ntout seul là ? mdrr\njsuis fou','ah merde mdr\njsuis tout seul','j aime le silence' ]
+
+voc['cavabien'] = ['yaas on é là','trop bien le reuf','yeeep de ouf','carrément bien poto','grave jsuis a donf là','ptain ouai de ouf hein jsuis alaiz']
+voc['cavapabien'] = ['arh bof jsuis en train de crevé','arh non jmeurs'
+                ,'bof tavu mon sang qui coule là ?','mal','très mal','à peu près le néant bien']
+voc['cavaboarf'] = ['boarf on é là hein','j\'y travaille','mouais'
+                ,'bof on sfait chier quoi','comme un lundi','ca va','on é là hein','ça paasse']
+
+
+voc['au revoir'] = [   'que votre voyage continue agréablement','à une prochaine fois','au revoir','salut','à toute','la bise','bye','a+','ouai degage ouai'   ]
+voc['omgcdelta'] = [   'omg tema c est delta','whaaa delta stp fais moi l amour','oh ptn je t aime delta'
+                        ,'oh wow le rappeur le plus fort de france !','trop cools tes sons le reuf'
+                        ,'delta fais moi des gosses stp','delta le s t bo', 'oh wow delta je suis joie',
+                        'oh god file un autographe stp','oh chut regarde c est delta','ptainnn delta jtm']
+voc['veut thune'] = [   'file ma thune','file ta thune','enculé file moi mes sous','tu mdois du flouz gars','t\'as ma thune ?' ]
+voc['parle seul'] = [   'ptdr je parle tout seul','pk jparle frr ya personne','mdrr je parle on dirait c\'est pas moi qui parle j\'ai juré'
+                            ,'jparle vraiment tout seul là ? mdrr jsuis fou','ah merde mdr jsuis tout seul','j aime le silence' ]
 voc['random'] = [
                 'wow le developpeur est si beau c\'est incroyable',
                 'humm le createur est si séduisant tu trouves pas ?',
@@ -125,24 +128,23 @@ class Roll_exp():
 
         # create labels
         self.labids = []
+        size = 20
         #acts
         for i in range(len(self.acts)):
             exp = self.acts[i]['exp']
             pt = self.pts[i]
-            size = 20
 
-            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui',max_width=20))
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui'))
         j = len(self.acts)
         #exps
         for i in range(len(self.exps)):
             exp = self.exps[i]
             pt = self.pts[i+j]
-            size = 20
 
             self.labids.append(g.lman.addLab(exp,pt,color=(255,255,100,150),font_size=size,anchor = ('center','center'),group='ui'))
 
         # create bg circle
-        self.bg = g.sman.addCircle(pos,self.ray*1.5,(80,80,120,160),group='ui-1')
+        self.bg = g.sman.addCircle(pos,self.ray*1.5,(80,80,120,180),group='ui-1')
 
     def update(self):
 
@@ -150,9 +152,9 @@ class Roll_exp():
             self.cur = None
             for i in range(len(self.labids)):
                 if i >= len(self.acts):
-                    g.lman.modify(self.labids[i],color=(255,255,100,150))
+                    g.lman.modify(self.labids[i],color=(255,255,100,180))
                 else:
-                    g.lman.modify(self.labids[i],color=(255,100,100,150))
+                    g.lman.modify(self.labids[i],color=(255,100,100,180))
         elif len(self.labids) == 1:
             self.cur = 0
             g.lman.modify(self.labids[self.cur],color=(255,255,0,255))
@@ -177,12 +179,12 @@ class Roll_exp():
                     if self.cur == i:
                         g.lman.modify(self.labids[i],color=(255,255,0,255))
                     else:
-                        g.lman.modify(self.labids[i],color=(255,255,100,150))
+                        g.lman.modify(self.labids[i],color=(255,255,100,180))
                 else:
                     if self.cur == i:
                         g.lman.modify(self.labids[i],color=(255,0,0,255))
                     else:
-                        g.lman.modify(self.labids[i],color=(255,100,100,150))
+                        g.lman.modify(self.labids[i],color=(255,100,100,180))
 
     def admit(self):
         self.delete()
@@ -225,7 +227,7 @@ class Roll_exp():
     def get_exps(self):
 
         dials = sorted(self.perso.dials,key= lambda x:x.get('imp'),reverse=True)
-        print(dials,self.perso.dials)
+        #print(dials,self.perso.dials)
         exps = []
         for dial in dials:
             exps.append(self.perso.voc.exp(dial['meaning']))

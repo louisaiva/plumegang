@@ -70,7 +70,7 @@ class Distroguy(Metier):
 
 class Human():
 
-    def __init__(self,textids,pos,name='John',group='perso-1',street='street1'):
+    def __init__(self,textids,pos,name='John',group='perso',street='street1'):
         # general
 
         self.name = name
@@ -175,12 +175,28 @@ class Human():
 
     def update_env(self):
         if self.alive:
+            self.old_env = self.environ
             self.environ = o2.NY.CITY[self.street].environ(self)
 
-            #print(list(filter(lambda x:x.get('type')=='hum',self.environ)))
-            if len(list(filter(lambda x:x.get('type')=='hum',self.environ))) == 1:
-                dial = { 't':time.time() , 'delay':None , 'meaning':'parle seul' , 'imp':30 }
+            hum_dans_env = len(list(filter(lambda x:x.get('type')=='hum',self.environ)))
+            hum_dans_oldenv = len(list(filter(lambda x:x.get('type')=='hum',self.old_env)))
+
+            if hum_dans_env == 1 and hum_dans_oldenv>1:
+                self.empty_dial()
+
+                dial = { 't':time.time() , 'delay':10 , 'meaning':'parle seul' , 'imp':30 }
                 self.add_dial(dial)
+
+            # si y'a des nouveaux gens qui arrivent
+            if hum_dans_env > 1 and hum_dans_env > hum_dans_oldenv:
+                self.del_dial('parle seul')
+                dial = { 't':time.time() , 'delay':None , 'meaning':'bonjour' , 'imp':30 }
+                self.add_dial(dial)
+                dial = { 't':time.time() , 'delay':None , 'meaning':'bien?' , 'imp':25 }
+                self.add_dial(dial)
+                dial = { 't':time.time() , 'delay':None , 'meaning':'au revoir' , 'imp':20 }
+                self.add_dial(dial)
+
 
     ##
 
@@ -399,7 +415,7 @@ class Human():
             # gaffe faut modifier aussi dans l'update
             x,y = self.box.cx,self.box.fy + 100
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                ,group='up-1',vis=True,duree=duree)
+                                ,group='midup',vis=True,duree=duree)
 
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
@@ -448,7 +464,7 @@ class Human():
 
         if hum != self:
             self.ear.append( voice )
-            print(self.name,'heard',hum.name)
+            #print(self.name,'heard',hum.name)
 
             #self.understand(voice)
             g.bertran.schedule_once(self.understand, r.randint(3,6)/10,voice)
@@ -466,7 +482,22 @@ class Human():
 
     def answer(self,voice):
         ## ATTENTION CHANGER DANS GUY asussi
-        exp = self.voc.answer(voice)
+        meaning = voice['meaning']
+
+        exp = None
+        if meaning == 'bonjour':
+            exp = self.voc.exp(meaning)
+        elif meaning == 'au revoir':
+            exp = self.voc.exp(meaning)
+        elif meaning == 'bien?':
+            exp = self.voc.bienouquoi(self.life/self.max_life)
+        elif meaning == 'veut thune':
+            exp = self.voc.exp('non')
+        elif meaning == 'random':
+            if r.random() > 0.5:
+                exp = self.voc.exp('oui')
+            else:
+                exp = self.voc.exp('non')
         if exp:
             self.say(exp)
 
@@ -494,9 +525,15 @@ class Human():
         if not dial.get('meaning') in list(map(lambda x:x.get('meaning'),self.dials)):
             self.dials.append(dial)
 
-    def del_dial(self,dial):
-        if dial in self.dials:
-            self.dials.remove(dial)
+    def del_dial(self,meaning='parle seul'):
+
+        if meaning in list(map(lambda x:x.get('meaning'),self.dials)):
+            self.dials.remove(list(filter(lambda x:x.get('meaning')==meaning,self.dials))[0])
+            if len(list(filter(lambda x:x.get('meaning')==meaning,self.dials))) > 0:
+                self.del_dial(meaning)
+
+    def empty_dial(self):
+        self.dials = []
 
     def update(self):
 
@@ -522,9 +559,6 @@ class Human():
         for voice in todel:
             self.selfear.remove(voice)
 
-        if self.name == 'Delta':
-            pass
-            #print(self.ear,self.selfear)
 
         #acting
         todel = []
@@ -541,6 +575,9 @@ class Human():
         for dial in todel:
             self.dials.remove(dial)
 
+        if self.name == 'Delta':
+            pass
+            print(list(map(lambda x:x.get('exp'),self.acts))+list(map(lambda x:x.get('meaning'),self.dials)))
 
     ## hoover
 
@@ -565,7 +602,7 @@ class Human():
 
         if not hasattr(self,'label'):
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
-            self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
+            self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=self.grp)
 
         #print('loaded',self.name)
 
@@ -716,6 +753,26 @@ class Guy(Fan):
         ## crée son metier:
         self.metier = metier(self)
 
+    def update_env(self):
+        super(Guy,self).update_env()
+
+        tab_hum = list(filter(lambda x:x.get('type')=='hum',self.environ))
+        tab_hum = list(map(lambda x:x.get('hum'),tab_hum))
+        tab_hum_old = list(filter(lambda x:x.get('type')=='hum',self.old_env))
+        tab_hum_old = list(map(lambda x:x.get('hum'),tab_hum_old))
+
+        #print(list(map(lambda x:x.get('nom'),tab_hum)),list(map(lambda x:x.get('nom'),tab_hum_old)))
+
+        for hum in tab_hum:
+            if hum not in tab_hum_old:
+                if hum != self:
+                    dial = { 't':time.time() , 'delay':None , 'meaning':'veut thune' , 'imp':50 }
+                    hum.add_dial(dial)
+
+        for hum in tab_hum_old:
+            if hum not in tab_hum:
+                hum.del_dial('veut thune')
+
     def answer(self,voice):
 
         meaning = voice['meaning']
@@ -726,12 +783,11 @@ class Guy(Fan):
         if meaning in self.metier.meanings:
             exp = self.metier.answer(voice)
 
-        # sinon on fait un comportement d'humain
-        if exp == None:
-            exp = self.voc.answer(voice)
-
         if exp:
             self.say(exp)
+        else:
+            # sinon on fait un comportement d'humain
+            super(Guy,self).answer(voice)
 
 # les rappeurs
 class Rappeur(Fan):
@@ -827,6 +883,27 @@ class Rappeur(Fan):
     def die(self):
         self.drop_plume()
         super(Rappeur,self).die()
+
+    # env
+    def update_env(self):
+
+        super(Rappeur,self).update_env()
+
+        tab_hum = list(filter(lambda x:x.get('type')=='hum',self.environ))
+        tab_hum = list(map(lambda x:x.get('hum'),tab_hum))
+        tab_hum_old = list(filter(lambda x:x.get('type')=='hum',self.old_env))
+        tab_hum_old = list(map(lambda x:x.get('hum'),tab_hum_old))
+
+        for hum in tab_hum:
+            if hum not in tab_hum_old:
+                if hum != self and hum in self.fans:
+                    dial = { 't':time.time() , 'delay':None , 'meaning':'omgcdelta' , 'imp':60 }
+                    hum.add_dial(dial)
+
+        for hum in tab_hum_old:
+            if hum not in tab_hum:
+                if hum in self.fans:
+                    hum.del_dial('omgcdelta')
 
     ##
 
@@ -945,6 +1022,10 @@ class Perso(Rappeur):
         self.plumhud = o.PlumHUD(self.plume)
 
         self.invhud.catch(o.sson(self.name))
+
+    def add_dial(self,dial):
+        super(Perso,self).add_dial(dial)
+        print(list(map(lambda x:x.get('meaning'),self.dials)))
 
     # huds
 

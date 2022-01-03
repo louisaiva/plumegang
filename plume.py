@@ -110,7 +110,7 @@ class App():
             self.sprids['effects'][size] = g.sman.addSpr(g.TEXTIDS['blur'],group='up-1',vis=False)
             g.sman.modify(self.sprids['effects'][size],scale=size,opacity=150)
 
-        print(self.sprids['effects'])
+        #print(self.sprids['effects'])
 
         ## STREETS
         o2.generate_map()

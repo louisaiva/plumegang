@@ -336,31 +336,6 @@ def trunc(f, n=3):
 
 #label
 
-def return_in_str(contenu,max_width=25):
-
-    ## ce qui serait mieux serait
-
-    if len(contenu)>=max_width and not '\n' in contenu:
-        words = contenu.split(' ')
-        contenu = ''
-        lines = []
-        line = []
-
-        while len(words) > 0:
-            if len(' '.join(line)) <= max_width:
-                line.append(words[0])
-            else:
-                lines.append(' '.join(line))
-                line = [words[0]]
-            del words[0]
-
-        if len(line) != 0:
-            lines.append(' '.join(line))
-
-        contenu = '\n'.join(lines)
-        #width = (max_width+1)*font_size
-    return contenu
-
 def str_bien(contenu,w=20):
 
     if len(contenu)>=w and not '\n' in contenu:
@@ -378,7 +353,7 @@ def str_bien(contenu,w=20):
         if '' in lines :
             lines.remove('')
 
-        print(lines,nblines)
+        #print(lines,nblines)
 
         for i in range(len(lines)-1):
             if lines[i][-1] == ' ':
