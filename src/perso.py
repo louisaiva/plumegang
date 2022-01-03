@@ -18,6 +18,56 @@ BOTS = []
 
 #graphic
 
+class PNJ():
+
+    def __init__(self,zone,name='John'):
+        # general
+
+        self.name = name
+        self.zone = zone
+
+        #voc
+        self.voc = v.dic
+        self.keyids_voc = None
+
+    ## SPEAKING
+
+    def say(self,exp,duree=20):
+        if self.keyids_voc:
+            g.pman.delete(self.keyids_voc)
+
+        # gaffe faut modifier aussi dans l'update
+        x,y = self.box.cx,self.box.fy + 100
+        self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
+                                ,group='up-1',vis=True,duree=duree,max_width=20)
+
+    def rsay(self,type,duree=20):
+        exp = self.voc.exp(type)
+        self.say(exp,duree)
+
+    def update(self):
+        if self.keyids_voc:
+            x,y = self.box.cx,self.box.fy + 100
+            #print(x,y)
+            g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
+            #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
+
+    def rspeak(self,dt=0):
+        exp = self.voc.random()
+        self.say(exp)
+
+    def speak(self,dt=0):
+        exp = self.voc.random()
+        self.say(exp)
+
+    def remove_speak_lab(self,dt=0):
+        self.keyids_voc = None
+
+    def _box(self):
+        return self.zone.box
+    box = property(_box)
+
+
 class Human():
 
     def __init__(self,textids,pos,name='John',group='perso-1',street='street1'):
@@ -497,7 +547,6 @@ class Fan(Human):
                     print(self.name,':',exp)
                     self.say(exp,60)
 
-
     def __str__(self):
         s = '-100 '
         for i in range(-10,11):
@@ -582,7 +631,6 @@ class Rappeur(Fan):
         self.disco.append(son)
         son.release(self,day)
 
-
         aa = o.a(son.quality)
         x = (son.quality-self.qua_score) * self.nb_fans
 
@@ -597,7 +645,6 @@ class Rappeur(Fan):
             if liked != None:
                 newfans.append(liked)
         self.addfans(newfans)
-
 
         self.update_scores()
 
@@ -666,7 +713,7 @@ class Rappeur(Fan):
 
         sons = self.disco[-2:]
         qua_score = sum([ i.quality for i in sons])/len(sons)
-        self.cred = max([ i.cred for i in sons])
+        #self.cred = max([ i.cred for i in sons])
 
         self.qua_score = qua_score
 
@@ -713,6 +760,14 @@ class Perso(Rappeur):
         self.cred = 0
         self.lifehud.update()
         self.credhud.update()
+
+    def cheat_plumson(self):
+        if self.plume != None:
+            self.plumhud.delete()
+        self.plume = o.splum(self.name)
+        self.plumhud = o.PlumHUD(self.plume)
+
+        self.invhud.catch(o.sson(self.name))
 
     # huds
 

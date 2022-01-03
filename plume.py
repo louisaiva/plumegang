@@ -118,6 +118,7 @@ class App():
         ## PERSOS
 
         self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
+        o.distro.sign(self.perso)
         o2.NY.CITY['home'].set_owner(self.perso)
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
@@ -173,8 +174,8 @@ class App():
         zones = []
         #zones.append(o.Ordi(1990,150,self.perso))
         #zones.append(o.Studio(2640,225))
-        zones.append(o.Releaser(1640,210))
-        #zones.append(o.Lit(-600,225))
+        zones.append(o.Releaser(1670,210))
+        zones.append(o.Distroguy(760,225))
         o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
@@ -298,6 +299,7 @@ class App():
                         ,'scr1':self.change_screen
                         ,'reset':self.menu.reset
                         ,'cheat':self.perso.cheat
+                        ,'splum':self.perso.cheat_plumson
                         ,'roll_color':g.Cyc.roll_mode}
         self.menu_args = {'play':['play'],'go home':[0,None,o2.NY.CITY['home']],'scr0':[0],'scr1':[1]}
 

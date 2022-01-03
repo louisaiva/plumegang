@@ -111,7 +111,7 @@ class Roll_exp():
         if distance(g.M,self.pos) < 20:
             self.cur = None
             for i in range(len(self.labids)):
-                g.lman.modify(self.labids[i],size=20,color=(255,255,200,255))
+                g.lman.modify(self.labids[i],color=(255,255,200,255))
         else:
             ang = ang_from_pos(g.M,self.pos)
             for i in range(len(self.angs)):
@@ -130,13 +130,13 @@ class Roll_exp():
 
             for i in range(len(self.labids)):
                 if self.cur == i:
-                    g.lman.modify(self.labids[i],size=30,color=(255,255,0,255))
+                    g.lman.modify(self.labids[i],color=(255,255,0,255))
                 else:
-                    g.lman.modify(self.labids[i],size=20,color=(255,255,200,255))
+                    g.lman.modify(self.labids[i],color=(255,255,200,255))
 
     def admit(self):
         self.delete()
-        print(self.cur)
+        #print(self.cur)
         if self.cur != None:
             return self.exps[self.cur]
         return None

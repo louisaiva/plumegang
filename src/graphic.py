@@ -8,6 +8,7 @@ enjoy
 import pyglet,random
 from math import *
 import src.utils as u
+from src import obj as o
 
 """""""""""""""""""""""""""""""""""
  PART ONE : GRAPHIC STUFF
@@ -736,6 +737,7 @@ class Cycle():
         #general
         self.day += 1
         self.perso.add_money(-10)
+        o.distro.update()
 
         #teinte
         self.newteinte()

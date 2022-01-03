@@ -17,6 +17,7 @@ class Menu:
         param = OrderedDict()
         param['go home']='reset','go home','play'
         param['cheat']='reset','cheat','play'
+        param['splum']='splum'
         param['nuits colorées'] = 'reset','roll_color','play'
         param['écran'] = OrderedDict()
         for i in range(len(g.scr.screens)):
@@ -27,7 +28,7 @@ class Menu:
         self.arb['...'] = param
         self.arb['quit'] = 'quit'
 
-        self.max_len = 4
+        self.max_len = 8
 
         """
             play

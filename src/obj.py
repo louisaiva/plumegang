@@ -10,6 +10,7 @@ from src.utils import *
 from src import graphic as g
 from src import names as n
 from src import obj2 as o2
+from src import perso as p
 
 """""""""""""""""""""""""""""""""""
  INIT
@@ -109,6 +110,29 @@ def rplum(owner):
     #print(convert_quality(quality),convert_cred(cred))
 
     return Plume(owner,quality,cred)
+
+def splum(owner):
+
+    quality = 0.999 + r.random()/1000
+    cred = r.randint(-100,100)
+
+    return Plume(owner,quality,cred)
+
+def sson(owner):
+
+    b = Btmaker(0.999,'°')
+
+    quains = 0.999 + r.random()/1000
+
+    ins = Instru(quains,b)
+
+    phz = []
+    for i in range(4):
+        quality = 0.999 + r.random()/1000
+        cred = r.randint(-100,100)
+        phz.append(Phase(quality,cred))
+
+    return Son(ins,phz,owner)
 
 def rinstru(bt=None):
 
@@ -326,12 +350,16 @@ class Son():
         self.phases = phases
 
         self.quality = self.global_qua()
+        if self.quality > 1:
+            self.quality = 1
+
         self.cred = max([ x.cred for x in self.phases])
 
         self._released = False
         self.streams = 0
 
         self.release_date = None
+
 
         #print(convert_quality(self.quality),convert_cred(self.cred))
 
@@ -376,6 +404,48 @@ class Son():
 
     def type(self):
         return 'Son'
+
+"""""""""""""""""""""""""""""""""""
+ LABELS
+"""""""""""""""""""""""""""""""""""
+
+class Label():
+
+    def __init__(self,nom='DefJam'):
+        self.name = nom
+
+class Distrokid(Label):
+
+    def __init__(self):
+        super(Distrokid,self).__init__('Distrokid')
+        self.rappeurs = []
+        self.caisse = {}
+        self.streams = {}
+
+        self.price_stream = 0.01
+        # 0.1 dollar le stream
+        self.daily_abo = 1
+        # 1 euro l'abonnement par jour à distro
+
+    def sign(self,rappeur):
+        self.rappeurs.append(rappeur)
+        self.caisse[rappeur] = 0
+        self.streams[rappeur] = 0
+
+        print(rappeur.name,'a signé chez distro !')
+
+    def update(self):
+        for rapper in self.rappeurs:
+            oldstream = self.streams[rapper]
+            daystream = rapper.nb_streams - oldstream
+            self.streams[rapper] = rapper.nb_streams
+            self.caisse[rapper] += daystream*self.price_stream
+            self.caisse[rapper] -= self.daily_abo
+            self.caisse[rapper] = float(f'{self.caisse[rapper]:.2f}')
+            print(rapper.name,':\n\t','daily streams :',daystream,'\n\t','caisse :',self.caisse[rapper])
+
+distro = Distrokid()
+
 
 """""""""""""""""""""""""""""""""""
  ZONES
@@ -502,6 +572,23 @@ class Releaser(Zone_ELEM):
     def activate(self,perso):
         super(Releaser,self).activate(perso)
         perso.auto_release()
+
+class Distroguy(Zone_ELEM):
+
+    def __init__(self,x,y):
+        super(Distroguy,self).__init__(box(x,y,180,200),'Distroguy','pink','mid',True,False)
+        self.guy = p.PNJ(self,'Alphonse')
+
+    def activate(self,perso):
+        super(Distroguy,self).activate(perso)
+
+        exp = ''
+        caisse = distro.caisse[perso]
+        if caisse > 0:
+            exp = 'on te doit '+str(caisse)+' dollars gros batard'
+        else:
+            exp = 'file moi '+str(-caisse)+' dollars enculé de ta mere'
+        self.guy.say(exp)
 
 class Porte(Zone_ELEM):
 

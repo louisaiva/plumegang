@@ -10,7 +10,6 @@ from src import obj as o
 import random as r
 
 
-
 # lines
 
 class preStreet(line):
