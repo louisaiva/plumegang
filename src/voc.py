@@ -63,18 +63,20 @@ class Dico():
 
 
 voc = {}
-voc['oui'] = [   'c\'est cela meme','vous avez bien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
-voc['non'] = [   'c\'est ma foi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','nik','non frr'   ]
-voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki degage','tu fais quoi la','arrhrh je fuis','deso frero mé tape paas','pas bien la violence'
-                    ,'t essaie de mourir frr ?','A L AIDE APPELEZ LA POLICE !'   ]
-voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
-                        ,'wsh il fait beau la',   ]
+voc['oui'] = [   'c\'est cela meme','vous avez\nbien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
+voc['non'] = [   'c\'est ma\nfoi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','nik','non frr'   ]
+voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki\ndegage','tu fais quoi la','arrhrh je fuis','deso frero\nmé tape paas','pas bien la violence'
+                    ,'t essaie de\nmourir frr ?','A L AIDE APPELEZ\nLA POLICE !'   ]
+voc['bonjour'] = [   'mes plus sincères\nsalutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
+                        ,'wsh il fait\nbeau la',   ]
 voc['merci'] = [   'merci','merce','thx','merci beaucoup','mercee','tu régales','ça fait zizir','oh merce','merci le zin','tu fais plaaiz','thanks broo'   ]
-voc['au revoir'] = [   'que votre voyage continue agréablement','à une prochaine fois','au revoir','salut','à toute','la bise','bye','a+','ouai degage ouai'   ]
-voc['omgcdelta'] = [   'omg tema c est delta','whaaa delta stp fais moi l amour','oh ptn je t aime delta'
-                        ,'oh wow le rappeur le plus fort de france !','trop cools tes sons le reuf','delta fais moi des gosses stp','delta le s t bo', 'oh wow delta je suis joie',
-                        'oh god file un autographe stp','oh chut regarde c est delta','ptainnn delta jtm']
-voc['veut thune'] = [   'file ma thune','file ta thune','enculé file moi mes sous','tu mdois du flouz gars','t\'as ma thune ?' ]
+voc['au revoir'] = [   'que votre voyage\ncontinue agréablement','à une prochaine fois','au revoir','salut','à toute','la bise','bye','a+','ouai degage ouai'   ]
+voc['omgcdelta'] = [   'omg tema\nc est delta','whaaa delta stp\nfais moi l amour','oh ptn je\nt aime delta'
+                        ,'oh wow le rappeur\nle plus fort de france !','trop cools tes\nsons le reuf','delta fais moi\ndes gosses stp','delta le s t bo', 'oh wow delta\nje suis joie',
+                        'oh god file un\nautographe stp','oh chut regarde\nc est delta','ptainnn delta jtm']
+voc['veut thune'] = [   'file ma thune','file ta thune','enculé file\nmoi mes sous','tu mdois du\nflouz gars','t\'as ma thune ?' ]
+voc['parle seul'] = [   'ptdr je parle\ntout seul','pk jparle frr\nya personne','mdrr je parle\non dirait c\'est pas\nmoi qui parle j\'ai juré'
+                            ,'jparle vraiment\ntout seul là ? mdrr\njsuis fou','ah merde mdr\njsuis tout seul','j aime le silence' ]
 voc['random'] = [
                 'wow le developpeur est si beau c\'est incroyable',
                 'humm le createur est si séduisant tu trouves pas ?',
@@ -98,7 +100,7 @@ dic = Dico(voc)
 
 
 
-
+''''''' ROLL '''''''''''''''''''''''''''
 
 ###
 # TEST GRAPHIQUE
@@ -108,10 +110,10 @@ class Roll_exp():
 
     def __init__(self,pos,perso):
 
-        self.exps = perso.voc.roll()
-        self.acts = perso.acts
-
         self.perso = perso
+
+        self.exps = self.get_exps()
+        self.acts = perso.acts
 
         self.pos = pos
 
@@ -129,7 +131,7 @@ class Roll_exp():
             pt = self.pts[i]
             size = 20
 
-            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui'))
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui',max_width=20))
         j = len(self.acts)
         #exps
         for i in range(len(self.exps)):
@@ -151,6 +153,9 @@ class Roll_exp():
                     g.lman.modify(self.labids[i],color=(255,255,100,150))
                 else:
                     g.lman.modify(self.labids[i],color=(255,100,100,150))
+        elif len(self.labids) == 1:
+            self.cur = 0
+            g.lman.modify(self.labids[self.cur],color=(255,255,0,255))
         else:
             ang = ang_from_pos(g.M,self.pos)
             for i in range(len(self.angs)):
@@ -216,3 +221,16 @@ class Roll_exp():
         self.perso.del_act(act)
 
         return self.perso.voc.exp(act['answer'])
+
+    def get_exps(self):
+
+        dials = sorted(self.perso.dials,key= lambda x:x.get('imp'),reverse=True)
+        print(dials,self.perso.dials)
+        exps = []
+        for dial in dials:
+            exps.append(self.perso.voc.exp(dial['meaning']))
+
+        ## toujours un truc random
+        exps.append('~')
+
+        return exps

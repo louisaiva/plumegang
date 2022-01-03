@@ -23,6 +23,7 @@ class ScreenManager():
         self.screens = self.display.get_screens()
 
         self.current_screen = self.screens[1]
+        #print(dir(self.current_screen))
 
     def update_screen(self,window):
         if window.screen in self.screens:
@@ -41,6 +42,19 @@ class ScreenManager():
         return self.screen.width
     w = property(_w)
 
+    def _h(self):
+        return self.screen.height
+    h = property(_h)
+
+    def _x(self):
+        return self.screen.x
+    x = property(_x)
+
+    def _y(self):
+        return self.screen.y
+    y = property(_y)
+
+
     def _cx(self):
         return self.screen.width/2
     cx = property(_cx)
@@ -49,9 +63,6 @@ class ScreenManager():
         return self.screen.height/2
     cy = property(_cy)
 
-    def _h(self):
-        return self.screen.height
-    h = property(_h)
 
     def _c(self):
         return self.cx,self.cy
@@ -346,28 +357,22 @@ class LabelManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
+        contenu = u.return_in_str(contenu)
+
         multi = '\n' in contenu
 
         anchor_x,anchor_y= anchor
 
         if multi:
-            maxwidth=0
-            lines = contenu.split('\n')
-            for line in lines:
-                lab = pyglet.text.Label(line,font_name=font_name,font_size=font_size, \
-                                anchor_x= anchor_x,anchor_y= anchor_y,color=color)
-                maxwidth = max(maxwidth,lab.content_width)
-                lab.delete()
-            width = maxwidth+1
-
+            width = 4000
+            anchor_x = 'center'
         else:
             width = None
-
 
         if group != None:
             group = gman.getGroup(group)
         self.labels[id] = pyglet.text.Label(contenu,font_name=font_name,font_size=font_size,group=group, \
-                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,width=width)
+                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,width=width,align='center')
 
 
 
@@ -488,7 +493,7 @@ class ParticleManager():
         bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
-                ('center','center'),color=(255,255,255,255),key='normal',vis=True,max_width=None):
+                ('center','center'),color=(255,255,255,255),key='normal',vis=True):
 
         id = u.get_id('lab_part')
 
@@ -503,34 +508,23 @@ class ParticleManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
+        contenu = u.return_in_str(contenu)
 
-        ## check multi
-        multi,width = False,False
-        if max_width and len(contenu)>max_width:
-            words = contenu.split(' ')
-            contenu = ''
-            line = ''
-            for word in words:
-                if len(word) + len(line) + 1 <= max_width:
-                    line+= word + ' '
-                else:
-                    contenu += line + '\n'
-                    line = word +' '
-            if line not in contenu :
-                contenu += line +'\n'
-            multi = True
-            width = (max_width+1)*font_size
+        multi = '\n' in contenu
 
         anchor_x,anchor_y= anchor
 
-        if anchor_x=='center' and multi:
-            x,y = xy_pos
-            xy_pos = x+width/4,y
+        if multi:
+            width = 2000
+            anchor_x = 'center'
+        else:
+            width = None
+
 
         if group != None:
             group = gman.getGroup(group)
         self.labels[key][id] = pyglet.text.Label(contenu,font_name=font_name,font_size=font_size,group=group, \
-                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,width=width)
+                        batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,align='center',width=width)
 
         self.labels[key][id].x,self.labels[key][id].y = xy_pos
 
@@ -596,8 +590,6 @@ class ParticleManager():
             if setx == None:
                 self.labels[key][id].x += dx
             else:
-                if self.labels[key][id].multiline:
-                    setx += self.labels[key][id].width/4
                 self.labels[key][id].x = setx
             if sety == None:
                 self.labels[key][id].y += dy

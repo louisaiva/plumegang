@@ -7,6 +7,9 @@ enjoy
 
 import random,os,ctypes,time
 #from __future__ import division
+from io import BytesIO
+import win32clipboard
+from PIL import ImageGrab,Image
 
 from math import *
 #from win32gui import GetWindowRect, GetForegroundWindow, GetWindowText
@@ -131,6 +134,26 @@ def get_screen_size():
     user32 = ctypes.windll.user32
     return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 
+def send_to_clipboard(clip_type, data):
+    win32clipboard.OpenClipboard()
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardData(clip_type, data)
+    win32clipboard.CloseClipboard()
+
+def capture_screen(zone):
+    # zone should be (x,y,w,h)
+
+    capture = ImageGrab.grab(zone)
+    capture.save('item/capture.png')
+    image = Image.open("item/capture.png")
+
+    output = BytesIO()
+    capture.convert("RGB").save(output, "BMP")
+    data = output.getvalue()[14:]
+    output.close()
+
+    send_to_clipboard(win32clipboard.CF_DIB, data)
+
 
 ## partie random
 
@@ -154,7 +177,6 @@ def randmultint(n,a,b=None): #returns n differents numbers between a and b-1
                 new = random.randint(a,b-1)
             t.append(new)
         return t
-
 
 def get_key_from_value(d,v,s=[]): # v valeur seule, d dic ou tab
 
@@ -311,6 +333,34 @@ def trunc(f, n=3):
         return '{0:.{1}f}'.format(f, n)
     i, p, d = s.partition('.')
     return '.'.join([i, (d+'0'*n)[:n]])
+
+#label
+
+def return_in_str(contenu,max_width=25):
+
+    if len(contenu)>=max_width and not '\n' in contenu:
+        words = contenu.split(' ')
+        contenu = ''
+        lines = []
+        line = []
+
+        while len(words) > 0:
+            if len(' '.join(line)) <= max_width:
+                line.append(words[0])
+            else:
+                lines.append(' '.join(line))
+                line = [words[0]]
+            del words[0]
+
+        if len(line) != 0:
+            lines.append(' '.join(line))
+
+        contenu = '\n'.join(lines)
+        #width = (max_width+1)*font_size
+    return contenu
+
+
+
 
 ### PARTIE AUTO-SAUVEGARDE
 def compt(bigpath,path = ['/.','/src']):

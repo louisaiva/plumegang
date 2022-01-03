@@ -18,6 +18,7 @@ from src import obj2 as o2
 from src import graphic as g
 from src import menu as m
 
+
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__)) # fopatouché
 if ' ' in CURRENT_PATH:
     print('Le chemin d\'acces contient un espace. Le programme va BUGUER SA MERE.')
@@ -370,9 +371,17 @@ class App():
         #on update g.scr
         g.scr.update_screen(self.window)
 
+    def screen_capture(self):
+
+        capture_screen((g.scr.x, g.scr.y, g.scr.w, g.scr.h))
+        g.pman.alert('screen capture copied to clipboard !')
+
     ### PYGLET FUNCTIONS
 
     def on_key_press(self,symbol,modifiers):
+
+        if symbol == key.F1:
+            self.screen_capture()
 
         if self.action == "play":
 

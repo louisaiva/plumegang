@@ -98,6 +98,7 @@ class Human():
         self.delay_earin = 1
         self.acts = []
         self.delay_actin = 10
+        self.dials = []
 
         #pos
         self.gex = pos[0] # general x
@@ -175,6 +176,11 @@ class Human():
     def update_env(self):
         if self.alive:
             self.environ = o2.NY.CITY[self.street].environ(self)
+
+            #print(list(filter(lambda x:x.get('type')=='hum',self.environ)))
+            if len(list(filter(lambda x:x.get('type')=='hum',self.environ))) == 1:
+                dial = { 't':time.time() , 'delay':None , 'meaning':'parle seul' , 'imp':30 }
+                self.add_dial(dial)
 
     ##
 
@@ -385,7 +391,7 @@ class Human():
 
     ## SPEAKING
 
-    def say(self,exp,duree=20):
+    def say(self,exp,duree=40):
         if self.alive:
             if self.keyids_voc:
                 g.pman.delete(self.keyids_voc)
@@ -393,7 +399,7 @@ class Human():
             # gaffe faut modifier aussi dans l'update
             x,y = self.box.cx,self.box.fy + 100
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                ,group='up-1',vis=True,duree=duree,max_width=20)
+                                ,group='up-1',vis=True,duree=duree)
 
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
@@ -466,6 +472,9 @@ class Human():
 
     ## ACTS
 
+    # ACT : { 't':float  ,  'giver':hum  ,
+    #  'recever':hum  ,  'exp':str  ,  'fct':funct  ,  'param':[]  ,  'answer':str }
+
     def add_act(self,act):
         if not act in self.acts:
             self.acts.append(act)
@@ -473,6 +482,21 @@ class Human():
     def del_act(self,act):
         if act in self.acts:
             self.acts.remove(act)
+
+    # DIAL : { 't':float  ,  'delay':float/None  ,   'meaning':str  , 'imp':int }
+    # (imp -> importance : plus c'est eleve plus ça va etre haut dans la roue -> concerne les warnings et les dialogues de situation)
+
+    # 100 : warning
+    #  50 : situation
+    #  10 : banal
+
+    def add_dial(self,dial):
+        if not dial.get('meaning') in list(map(lambda x:x.get('meaning'),self.dials)):
+            self.dials.append(dial)
+
+    def del_dial(self,dial):
+        if dial in self.dials:
+            self.dials.remove(dial)
 
     def update(self):
 
@@ -509,6 +533,13 @@ class Human():
                 todel.append(act)
         for act in todel:
             self.acts.remove(act)
+        #dialing
+        todel = []
+        for dial in self.dials:
+            if dial['delay'] != None and time.time()-dial['t'] > dial['delay']:
+                todel.append(dial)
+        for dial in todel:
+            self.dials.remove(dial)
 
 
     ## hoover
