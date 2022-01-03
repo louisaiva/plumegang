@@ -542,7 +542,7 @@ class ParticleManager():
         color = (255,20,20,255)
         duree = 10
         size = 40
-        self.addLabPart(contenu,xy_pos,duree,font_size=size,color=color)
+        self.addLabPart(contenu,xy_pos,duree,font_size=size,color=color,group='ui')
 
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         text = tman.addCol(*box.wh,col)

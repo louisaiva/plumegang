@@ -573,11 +573,12 @@ class Releaser(Zone_ELEM):
         super(Releaser,self).activate(perso)
         perso.auto_release()
 
-class Distroguy(Zone_ELEM):
+'''class Distroguy(Zone_ELEM):
 
     def __init__(self,x,y):
         super(Distroguy,self).__init__(box(x,y,180,200),'Distroguy','pink','mid',True,False)
-        self.guy = p.PNJ(self,'Alphonse')
+        self.guy = p.Bosseur(g.TEXTIDS['bosseur'],'Alphonse')
+
 
     def activate(self,perso):
         super(Distroguy,self).activate(perso)
@@ -588,7 +589,7 @@ class Distroguy(Zone_ELEM):
             exp = 'on te doit '+str(caisse)+' dollars gros batard'
         else:
             exp = 'file moi '+str(-caisse)+' dollars enculé de ta mere'
-        self.guy.say(exp)
+        self.guy.say(exp)'''
 
 class Porte(Zone_ELEM):
 

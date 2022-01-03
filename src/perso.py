@@ -18,54 +18,6 @@ BOTS = []
 
 #graphic
 
-class PNJ():
-
-    def __init__(self,zone,name='John'):
-        # general
-
-        self.name = name
-        self.zone = zone
-
-        #voc
-        self.voc = v.dic
-        self.keyids_voc = None
-
-    ## SPEAKING
-
-    def say(self,exp,duree=20):
-        if self.keyids_voc:
-            g.pman.delete(self.keyids_voc)
-
-        # gaffe faut modifier aussi dans l'update
-        x,y = self.box.cx,self.box.fy + 100
-        self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                ,group='up-1',vis=True,duree=duree,max_width=20)
-
-    def rsay(self,type,duree=20):
-        exp = self.voc.exp(type)
-        self.say(exp,duree)
-
-    def update(self):
-        if self.keyids_voc:
-            x,y = self.box.cx,self.box.fy + 100
-            #print(x,y)
-            g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
-            #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
-
-    def rspeak(self,dt=0):
-        exp = self.voc.random()
-        self.say(exp)
-
-    def speak(self,dt=0):
-        exp = self.voc.random()
-        self.say(exp)
-
-    def remove_speak_lab(self,dt=0):
-        self.keyids_voc = None
-
-    def _box(self):
-        return self.zone.box
-    box = property(_box)
 
 
 class Human():
@@ -487,6 +439,7 @@ class Human():
         return False
     alive = property(_alive)
 
+# les gens que tu croises dans la rue
 class Fan(Human):
 
     def __init__(self,textids,pos,name=None,street='street1'):
@@ -558,6 +511,44 @@ class Fan(Human):
 
         return s + ' ' + self.name
 
+# travaille dans un shop ou autre
+class Guy(Fan):
+
+    def __init__(self,textids,pos,name='Alphonse',street='street1'):
+
+        super(Guy,self).__init__(textids,pos,name,street=street)
+
+        # skins
+        self.textids = {}
+        self.textids['nothing'] = {}
+        self.textids['nothing']['R'] = [textids[0]]
+        self.textids['nothing']['L'] = [textids[0]]
+
+        self.textids['move'] = {}
+        self.textids['move']['R'] = [textids[0]]
+        self.textids['move']['L'] = [textids[0]]
+
+        self.textids['hit'] = {}
+        self.textids['hit']['R'] = [textids[0]]
+        self.textids['hit']['L'] = [textids[0]]
+
+        self.textids['write'] = {}
+        self.textids['write']['R'] = [textids[0]]
+        self.textids['write']['L'] = [textids[0]]
+
+        self.textids['wait'] = {}
+        self.textids['wait']['R'] = [textids[0]]
+        self.textids['wait']['L'] = [textids[0]]
+
+        self.textids['die'] = {}
+        self.textids['die']['R'] = [textids[0]]
+        self.textids['die']['L'] = [textids[0]]
+
+        ## check if in BOTS (souvent les guys sont ajoutés directement depuis leur shop)
+        if self not in BOTS:
+            BOTS.append(self)
+
+# les rappeurs
 class Rappeur(Fan):
 
     def __init__(self,textids,pos,name=None,street='street1'):
@@ -731,6 +722,7 @@ class Rappeur(Fan):
     def add_money(self,qté):
         self.money += qté
 
+#toa
 class Perso(Rappeur):
 
     def __init__(self,textids,pos=(400,175),name='Delta',street='home',fill=True):

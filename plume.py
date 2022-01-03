@@ -25,7 +25,7 @@ if ' ' in CURRENT_PATH:
 
 ESK_QUIT = 0
 ## pour éviter d'avoir à passer par le menu
-FILL_INV = 1
+FILL_INV = 0
 ## pour remplir ou non l'inventaire au debut
 
 class App():
@@ -111,7 +111,6 @@ class App():
 
         print(self.sprids['effects'])
 
-
         ## STREETS
         o2.generate_map()
 
@@ -123,12 +122,12 @@ class App():
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
-        #p.BOTS = []
+        ## FANS/RAPPEURS
         n = 30*len(o2.NY.CITY)
         print(n,'bots in this game !')
         for i in range(n):
             street = o2.NY.rand_street()
-            pos = (random.randint(0,street.rxf),random.randint(105,175))
+            pos = street.rand_pos()
 
             if random.random() < 1/8 and len(names.rappeurs) > 0:
                 p.BOTS.append(p.Rappeur(g.TEXTIDS['perso2'],pos,street=street.name))
@@ -140,6 +139,9 @@ class App():
                 o2.NY.CITY[hum.street].add_hum(hum)
             else:
                 o2.NY.Ghost.add_hum(hum)
+
+        ## GUYS
+
 
         ## cycle
 
@@ -175,7 +177,7 @@ class App():
         #zones.append(o.Ordi(1990,150,self.perso))
         #zones.append(o.Studio(2640,225))
         zones.append(o.Releaser(1670,210))
-        zones.append(o.Distroguy(760,225))
+        #zones.append(o.Distroguy(760,225))
         o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
@@ -220,8 +222,13 @@ class App():
 
     def create_organise_textures(self):
 
+        ### PERSOS
         g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(4,6))
         g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,4))
+        g.TEXTIDS['guys'] = g.tman.loadImSeq('bosseur.png',(1,1))
+
+
+        # items
         g.TEXTIDS['_son'] = g.tman.loadImSeq('son.png',(1,6))
         g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
         g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
@@ -372,7 +379,7 @@ class App():
             self.longpress[symbol] = time.time()
 
             if symbol == key.ESCAPE:
-                if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso] and self.perso.element_colli.activated:
+                if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso,p.Guy] and self.perso.element_colli.activated:
                     self.perso.element_colli.close(self.perso)
                     return pyglet.event.EVENT_HANDLED
                 else:
@@ -407,7 +414,7 @@ class App():
                 elif symbol == key.E:
                     if self.perso.element_colli != None:
 
-                        if type(self.perso.element_colli) in [p.Human,p.Fan,p.Rappeur,p.Perso]:
+                        if type(self.perso.element_colli) in [p.Human,p.Fan,p.Rappeur,p.Perso,p.Guy]:
                             if self.perso.element_colli.alive:
                                 self.perso.element_colli.do('hit')
                                 self.perso.be_hit(self.perso.element_colli)
@@ -679,7 +686,7 @@ class App():
                         p.BOTS[0].move('R',o2.NY.CITY[self.perso.street])
 
                 if self.keys[key.E]:
-                    if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso]:
+                    if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso,p.Guy]:
                         if self.perso.element_colli.longpress:
                             if time.time() - self.longpress[key.E] > self.cooldown:
                                 self.longpress[key.E] = time.time()
@@ -745,6 +752,7 @@ class App():
                     item.move(x_r,y_r)
 
                 #--# persos
+                #print(o2.NY.CITY[self.perso.street].humans)
                 for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
                     x_r = hum.gex + g.Cam.X + g.GodCam.X
                     y_r = hum.gey + g.Cam.Y

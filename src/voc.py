@@ -101,10 +101,10 @@ class Roll_exp():
             pt = self.pts[i]
             size = 20
 
-            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,200,255),font_size=size,anchor = ('center','center'),group='hud1'))
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,200,255),font_size=size,anchor = ('center','center'),group='ui'))
 
         # create bg circle
-        self.bg = g.sman.addCircle(pos,self.ray*1.5,(80,80,120,160),group='hud-1')
+        self.bg = g.sman.addCircle(pos,self.ray*1.5,(80,80,120,160),group='ui-1')
 
     def update(self):
 

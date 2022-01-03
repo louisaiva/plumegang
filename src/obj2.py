@@ -7,8 +7,10 @@ import json,os
 from src.utils import *
 from src import graphic as g
 from src import obj as o
+from src import perso as p
 import random as r
 
+Y = 100,175
 
 # lines
 
@@ -76,6 +78,7 @@ class Street():
                 item.deload()
 
     def add_hum(self,hum):
+
         if type(hum) == type([]):
             for h in hum:
                 self.humans.append(h)
@@ -148,7 +151,8 @@ class Street():
 
     # bots
     def rand_pos(self):
-        return (r.randint(self.x,self.x+self.w),self.y)
+        x,y = random.randint(0,self.rxf),random.randint(*Y)
+        return (x,y)
 
     def environ_lr(self,xl,xr):
         if xl > xr :
@@ -274,8 +278,26 @@ class Shop(House):
     def __init__(self,name='shop1',text=(None,None),box=box(0,-50,5120)):
         super(Shop,self).__init__(name,text,box)
 
+        self.guys = []
+        self.guys.append( p.Guy(g.TEXTIDS['guys'],self.rand_pos(),street=self.name) )
+
     def openable(self,perso):
         return True
+
+    def del_hum(self,hum):
+        super(Shop,self).del_hum(hum)
+        """if not hum.alive:
+            self.guys.remove(hum)"""
+
+    def update_catalog(self,perso=None):
+        for guy in self.guys:
+            if not guy.alive:
+                print('wtf alphonse mort')
+                exp = guy.name + ' est mort wtf'
+                g.pman.alert(exp)
+                self.guys.remove(guy)
+                #self.guys.append(p.Human_to_Guy(self))
+        super(Shop,self).update_catalog(perso)
 
 ## CITY
 
@@ -307,7 +329,7 @@ class CITY():
             if type(street) != House and k > d and k <= d+self.percentage(street):
                 return street
             d+=self.percentage(street)
-        return self.Ghost
+        return list(self.CITY.values())[0]
 
 
     #
