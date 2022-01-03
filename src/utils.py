@@ -338,6 +338,8 @@ def trunc(f, n=3):
 
 def return_in_str(contenu,max_width=25):
 
+    ## ce qui serait mieux serait
+
     if len(contenu)>=max_width and not '\n' in contenu:
         words = contenu.split(' ')
         contenu = ''
@@ -359,7 +361,42 @@ def return_in_str(contenu,max_width=25):
         #width = (max_width+1)*font_size
     return contenu
 
+def str_bien(contenu,w=20):
 
+    if len(contenu)>=w and not '\n' in contenu:
+
+        nblines = len(contenu)//w + 1
+
+        lines = []
+        for i in range(nblines):
+            if i == nblines-1:
+                line = contenu[i*w:]
+            else:
+                line = contenu[i*w:(i+1)*w]
+            lines.append(line)
+
+        if '' in lines :
+            lines.remove('')
+
+        print(lines,nblines)
+
+        for i in range(len(lines)-1):
+            if lines[i][-1] == ' ':
+                lines[i] = lines[i][:-1]
+            elif lines[i+1][0] == ' ':
+                lines[i+1] = lines[i+1][1:]
+            else:
+                part1,part2 = lines[i].split(' ')[-1],lines[i+1].split(' ')[0]
+                if len(lines[i]+part2) > len(part1+lines[i+1]):
+                    lines[i+1] = part1+lines[i+1]
+                    lines[i] = ' '.join(lines[i].split(' ')[:-1])
+                else:
+                    lines[i] = lines[i]+part2
+                    lines[i+1] = ' '.join(lines[i+1].split(' ')[1:])
+
+        contenu = '\n'.join(lines)
+
+    return contenu
 
 
 ### PARTIE AUTO-SAUVEGARDE

@@ -357,7 +357,7 @@ class LabelManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
-        contenu = u.return_in_str(contenu)
+        contenu = u.str_bien(contenu)
 
         multi = '\n' in contenu
 
@@ -508,7 +508,7 @@ class ParticleManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
-        contenu = u.return_in_str(contenu)
+        contenu = u.str_bien(contenu)
 
         multi = '\n' in contenu
 
