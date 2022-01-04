@@ -433,6 +433,8 @@ class Distrokid(Label):
         self.streams[rapper] = 0
 
         print(rapper.name,'a signé chez distro !')
+        exp = rapper.name+' a signé chez distro !'
+        g.pman.alert(exp)
 
     def update(self):
         for rapper in self.rappeurs:

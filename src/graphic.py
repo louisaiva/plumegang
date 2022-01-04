@@ -495,7 +495,7 @@ class ParticleManager():
         bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
-                ('center','center'),color=(255,255,255,255),key='normal',vis=True):
+                ('center','center'),color=(255,255,255,255),key='normal',vis=True,use_str_bien=True):
 
         id = u.get_id('lab_part')
 
@@ -510,7 +510,8 @@ class ParticleManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
-        contenu = u.str_bien(contenu)
+        if use_str_bien:
+            contenu = u.str_bien(contenu)
 
         multi = '\n' in contenu
 
@@ -538,7 +539,7 @@ class ParticleManager():
         color = (255,20,20,255)
         duree = 10
         size = 40
-        self.addLabPart(contenu,xy_pos,duree,font_size=size,color=color,group='ui')
+        self.addLabPart(contenu,xy_pos,duree,font_size=size,color=color,group='ui',use_str_bien=False)
 
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         text = tman.addCol(*box.wh,col)

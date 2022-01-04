@@ -118,7 +118,7 @@ class App():
         ## PERSOS
 
         self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
-        o.distro.sign(self.perso)
+        #o.distro.sign(self.perso)
         o2.NY.CITY['home'].set_owner(self.perso)
         #self.sprids['cred_bar'] =
         self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))

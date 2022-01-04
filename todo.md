@@ -56,3 +56,10 @@
     	c'est auprès de ces 2 bails que tu vas pouvoir récup ta thune après en fonction de tes streams:
     		-labels tu récup 50% voir moins (ça dépend de ton contrat, encore une fois plus tu paye cher plus tu gagnes)
     		-distrokid tu gagnes 100%
+
+# animations mdr
+
+  alors deja finir les putains de 3 sprites pour le skin du poto alphonse,
+  puis le poto pénis
+
+  et mettre genre des ptites anim des décors ça pourrait être lourdax (mais bon ça sera dans longtemps jimagijn)

@@ -58,19 +58,20 @@ class Dico():
 voc = {}
 voc['oui'] = [   'c\'est cela meme','vous avez bien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
 voc['non'] = [   'c\'est ma foi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','nik','non frr'   ]
+voc['tu bosses?'] = [   'tu fais quoi ?','tu fous quoi ici','tu fais quoi ?','tu bosses ici','vous faites quoi ici ?'   ]
 voc['bien?'] = [   'bien ou quoi frr','comment ça va ?','sku ?','ça baigne ?','bien le reuf ?','ça dit quoi','u good ?','quoi de neuf ?','bien ?','\'sup ?'   ]
 voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki degage','tu fais quoi la','arrhrh je fuis','deso frero mé tape paas','pas bien la violence'
                     ,'t essaie de mourir frr ?','A L AIDE APPELEZ LA POLICE !'   ]
 voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
                         ,'wsh le gang',   ]
 voc['merci'] = [   'merci','merce','thx','merci beaucoup','mercee','tu régales','ça fait zizir','oh merce','merci le zin','tu fais plaaiz','thanks broo'   ]
+voc['trop cool'] = [   'ohh trop cool','trop cool','incroyable','ça fait zizir','ptain trop bienn','trop dla bouule','je suis joie','oh yaaay','lezgooo','lezgongue','ouuh yeaah'   ]
 
 voc['cavabien'] = ['yaas on é là','trop bien le reuf','yeeep de ouf','carrément bien poto','grave jsuis a donf là','ptain ouai de ouf hein jsuis alaiz']
 voc['cavapabien'] = ['arh bof jsuis en train de crever','arh non jmeurs','euh bof c\'est plutot la mort là','bah on est sur un niveau de mort qwa'
                 ,'bof tavu mon sang qui coule là ?','mal','très mal','à peu près le néant bien']
 voc['cavaboarf'] = ['boarf on é là hein','j\'y travaille','mouais'
                 ,'bof on sfait chier quoi','comme un lundi','ca va','on é là hein','ça paasse']
-
 
 voc['au revoir'] = [   'que votre voyage continue agréablement','à une prochaine fois','au revoir','salut','à toute','la bise','bye','a+','ouai degage ouai'   ]
 voc['omgcdelta'] = [   'omg tema c est delta','whaaa delta stp fais moi l amour','oh ptn je t aime delta'

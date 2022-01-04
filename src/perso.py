@@ -48,13 +48,15 @@ class Distroguy(Metier):
         super(Distroguy,self).__init__(perso,'distroguy')
 
         self.meanings.append('veut thune')
+        self.meanings.append('tu bosses?')
 
         self.arrival_dials['veut thune'] = { 't':0 , 'delay':None , 'meaning':'veut thune' , 'imp':50 }
+        self.arrival_dials['tu bosses?'] = { 't':0 , 'delay':None , 'meaning':'tu bosses?' , 'imp':49 }
 
     def answer(self,voice):
         meaning = voice['meaning']
+        hum = voice['h']
         if meaning == 'veut thune':
-            hum = voice['h']
             #print(hum,'veut thune')
             if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
                 if o.distro.caisse[hum] > 0:
@@ -66,12 +68,36 @@ class Distroguy(Metier):
                     exp = 'fais de la thune d\'abord mdr'
                 return exp
 
+        elif meaning == 'tu bosses?':
+            if isinstance(hum, Rappeur) and hum not in o.distro.rappeurs:
+                exps = ['oue je fais de la thune en signant des rappeurs chez distrokid, ça pourrait t\'interesser !',
+                            'ici on accueille des rappeurs qui veulent poster des sons sur le web, ça t\'intéresse ?',
+                            'on signe des ptis rappeurs ici ! ça coûte pas cher pour poster tes sons, ça te dit ?',
+                            'oh mais t\'es rappeur ! ici on signe des artistes pour qu\'ils puissent être sur spotify etc ! ça te dit ?']
+
+                exp = r.choice(exps)
+                act = { 't':time.time() , 'delay':10 , 'giver':self.perso , 'recever':hum , 'exp':'signer chez distro (1$/jour)'
+                            , 'fct':o.distro.sign , 'param':[hum] , 'answer':'trop cool' }
+
+                hum.del_dial('tu bosses?')
+                dial = self.arrival_dials['veut thune']
+                dial['t'] = time.time()
+                hum.add_dial(dial)
+                hum.add_act(act)
+            else:
+                exp = 'boarf je glande, pas bcp de taf ici'
+            return exp
+
     def add_arrival_dials(self,hum):
 
-        for meaning in self.arrival_dials:
-            dial = self.arrival_dials[meaning]
+        if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
+            dial = self.arrival_dials['veut thune']
             dial['t'] = time.time()
             hum.add_dial(dial)
+
+        dial = self.arrival_dials['tu bosses?']
+        dial['t'] = time.time()
+        hum.add_dial(dial)
 
     def del_arrival_dials(self,hum):
         for meaning in self.arrival_dials:
@@ -430,10 +456,14 @@ class Human():
 
     ## SPEAKING
 
-    def say(self,exp,duree=40):
+    def say(self,exp):
         if self.alive:
             if self.keyids_voc:
                 g.pman.delete(self.keyids_voc)
+
+            duree = 20
+            if len(exp) > duree:
+                duree = len(exp)
 
             # gaffe faut modifier aussi dans l'update
             x,y = self.box.cx,self.box.fy + 100
@@ -446,9 +476,9 @@ class Human():
                 hum = hum.get('hum')
                 hum.listen(self,exp)
 
-    def rsay(self,type,duree=20):
+    def rsay(self,type):
         exp = self.voc.exp(type)
-        self.say(exp,duree)
+        self.say(exp)
 
     def rspeak(self,dt=0):
         if hasattr(self,'skin_id') and 'die' not in self.doing:
@@ -736,7 +766,7 @@ class Fan(Human):
                 if hum.get('nom') in list(map(lambda x:x.name,self.artists)):
                     exp = self.voc.omg_c_delta(hum.get('nom'))
                     print(self.name,':',exp)
-                    self.say(exp,60)
+                    self.say(exp)
 
     def __str__(self):
         s = '-100 '
