@@ -218,13 +218,13 @@ class Roll_exp():
 
         ## le rôle de la roll est de faire cette action puis de renvoyer un msg (ou r) que le perso va dire
 
-        # ACT : { 't':float  ,  'giver':hum  ,  'recever':hum  ,  'exp':str  ,  'fct':funct  ,  'param':[]  ,  'answer':str }
+        # ACT : { 't':float  ,  'giver':hum  ,  'exp':str  ,  'fct':funct  ,  'param':[]  ,  'answer':str ,'id': str}
 
         act = self.acts[self.cur]
 
         act['fct'](*act['param'])
 
-        self.perso.del_act(act,recreate=False)
+        self.perso.del_act(act['id'],recreate=False)
 
         return self.perso.voc.exp(act['answer'])
 
