@@ -1,4 +1,9 @@
 
+# hm error dans les bots ?
+  j'ai eu 694 fans alors que y'avait apparement que 690 bots (+ alphonse)
+  et en plus j'en ai tué en chemin et ça m'a pas baissé des fans
+  --> à régler
+
 # tableau d'appreciation d'une personne
   que les bots (et toi) aient des avis sur chaque personne qu'ils croisent
   un mec qui t'a insulté bah tu l'aimes pas etc.
