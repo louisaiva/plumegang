@@ -30,16 +30,26 @@ class Metier():
         self.meanings = ['veut thune']
         self.name = name
 
+        self.arrival_dials = {}
+
     def answer(self,voice):
         meaning = voice['meaning']
         if meaning == 'veut thune':
             return 'jsuis au chomdu'
+
+    def add_arrival_dials(self,hum):
+        pass
+
+    def del_arrival_dials(self,hum):
+        pass
 
 class Distroguy(Metier):
     def __init__(self,perso):
         super(Distroguy,self).__init__(perso,'distroguy')
 
         self.meanings.append('veut thune')
+
+        self.arrival_dials['veut thune'] = { 't':0 , 'delay':None , 'meaning':'veut thune' , 'imp':50 }
 
     def answer(self,voice):
         meaning = voice['meaning']
@@ -56,11 +66,25 @@ class Distroguy(Metier):
                     exp = 'fais de la thune d\'abord mdr'
                 return exp
 
+    def add_arrival_dials(self,hum):
+
+        for meaning in self.arrival_dials:
+            dial = self.arrival_dials[meaning]
+            dial['t'] = time.time()
+            hum.add_dial(dial)
+
+    def del_arrival_dials(self,hum):
+        for meaning in self.arrival_dials:
+            hum.del_dial(meaning)
+
+    ## distro
+
     def act_cashback(self,rapper):
 
-        act = { 't':time.time() , 'giver':self.perso , 'recever':rapper , 'exp':'prendre'
+        act = { 't':time.time() , 'delay':10 , 'giver':self.perso , 'recever':rapper , 'exp':'prendre'
                     , 'fct':o.distro.cashback , 'param':[rapper] , 'answer':'merci' }
 
+        rapper.del_dial('veut thune')
         rapper.add_act(act)
 
 
@@ -97,7 +121,6 @@ class Human():
         self.selfear = []
         self.delay_earin = 1
         self.acts = []
-        self.delay_actin = 10
         self.dials = []
 
         #pos
@@ -503,16 +526,20 @@ class Human():
 
     ## ACTS
 
-    # ACT : { 't':float  ,  'giver':hum  ,
+    # ACT : { 't':float  ,  'delay':float/((((((None))))))  ,  'giver':hum  ,
     #  'recever':hum  ,  'exp':str  ,  'fct':funct  ,  'param':[]  ,  'answer':str }
 
     def add_act(self,act):
         if not act in self.acts:
             self.acts.append(act)
+            if self.roll != None:
+                self.roll.recreate()
 
-    def del_act(self,act):
+    def del_act(self,act,recreate=True):
         if act in self.acts:
             self.acts.remove(act)
+            if recreate and self.roll != None:
+                self.roll.recreate()
 
     # DIAL : { 't':float  ,  'delay':float/None  ,   'meaning':str  , 'imp':int }
     # (imp -> importance : plus c'est eleve plus ça va etre haut dans la roue -> concerne les warnings et les dialogues de situation)
@@ -524,11 +551,15 @@ class Human():
     def add_dial(self,dial):
         if not dial.get('meaning') in list(map(lambda x:x.get('meaning'),self.dials)):
             self.dials.append(dial)
+            if self.roll != None:
+                self.roll.recreate()
 
     def del_dial(self,meaning='parle seul'):
 
         if meaning in list(map(lambda x:x.get('meaning'),self.dials)):
             self.dials.remove(list(filter(lambda x:x.get('meaning')==meaning,self.dials))[0])
+            if self.roll != None:
+                self.roll.recreate()
             if len(list(filter(lambda x:x.get('meaning')==meaning,self.dials))) > 0:
                 self.del_dial(meaning)
 
@@ -559,12 +590,14 @@ class Human():
         for voice in todel:
             self.selfear.remove(voice)
 
+        deleted_acts_dials = False
 
         #acting
         todel = []
         for act in self.acts:
-            if time.time()-act['t'] > self.delay_actin:
+            if time.time()-act['t'] > act['delay']:
                 todel.append(act)
+                deleted_acts_dials = True
         for act in todel:
             self.acts.remove(act)
         #dialing
@@ -572,12 +605,16 @@ class Human():
         for dial in self.dials:
             if dial['delay'] != None and time.time()-dial['t'] > dial['delay']:
                 todel.append(dial)
+                deleted_acts_dials = True
         for dial in todel:
             self.dials.remove(dial)
 
+        if deleted_acts_dials and self.roll != None:
+            self.roll.recreate()
+
         if self.name == 'Delta':
             pass
-            print(list(map(lambda x:x.get('exp'),self.acts))+list(map(lambda x:x.get('meaning'),self.dials)))
+            #print(list(map(lambda x:x.get('exp'),self.acts))+list(map(lambda x:x.get('meaning'),self.dials)))
 
     ## hoover
 
@@ -763,15 +800,16 @@ class Guy(Fan):
 
         #print(list(map(lambda x:x.get('nom'),tab_hum)),list(map(lambda x:x.get('nom'),tab_hum_old)))
 
+        ## RAJOUTE LES DIALS DU METIER AUX nouveaux VENUS
         for hum in tab_hum:
             if hum not in tab_hum_old:
                 if hum != self:
-                    dial = { 't':time.time() , 'delay':None , 'meaning':'veut thune' , 'imp':50 }
-                    hum.add_dial(dial)
+                    self.metier.add_arrival_dials(hum)
 
+        ## ENLEVE LES DIALS DU METIER A CEUX QUI SONT PARTI
         for hum in tab_hum_old:
             if hum not in tab_hum:
-                hum.del_dial('veut thune')
+                self.metier.del_arrival_dials(hum)
 
     def answer(self,voice):
 
@@ -1025,7 +1063,7 @@ class Perso(Rappeur):
 
     def add_dial(self,dial):
         super(Perso,self).add_dial(dial)
-        print(list(map(lambda x:x.get('meaning'),self.dials)))
+        #print(list(map(lambda x:x.get('meaning'),self.dials)))
 
     # huds
 

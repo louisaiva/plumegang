@@ -341,7 +341,8 @@ class LabelManager():
             self.fonts = ['arial']
             self.font = 'arial'
 
-    def addLab(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group='hud',anchor = ('left','bottom'),color=(255,255,255,255)):
+    def addLab(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group='hud'
+                ,anchor = ('left','bottom'),color=(255,255,255,255),use_str_bien=False):
 
         if alr_id == -1:
             id = u.get_id('lbl')
@@ -357,7 +358,8 @@ class LabelManager():
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
 
-        contenu = u.str_bien(contenu)
+        if use_str_bien:
+            contenu = u.str_bien(contenu)
 
         multi = '\n' in contenu
 

@@ -66,7 +66,7 @@ voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','sal
 voc['merci'] = [   'merci','merce','thx','merci beaucoup','mercee','tu régales','ça fait zizir','oh merce','merci le zin','tu fais plaaiz','thanks broo'   ]
 
 voc['cavabien'] = ['yaas on é là','trop bien le reuf','yeeep de ouf','carrément bien poto','grave jsuis a donf là','ptain ouai de ouf hein jsuis alaiz']
-voc['cavapabien'] = ['arh bof jsuis en train de crevé','arh non jmeurs'
+voc['cavapabien'] = ['arh bof jsuis en train de crever','arh non jmeurs','euh bof c\'est plutot la mort là','bah on est sur un niveau de mort qwa'
                 ,'bof tavu mon sang qui coule là ?','mal','très mal','à peu près le néant bien']
 voc['cavaboarf'] = ['boarf on é là hein','j\'y travaille','mouais'
                 ,'bof on sfait chier quoi','comme un lundi','ca va','on é là hein','ça paasse']
@@ -134,19 +134,22 @@ class Roll_exp():
             exp = self.acts[i]['exp']
             pt = self.pts[i]
 
-            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui'))
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui',use_str_bien=True))
         j = len(self.acts)
         #exps
         for i in range(len(self.exps)):
             exp = self.exps[i]
             pt = self.pts[i+j]
 
-            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,100,150),font_size=size,anchor = ('center','center'),group='ui'))
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,100,150),font_size=size,anchor = ('center','center'),group='ui',use_str_bien=True))
 
         # create bg circle
         self.bg = g.sman.addCircle(pos,self.ray*1.5,(80,80,120,180),group='ui-1')
 
     def update(self):
+
+        """if len(self.acts+self.exps) != len(self.labids):
+            self.recreate()"""
 
         if distance(g.M,self.pos) < 20:
             self.cur = None
@@ -220,7 +223,7 @@ class Roll_exp():
 
         act['fct'](*act['param'])
 
-        self.perso.del_act(act)
+        self.perso.del_act(act,recreate=False)
 
         return self.perso.voc.exp(act['answer'])
 
@@ -236,3 +239,36 @@ class Roll_exp():
         exps.append('~')
 
         return exps
+
+    def recreate(self):
+
+        self.delete()
+
+        self.exps = self.get_exps()
+        self.acts = self.perso.acts
+
+        self.cur = None
+
+        # calcul pos
+        self.ray = 200
+        self.pts,self.angs = points_on_circle(self.pos,self.ray,len(self.acts+self.exps))
+
+        # create labels
+        self.labids = []
+        size = 20
+        #acts
+        for i in range(len(self.acts)):
+            exp = self.acts[i]['exp']
+            pt = self.pts[i]
+
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,100,100,150),font_size=size,anchor = ('center','center'),group='ui',use_str_bien=True))
+        j = len(self.acts)
+        #exps
+        for i in range(len(self.exps)):
+            exp = self.exps[i]
+            pt = self.pts[i+j]
+
+            self.labids.append(g.lman.addLab(exp,pt,color=(255,255,100,150),font_size=size,anchor = ('center','center'),group='ui',use_str_bien=True))
+
+        # create bg circle
+        self.bg = g.sman.addCircle(self.pos,self.ray*1.5,(80,80,120,180),group='ui-1')
