@@ -9,6 +9,7 @@ import random,os,ctypes,time
 #from __future__ import division
 from io import BytesIO
 import win32clipboard
+import threading
 from PIL import ImageGrab,Image
 
 from math import *
@@ -462,3 +463,9 @@ def point_in_segment(C,line):
     if Kac >= 0 and Kac <= Kab:
         return True
     return False
+
+
+## WAIT
+timer=threading.Event()
+def waait(n=100):
+    timer.wait(n/1000)

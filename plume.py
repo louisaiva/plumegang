@@ -449,7 +449,7 @@ class App():
 
                 elif symbol == key.K:
                     self.perso.minirelhud.rollhide()
-                    self.perso.poto.follow_hum(0,self.perso,2)
+                    self.perso.poto.attack_hum(0,self.perso)
 
         elif self.action == 'pause':
 

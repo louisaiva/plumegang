@@ -172,6 +172,7 @@ class Human():
         self.money = 1000
 
         self.element_colli = None
+        self.collis = []
         self.environ = []
         self.hum_env = []
 
@@ -290,74 +291,71 @@ class Human():
     def check_colli(self,street):
 
         ## CHANGER DANS PERSO
-        collis = []
+        self.collis = []
 
         for elem in list(map(lambda x:x.get('elem'),self.environ)):
             if collisionAB(self.realbox,elem.realbox) :
-                collis.append(elem)
+                self.collis.append(elem)
 
-        if len(collis) > 0:
-            collis.sort(key=lambda x:x.gey)
-            #print(list(map(lambda x:x.name,collis)))
+        if len(self.collis) > 0:
+            self.collis.sort(key=lambda x:x.gey)
+            #print(list(map(lambda x:x.name,self.collis)))
 
             y,yf = street.yyf
             d = yf-y
             yranges = [y]
-            for i in range(len(collis)):
-                yranges.append(y+(i+1)*(d/len(collis)))
+            for i in range(len(self.collis)):
+                yranges.append(y+(i+1)*(d/len(self.collis)))
             #print(yranges)
 
             k=0
-            for i in range(len(collis)):
+            for i in range(len(self.collis)):
                 if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
                     k=i
-            self.element_colli = collis[k]
+            self.element_colli = self.collis[k]
         else:
             self.element_colli = None
     ##
 
-    def hit(self):
-        self.do('hit')
-        if self.element_colli != None:
-            if type(self.element_colli) in [Human,Fan,Rappeur,Perso,Guy]:
-                if self.element_colli.alive:
-                    self.element_colli.do('hit')
-                    self.be_hit(self.element_colli)
-                self.element_colli.be_hit(self)
-            else:
-                self.element_colli.activate(self)
+    def hit(self,dt=0):
+        if self.alive:
+            self.do('hit')
+            if self.element_colli != None:
+                if isinstance(self.element_colli,Human):
+                    self.element_colli.be_hit(self)
+                elif type(self) == Perso:
+                    self.element_colli.activate(self)
 
     def do(self,action='nothing'):
 
         if action not in self.doing:
-
-            if action == 'nothing':
-                self.doing = ['nothing']
-                #print(self.name,'do notjing')
-
-            elif action == 'hit':
+            if action == 'die':
                 self.doing.insert(0, action)
                 self.undo()
                 self.update_skin(repeat=False)
-                g.bertran.schedule_once(self.undo,0.1,'hit')
+            elif self.alive:
+                if action == 'nothing':
+                    self.doing = ['nothing']
+                    #print(self.name,'do notjing')
 
-            elif action == 'write':
-                self.doing.insert(0, action)
-                self.undo()
+                elif action == 'hit':
+                    self.doing.insert(0, action)
+                    self.undo()
+                    self.update_skin(repeat=False)
+                    g.bertran.schedule_once(self.undo,0.1,'hit')
 
-            elif action == 'move':
-                self.doing.append(action)
-                self.undo()
+                elif action == 'write':
+                    self.doing.insert(0, action)
+                    self.undo()
 
-            elif action == 'wait':
-                self.doing.insert(0, action)
-                self.undo()
-                self.update_skin(repeat=False)
+                elif action == 'move':
+                    self.doing.append(action)
+                    self.undo()
 
-            elif action == 'die':
-                self.doing.insert(0, action)
-                self.undo()
-                self.update_skin(repeat=False)
+                elif action == 'wait':
+                    self.doing.insert(0, action)
+                    self.undo()
+                    self.update_skin(repeat=False)
 
     def undo(self,dt=0,action='nothing'):
 
@@ -457,7 +455,7 @@ class Human():
 
         self.life -= hitter.damage
         hitter.cred += 1
-        self.cred += 1
+        #self.cred += 1
 
         if (self.life <= 0 or self.cred > 100 or self.cred < -100) and 'die' not in self.doing:
             self.die()
@@ -561,26 +559,31 @@ class Human():
 
     def attack_hum(self,dt,target):
 
-        x,y = target.gex,target.gey
-        speed = self.speed
+        if self.alive and target.alive:
+            x,y = target.gex,target.gey
+            speed = self.speed
 
-        #x
-        """if hum
-        elif self.gex > x:
-            self.move('L',o2.NY.CITY[self.street],speed)
-        elif self.gex < x:
-            self.move('R',o2.NY.CITY[self.street],speed)
+            #x
+            if target == self.element_colli:
+                dt = r.randint(1,2)/10
+                g.bertran.schedule_once(self.hit,dt)
+                g.bertran.schedule_once(self.attack_hum,r.randint(2,5)/10,target)
+            else:
+                if target in self.collis:
+                    #y
+                    if self.gey > y:
+                        self.move('down',o2.NY.CITY[self.street])
+                    elif self.gey < y:
+                        self.move('up',o2.NY.CITY[self.street])
 
-        #y
-        if self.gey + self.speed >= y and self.gey <= y:
-            reached = reached[0],True
-        elif self.gey > y:
-            self.move('down',o2.NY.CITY[self.street])
-        elif self.gey < y:
-            self.move('up',o2.NY.CITY[self.street])
+                if self.gex > x:
+                    self.move('L',o2.NY.CITY[self.street],speed)
+                elif self.gex < x:
+                    self.move('R',o2.NY.CITY[self.street],speed)
 
-        if reached != (True,True) and self.alive and not 'nothing' in self.doing:
-            g.bertran.schedule_once(self.follow_hum,0.01,target,strengh)"""
+
+                if self.alive and not 'nothing' in self.doing:
+                    g.bertran.schedule_once(self.attack_hum,0.01,target)
 
     ## SPEAKING
 
@@ -1344,28 +1347,30 @@ class Perso(Rappeur):
         self.check_colli(street)
 
     def check_colli(self,street):
-        collis = []
+
+        ## CHANGER DANS PERSO
+        self.collis = []
 
         for elem in list(map(lambda x:x.get('elem'),self.environ)):
             if collisionAB(self.realbox,elem.realbox) :
-                collis.append(elem)
+                self.collis.append(elem)
 
-        if len(collis) > 0:
-            collis.sort(key=lambda x:x.gey)
-            #print(list(map(lambda x:x.name,collis)))
+        if len(self.collis) > 0:
+            self.collis.sort(key=lambda x:x.gey)
+            #print(list(map(lambda x:x.name,self.collis)))
 
             y,yf = street.yyf
             d = yf-y
             yranges = [y]
-            for i in range(len(collis)):
-                yranges.append(y+(i+1)*(d/len(collis)))
+            for i in range(len(self.collis)):
+                yranges.append(y+(i+1)*(d/len(self.collis)))
             #print(yranges)
 
             k=0
-            for i in range(len(collis)):
+            for i in range(len(self.collis)):
                 if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
                     k=i
-            colli_elem = collis[k]
+            colli_elem = self.collis[k]
         else:
             colli_elem = None
 
