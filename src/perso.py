@@ -137,7 +137,8 @@ class Human():
         self.speed = r.randint(10,25)
         self.yspeed = 5
         self.runspeed = 100
-        self.play = 'play'
+        self.id = get_id('hum')
+        #self.play = 'play'
 
         #life
         self.life = 100
@@ -146,6 +147,10 @@ class Human():
 
         #cred
         self.cred = r.randint(-50,50)
+
+        # relations
+        self.relations = {}
+        self.mood = None
 
         #voc
         self.voc = v.dic
@@ -168,6 +173,7 @@ class Human():
 
         self.element_colli = None
         self.environ = []
+        self.hum_env = []
 
         # track of time
         self.time_last_move = 0
@@ -237,17 +243,35 @@ class Human():
             self.old_env = self.environ
             self.environ = o2.NY.CITY[self.street].environ(self)
 
-            hum_dans_env = len(list(filter(lambda x:x.get('type')=='hum',self.environ)))
-            hum_dans_oldenv = len(list(filter(lambda x:x.get('type')=='hum',self.old_env)))
+            self.hum_oldenv = self.hum_env
+            self.hum_env = list(filter(lambda x:x.get('type')=='hum',self.environ))
+            self.hum_env = list(map(lambda x:x.get('hum'),self.hum_env))
+            #hum_oldenv = list(filter(lambda x:x.get('type')=='hum',old_env))
+            #hum_oldenv = list(map(lambda x:x.get('hum'),hum_oldenv))
 
-            if hum_dans_env == 1 and hum_dans_oldenv>1:
-                self.empty_dial()
+            nb_hum_env = len(self.hum_env)
+            nb_hum_oldenv = len(self.hum_oldenv)
 
-                dial = { 't':time.time() , 'delay':10 , 'meaning':'parle seul' , 'imp':30 ,'id':'dial_parle_seul'}
-                self.add_dial(dial)
+            for hum in self.hum_env:
+                if hum not in self.relations:
+                    self.relations[hum] = {'t':1,'last':-1,'feel':r.randint(-100,100)}
 
-            # si y'a des nouveaux gens qui arrivent
-            if hum_dans_env > 1 and hum_dans_env > hum_dans_oldenv:
+            if nb_hum_oldenv > nb_hum_env:
+                # si y'a des gens qui partent
+                if nb_hum_env == 0:
+                    # si on vient d'etre seul
+                    self.empty_dial()
+
+                    dial = { 't':time.time() , 'delay':10 , 'meaning':'parle seul' , 'imp':30 ,'id':'dial_parle_seul'}
+                    self.add_dial(dial)
+
+                t = time.time()
+                for hum in self.hum_oldenv:
+                    if hum not in self.hum_env:
+                        self.relations[hum]['last'] = t
+
+            elif nb_hum_env > 0 and nb_hum_env > nb_hum_oldenv:
+                # si y'a des nouveaux gens qui arrivent
                 self.del_dial('dial_parle_seul')
                 dial = { 't':time.time() , 'delay':None , 'meaning':'bonjour' , 'imp':30 ,'id':'dial_bjr'}
                 self.add_dial(dial)
@@ -255,6 +279,13 @@ class Human():
                 self.add_dial(dial)
                 dial = { 't':time.time() , 'delay':None , 'meaning':'au revoir' , 'imp':20 ,'id':'dial_bye'}
                 self.add_dial(dial)
+
+    def get_feel(self,hum):
+
+        if hum in self.relations:
+            #print(self.relations[hum]['feel'])
+            return self.relations[hum]['feel']
+
 
     ##
 
@@ -484,6 +515,7 @@ class Human():
             for hum in list(filter( lambda x:x.get('type') == 'hum' , self.environ)):
                 hum = hum.get('hum')
                 hum.listen(self,exp)
+            self.listen(self,exp)
 
     def rsay(self,type):
         exp = self.voc.exp(type)
@@ -615,6 +647,8 @@ class Human():
             g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
             #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
 
+
+
         #listening
         todel = []
         for voice in self.ear:
@@ -631,6 +665,8 @@ class Human():
             self.selfear.remove(voice)
 
         deleted_acts_dials = False
+
+
 
         #acting
         todel = []
@@ -652,9 +688,27 @@ class Human():
         if deleted_acts_dials and self.roll != None:
             self.roll.recreate()
 
+
+        #self.relations.sort(key=lambda x:x.get('last'),reverse=True)
+
+        #relations
+        for hum in self.relations:
+            if hum in self.hum_env:
+                self.relations[hum]['t'] += 1
+                self.relations[hum]['feel'] += 1
+                if self.relations[hum]['feel'] > 100 :
+                    self.relations[hum]['feel'] = 100
+            else:
+                self.relations[hum]['t'] -= 0.1
+                self.relations[hum]['feel'] -= 0.1
+                if self.relations[hum]['feel'] < -100 :
+                    self.relations[hum]['feel'] = -100
+
+
+
         if self.name == 'Delta':
             pass
-            #print(list(map(lambda x:x.get('exp'),self.acts))+list(map(lambda x:x.get('meaning'),self.dials)))
+            #print()
 
     ## hoover
 
@@ -1083,6 +1137,7 @@ class Perso(Rappeur):
         self.sonhud = o.SonHUD(self)
 
         self.bigmap = o.Map(self)
+        self.relhud = o.RelHUD(self)
 
         self.load()
 
@@ -1195,14 +1250,10 @@ class Perso(Rappeur):
         pos = g.lman.labels[self.hud.labids['coin_lab']].x +r.randint(-2,2),g.lman.labels[self.hud.labids['coin_lab']].y+20
         g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
-    """def update(self):
+    def update(self):
 
         super(Perso,self).update()
-
-        # addstream ...
-        nb_streams = 0
-        for son in self.disco:
-            nb_streams += son.streams"""
+        self.relhud.update()
 
     ## colli hoover
 

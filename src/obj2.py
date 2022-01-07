@@ -180,8 +180,8 @@ class Street():
 
         elems = []
         for i in range(il,ir+1):
-            #if self.catalog[i].get('nom') != elem.name:
-            elems.append(self.catalog[i])
+            if self.catalog[i].get('nom') != elem.name:
+                elems.append(self.catalog[i])
         return elems
 
     ###

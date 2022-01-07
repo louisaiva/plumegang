@@ -50,18 +50,6 @@
 		-labels tu récup 50% voir moins (ça dépend de ton contrat, encore une fois plus tu paye cher plus tu gagnes)
 		-distrokid tu gagnes 100%
 
-    	pour publier un son tu as 2 moyens différents:
-    	-soit tu passes par un label (coute cher)
-    	-soit tu vas voir distrokid (coute pas cher)
-
-    	les labels c'est bien parce que tu auras la possibilité de choisir des plans de com : plus tu payes cher plus tu auras de la promo
-    				-> on peut voir afficher dans la rue des affiches "delta nouvel ep" et meme sur les batiments au loin
-    	distrokid ça fait le taf (tu paye genre 2 euros pour mettre en ligne 1 son) mais t'as aucune com
-
-    	c'est auprès de ces 2 bails que tu vas pouvoir récup ta thune après en fonction de tes streams:
-    		-labels tu récup 50% voir moins (ça dépend de ton contrat, encore une fois plus tu paye cher plus tu gagnes)
-    		-distrokid tu gagnes 100%
-
 # animations mdr
 
   alors deja finir les putains de 3 sprites pour le skin du poto alphonse,

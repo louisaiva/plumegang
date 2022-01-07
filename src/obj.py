@@ -11,6 +11,7 @@ from src import graphic as g
 from src import names as n
 from src import obj2 as o2
 from src import perso as p
+from collections import OrderedDict
 
 """""""""""""""""""""""""""""""""""
  INIT
@@ -442,7 +443,7 @@ class Label():
         exp = rapper.name+' a signé chez '+self.name+' !'
         g.pman.alert(exp)
 
-    def release(self,son,perc=1):
+    def release(self,son,perc=0.5):
         if son not in self.sons:
             rapper = son.author
             self.sons[rapper][son] = perc
@@ -474,6 +475,9 @@ class Distrokid(Label):
         # 0.1 dollar le stream
         self.daily_abo = 1
         # 1 euro l'abonnement par jour à distro
+
+    def release(self,son):
+        super(Distrokid,self).releas(son,1)
 
     def update(self):
         for rapper in self.rappeurs:
@@ -852,20 +856,38 @@ class HUD():
             textid = g.tman.addCol(*box.wh,c[color])
         self.addSpr(key,textid,box.xy,group=group)
 
-    def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_name=0,font_size=30,anchor=('left','bottom'),color=(255,255,255,255)):
+    def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_name=0,font_size=30,anchor=('left','bottom'),color=(255,255,255,255),replace=True):
 
+        if replace:
+            if key in self.labids:
+                g.lman.delete(self.labids[key])
+
+            if group == None:
+                group = self.group
+
+            self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_name=font_name,font_size=font_size,anchor=anchor,color=color,vis=self.visible)
+
+        elif key not in self.labids:
+            if group == None:
+                group = self.group
+
+            self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_name=font_name,font_size=font_size,anchor=anchor,color=color,vis=self.visible)
+
+    def delLab(self,key):
         if key in self.labids:
             g.lman.delete(self.labids[key])
+            self.labids.pop(key)
 
-        if group == None:
-            group = self.group
-
-        self.labids[key] = g.lman.addLab(str(contenu),xy_pos,group=group,font_name=font_name,font_size=font_size,anchor=anchor,color=color,vis=self.visible)
-
-        #print(xy_pos)
+    def delSpr(self,key):
+        if key in self.sprids:
+            g.sman.delete(self.sprids[key])
+            self.sprids.pop(key)
 
     def modifySpr(self,key,pos=None,scale=None):
         g.sman.modify(self.sprids[key],pos,scale)
+
+    def modifyLab(self,key,pos=None,col=None):
+        g.lman.modify(self.labids[key],pos,color=col)
 
     def unhide(self,hide=False):
 
@@ -1162,6 +1184,134 @@ class PlumHUD(HUD):
 
         super(PlumHUD,self).delete()
         self.ui.delete()
+
+class RelHUD(HUD):
+
+    def __init__(self,hum):
+
+        super(RelHUD, self).__init__(group='hud2',name='relhud',vis=False)
+
+        self.hum = hum
+
+        cx,cy=g.scr.c
+        self.box = box(cx-300,cy-450,600,900)
+
+        self.pad = 25
+        self.padding = 50
+
+        col = (*c['delta_blue'][:3],170)
+        self.addCol('bg',self.box,color=col,group='hud2-1')
+        self.addLab('title','relations of '+self.hum.name,(self.box.cx,self.box.fy+self.padding),font_name=1,font_size=20,anchor=('center','center'))
+
+    def update(self):
+
+        if self.visible:
+
+            max_aff = 10
+
+            aff = 0
+            y = self.box.fy-(3/4)*self.padding
+            xname = self.box.cx - self.box.w/4
+            xthg = self.box.cx + self.box.w/4
+
+            size_max_bar = self.box.w/2
+
+            ## EN 1er on affiche les humains dans l'environnement
+            for hum in self.hum.hum_env:
+                if aff <= max_aff:
+                    if hum.id not in self.labids :
+                        self.addLab(hum.id,hum.name,(xname,y),font_size=20,anchor=('center','center'),replace=False)
+                        self.addLab(hum.id+'o','o',(xthg,y),anchor=('center','center'),replace=False,color=c['green'])
+
+                        y -= self.pad
+
+                        feel = self.hum.get_feel(hum)
+                        size_fill = (abs(feel)*size_max_bar/2)/100
+                        if feel >=0:
+                            xfeel = self.box.cx
+                        else:
+                            xfeel = self.box.cx-size_fill
+
+                        self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
+                        self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                    else:
+                        self.modifyLab(hum.id,(xname,y),(255,255,255,255))
+                        self.modifyLab(hum.id+'o',(xthg,y),c['green'])
+                        y -= self.pad
+
+                        feel = self.hum.get_feel(hum)
+                        size_fill = (abs(feel)*size_max_bar/2)/100
+                        if feel >=0:
+                            xfeel = self.box.cx
+                        else:
+                            xfeel = self.box.cx-size_fill
+
+                        self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
+
+
+                    y -= self.padding
+                    aff +=1
+
+                elif hum.id in self.labids :
+                    self.delLab(hum.id)
+                    self.delLab(hum.id+'o')
+                    self.delSpr(hum.id+'feel')
+
+
+            # on laisse une ptite place vide pour bien voir
+            if len(self.hum.hum_env) > 0:
+                y -= self.padding+self.pad
+            else:
+                max_aff+=1
+
+            col = (255,255,255,170)
+            colred = (*c['red'][:3],170)
+
+            ## ENsuite ceux qui n'y sont pas en faded
+            #od = OrderedDict(self.hum.relations.items())
+            #print(self.hum.relations.items())
+            od = OrderedDict(sorted(self.hum.relations.items(), key=lambda t: t[1]['last'],reverse=True))
+            for hum in od:
+                if hum not in self.hum.hum_env:
+                    if aff <= max_aff:
+                        #name + time elapsed
+                        if hum.id not in self.labids :
+                            self.addLab(hum.id,hum.name,(xname,y),font_size=20,anchor=('center','center'),replace=False,color=col)
+                            self.addLab(hum.id+'o','o',(xthg,y),anchor=('center','center'),replace=False,color=colred)
+
+                            y -= self.pad
+
+                            feel = self.hum.get_feel(hum)
+                            size_fill = (abs(feel)*size_max_bar/2)/100
+                            if feel >=0:
+                                xfeel = self.box.cx
+                            else:
+                                xfeel = self.box.cx-size_fill
+
+                            self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
+                            self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                        else:
+                            self.modifyLab(hum.id,(xname,y),col)
+                            self.modifyLab(hum.id+'o',(xthg,y),colred)
+                            y -= self.pad
+
+                            feel = self.hum.get_feel(hum)
+                            size_fill = (abs(feel)*size_max_bar/2)/100
+                            if feel >=0:
+                                xfeel = self.box.cx
+                            else:
+                                xfeel = self.box.cx-size_fill
+
+                            self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
+
+                        y -= self.padding
+                        aff +=1
+
+                    elif hum.id in self.labids :
+                        self.delLab(hum.id)
+                        self.delLab(hum.id+'o')
+                        self.delSpr(hum.id+'feel')
+
 
 class SonHUD(HUD):
 
@@ -1956,6 +2106,7 @@ class InventHUD(HUD):
                 g.lman.unhide(self.detaids[fam],True)
             else:
                 g.sman.unhide(self.detaids[fam],True)
+
 
 
 """""""""""""""""""""""""""""""""""

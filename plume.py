@@ -456,6 +456,9 @@ class App():
                 elif symbol == key.M:
                     self.perso.bigmap.rollhide()
 
+                elif symbol == key.TAB:
+                    self.perso.relhud.unhide()
+
                 elif symbol == key.K:
                     pass
 
@@ -491,6 +494,9 @@ class App():
 
             if symbol == key.F and self.perso.roll != None:
                 self.perso.unroll()
+
+            elif symbol == key.TAB:
+                self.perso.relhud.unhide(True)
 
 
     def on_close(self):
@@ -761,11 +767,14 @@ class App():
                     item.move(x_r,y_r)
 
                 #--# persos
+                ## update catalog:
+                o2.NY.CITY[self.perso.street].update_catalog(self.perso)
                 #print(o2.NY.CITY[self.perso.street].humans)
                 for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
                     x_r = hum.gex + g.Cam.X + g.GodCam.X
                     y_r = hum.gey + g.Cam.Y
                     g.sman.modify(hum.skin_id,(x_r,y_r))
+                    hum.update_env()
                     hum.update_lab()
                     hum.update()
                 self.perso.check_colli(o2.NY.CITY[self.perso.street])
@@ -824,11 +833,6 @@ class App():
             self.perso.hud.update()
             self.perso.bigmap.update()
             #print(self.perso.gex,self.perso.gey)
-
-            ## update catalog:
-            o2.NY.CITY[self.perso.street].update_catalog(self.perso)
-            for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
-                hum.update_env()
 
             #print(list(map(lambda x:x.get('nom'),o2.NY.CITY[self.perso.street].catalog)))
             #print(list(map(lambda x:int(x.get('x')),self.perso.environ)))
