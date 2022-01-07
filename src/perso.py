@@ -68,7 +68,7 @@ class Distroguy(Metier):
             if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
                 if o.distro.caisse[hum] > 0:
                     exp = 'tu as ' + trunc(o.distro.caisse[hum],2) + ' $ de côté, tu les veux ?'
-                    self.act_cashback(hum)
+                    self.act_cashback(hum,o.distro.caisse[hum])
                 elif o.distro.caisse[hum] < 0:
                     exp = 'mdr non tu nous dois '+str(int(-o.distro.caisse[hum]))+ ' balles batard'
                 else:
@@ -114,10 +114,11 @@ class Distroguy(Metier):
 
     ## distro
 
-    def act_cashback(self,rapper):
+    def act_cashback(self,rapper,qté):
 
         rapper.del_dial('distroguy_dial_thune')
         act = self.acts['distroguy_act_thune']
+        act['exp'] = 'prendre ('+trunc(qté,2)+'$)'
         act['param'] = [rapper]
         act['t'] = time.time()
         rapper.add_act(act)
@@ -738,13 +739,13 @@ class Fan(Human):
         if son.cred >= self.cred_range[0] and son.cred <= self.cred_range[1]:
             if son not in self.likes:
                 self.likes[son] = True
-                if not self in son.perso.fans:
+                if not self in son.author.fans:
                     #print(self.name + ' aime ce son !')
 
-                    if direct: son.perso.addfan(self)
+                    if direct: son.author.addfan(self)
                     else: return self
-                if not son.perso in self.artists:
-                    self.artists.append(son.perso)
+                if not son.author in self.artists:
+                    self.artists.append(son.author)
 
                 else:
                     #print(self.name + ' aime deja un autre son !')
@@ -936,9 +937,9 @@ class Rappeur(Fan):
             self.plume.delete()
         self.plume = plume
 
-    def release_son(self,son,fans,day):
+    def release_son(self,son,fans,day,label):
         self.disco.append(son)
-        son.release(self,day)
+        son.release(self,day,label)
 
         aa = o.a(son.quality)
         x = (son.quality-self.qua_score) * self.nb_fans
@@ -1145,11 +1146,11 @@ class Perso(Rappeur):
         pos = self.box.cx +r.randint(-10,10),self.box.fy
         g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=True)
 
-    def release_son(self,son,fans,day):
-        super(Perso,self).release_son(son,fans,day)
+    def release_son(self,son,fans,day,label):
+        super(Perso,self).release_son(son,fans,day,label)
         self.credhud.update()
 
-    def auto_release(self):
+    def auto_release(self,label):
 
         choiced_son = None
         for son in self.invhud.inventory['son']:
@@ -1157,7 +1158,7 @@ class Perso(Rappeur):
                 choiced_son = son.item
                 break
         if choiced_son != None:
-            self.release_son(choiced_son,BOTS,g.Cyc.day)
+            self.release_son(choiced_son,BOTS,g.Cyc.day,label)
 
     ## particles
 
@@ -1179,6 +1180,12 @@ class Perso(Rappeur):
         pos = g.lman.labels[self.hud.labids['stream_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['stream_lab']].y+20
         g.pman.addLabPart(s,pos,color=c['lightblue'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
+    def addstreams(self,nb):
+        super(Perso,self).addstream()
+        s = '+'+str(nb)
+        pos = g.lman.labels[self.hud.labids['stream_lab']].x +r.randint(-2,2) ,g.lman.labels[self.hud.labids['stream_lab']].y+20
+        g.pman.addLabPart(s,pos,color=c['lightgreen'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
+
     def add_money(self,qté):
         super(Perso,self).add_money(qté)
         if qté < 0:
@@ -1187,6 +1194,15 @@ class Perso(Rappeur):
             s='+' + convert_huge_nb(qté)
         pos = g.lman.labels[self.hud.labids['coin_lab']].x +r.randint(-2,2),g.lman.labels[self.hud.labids['coin_lab']].y+20
         g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
+
+    """def update(self):
+
+        super(Perso,self).update()
+
+        # addstream ...
+        nb_streams = 0
+        for son in self.disco:
+            nb_streams += son.streams"""
 
     ## colli hoover
 

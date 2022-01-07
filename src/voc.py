@@ -26,7 +26,8 @@ class Dico():
         self.roll_exp = ['oui','non','yo','~','file ta thune']
 
     def exp(self,sign='oui',cred=0):
-        return r.choice(self.voc[sign])
+        if sign in self.voc:
+            return r.choice(self.voc[sign])
 
     def omg_c_delta(self,nom='delta'):
         text = r.choice(self.voc['omgcdelta'])

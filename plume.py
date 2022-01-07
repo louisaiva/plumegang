@@ -177,7 +177,7 @@ class App():
         zones = []
         #zones.append(o.Ordi(1990,150,self.perso))
         #zones.append(o.Studio(2640,225))
-        zones.append(o.Releaser(1670,210))
+        zones.append(o.SimpleReleaser(1670,210,o.distro))
         #zones.append(o.Distroguy(760,225))
         o2.NY.CITY['distrokid'].assign_zones(zones)
 

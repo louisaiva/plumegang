@@ -387,14 +387,17 @@ class Son():
 
         return qua
 
-    def release(self,perso,day):
+    def release(self,perso,day,label):
         self._released = True
-        self.perso = perso
+        self.author = perso
         self.release_date = day
+        self.label = label
+        self.label.release(self)
 
     def stream(self):
         self.streams+=1
-        self.perso.addstream()
+        self.author.addstream()
+        self.label.stream(self)
 
     def __lt__(self, other):
          return self.quality < other.quality
@@ -412,45 +415,71 @@ class Son():
 class Label():
 
     def __init__(self,nom='DefJam'):
-        self.name = nom
 
-class Distrokid(Label):
+        self.name = nom  #name of the label
 
-    def __init__(self):
-        super(Distrokid,self).__init__('Distrokid')
-        self.rappeurs = []
+        self.rappeurs = [] #each rapper workin with this label
+
         self.caisse = {}
+        self.sons = {}
         self.streams = {}
+        self.dailystreams = {}
 
-        self.price_stream = 1
-        # 0.1 dollar le stream
-        self.daily_abo = 1
-        # 1 euro l'abonnement par jour à distro
+        self.thune = 0
+
+        ## argent gagné par stream :
+        ## caisse = nb_streams * prix_stream * pourcentage_pour_artiste
+        self.stream_price = 1 # prix du stream
 
     def sign(self,rapper):
         self.rappeurs.append(rapper)
         self.caisse[rapper] = 0
-        self.streams[rapper] = 0
+        self.streams[rapper] = {}
+        self.sons[rapper] = {}
+        self.dailystreams[rapper] = 0
 
-        print(rapper.name,'a signé chez distro !')
-        exp = rapper.name+' a signé chez distro !'
+        print(rapper.name,'a signé chez',self.name,'!')
+        exp = rapper.name+' a signé chez '+self.name+' !'
         g.pman.alert(exp)
 
-    def update(self):
-        for rapper in self.rappeurs:
-            oldstream = self.streams[rapper]
-            daystream = rapper.nb_streams - oldstream
-            self.streams[rapper] = rapper.nb_streams
-            self.caisse[rapper] += daystream*self.price_stream
-            self.caisse[rapper] -= self.daily_abo
-            self.caisse[rapper] = float(f'{self.caisse[rapper]:.2f}')
-            print(rapper.name,':\n\t','daily streams :',daystream,'\n\t','caisse :',self.caisse[rapper])
+    def release(self,son,perc=1):
+        if son not in self.sons:
+            rapper = son.author
+            self.sons[rapper][son] = perc
+            self.streams[rapper][son] = 0
+
+    def stream(self,son):
+        self.streams[son.author][son] += 1
+        self.dailystreams[son.author] += 1
+        self.caisse[son.author] += self.price_stream*self.sons[son.author][son]
+        self.thune += (1-self.sons[son.author][son])*self.price_stream
 
     def cashback(self,rapper):
         if rapper in self.rappeurs and self.caisse[rapper] > 0:
             rapper.add_money(self.caisse[rapper])
             self.caisse[rapper] = 0
 
+    def update(self):
+        # changer dans distrokid aussi
+        for rapper in self.rappeurs:
+            print(rapper.name,':\n\t','daily streams :',self.dailystreams[rapper],'\n\t','caisse :',self.caisse[rapper])
+            self.dailystreams[rapper] = 0
+
+class Distrokid(Label):
+
+    def __init__(self):
+        super(Distrokid,self).__init__('Distrokid')
+
+        self.price_stream = 1
+        # 0.1 dollar le stream
+        self.daily_abo = 1
+        # 1 euro l'abonnement par jour à distro
+
+    def update(self):
+        for rapper in self.rappeurs:
+            self.caisse[rapper] -= self.daily_abo
+            print(rapper.name,':\n\t','daily streams :',self.dailystreams[rapper],'\n\t','caisse :',self.caisse[rapper])
+            self.dailystreams[rapper] = 0
 
 distro = Distrokid()
 
@@ -572,14 +601,16 @@ class Market(Zone_ELEM):
         super(Market,self).activate(perso)
         perso.rplum()
 
-class Releaser(Zone_ELEM):
+class SimpleReleaser(Zone_ELEM):
 
-    def __init__(self,x,y):
-        super(Releaser,self).__init__(box(x,y,300,320),'releaser','pink','mid',True,False)
+    def __init__(self,x,y,label):
+        super(SimpleReleaser,self).__init__(box(x,y,300,320),'releaser','pink','mid',True,False)
+        self.LABEL = label
 
     def activate(self,perso):
-        super(Releaser,self).activate(perso)
-        perso.auto_release()
+        super(SimpleReleaser,self).activate(perso)
+        if perso in self.LABEL.rappeurs:
+            perso.auto_release(self.LABEL)
 
 class Porte(Zone_ELEM):
 
