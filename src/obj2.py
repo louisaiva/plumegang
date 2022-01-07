@@ -138,13 +138,13 @@ class Street():
     def update_catalog(self,perso=None):
         self.catalog = []
         for zone in self.zones:
-            self.catalog.append( {'x':self.zones[zone].box.cx,'y':self.zones[zone].box.cy,'type':'zone','nom':self.zones[zone].name} )
+            self.catalog.append( {'x':self.zones[zone].box.cx,'y':self.zones[zone].box.cy,'type':'zone','nom':self.zones[zone].name,'elem':self.zones[zone]} )
         for hum in self.humans:
-            self.catalog.append( {'x':hum.gex,'y':hum.gey,'type':'hum','nom':hum.name,'hum':hum} )
+            self.catalog.append( {'x':hum.gex,'y':hum.gey,'type':'hum','nom':hum.name,'elem':hum} )
         for item in self.items:
-            self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name} )
+            self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name,'elem':item} )
         if perso != None:
-            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name,'hum':perso} )
+            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name,'elem':perso} )
 
         self.catalog.sort(key=lambda x:x.get('x'))
 

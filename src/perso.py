@@ -245,9 +245,9 @@ class Human():
 
             self.hum_oldenv = self.hum_env
             self.hum_env = list(filter(lambda x:x.get('type')=='hum',self.environ))
-            self.hum_env = list(map(lambda x:x.get('hum'),self.hum_env))
+            self.hum_env = list(map(lambda x:x.get('elem'),self.hum_env))
             #hum_oldenv = list(filter(lambda x:x.get('type')=='hum',old_env))
-            #hum_oldenv = list(map(lambda x:x.get('hum'),hum_oldenv))
+            #hum_oldenv = list(map(lambda x:x.get('elem'),hum_oldenv))
 
             nb_hum_env = len(self.hum_env)
             nb_hum_oldenv = len(self.hum_oldenv)
@@ -279,6 +279,7 @@ class Human():
                 self.add_dial(dial)
                 dial = { 't':time.time() , 'delay':None , 'meaning':'au revoir' , 'imp':20 ,'id':'dial_bye'}
                 self.add_dial(dial)
+        self.check_colli(o2.NY.CITY[self.street])
 
     def get_feel(self,hum):
 
@@ -286,8 +287,45 @@ class Human():
             #print(self.relations[hum]['feel'])
             return self.relations[hum]['feel']
 
+    def check_colli(self,street):
 
+        ## CHANGER DANS PERSO
+        collis = []
+
+        for elem in list(map(lambda x:x.get('elem'),self.environ)):
+            if collisionAB(self.realbox,elem.realbox) :
+                collis.append(elem)
+
+        if len(collis) > 0:
+            collis.sort(key=lambda x:x.gey)
+            #print(list(map(lambda x:x.name,collis)))
+
+            y,yf = street.yyf
+            d = yf-y
+            yranges = [y]
+            for i in range(len(collis)):
+                yranges.append(y+(i+1)*(d/len(collis)))
+            #print(yranges)
+
+            k=0
+            for i in range(len(collis)):
+                if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
+                    k=i
+            self.element_colli = collis[k]
+        else:
+            self.element_colli = None
     ##
+
+    def hit(self):
+        self.do('hit')
+        if self.element_colli != None:
+            if type(self.element_colli) in [Human,Fan,Rappeur,Perso,Guy]:
+                if self.element_colli.alive:
+                    self.element_colli.do('hit')
+                    self.be_hit(self.element_colli)
+                self.element_colli.be_hit(self)
+            else:
+                self.element_colli.activate(self)
 
     def do(self,action='nothing'):
 
@@ -295,6 +333,7 @@ class Human():
 
             if action == 'nothing':
                 self.doing = ['nothing']
+                #print(self.name,'do notjing')
 
             elif action == 'hit':
                 self.doing.insert(0, action)
@@ -333,14 +372,12 @@ class Human():
             if time.time()-self.time_last_move > 0.2:
                 self.do()
 
-    def move(self,dir,street,run=False):
+    def move(self,dir,street,speed=None):
 
         maxx = street.xxf
         maxy = street.yyf
 
-        if run:
-            speed = self.runspeed
-        else:
+        if not speed:
             speed = self.speed
 
         if 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
@@ -377,7 +414,7 @@ class Human():
                 self.update()
 
                 self.time_last_move = time.time()
-            elif run:
+            elif speed > self.speed:
                 self.move(dir,street)
 
     def tp(self,x=None,y=None,street=None):
@@ -494,6 +531,57 @@ class Human():
         if reached != (True,True) and self.alive and not 'nothing' in self.doing:
             g.bertran.schedule_once(self.move_until,0.01,objective)
 
+    def follow_hum(self,dt,target,strengh=1):
+        # the more strengh is high, the more the hum will follow the target
+
+        reached = False,False
+        x,y = target.gex,target.gey
+        speed = strengh*(self.speed/10)
+        if speed > self.runspeed:
+            speed = self.runspeed
+
+        #x
+        if self.gex + self.speed >= x and self.gex <= x:
+            reached = True,reached[1]
+        elif self.gex > x:
+            self.move('L',o2.NY.CITY[self.street],speed)
+        elif self.gex < x:
+            self.move('R',o2.NY.CITY[self.street],speed)
+
+        #y
+        if self.gey + self.speed >= y and self.gey <= y:
+            reached = reached[0],True
+        elif self.gey > y:
+            self.move('down',o2.NY.CITY[self.street])
+        elif self.gey < y:
+            self.move('up',o2.NY.CITY[self.street])
+
+        if reached != (True,True) and self.alive and not 'nothing' in self.doing:
+            g.bertran.schedule_once(self.follow_hum,0.01,target,strengh)
+
+    def attack_hum(self,dt,target):
+
+        x,y = target.gex,target.gey
+        speed = self.speed
+
+        #x
+        """if hum
+        elif self.gex > x:
+            self.move('L',o2.NY.CITY[self.street],speed)
+        elif self.gex < x:
+            self.move('R',o2.NY.CITY[self.street],speed)
+
+        #y
+        if self.gey + self.speed >= y and self.gey <= y:
+            reached = reached[0],True
+        elif self.gey > y:
+            self.move('down',o2.NY.CITY[self.street])
+        elif self.gey < y:
+            self.move('up',o2.NY.CITY[self.street])
+
+        if reached != (True,True) and self.alive and not 'nothing' in self.doing:
+            g.bertran.schedule_once(self.follow_hum,0.01,target,strengh)"""
+
     ## SPEAKING
 
     def say(self,exp):
@@ -513,7 +601,7 @@ class Human():
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
             for hum in list(filter( lambda x:x.get('type') == 'hum' , self.environ)):
-                hum = hum.get('hum')
+                hum = hum.get('elem')
                 hum.listen(self,exp)
             self.listen(self,exp)
 
@@ -698,8 +786,6 @@ class Human():
             else:
                 self.relations[hum]['t'] -= 0.1
 
-
-
         if self.name == 'Delta':
             pass
             #print()
@@ -819,10 +905,10 @@ class Fan(Human):
         #print( list(map( lambda x:x.get('nom'),   list(filter(lambda x:x.get('type')=='hum',self.environ))  )) )
         if self.artists != [] and not self.keyids_voc:
             #print(self.name,'est fan de',list(map(lambda x:x.name,self.artists)))
-            for hum in list(filter(lambda x:x.get('type')=='hum',self.environ)):
+            for hum in self.hum_env:
                 #print(hum.get('nom'),list(map(lambda x:x.name,self.artists)))
-                if hum.get('nom') in list(map(lambda x:x.name,self.artists)):
-                    exp = self.voc.omg_c_delta(hum.get('nom'))
+                if hum.name in list(map(lambda x:x.name,self.artists)):
+                    exp = self.voc.omg_c_delta(hum.name)
                     print(self.name,':',exp)
                     self.say(exp)
 
@@ -881,22 +967,22 @@ class Guy(Fan):
     def update_env(self):
         super(Guy,self).update_env()
 
-        tab_hum = list(filter(lambda x:x.get('type')=='hum',self.environ))
-        tab_hum = list(map(lambda x:x.get('hum'),tab_hum))
+        """tab_hum = list(filter(lambda x:x.get('type')=='hum',self.environ))
+        tab_hum = list(map(lambda x:x.get('elem'),tab_hum))
         tab_hum_old = list(filter(lambda x:x.get('type')=='hum',self.old_env))
-        tab_hum_old = list(map(lambda x:x.get('hum'),tab_hum_old))
+        tab_hum_old = list(map(lambda x:x.get('elem'),tab_hum_old))"""
 
         #print(list(map(lambda x:x.get('nom'),tab_hum)),list(map(lambda x:x.get('nom'),tab_hum_old)))
 
         ## RAJOUTE LES DIALS DU METIER AUX nouveaux VENUS
-        for hum in tab_hum:
-            if hum not in tab_hum_old:
+        for hum in self.hum_env:
+            if hum not in self.hum_oldenv:
                 if hum != self:
                     self.metier.add_arrival_dials(hum)
 
         ## ENLEVE LES DIALS DU METIER A CEUX QUI SONT PARTI
-        for hum in tab_hum_old:
-            if hum not in tab_hum:
+        for hum in self.hum_oldenv:
+            if hum not in self.hum_env:
                 self.metier.del_arrival_dials(hum)
 
     def answer(self,voice):
@@ -1015,19 +1101,14 @@ class Rappeur(Fan):
 
         super(Rappeur,self).update_env()
 
-        tab_hum = list(filter(lambda x:x.get('type')=='hum',self.environ))
-        tab_hum = list(map(lambda x:x.get('hum'),tab_hum))
-        tab_hum_old = list(filter(lambda x:x.get('type')=='hum',self.old_env))
-        tab_hum_old = list(map(lambda x:x.get('hum'),tab_hum_old))
-
-        for hum in tab_hum:
-            if hum not in tab_hum_old:
+        for hum in self.hum_env:
+            if hum not in self.hum_oldenv:
                 if hum != self and hum in self.fans:
                     dial = { 't':time.time() , 'delay':None , 'meaning':'omgcdelta' , 'imp':60 ,'id':'dial_omgcdelta'}
                     hum.add_dial(dial)
 
-        for hum in tab_hum_old:
-            if hum not in tab_hum:
+        for hum in self.hum_oldenv:
+            if hum not in self.hum_env:
                 if hum in self.fans:
                     hum.del_dial('dial_omgcdelta')
 
@@ -1258,25 +1339,16 @@ class Perso(Rappeur):
 
     ## colli hoover
 
-    def move(self,dir,street,run=False):
-        super(Perso,self).move(dir,street,run)
+    def move(self,dir,street,speed=None):
+        super(Perso,self).move(dir,street,speed)
         self.check_colli(street)
 
     def check_colli(self,street):
-
         collis = []
 
-        for hum in street.humans:
-            if collisionAB(self.realbox,hum.realbox) :
-                collis.append(hum)
-
-        for elem in street.zones:
-            if collisionAB(self.realbox,street.zones[elem].realbox) :
-                collis.append(street.zones[elem])
-
-        for item in street.items:
-            if collisionAB(self.realbox,item.realbox) :
-                collis.append(item)
+        for elem in list(map(lambda x:x.get('elem'),self.environ)):
+            if collisionAB(self.realbox,elem.realbox) :
+                collis.append(elem)
 
         if len(collis) > 0:
             collis.sort(key=lambda x:x.gey)
@@ -1294,7 +1366,6 @@ class Perso(Rappeur):
                 if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
                     k=i
             colli_elem = collis[k]
-
         else:
             colli_elem = None
 

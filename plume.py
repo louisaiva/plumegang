@@ -425,23 +425,7 @@ class App():
                     self.perso.drop_plume()
 
                 elif symbol == key.E:
-                    if self.perso.element_colli != None:
-
-                        if type(self.perso.element_colli) in [p.Human,p.Fan,p.Rappeur,p.Perso,p.Guy]:
-                            if self.perso.element_colli.alive:
-                                self.perso.element_colli.do('hit')
-                                self.perso.be_hit(self.perso.element_colli)
-                            self.perso.do('hit')
-                            self.perso.element_colli.be_hit(self.perso)
-                        else:
-                            if not self.perso.element_colli.longpress:
-                                if type(self.perso.element_colli) == o.Porte:
-                                    self.perso.element_colli.activate(self.perso)
-                                else:
-                                    self.perso.element_colli.activate(self.perso)
-                                self.perso.do('hit')
-                    else:
-                        self.perso.do('hit')
+                    self.perso.hit()
 
                 elif symbol == key.X:
                     self.perso.hud.rollhide()
@@ -465,6 +449,7 @@ class App():
 
                 elif symbol == key.K:
                     self.perso.minirelhud.rollhide()
+                    self.perso.poto.follow_hum(0,self.perso,2)
 
         elif self.action == 'pause':
 
@@ -682,27 +667,20 @@ class App():
 
             if not self.gameover:
 
-                run = False
+                speed = self.perso.speed
                 if self.keys[key.LSHIFT]:
-                    run = True
+                    speed = self.perso.runspeed
 
                 ## moving perso
                 if self.keys[key.Q]:
-                    self.perso.move('L',o2.NY.CITY[self.perso.street],run)
+                    self.perso.move('L',o2.NY.CITY[self.perso.street],speed)
                 if self.keys[key.D]:
-                    self.perso.move('R',o2.NY.CITY[self.perso.street],run)
+                    self.perso.move('R',o2.NY.CITY[self.perso.street],speed)
 
                 if self.keys[key.Z]:
                     self.perso.move('up',o2.NY.CITY[self.perso.street])
                 if self.keys[key.S]:
                     self.perso.move('down',o2.NY.CITY[self.perso.street])
-
-                ## moving freeze Corleone
-                if self.perso.street == p.BOTS[0].street:
-                    if self.keys[key.K]:
-                        p.BOTS[0].move('L',o2.NY.CITY[self.perso.street])
-                    if self.keys[key.M]:
-                        p.BOTS[0].move('R',o2.NY.CITY[self.perso.street])
 
                 if self.keys[key.E]:
                     if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso,p.Guy]:
@@ -781,7 +759,7 @@ class App():
                     hum.update_env()
                     hum.update_lab()
                     hum.update()
-                self.perso.check_colli(o2.NY.CITY[self.perso.street])
+                #self.perso.check_colli(o2.NY.CITY[self.perso.street])
 
 
                 #--# bg
@@ -830,21 +808,16 @@ class App():
             ## perso
 
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
-                hum.being_bot()
+                if type(hum) != p.Perso:
+                    hum.being_bot()
                 hum.check_do()
-                #hum.update()
+
             g.lman.set_text(self.lab_doing,self.perso.doing)
             self.perso.hud.update()
             self.perso.bigmap.update()
-            #print(self.perso.gex,self.perso.gey)
 
-            #print(list(map(lambda x:x.get('nom'),o2.NY.CITY[self.perso.street].catalog)))
-            #print(list(map(lambda x:int(x.get('x')),self.perso.environ)))
-            #print(list(map(lambda x:x.get('nom'),self.perso.environ)))
-            #print(o2.NY.CITY[self.perso.street].catalog)
 
             if self.perso.money <= 0 or not self.perso.alive:
-                #print('game over')
                 self.gameover = True
                 self.game_over()
 

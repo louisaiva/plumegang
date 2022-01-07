@@ -477,7 +477,7 @@ class Distrokid(Label):
         # 1 euro l'abonnement par jour à distro
 
     def release(self,son):
-        super(Distrokid,self).releas(son,1)
+        super(Distrokid,self).release(son,1)
 
     def update(self):
         for rapper in self.rappeurs:
