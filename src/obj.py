@@ -1312,6 +1312,76 @@ class RelHUD(HUD):
                         self.delLab(hum.id+'o')
                         self.delSpr(hum.id+'feel')
 
+class MiniRelHUD(HUD):
+
+    def __init__(self,hum):
+
+        super(MiniRelHUD, self).__init__(group='hud2',name='minirelhud',vis=False)
+
+        self.hum = hum
+        self.target=None
+
+        x,y = 20,100
+        w,h = 300,80
+        self.box = box(x,y,w,h)
+
+        self.pad = 25
+        self.padding = 50
+
+        col = (*c['delta_blue'][:3],170)
+        self.addCol('bg',self.box,color=col,group='hud2-1')
+
+    def assign_target(self,hum):
+        self.target = hum
+        self.addLab('title','relations of '+self.target.name,(self.box.cx,self.box.fy+self.pad),font_name=1,font_size=20,anchor=('center','center'))
+
+    def update(self):
+
+        if self.visible and self.target!=None:
+
+            y = self.box.fy-(3/4)*self.padding
+            xname = self.box.cx - self.box.w/4
+            xthg = self.box.cx + self.box.w/4
+
+            size_max_bar = self.box.w/2
+
+            hum = self.hum
+            if hum in self.target.relations:
+
+                feel = self.target.get_feel(hum)
+                size_fill = (abs(feel)*size_max_bar/2)/100
+                if feel >=0:
+                    xfeel = self.box.cx
+                else:
+                    xfeel = self.box.cx-size_fill
+
+                if hum in self.target.hum_env:
+                    if hum.id not in self.labids :
+                        self.addLab(hum.id,hum.name,(xname,y),font_size=20,anchor=('center','center'),replace=False)
+                        self.addLab(hum.id+'o','o',(xthg,y),anchor=('center','center'),replace=False,color=c['green'])
+                        y -= self.pad
+                        self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
+                        self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                    else:
+                        self.modifyLab(hum.id,(xname,y),(255,255,255,255))
+                        self.modifyLab(hum.id+'o',(xthg,y),c['green'])
+                        y -= self.pad
+                        self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
+                else:
+                    col = (255,255,255,170)
+                    colred = (*c['red'][:3],170)
+                    if hum.id not in self.labids :
+                        self.addLab(hum.id,hum.name,(xname,y),font_size=20,anchor=('center','center'),replace=False,color=col)
+                        self.addLab(hum.id+'o','o',(xthg,y),anchor=('center','center'),replace=False,color=colred)
+                        y -= self.pad
+                        self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
+                        self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                    else:
+                        self.modifyLab(hum.id,(xname,y),col)
+                        self.modifyLab(hum.id+'o',(xthg,y),colred)
+                        y -= self.pad
+                        self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
+
 
 class SonHUD(HUD):
 

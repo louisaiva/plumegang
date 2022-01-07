@@ -695,14 +695,8 @@ class Human():
         for hum in self.relations:
             if hum in self.hum_env:
                 self.relations[hum]['t'] += 1
-                self.relations[hum]['feel'] += 1
-                if self.relations[hum]['feel'] > 100 :
-                    self.relations[hum]['feel'] = 100
             else:
                 self.relations[hum]['t'] -= 0.1
-                self.relations[hum]['feel'] -= 0.1
-                if self.relations[hum]['feel'] < -100 :
-                    self.relations[hum]['feel'] = -100
 
 
 
@@ -1138,6 +1132,7 @@ class Perso(Rappeur):
 
         self.bigmap = o.Map(self)
         self.relhud = o.RelHUD(self)
+        self.minirelhud = o.MiniRelHUD(self)
 
         self.load()
 
@@ -1254,6 +1249,12 @@ class Perso(Rappeur):
 
         super(Perso,self).update()
         self.relhud.update()
+        self.minirelhud.update()
+
+    def assign_poto(self,hum):
+        self.poto = hum
+        self.minirelhud.assign_target(self.poto)
+
 
     ## colli hoover
 
