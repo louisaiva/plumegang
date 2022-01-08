@@ -188,7 +188,8 @@ class Human():
         #do
         self.doing = ['nothing']
         self.dir = r.choice(('R','L'))
-        self.bigdoing = [] ## 'fuir' 'attack' 'move' 'talkin' 'followin'
+        self.todo = [] ## 'fuir' 'attack' 'move' 'talkin' 'followin'
+        self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
 
         # skins
         if type(self) in [Human,Fan,Perso]:
@@ -217,6 +218,10 @@ class Human():
             self.textids['die'] = {}
             self.textids['die']['R'] = [textids[14]]
             self.textids['die']['L'] = [textids[14]]
+
+            self.textids['heal'] = {}
+            self.textids['heal']['R'] = [textids[15],textids[16]]
+            self.textids['heal']['L'] = [textids[15],textids[16]]
 
         self.grp = group
 
@@ -393,6 +398,11 @@ class Human():
                     self.doing.append(action)
                     self.undo()
 
+                elif action == 'heal':
+                    self.doing.append(action)
+                    self.undo()
+                    self.update_skin(repeat=False)
+
                 elif action == 'wait':
                     self.doing.insert(0, action)
                     self.undo()
@@ -407,7 +417,7 @@ class Human():
 
     def check_do(self):
 
-        if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
+        if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing and 'heal' not in self.doing:
             if time.time()-self.time_last_move > 0.2:
                 self.do()
 
@@ -485,6 +495,7 @@ class Human():
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
             g.lman.modify(self.label,pos)
 
+        if hasattr(self,'label_life'):
             # spr life
             size_lifebar = 150
             size_fill = (self.life*size_lifebar)/self.max_life
@@ -530,8 +541,8 @@ class Human():
             else :
                 self.confidence -= self.confidence/(self.life/dmg)
 
-            self.relations[hitter]['peur/rassure'] -= dmg/5
-            self.relations[hitter]['hate/like'] -= dmg/5
+            self.relations[hitter]['peur/rassure'] -= dmg
+            self.relations[hitter]['hate/like'] -= dmg
 
             if not self.in_combat:
                 # 3 cas de figure : soit on est très confiant et on réplique direct
@@ -539,10 +550,11 @@ class Human():
                 # soit on est une tafiole et on fuit
 
                 if self.confidence > 80:
-                    self.attack_hum(0,hitter)
+                    self.add_todo('atak',self.attack_hum,80,[hitter])
+                    #self.attack_hum(0,hitter)
                     self.in_combat = True
                 elif self.confidence > 40 and self.hits_in_row > 1:
-                    self.attack_hum(0,hitter)
+                    self.add_todo('atak',self.attack_hum,80,[hitter])
                     self.in_combat = True
 
             if self.confidence > 80:
@@ -552,12 +564,14 @@ class Human():
             elif self.confidence > 20:
                 g.bertran.unschedule(self.hit)
                 g.bertran.unschedule(self.attack_hum)
-                self.fuir(0,hitter)
+                self.add_todo('fuir',self.fuir,100,[hitter])
+                self.add_todo('heal',self.heal,90)
                 self.rsay('moi fuir')
             else:
                 g.bertran.unschedule(self.hit)
                 g.bertran.unschedule(self.attack_hum)
-                self.fuir(0,hitter)
+                self.add_todo('fuir',self.fuir,100,[hitter])
+                self.add_todo('heal',self.heal,90)
                 self.rsay('aled')
 
     def un_hit(self,dt):
@@ -570,6 +584,11 @@ class Human():
         self.damage = 0
         self.speed = 0
         self.yspeed = 0
+        if hasattr(self,'label_life'):
+            g.sman.delete(self.label_life)
+            del self.label_life
+            g.sman.delete(self.label_conf)
+            del self.label_conf
 
         g.bertran.schedule_once(self.delete,4)
 
@@ -582,9 +601,9 @@ class Human():
     ## BOTS
 
     def being_bot(self):
-        if not self.in_combat and type(self) not in [Perso] and 'die' not in self.doing:
+        if  type(self) not in [Perso] and 'die' not in self.doing:
 
-            if self.doing == ['nothing'] and not self.in_combat and r.random()>0.999:
+            if r.random()>0.999:
                 x,y = self.gex + r.randint(-2000,2000), self.gey + r.randint(-20,20)
 
 
@@ -593,30 +612,76 @@ class Human():
                 elif x < o2.NY.CITY[self.street].x:
                     x = o2.NY.CITY[self.street].x
 
-                self.move_until(0,(x,y))
+                #self.move_until(0,(x,y))
+                self.add_todo('move',self.move_until,param=[(x,y)])
 
-            #acting/dialing
-            exp = None
-            imp = 0
-            p = r.random()
-            if p < 0.1:
-                exp = self.voc.random()
-                imp = 10
-            else:
-                ptot = sum(list(map(lambda x:x.get('imp'),self.dials)))
-                if ptot < 100:
-                    ptot = 100
-                for dial in self.dials:
-                    prob = 0.1 + dial.get('imp')*0.9/ptot
-                    if p < prob:
-                        exp = self.voc.exp(dial['meaning'])
-                        imp = dial.get('imp')
-                        break
+            if not self.in_combat :
+                #acting/dialing
+                exp = None
+                imp = 0
+                p = r.random()
+                if p < 0.1:
+                    exp = self.voc.random()
+                    imp = 10
+                else:
+                    ptot = sum(list(map(lambda x:x.get('imp'),self.dials)))
+                    if ptot < 100:
+                        ptot = 100
+                    for dial in self.dials:
+                        prob = 0.1 + dial.get('imp')*0.9/ptot
+                        if p < prob:
+                            exp = self.voc.exp(dial['meaning'])
+                            imp = dial.get('imp')
+                            break
 
-            p = r.random()
-            if p < imp/10000:
-                self.say(exp)
+                p = r.random()
+                if p < imp/10000:
+                    self.say(exp)
 
+            ##todo
+            if len(self.todo) > 0 and self.bigdoing != self.todo[0]:
+
+                g.bertran.unschedule(self.bigdoing['funct'])
+                if self.bigdoing['lab'] == 'heal':
+                    self.undo(0,'heal')
+
+                self.bigdoing = self.todo[0]
+                self.todo[0]['funct'](0,*self.todo[0]['param'])
+
+            if len(self.todo) == 0:
+                self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
+
+    def done_todo(self):
+        del self.todo[0]
+
+    def add_todo(self,lab,funct,imp=0,param=[]):
+
+        # nouveau todo
+        newtodo = {'lab':lab,'funct':funct,'imp':imp,'param':param}
+
+        # on vérifie qu'il y est pas déjà et on supprim si jamai
+        if funct == self.fuir:
+            for todo in list(filter(lambda x:x['funct'] == self.attack_hum,self.todo)):
+                if todo['param'] == param:
+                    self.todo.remove(todo)
+
+            for todo in list(filter(lambda x:x['funct'] == self.fuir,self.todo)):
+                if todo['param'] == param:
+                    self.todo.remove(todo)
+
+        if funct == self.heal:
+            for todo in list(filter(lambda x:x['funct'] == self.heal,self.todo)):
+                self.todo.remove(todo)
+
+        if funct == self.move_until:
+            for todo in list(filter(lambda x:x['funct'] == self.move_until,self.todo)):
+                self.todo.remove(todo)
+
+        # on ajoute le nouveau et on reclasse
+        self.todo.append(newtodo)
+        self.todo.sort(key=lambda x:x.get('imp'),reverse=True)
+
+    #todo
     def move_until(self,dt=0,objective=(0,0)):
 
         reached = False,False
@@ -640,6 +705,8 @@ class Human():
 
         if reached != (True,True) and self.alive and not 'nothing' in self.doing:
             g.bertran.schedule_once(self.move_until,0.01,objective)
+        else:
+            self.done_todo()
 
     def follow_hum(self,dt,target,strengh=1):
         # the more strengh is high, the more the hum will follow the target
@@ -695,6 +762,10 @@ class Human():
 
                 if self.alive and not 'nothing' in self.doing:
                     g.bertran.schedule_once(self.attack_hum,0.01,target)
+                else:
+                    self.done_todo()
+        elif not target.alive:
+            self.done_todo()
 
     def fuir(self,dt,target):
 
@@ -711,6 +782,23 @@ class Human():
 
             if self.alive and abs(self.gex-x) < safety_distance and not 'nothing' in self.doing:
                 g.bertran.schedule_once(self.fuir,0.01,target)
+            else:
+                self.done_todo()
+        elif not target.alive:
+            self.done_todo()
+
+    def heal(self,dt=0):
+
+        if self.alive and self.life <= self.max_life:
+
+            self.do('heal')
+            self.life += 1
+            if self.life > self.max_life:
+                self.undo(0,'heal')
+                self.life = self.max_life
+                del self.todo[0]
+            else:
+                g.bertran.schedule_once(self.heal,0.1)
 
     ## SPEAKING
 
@@ -820,7 +908,8 @@ class Human():
                 prob_tapé = self.confidence*(-self.relations[hum]['hate/like'])/10000
                 p = r.random()
                 if p < prob_tapé*2:
-                    self.attack_hum(0,hum)
+                    self.add_todo('atak',self.attack_hum,80,[hum])
+                    #self.attack_hum(0,hum)
                 if p < prob_tapé:
                     exp = self.voc.exp('free insult')
 
@@ -913,27 +1002,21 @@ class Human():
             self.roll.recreate()
 
 
-        in_combat = self.in_combat
+        #combatting
+        in_combat = ('atak' == self.bigdoing['lab'])
         if not in_combat:
             for hum in self.hum_env:
-                if hum.in_combat:
+                if ('atak' == hum.bigdoing['lab']):
                     in_combat = True
                     break
 
-        #combatting
         if in_combat:
-            if t-self.last_hit > 15 and self.doing == ['nothing']:
+            if t-self.last_hit > 15 and self.bigdoing == '':
                 self.in_combat = False
                 self.hits_in_row = 0
                 self.last_hit = 0
 
         else: ### feelings
-
-            ## life
-            if self.life < self.max_life:
-                self.life += 1
-                if self.life > self.max_life:
-                    self.life = self.max_life
 
 
             ## confidence
@@ -948,8 +1031,6 @@ class Human():
                     amis_rassurants += self.relations[hum]['peur/rassure']
 
             confidence = 100*self.life/self.max_life + gens_effrayants + amis_rassurants
-            """if self.name != 'Delta':
-                print(confidence,100*self.life/self.max_life,gens_effrayants)"""
 
             if confidence > 100:
                 confidence = 100
@@ -978,6 +1059,7 @@ class Human():
     def hoover(self):
         if hasattr(self,'label'):
             g.lman.unhide(self.label)
+        if hasattr(self,'label_life'):
             g.sman.unhide(self.label_life)
             g.sman.unhide(self.label_conf)
             self._hoover = True
@@ -985,6 +1067,7 @@ class Human():
     def unhoover(self):
         if hasattr(self,'label'):
             g.lman.unhide(self.label,True)
+        if hasattr(self,'label_life'):
             g.sman.unhide(self.label_life,True)
             g.sman.unhide(self.label_conf,True)
             self._hoover = False
@@ -1003,6 +1086,7 @@ class Human():
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
             self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=self.grp)
 
+        if not hasattr(self,'label_life') and self.alive:
             # spr life
             size_lifebar = 100
             size_fill = (self.life*size_lifebar)/self.max_life
@@ -1031,6 +1115,7 @@ class Human():
         if hasattr(self,'label'):
             g.lman.delete(self.label)
             del self.label
+        if hasattr(self,'label_life'):
             g.sman.delete(self.label_life)
             del self.label_life
             g.sman.delete(self.label_conf)
@@ -1244,6 +1329,10 @@ class Rappeur(Fan):
             self.textids['die'] = {}
             self.textids['die']['R'] = [textids[0]]
             self.textids['die']['L'] = [textids[0]]
+
+            self.textids['heal'] = {}
+            self.textids['heal']['R'] = [textids[0]]
+            self.textids['heal']['L'] = [textids[0]]
 
         self.qua_score = 0
 

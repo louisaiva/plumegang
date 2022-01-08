@@ -125,7 +125,7 @@ class App():
         self.perso.assign_poto(p.BOTS[-1])
 
 
-        self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
+        self.lab_doing = g.lman.addLab(self.perso.poto.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         ## FANS/RAPPEURS
         n = 30*len(o2.NY.CITY)
@@ -228,7 +228,8 @@ class App():
     def create_organise_textures(self):
 
         ### PERSOS
-        g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(4,6))
+        #g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(4,6))
+        g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
         g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,4))
         g.TEXTIDS['guys'] = g.tman.loadImSeq('bosseur.png',(1,1))
 
@@ -263,7 +264,7 @@ class App():
             g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
         del g.TEXTIDS['_son']
 
-        g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
+        #g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
         g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/sky.png')
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
@@ -808,14 +809,14 @@ class App():
             ## perso
 
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
-                if type(hum) != p.Perso and hum != self.perso.poto:
+                if type(hum) != p.Perso:# and hum != self.perso.poto:
                     hum.being_bot()
                 hum.check_do()
 
-            g.lman.set_text(self.lab_doing,self.perso.doing)
+            text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
+            g.lman.set_text(self.lab_doing,text_lab)
             self.perso.hud.update()
             self.perso.bigmap.update()
-
 
             if self.perso.money <= 0 or not self.perso.alive:
                 self.gameover = True
