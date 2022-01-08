@@ -151,7 +151,6 @@ class Human():
         self.confidence = 100 #compris entre 0 et 100 -> décrit la peur (0) et la confidence (100)
 
         #combat
-        self.in_combat = False
         self.hits_in_row = 0
         self.last_hit = 0
 
@@ -363,11 +362,7 @@ class Human():
             self.do('hit')
             if self.element_colli != None:
                 if isinstance(self.element_colli,Human):
-
-                    if not self.in_combat:
-                        self.in_combat = True
                     self.last_hit = time.time()
-
                     self.element_colli.be_hit(self)
                 elif type(self) == Perso:
                     self.element_colli.activate(self)
@@ -417,9 +412,11 @@ class Human():
 
     def check_do(self):
 
-        if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing and 'heal' not in self.doing:
-            if time.time()-self.time_last_move > 0.2:
+        if time.time()-self.time_last_move > 0.2:
+            if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing and 'heal' not in self.doing:
                 self.do()
+            else:
+                self.undo(0,'move')
 
     def move(self,dir,street,speed=None):
         if hasattr(self,'skin_id'):
@@ -524,7 +521,6 @@ class Human():
         ## dmging
         self.life -= dmg
         self.hits_in_row += 1
-        self.last_hit = time.time()
         hitter.cred += 1
 
         if (self.life <= 0) and 'die' not in self.doing:
@@ -552,10 +548,8 @@ class Human():
                 if self.confidence > 80:
                     self.add_todo('atak',self.attack_hum,80,[hitter])
                     #self.attack_hum(0,hitter)
-                    self.in_combat = True
                 elif self.confidence > 40 and self.hits_in_row > 1:
                     self.add_todo('atak',self.attack_hum,80,[hitter])
-                    self.in_combat = True
 
             if self.confidence > 80:
                 self.rsay('tveux mourir?')
@@ -564,7 +558,7 @@ class Human():
             elif self.confidence > 20:
                 g.bertran.unschedule(self.hit)
                 g.bertran.unschedule(self.attack_hum)
-                self.add_todo('fuir',self.fuir,100,[hitter])
+                self.add_todo('fuir',self.fuir,100,[hitter,1000])
                 self.add_todo('heal',self.heal,90)
                 self.rsay('moi fuir')
             else:
@@ -573,6 +567,8 @@ class Human():
                 self.add_todo('fuir',self.fuir,100,[hitter])
                 self.add_todo('heal',self.heal,90)
                 self.rsay('aled')
+
+        self.last_hit = time.time()
 
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
@@ -615,7 +611,7 @@ class Human():
                 #self.move_until(0,(x,y))
                 self.add_todo('move',self.move_until,param=[(x,y)])
 
-            if not self.in_combat :
+            if True :
                 #acting/dialing
                 exp = None
                 imp = 0
@@ -662,7 +658,7 @@ class Human():
         # on vérifie qu'il y est pas déjà et on supprim si jamai
         if funct == self.fuir:
             for todo in list(filter(lambda x:x['funct'] == self.attack_hum,self.todo)):
-                if todo['param'] == param:
+                if todo['param'][0] == param[0]:
                     self.todo.remove(todo)
 
             for todo in list(filter(lambda x:x['funct'] == self.fuir,self.todo)):
@@ -767,13 +763,11 @@ class Human():
         elif not target.alive:
             self.done_todo()
 
-    def fuir(self,dt,target):
+    def fuir(self,dt,target,safety_distance=1000):
 
         if self.alive and target.alive:
             x = target.gex
             speed = self.speed
-
-            safety_distance = 10000
 
             if self.gex > x:
                 self.move('R',o2.NY.CITY[self.street],speed)
@@ -783,6 +777,7 @@ class Human():
             if self.alive and abs(self.gex-x) < safety_distance and not 'nothing' in self.doing:
                 g.bertran.schedule_once(self.fuir,0.01,target)
             else:
+                #self.undo('move')
                 self.done_todo()
         elif not target.alive:
             self.done_todo()
@@ -791,12 +786,15 @@ class Human():
 
         if self.alive and self.life <= self.max_life:
 
-            self.do('heal')
-            self.life += 1
-            if self.life > self.max_life:
-                self.undo(0,'heal')
-                self.life = self.max_life
-                del self.todo[0]
+            if not (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))):
+                self.do('heal')
+                self.life += 1
+                if self.life > self.max_life:
+                    self.undo(0,'heal')
+                    self.life = self.max_life
+                    del self.todo[0]
+                else:
+                    g.bertran.schedule_once(self.heal,0.1)
             else:
                 g.bertran.schedule_once(self.heal,0.1)
 
@@ -1001,23 +999,12 @@ class Human():
         if deleted_acts_dials and self.roll != None:
             self.roll.recreate()
 
-
         #combatting
-        in_combat = ('atak' == self.bigdoing['lab'])
-        if not in_combat:
-            for hum in self.hum_env:
-                if ('atak' == hum.bigdoing['lab']):
-                    in_combat = True
-                    break
-
-        if in_combat:
-            if t-self.last_hit > 15 and self.bigdoing == '':
-                self.in_combat = False
+        if (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) :
+            if t-self.last_hit > 5:
                 self.hits_in_row = 0
                 self.last_hit = 0
-
-        else: ### feelings
-
+        else:
 
             ## confidence
 
@@ -1137,6 +1124,22 @@ class Human():
         else:
             return 0,0,0,0
     realbox = property(_realbox)
+
+    def _in_combat(self):
+
+        in_c = False
+        if (time.time()-self.last_hit < 5):
+            in_c = True
+        if self.attack_hum == self.bigdoing['funct']:
+            in_c = True
+
+        if not in_c:
+            self.last_hit = 0
+            self.hits_in_row = 0
+
+        return in_c
+
+    in_combat = property(_in_combat)
 
     def _alive(self):
         if self.life > 0:
@@ -1620,3 +1623,7 @@ class Perso(Rappeur):
     def move(self,dir,street,speed=None):
         super(Perso,self).move(dir,street,speed)
         self.check_colli(street)
+
+    def _in_combat(self):
+        return (time.time()-self.last_hit < 5)
+    in_combat = property(_in_combat)

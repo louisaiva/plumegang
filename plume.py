@@ -811,6 +811,8 @@ class App():
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
                 if type(hum) != p.Perso:# and hum != self.perso.poto:
                     hum.being_bot()
+                """else:
+                    print(hum.in_combat)"""
                 hum.check_do()
 
             text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
