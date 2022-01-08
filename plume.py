@@ -809,11 +809,11 @@ class App():
             ## perso
 
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
-                if type(hum) != p.Perso:# and hum != self.perso.poto:
-                    hum.being_bot()
+                #if type(hum) != p.Perso:# and hum != self.perso.poto:
+                hum.being_bot()
                 hum.check_do()
 
-            text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
+            text_lab = (self.perso.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.todo)),self.perso.doing)
             g.lman.set_text(self.lab_doing,text_lab)
             self.perso.hud.update()
             self.perso.bigmap.update()

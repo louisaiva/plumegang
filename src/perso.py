@@ -144,7 +144,7 @@ class Human():
         #life
         self.life = 100
         self.max_life = 100
-        self.damage = r.randint(10, 20)
+        self.damage = r.randint(10, 15)
 
         #états
         self.cred = r.randint(-50,50)
@@ -270,7 +270,7 @@ class Human():
                     self.relations[hum] = {'t':1,'last':-1,'hate/like':r.randint(-100,100),'peur/rassure':0}
 
                 if self.relations[hum]['hate/like'] < -50:
-                    dial = { 't':time.time() , 'delay':None , 'meaning':'free insult' , 'imp':40 ,'id':'dial_insuult'}
+                    dial = { 't':time.time() , 'delay':None , 'meaning':'free insult' , 'imp':-self.relations[hum]['hate/like']-20 ,'id':'dial_insuult'}
                     self.add_dial(dial)
                     hate = True
 
@@ -359,10 +359,13 @@ class Human():
 
     def hit(self,dt=0):
         if self.alive:
+            if 'heal' in self.doing:
+                self.done_todo()
             self.do('hit')
             if self.element_colli != None:
                 if isinstance(self.element_colli,Human):
                     self.last_hit = time.time()
+                    self.relup(self.element_colli,self.damage,'peur/rassure')
                     self.element_colli.be_hit(self)
                 elif type(self) == Perso:
                     self.element_colli.activate(self)
@@ -419,6 +422,7 @@ class Human():
                 self.undo(0,'move')
 
     def move(self,dir,street,speed=None):
+
         if hasattr(self,'skin_id'):
 
             maxx = street.xxf
@@ -448,6 +452,9 @@ class Human():
                     moved = True
 
                 if moved :
+                    if 'heal' in self.doing:
+                        self.done_todo()
+
                     if dir in ['R','L']:
                         if self.dir != dir:
                             self.dir = dir
@@ -506,6 +513,9 @@ class Human():
 
     def be_hit(self,hitter):
 
+        if self.bigdoing['lab'] == 'heal':
+            self.done_todo()
+
         ## skin
         g.sman.filter(self.skin_id)
         g.bertran.unschedule(self.un_hit)
@@ -522,6 +532,10 @@ class Human():
         self.life -= dmg
         self.hits_in_row += 1
         hitter.cred += 1
+        self.relup(hitter,-dmg)
+        self.relup(hitter,-dmg,'peur/rassure')
+
+
 
         if (self.life <= 0) and 'die' not in self.doing:
             print(hitter.name,'killed',self.name)
@@ -537,8 +551,6 @@ class Human():
             else :
                 self.confidence -= self.confidence/(self.life/dmg)
 
-            self.relations[hitter]['peur/rassure'] -= dmg
-            self.relations[hitter]['hate/like'] -= dmg
 
             if not self.in_combat:
                 # 3 cas de figure : soit on est très confiant et on réplique direct
@@ -567,6 +579,7 @@ class Human():
                 self.add_todo('fuir',self.fuir,100,[hitter])
                 self.add_todo('heal',self.heal,90)
                 self.rsay('aled')
+
 
         self.last_hit = time.time()
 
@@ -597,58 +610,62 @@ class Human():
     ## BOTS
 
     def being_bot(self):
-        if  type(self) not in [Perso] and 'die' not in self.doing:
+        if 'die' not in self.doing:
 
-            if r.random()>0.999:
-                x,y = self.gex + r.randint(-2000,2000), self.gey + r.randint(-20,20)
+            if type(self) not in [Perso]:
+
+                if r.random()>0.999:
+                    x,y = self.gex + r.randint(-2000,2000), self.gey + r.randint(-20,20)
 
 
-                if x > o2.NY.CITY[self.street].rxf :
-                    x = o2.NY.CITY[self.street].rxf
-                elif x < o2.NY.CITY[self.street].x:
-                    x = o2.NY.CITY[self.street].x
+                    if x > o2.NY.CITY[self.street].rxf :
+                        x = o2.NY.CITY[self.street].rxf
+                    elif x < o2.NY.CITY[self.street].x:
+                        x = o2.NY.CITY[self.street].x
 
-                #self.move_until(0,(x,y))
-                self.add_todo('move',self.move_until,param=[(x,y)])
+                    #self.move_until(0,(x,y))
+                    self.add_todo('move',self.move_until,param=[(x,y)])
 
-            if True :
-                #acting/dialing
-                exp = None
-                imp = 0
-                p = r.random()
-                if p < 0.1:
-                    exp = self.voc.random()
-                    imp = 10
-                else:
-                    ptot = sum(list(map(lambda x:x.get('imp'),self.dials)))
-                    if ptot < 100:
-                        ptot = 100
-                    for dial in self.dials:
-                        prob = 0.1 + dial.get('imp')*0.9/ptot
-                        if p < prob:
-                            exp = self.voc.exp(dial['meaning'])
-                            imp = dial.get('imp')
-                            break
+                if True :
+                    #acting/dialing
+                    exp = None
+                    imp = 0
+                    p = r.random()
+                    if p < 0.1:
+                        exp = self.voc.random()
+                        imp = 10
+                    else:
+                        ptot = sum(list(map(lambda x:x.get('imp'),self.dials)))
+                        if ptot < 100:
+                            ptot = 100
+                        for dial in self.dials:
+                            prob = 0.1 + dial.get('imp')*0.9/ptot
+                            if p < prob:
+                                exp = self.voc.exp(dial['meaning'])
+                                imp = dial.get('imp')
+                                break
 
-                p = r.random()
-                if p < imp/10000:
-                    self.say(exp)
+                    p = r.random()
+                    if p < imp/10000:
+                        self.say(exp)
 
             ##todo
             if len(self.todo) > 0 and self.bigdoing != self.todo[0]:
 
+                self.bigdoing = self.todo[0]
+                self.todo[0]['funct'](0,*self.todo[0]['param'])
+
+    def done_todo(self):
+
+        if len(self.todo) > 0:
+            if self.bigdoing == self.todo[0]:
+                del self.todo[0]
                 g.bertran.unschedule(self.bigdoing['funct'])
                 if self.bigdoing['lab'] == 'heal':
                     self.undo(0,'heal')
 
-                self.bigdoing = self.todo[0]
-                self.todo[0]['funct'](0,*self.todo[0]['param'])
-
-            if len(self.todo) == 0:
-                self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
-
-    def done_todo(self):
-        del self.todo[0]
+        if len(self.todo) == 0:
+            self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
 
     def add_todo(self,lab,funct,imp=0,param=[]):
 
@@ -785,18 +802,28 @@ class Human():
     def heal(self,dt=0):
 
         if self.alive and self.life <= self.max_life:
-
-            if not (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))):
+            if not (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) and time.time()-self.time_last_move > 1:
                 self.do('heal')
-                self.life += 1
+                heal = self.max_life//100
+                self.life += heal
                 if self.life > self.max_life:
-                    self.undo(0,'heal')
                     self.life = self.max_life
-                    del self.todo[0]
+                    self.done_todo()
                 else:
                     g.bertran.schedule_once(self.heal,0.1)
             else:
                 g.bertran.schedule_once(self.heal,0.1)
+
+
+    ## RELATIONS
+
+    def relup(self,hum,qté,cat='hate/like'):
+        if hum in self.relations:
+            self.relations[hum][cat] += qté
+            if self.relations[hum][cat] > 100:
+                self.relations[hum][cat] = 100
+            elif self.relations[hum][cat] < -100:
+                self.relations[hum][cat] = -100
 
     ## SPEAKING
 
@@ -904,10 +931,12 @@ class Human():
                 hum = voice['h']
 
                 prob_tapé = self.confidence*(-self.relations[hum]['hate/like'])/10000
+                self.relup(hum,-10)
+
+                #print(prob_tapé)
                 p = r.random()
-                if p < prob_tapé*2:
+                if p < prob_tapé/2:
                     self.add_todo('atak',self.attack_hum,80,[hum])
-                    #self.attack_hum(0,hum)
                 if p < prob_tapé:
                     exp = self.voc.exp('free insult')
 
@@ -958,6 +987,10 @@ class Human():
     def update(self):
 
         t = time.time()
+
+        #life
+        if self.life < self.max_life and not 'heal' in list(map(lambda x:x['lab'],self.todo)):
+            self.add_todo('heal',self.heal,20)
 
         #speaking
         if self.keyids_voc:
@@ -1470,7 +1503,8 @@ class Perso(Rappeur):
 
         super(Perso,self).__init__(textids,pos,name,street=street)
 
-        self.max_life = 4800
+        self.max_life = 500
+        #self.damage = 10
         self.life = self.max_life
         self.speed = g.SPEED
         self.runspeed = g.RSPEED
@@ -1529,6 +1563,11 @@ class Perso(Rappeur):
 
     def be_hit(self,hitter):
         super(Perso,self).be_hit(hitter)
+        self.credhud.update()
+        self.lifehud.update()
+
+    def heal(self,dt=0):
+        super(Perso,self).heal(dt)
         self.credhud.update()
         self.lifehud.update()
 
