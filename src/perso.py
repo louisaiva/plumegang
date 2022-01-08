@@ -191,7 +191,7 @@ class Human():
         self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
 
         # skins
-        if type(self) in [Human,Fan,Perso]:
+        if type(self) not in []:
 
             self.textids = {}
             self.textids['nothing'] = {}
@@ -1092,9 +1092,11 @@ class Human():
 
     def deload(self):
         g.bertran.unschedule(self.update_skin)
-        g.bertran.unschedule(self.move_until)
+        #g.bertran.unschedule(self.move_until)
         g.bertran.unschedule(self.hit)
-        #g.bertran.unschedule(self.attack_hum)
+        g.bertran.unschedule(self.be_hit)
+        g.bertran.unschedule(self.bigdoing['funct'])
+        self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
 
         if hasattr(self,'skin_id'):
             g.sman.delete(self.skin_id)
@@ -1224,33 +1226,6 @@ class Guy(Fan):
 
         super(Guy,self).__init__(textids,pos,name,street=street)
 
-        if 1:
-            # skins
-            self.textids = {}
-            self.textids['nothing'] = {}
-            self.textids['nothing']['R'] = [textids[0]]
-            self.textids['nothing']['L'] = [textids[0]]
-
-            self.textids['move'] = {}
-            self.textids['move']['R'] = [textids[0]]
-            self.textids['move']['L'] = [textids[0]]
-
-            self.textids['hit'] = {}
-            self.textids['hit']['R'] = [textids[0]]
-            self.textids['hit']['L'] = [textids[0]]
-
-            self.textids['write'] = {}
-            self.textids['write']['R'] = [textids[0]]
-            self.textids['write']['L'] = [textids[0]]
-
-            self.textids['wait'] = {}
-            self.textids['wait']['R'] = [textids[0]]
-            self.textids['wait']['L'] = [textids[0]]
-
-            self.textids['die'] = {}
-            self.textids['die']['R'] = [textids[0]]
-            self.textids['die']['L'] = [textids[0]]
-
         ## check if in BOTS (souvent les guys sont ajoutés directement depuis leur shop)
         if self not in BOTS:
             BOTS.append(self)
@@ -1306,7 +1281,7 @@ class Rappeur(Fan):
 
         super(Rappeur,self).__init__(textids,pos,name,street=street)
 
-        if type(self) != Perso:
+        """if type(self) != Perso:
             # skins
             self.textids = {}
             self.textids['nothing'] = {}
@@ -1335,7 +1310,7 @@ class Rappeur(Fan):
 
             self.textids['heal'] = {}
             self.textids['heal']['R'] = [textids[0]]
-            self.textids['heal']['L'] = [textids[0]]
+            self.textids['heal']['L'] = [textids[0]]"""
 
         self.qua_score = 0
 

@@ -228,10 +228,10 @@ class App():
     def create_organise_textures(self):
 
         ### PERSOS
-        #g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(4,6))
         g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
         g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,4))
-        g.TEXTIDS['guys'] = g.tman.loadImSeq('bosseur.png',(1,1))
+        g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
+        g.TEXTIDS['perso2'] = g.tman.loadImSeq('guy.png',(1,30))
 
 
         # items
@@ -752,15 +752,15 @@ class App():
                 #--# persos
                 ## update catalog:
                 o2.NY.CITY[self.perso.street].update_catalog(self.perso)
-                #print(o2.NY.CITY[self.perso.street].humans)
+                #print(self.perso.street)
                 for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
+                    #print(hum)
                     x_r = hum.gex + g.Cam.X + g.GodCam.X
                     y_r = hum.gey + g.Cam.Y
                     g.sman.modify(hum.skin_id,(x_r,y_r))
                     hum.update_env()
                     hum.update_lab()
                     hum.update()
-                #self.perso.check_colli(o2.NY.CITY[self.perso.street])
 
 
                 #--# bg
@@ -811,8 +811,6 @@ class App():
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
                 if type(hum) != p.Perso:# and hum != self.perso.poto:
                     hum.being_bot()
-                """else:
-                    print(hum.in_combat)"""
                 hum.check_do()
 
             text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
