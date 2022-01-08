@@ -1092,7 +1092,6 @@ class Human():
 
     def deload(self):
         g.bertran.unschedule(self.update_skin)
-        #g.bertran.unschedule(self.move_until)
         g.bertran.unschedule(self.hit)
         g.bertran.unschedule(self.be_hit)
         g.bertran.unschedule(self.bigdoing['funct'])
@@ -1281,36 +1280,36 @@ class Rappeur(Fan):
 
         super(Rappeur,self).__init__(textids,pos,name,street=street)
 
-        """if type(self) != Perso:
+        if type(self) != Fan:
             # skins
             self.textids = {}
             self.textids['nothing'] = {}
-            self.textids['nothing']['R'] = [textids[0],textids[1],textids[2],textids[3]]
-            self.textids['nothing']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['nothing']['R'] = [textids[0],textids[1],textids[2]]
+            self.textids['nothing']['L'] = [textids[3],textids[4],textids[5]]
 
             self.textids['move'] = {}
-            self.textids['move']['R'] = [textids[0]]
-            self.textids['move']['L'] = [textids[0]]
+            self.textids['move']['R'] = [textids[6],textids[7]]
+            self.textids['move']['L'] = [textids[8],textids[9]]
 
             self.textids['hit'] = {}
-            self.textids['hit']['R'] = [textids[0],textids[1],textids[2],textids[3]]
-            self.textids['hit']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['hit']['R'] = [textids[10]]
+            self.textids['hit']['L'] = [textids[11]]
 
             self.textids['write'] = {}
-            self.textids['write']['R'] = [textids[0],textids[1],textids[2],textids[3]]
-            self.textids['write']['L'] = [textids[0],textids[1],textids[2],textids[3]]
+            self.textids['write']['R'] = [textids[10+2],textids[11+2]]
+            self.textids['write']['L'] = [textids[12+2],textids[13+2]]
 
             self.textids['wait'] = {}
             self.textids['wait']['R'] = [textids[0]]
-            self.textids['wait']['L'] = [textids[0]]
+            self.textids['wait']['L'] = [textids[3]]
 
             self.textids['die'] = {}
-            self.textids['die']['R'] = [textids[0]]
-            self.textids['die']['L'] = [textids[0]]
+            self.textids['die']['R'] = [textids[14+2]]
+            self.textids['die']['L'] = [textids[14+2]]
 
             self.textids['heal'] = {}
-            self.textids['heal']['R'] = [textids[0]]
-            self.textids['heal']['L'] = [textids[0]]"""
+            self.textids['heal']['R'] = [textids[15+2],textids[16+2]]
+            self.textids['heal']['L'] = [textids[15+2],textids[16+2]]
 
         self.qua_score = 0
 

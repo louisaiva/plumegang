@@ -117,7 +117,7 @@ class App():
 
         ## PERSOS
 
-        self.perso = p.Perso(g.TEXTIDS['persos'],fill=FILL_INV)
+        self.perso = p.Perso(g.TEXTIDS['perso2'],fill=FILL_INV)
         #o.distro.sign(self.perso)
         o2.NY.CITY['home'].set_owner(self.perso)
         p.BOTS.append(p.Fan(g.TEXTIDS['persos'],o2.NY.CITY['home'].rand_pos(),street='home'))
@@ -229,9 +229,9 @@ class App():
 
         ### PERSOS
         g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
-        g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,4))
+        #g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,4))
         g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
-        g.TEXTIDS['perso2'] = g.tman.loadImSeq('guy.png',(1,30))
+        g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,30))
 
 
         # items
