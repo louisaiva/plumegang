@@ -60,9 +60,9 @@ voc = {}
 voc['oui'] = [   'c\'est cela meme','vous avez bien raison','affirmatif','en effet','oui','yes','euh yep','ouai','oe','oe y\'a quoi'   ]
 voc['non'] = [   'c\'est ma foi faux','vous avez tort','négatif','non','euh nope','nop','no','nn','nik','non frr'   ]
 voc['tu bosses?'] = [   'tu fais quoi ?','tu fous quoi ici','tu fais quoi ?','tu bosses ici','vous faites quoi ici ?'   ]
+voc['free insult'] = ['enculé','connard','jte hais connard','tu pues sale porc','ntm','dégage salop','vire de là']
 voc['bien?'] = [   'bien ou quoi frr','comment ça va ?','sku ?','ça baigne ?','bien le reuf ?','ça dit quoi','u good ?','quoi de neuf ?','bien ?','\'sup ?'   ]
-voc['aled'] = [   'aleeeed','wsh tape moi pas','mdr t ki degage','tu fais quoi la','arrhrh je fuis','deso frero mé tape paas','pas bien la violence'
-                    ,'t essaie de mourir frr ?','A L AIDE APPELEZ LA POLICE !'   ]
+#
 voc['bonjour'] = [   'mes plus sincères salutations','enchanté','bonjour','salut','plop','coucou','wesh','wesh la zone','wsh t ki','t ki','yo'
                         ,'wsh le gang',   ]
 voc['merci'] = [   'merci','merce','thx','merci beaucoup','mercee','tu régales','ça fait zizir','oh merce','merci le zin','tu fais plaaiz','thanks broo'   ]
@@ -100,6 +100,12 @@ voc['random'] = [
                 '*scof scof*',
                 'nan mé wesh drake d\'où tu refuses mon feat',
                 ]
+
+#tapé
+voc['tveux mourir?'] = ['woow tu fais quoi là ?','mdr t ki degage','tu fais quoi la','t essaie de mourir frr ?',]
+voc['stop taper'] = ['euh d\'où tu me tapes ?','tape moi pas frérot','arrête wesh','pas bien la violence','wsh tape moi pas']
+voc['moi fuir'] = ['ok je fuis','woow jme tire','AHH fuite','help je fuis','oupsi jme taille','okok je dégage']
+voc['aled'] = [   'aleeeed','arrhrh je meurs','à l\'aide y a quelqu un ?','aaah mon sang','ptain je douille'   ]
 
 dic = Dico(voc)
 

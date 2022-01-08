@@ -1232,8 +1232,8 @@ class RelHUD(HUD):
                         else:
                             xfeel = self.box.cx-size_fill
 
-                        self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
-                        self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                        self.addSpr(hum.id+'hate/like',g.TEXTIDS['utils'][6],(xfeel,y))
+                        self.modifySpr(hum.id+'hate/like',scale=(size_fill/32,5/32))
                     else:
                         self.modifyLab(hum.id,(xname,y),(255,255,255,255))
                         self.modifyLab(hum.id+'o',(xthg,y),c['green'])
@@ -1246,7 +1246,7 @@ class RelHUD(HUD):
                         else:
                             xfeel = self.box.cx-size_fill
 
-                        self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
+                        self.modifySpr(hum.id+'hate/like',(xfeel,y),scale=(size_fill/32,None))
 
 
                     y -= self.padding
@@ -1255,7 +1255,7 @@ class RelHUD(HUD):
                 elif hum.id in self.labids :
                     self.delLab(hum.id)
                     self.delLab(hum.id+'o')
-                    self.delSpr(hum.id+'feel')
+                    self.delSpr(hum.id+'hate/like')
 
 
             # on laisse une ptite place vide pour bien voir
@@ -1288,8 +1288,8 @@ class RelHUD(HUD):
                             else:
                                 xfeel = self.box.cx-size_fill
 
-                            self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
-                            self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                            self.addSpr(hum.id+'hate/like',g.TEXTIDS['utils'][6],(xfeel,y))
+                            self.modifySpr(hum.id+'hate/like',scale=(size_fill/32,5/32))
                         else:
                             self.modifyLab(hum.id,(xname,y),col)
                             self.modifyLab(hum.id+'o',(xthg,y),colred)
@@ -1302,7 +1302,7 @@ class RelHUD(HUD):
                             else:
                                 xfeel = self.box.cx-size_fill
 
-                            self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
+                            self.modifySpr(hum.id+'hate/like',(xfeel,y),scale=(size_fill/32,None))
 
                         y -= self.padding
                         aff +=1
@@ -1310,7 +1310,7 @@ class RelHUD(HUD):
                     elif hum.id in self.labids :
                         self.delLab(hum.id)
                         self.delLab(hum.id+'o')
-                        self.delSpr(hum.id+'feel')
+                        self.delSpr(hum.id+'hate/like')
 
 class MiniRelHUD(HUD):
 
@@ -1360,13 +1360,13 @@ class MiniRelHUD(HUD):
                         self.addLab(hum.id,hum.name,(xname,y),font_size=20,anchor=('center','center'),replace=False)
                         self.addLab(hum.id+'o','o',(xthg,y),anchor=('center','center'),replace=False,color=c['green'])
                         y -= self.pad
-                        self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
-                        self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                        self.addSpr(hum.id+'hate/like',g.TEXTIDS['utils'][6],(xfeel,y))
+                        self.modifySpr(hum.id+'hate/like',scale=(size_fill/32,5/32))
                     else:
                         self.modifyLab(hum.id,(xname,y),(255,255,255,255))
                         self.modifyLab(hum.id+'o',(xthg,y),c['green'])
                         y -= self.pad
-                        self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
+                        self.modifySpr(hum.id+'hate/like',(xfeel,y),scale=(size_fill/32,None))
                 else:
                     col = (255,255,255,170)
                     colred = (*c['red'][:3],170)
@@ -1374,14 +1374,13 @@ class MiniRelHUD(HUD):
                         self.addLab(hum.id,hum.name,(xname,y),font_size=20,anchor=('center','center'),replace=False,color=col)
                         self.addLab(hum.id+'o','o',(xthg,y),anchor=('center','center'),replace=False,color=colred)
                         y -= self.pad
-                        self.addSpr(hum.id+'feel',g.TEXTIDS['utils'][6],(xfeel,y))
-                        self.modifySpr(hum.id+'feel',scale=(size_fill/32,5/32))
+                        self.addSpr(hum.id+'hate/like',g.TEXTIDS['utils'][6],(xfeel,y))
+                        self.modifySpr(hum.id+'hate/like',scale=(size_fill/32,5/32))
                     else:
                         self.modifyLab(hum.id,(xname,y),col)
                         self.modifyLab(hum.id+'o',(xthg,y),colred)
                         y -= self.pad
-                        self.modifySpr(hum.id+'feel',(xfeel,y),scale=(size_fill/32,None))
-
+                        self.modifySpr(hum.id+'hate/like',(xfeel,y),scale=(size_fill/32,None))
 
 class SonHUD(HUD):
 

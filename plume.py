@@ -449,7 +449,7 @@ class App():
 
                 elif symbol == key.K:
                     self.perso.minirelhud.rollhide()
-                    self.perso.poto.attack_hum(0,self.perso)
+                    #self.perso.poto.attack_hum(0,self.perso)
 
         elif self.action == 'pause':
 
@@ -808,7 +808,7 @@ class App():
             ## perso
 
             for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
-                if type(hum) != p.Perso:
+                if type(hum) != p.Perso and hum != self.perso.poto:
                     hum.being_bot()
                 hum.check_do()
 

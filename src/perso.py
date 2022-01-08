@@ -134,6 +134,7 @@ class Human():
         # general
 
         self.name = name
+        self.money = 1000
         self.speed = r.randint(10,25)
         self.yspeed = 5
         self.runspeed = 100
@@ -143,10 +144,16 @@ class Human():
         #life
         self.life = 100
         self.max_life = 100
-        self.damage = r.randint(10, 110)
+        self.damage = r.randint(10, 20)
 
-        #cred
+        #états
         self.cred = r.randint(-50,50)
+        self.confidence = 100 #compris entre 0 et 100 -> décrit la peur (0) et la confidence (100)
+
+        #combat
+        self.in_combat = False
+        self.hits_in_row = 0
+        self.last_hit = 0
 
         # relations
         self.relations = {}
@@ -169,8 +176,7 @@ class Human():
         self.gey = pos[1] # general y
         self.street = street
 
-        self.money = 1000
-
+        #environ
         self.element_colli = None
         self.collis = []
         self.environ = []
@@ -179,8 +185,10 @@ class Human():
         # track of time
         self.time_last_move = 0
 
+        #do
         self.doing = ['nothing']
         self.dir = r.choice(('R','L'))
+        self.bigdoing = [] ## 'fuir' 'attack' 'move' 'talkin' 'followin'
 
         # skins
         if type(self) in [Human,Fan,Perso]:
@@ -219,22 +227,22 @@ class Human():
         self.rspeak()
 
     def update_skin(self,dt=0.4,repeat=True):
+        if hasattr(self,'skin_id'):
+            max_roll = len(self.textids[self.doing[0]][self.dir])
+            if self.roll_skin >= max_roll:
+                self.roll_skin = 0
 
-        max_roll = len(self.textids[self.doing[0]][self.dir])
-        if self.roll_skin >= max_roll:
-            self.roll_skin = 0
+            g.sman.set_text(self.skin_id,self.textids[self.doing[0]][self.dir][self.roll_skin])
+            if g.sman.spr(self.skin_id).width != SIZE_SPR:
+                sc = SIZE_SPR//g.sman.spr(self.skin_id).width
+                g.sman.modify(self.skin_id,scale=(sc,sc))
 
-        g.sman.set_text(self.skin_id,self.textids[self.doing[0]][self.dir][self.roll_skin])
-        if g.sman.spr(self.skin_id).width != SIZE_SPR:
-            sc = SIZE_SPR//g.sman.spr(self.skin_id).width
-            g.sman.modify(self.skin_id,scale=(sc,sc))
+            self.roll_skin += 1
+            if self.roll_skin >= max_roll:
+                self.roll_skin = 0
 
-        self.roll_skin += 1
-        if self.roll_skin >= max_roll:
-            self.roll_skin = 0
-
-        if repeat:
-            g.bertran.schedule_once(self.update_skin, 0.2)
+            if repeat:
+                g.bertran.schedule_once(self.update_skin, 0.2)
 
     def add_money(self,qté):
         self.money += qté
@@ -247,15 +255,23 @@ class Human():
             self.hum_oldenv = self.hum_env
             self.hum_env = list(filter(lambda x:x.get('type')=='hum',self.environ))
             self.hum_env = list(map(lambda x:x.get('elem'),self.hum_env))
-            #hum_oldenv = list(filter(lambda x:x.get('type')=='hum',old_env))
-            #hum_oldenv = list(map(lambda x:x.get('elem'),hum_oldenv))
+            self.new_hum = list(filter(lambda x:x not in self.hum_oldenv,self.hum_env))
 
             nb_hum_env = len(self.hum_env)
             nb_hum_oldenv = len(self.hum_oldenv)
 
+            hate = False
             for hum in self.hum_env:
                 if hum not in self.relations:
-                    self.relations[hum] = {'t':1,'last':-1,'feel':r.randint(-100,100)}
+                    self.relations[hum] = {'t':1,'last':-1,'hate/like':r.randint(-100,100),'peur/rassure':0}
+
+                if self.relations[hum]['hate/like'] < -50:
+                    dial = { 't':time.time() , 'delay':None , 'meaning':'free insult' , 'imp':40 ,'id':'dial_insuult'}
+                    self.add_dial(dial)
+                    hate = True
+
+            if not hate:
+                self.del_dial('dial_insuult')
 
             if nb_hum_oldenv > nb_hum_env:
                 # si y'a des gens qui partent
@@ -278,15 +294,16 @@ class Human():
                 self.add_dial(dial)
                 dial = { 't':time.time() , 'delay':None , 'meaning':'bien?' , 'imp':25 ,'id':'dial_uoka'}
                 self.add_dial(dial)
-                dial = { 't':time.time() , 'delay':None , 'meaning':'au revoir' , 'imp':20 ,'id':'dial_bye'}
-                self.add_dial(dial)
+                #dial = { 't':time.time() , 'delay':None , 'meaning':'au revoir' , 'imp':20 ,'id':'dial_bye'}
+                #self.add_dial(dial)
+
         self.check_colli(o2.NY.CITY[self.street])
 
     def get_feel(self,hum):
 
         if hum in self.relations:
-            #print(self.relations[hum]['feel'])
-            return self.relations[hum]['feel']
+            #print(self.relations[hum]['hate/like'])
+            return self.relations[hum]['hate/like']
 
     def check_colli(self,street):
 
@@ -312,9 +329,28 @@ class Human():
             for i in range(len(self.collis)):
                 if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
                     k=i
-            self.element_colli = self.collis[k]
+            colli_elem = self.collis[k]
         else:
-            self.element_colli = None
+            colli_elem = None
+
+        if type(self) == Perso:
+            if self.element_colli != None:
+                if colli_elem != None:
+                    if colli_elem != self.element_colli :
+                        self.element_colli.unhoover()
+                        self.element_colli = colli_elem
+                        self.element_colli.hoover()
+                else:
+                    self.element_colli.unhoover()
+                    self.element_colli = None
+            else:
+                if colli_elem != None:
+                    self.element_colli = colli_elem
+                    self.element_colli.hoover()
+        else:
+            self.element_colli = colli_elem
+
+
     ##
 
     def hit(self,dt=0):
@@ -322,6 +358,11 @@ class Human():
             self.do('hit')
             if self.element_colli != None:
                 if isinstance(self.element_colli,Human):
+
+                    if not self.in_combat:
+                        self.in_combat = True
+                    self.last_hit = time.time()
+
                     self.element_colli.be_hit(self)
                 elif type(self) == Perso:
                     self.element_colli.activate(self)
@@ -371,49 +412,50 @@ class Human():
                 self.do()
 
     def move(self,dir,street,speed=None):
+        if hasattr(self,'skin_id'):
 
-        maxx = street.xxf
-        maxy = street.yyf
+            maxx = street.xxf
+            maxy = street.yyf
 
-        if not speed:
-            speed = self.speed
+            if not speed:
+                speed = self.speed
 
-        if 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
+            if 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
 
-            moved = False
-            if dir == 'R' :
-                if (maxx[1] == None or maxx[1] > self.gex+speed+g.sman.spr(self.skin_id).width ):
-                    self.gex+=speed
+                moved = False
+                if dir == 'R' :
+                    if (maxx[1] == None or maxx[1] > self.gex+speed+g.sman.spr(self.skin_id).width ):
+                        self.gex+=speed
+                        moved = True
+
+                elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-speed ):
+                    self.gex-=speed
                     moved = True
 
-            elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-speed ):
-                self.gex-=speed
-                moved = True
+                elif dir == 'up' and maxy[1] > self.gey+self.yspeed:
+                    self.gey+=self.yspeed
+                    moved = True
 
-            elif dir == 'up' and maxy[1] > self.gey+self.yspeed:
-                self.gey+=self.yspeed
-                moved = True
+                elif dir == 'down' and maxy[0] < self.gey-self.yspeed :
+                    self.gey-=self.yspeed
+                    moved = True
 
-            elif dir == 'down' and maxy[0] < self.gey-self.yspeed :
-                self.gey-=self.yspeed
-                moved = True
-
-            if moved :
-                if dir in ['R','L']:
-                    if self.dir != dir:
-                        self.dir = dir
-                        self.do('move')
-                        self.update_skin(repeat=False)
+                if moved :
+                    if dir in ['R','L']:
+                        if self.dir != dir:
+                            self.dir = dir
+                            self.do('move')
+                            self.update_skin(repeat=False)
+                        else:
+                            self.do('move')
                     else:
                         self.do('move')
-                else:
-                    self.do('move')
-                self.update_lab()
-                self.update()
+                    self.update_lab()
+                    self.update()
 
-                self.time_last_move = time.time()
-            elif speed > self.speed:
-                self.move(dir,street)
+                    self.time_last_move = time.time()
+                elif speed > self.speed:
+                    self.move(dir,street)
 
     def tp(self,x=None,y=None,street=None):
 
@@ -443,26 +485,80 @@ class Human():
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
             g.lman.modify(self.label,pos)
 
+            # spr life
+            size_lifebar = 150
+            size_fill = (self.life*size_lifebar)/self.max_life
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 10
+            g.sman.modify(self.label_life,(x,y),scale=(size_fill/32,None))
+            # spr confidence
+            size_lifebar = 150
+            size_fill = (self.confidence*size_lifebar)/100
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 15
+            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None))
+
     def be_hit(self,hitter):
 
-        ## attention faut réécrire dans Perso aussi
-
-        #print(self.name,'hit by',hitter.name)
-        self.rsay('aled')
+        ## skin
         g.sman.filter(self.skin_id)
         g.bertran.unschedule(self.un_hit)
         g.bertran.schedule_once(self.un_hit, 0.4)
 
-        self.life -= hitter.damage
-        hitter.cred += 1
-        #self.cred += 1
+        dmg = hitter.damage + r.randint(-5,5)
 
-        if (self.life <= 0 or self.cred > 100 or self.cred < -100) and 'die' not in self.doing:
-            self.die()
-
-        s=convert_huge_nb(hitter.damage)
+        ## label +57
+        s=convert_huge_nb(dmg)
         pos = self.box.cx +r.randint(-10,10),self.box.fy
         g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=True)
+
+        ## dmging
+        self.life -= dmg
+        self.hits_in_row += 1
+        self.last_hit = time.time()
+        hitter.cred += 1
+
+        if (self.life <= 0) and 'die' not in self.doing:
+            print(hitter.name,'killed',self.name)
+            self.die()
+
+        if self.alive and type(self) != Perso:
+
+            ## feelings
+            #peur
+            if dmg > self.life:
+                # je suis oneshot j'ai PEUR => minimum
+                self.confidence = 0
+            else :
+                self.confidence -= self.confidence/(self.life/dmg)
+
+            self.relations[hitter]['peur/rassure'] -= dmg/5
+            self.relations[hitter]['hate/like'] -= dmg/5
+
+            if not self.in_combat:
+                # 3 cas de figure : soit on est très confiant et on réplique direct
+                # soit on est pas confiant et on dit calmos et on attend de se faire taper un peu plus
+                # soit on est une tafiole et on fuit
+
+                if self.confidence > 80:
+                    self.attack_hum(0,hitter)
+                    self.in_combat = True
+                elif self.confidence > 40 and self.hits_in_row > 1:
+                    self.attack_hum(0,hitter)
+                    self.in_combat = True
+
+            if self.confidence > 80:
+                self.rsay('tveux mourir?')
+            elif self.confidence > 40:
+                self.rsay('stop taper')
+            elif self.confidence > 20:
+                g.bertran.unschedule(self.hit)
+                g.bertran.unschedule(self.attack_hum)
+                self.fuir(0,hitter)
+                self.rsay('moi fuir')
+            else:
+                g.bertran.unschedule(self.hit)
+                g.bertran.unschedule(self.attack_hum)
+                self.fuir(0,hitter)
+                self.rsay('aled')
 
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
@@ -486,12 +582,9 @@ class Human():
     ## BOTS
 
     def being_bot(self):
-        if type(self) not in [Rappeur,Perso] and 'die' not in self.doing:
+        if not self.in_combat and type(self) not in [Perso] and 'die' not in self.doing:
 
-            if r.random() > 0.99995:
-                self.rspeak()
-
-            if self.doing == ['nothing'] and r.random()>0.999:
+            if self.doing == ['nothing'] and not self.in_combat and r.random()>0.999:
                 x,y = self.gex + r.randint(-2000,2000), self.gey + r.randint(-20,20)
 
 
@@ -500,10 +593,29 @@ class Human():
                 elif x < o2.NY.CITY[self.street].x:
                     x = o2.NY.CITY[self.street].x
 
-                """if type(self) == Perso:
-                    print('omg new direction',x,y)"""
-                #print(self.name,'moving from',(self.gex,self.gey),'to',objective)
                 self.move_until(0,(x,y))
+
+            #acting/dialing
+            exp = None
+            imp = 0
+            p = r.random()
+            if p < 0.1:
+                exp = self.voc.random()
+                imp = 10
+            else:
+                ptot = sum(list(map(lambda x:x.get('imp'),self.dials)))
+                if ptot < 100:
+                    ptot = 100
+                for dial in self.dials:
+                    prob = 0.1 + dial.get('imp')*0.9/ptot
+                    if p < prob:
+                        exp = self.voc.exp(dial['meaning'])
+                        imp = dial.get('imp')
+                        break
+
+            p = r.random()
+            if p < imp/10000:
+                self.say(exp)
 
     def move_until(self,dt=0,objective=(0,0)):
 
@@ -581,9 +693,24 @@ class Human():
                 elif self.gex < x:
                     self.move('R',o2.NY.CITY[self.street],speed)
 
-
                 if self.alive and not 'nothing' in self.doing:
                     g.bertran.schedule_once(self.attack_hum,0.01,target)
+
+    def fuir(self,dt,target):
+
+        if self.alive and target.alive:
+            x = target.gex
+            speed = self.speed
+
+            safety_distance = 10000
+
+            if self.gex > x:
+                self.move('R',o2.NY.CITY[self.street],speed)
+            else:
+                self.move('L',o2.NY.CITY[self.street],speed)
+
+            if self.alive and abs(self.gex-x) < safety_distance and not 'nothing' in self.doing:
+                g.bertran.schedule_once(self.fuir,0.01,target)
 
     ## SPEAKING
 
@@ -666,25 +793,39 @@ class Human():
             self.answer(voice)
 
     def answer(self,voice):
-        ## ATTENTION CHANGER DANS GUY asussi
-        meaning = voice['meaning']
 
-        exp = None
-        if meaning == 'bonjour':
-            exp = self.voc.exp(meaning)
-        elif meaning == 'au revoir':
-            exp = self.voc.exp(meaning)
-        elif meaning == 'bien?':
-            exp = self.voc.bienouquoi(self.life/self.max_life)
-        elif meaning == 'veut thune':
-            exp = self.voc.exp('non')
-        elif meaning == 'random':
-            if r.random() > 0.5:
-                exp = self.voc.exp('oui')
-            else:
+        ## ATTENTION CHANGER DANS GUY asussi (PEUT ETRE ~~~~)
+
+        if type(self) != Perso:
+            meaning = voice['meaning']
+
+            exp = None
+            if meaning == 'bonjour':
+                exp = self.voc.exp(meaning)
+            elif meaning == 'au revoir':
+                exp = self.voc.exp(meaning)
+            elif meaning == 'bien?':
+                exp = self.voc.bienouquoi(self.life/self.max_life)
+            elif meaning == 'veut thune':
                 exp = self.voc.exp('non')
-        if exp:
-            self.say(exp)
+            elif meaning == 'random':
+                if r.random() > 0.5:
+                    exp = self.voc.exp('oui')
+                else:
+                    exp = self.voc.exp('non')
+
+            elif meaning == 'free insult':
+                hum = voice['h']
+
+                prob_tapé = self.confidence*(-self.relations[hum]['hate/like'])/10000
+                p = r.random()
+                if p < prob_tapé*2:
+                    self.attack_hum(0,hum)
+                if p < prob_tapé:
+                    exp = self.voc.exp('free insult')
+
+            if exp:
+                self.say(exp)
 
     ## ACTS
 
@@ -723,13 +864,13 @@ class Human():
             self.dials.remove(list(filter(lambda x:x.get('id')==dialid,self.dials))[0])
             if self.roll != None:
                 self.roll.recreate()
-            """if len(list(filter(lambda x:x.get('meaning')==meaning,self.dials))) > 0:
-                self.del_dial(meaning)"""
 
     def empty_dial(self):
         self.dials = []
 
     def update(self):
+
+        t = time.time()
 
         #speaking
         if self.keyids_voc:
@@ -738,49 +879,88 @@ class Human():
             g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
             #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
 
-
-
         #listening
         todel = []
         for voice in self.ear:
-            if time.time()-voice['t'] > self.delay_earin:
+            if t-voice['t'] > self.delay_earin:
                 todel.append(voice)
         for voice in todel:
             self.ear.remove(voice)
-
         todel = []
         for voice in self.selfear:
-            if time.time()-voice['t'] > 5*self.delay_earin:
+            if t-voice['t'] > 5*self.delay_earin:
                 todel.append(voice)
         for voice in todel:
             self.selfear.remove(voice)
 
+        #act/dial
         deleted_acts_dials = False
-
-
-
-        #acting
         todel = []
         for act in self.acts:
-            if time.time()-act['t'] > act['delay']:
+            if t-act['t'] > act['delay']:
                 todel.append(act)
                 deleted_acts_dials = True
         for act in todel:
             self.acts.remove(act)
-        #dialing
         todel = []
         for dial in self.dials:
-            if dial['delay'] != None and time.time()-dial['t'] > dial['delay']:
+            if dial['delay'] != None and t-dial['t'] > dial['delay']:
                 todel.append(dial)
                 deleted_acts_dials = True
         for dial in todel:
             self.dials.remove(dial)
-
         if deleted_acts_dials and self.roll != None:
             self.roll.recreate()
 
 
-        #self.relations.sort(key=lambda x:x.get('last'),reverse=True)
+        in_combat = self.in_combat
+        if not in_combat:
+            for hum in self.hum_env:
+                if hum.in_combat:
+                    in_combat = True
+                    break
+
+        #combatting
+        if in_combat:
+            if t-self.last_hit > 15 and self.doing == ['nothing']:
+                self.in_combat = False
+                self.hits_in_row = 0
+                self.last_hit = 0
+
+        else: ### feelings
+
+            ## life
+            if self.life < self.max_life:
+                self.life += 1
+                if self.life > self.max_life:
+                    self.life = self.max_life
+
+
+            ## confidence
+
+            gens_effrayants = 0
+            amis_rassurants = 0
+
+            for hum in self.hum_env:
+                if self.relations[hum]['peur/rassure'] < 0:
+                    gens_effrayants += self.relations[hum]['peur/rassure']
+                elif self.relations[hum]['peur/rassure'] > 0:
+                    amis_rassurants += self.relations[hum]['peur/rassure']
+
+            confidence = 100*self.life/self.max_life + gens_effrayants + amis_rassurants
+            """if self.name != 'Delta':
+                print(confidence,100*self.life/self.max_life,gens_effrayants)"""
+
+            if confidence > 100:
+                confidence = 100
+            elif confidence < 0:
+                confidence = 0
+
+            if int(confidence) != int(self.confidence):
+                if self.confidence > confidence:
+                    self.confidence -= 1
+                else:
+                    self.confidence += 1
 
         #relations
         for hum in self.relations:
@@ -798,11 +978,15 @@ class Human():
     def hoover(self):
         if hasattr(self,'label'):
             g.lman.unhide(self.label)
+            g.sman.unhide(self.label_life)
+            g.sman.unhide(self.label_conf)
             self._hoover = True
 
     def unhoover(self):
         if hasattr(self,'label'):
             g.lman.unhide(self.label,True)
+            g.sman.unhide(self.label_life,True)
+            g.sman.unhide(self.label_conf,True)
             self._hoover = False
 
     ## load deload
@@ -815,14 +999,31 @@ class Human():
             self.update_skin()
 
         if not hasattr(self,'label'):
+            #label
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
             self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=self.grp)
 
-        #print('loaded',self.name)
+            # spr life
+            size_lifebar = 100
+            size_fill = (self.life*size_lifebar)/self.max_life
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 10
+
+            self.label_life = g.sman.addSpr(g.TEXTIDS['utils'][5],(x,y),group=self.grp,vis=False)
+            g.sman.modify(self.label_life,scale=(size_fill/32,5/32))
+
+            # spr confidence
+            size_lifebar = 150
+            size_fill = (self.confidence*size_lifebar)/100
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 15
+
+            self.label_conf = g.sman.addSpr(g.TEXTIDS['utils'][6],(x,y),group=self.grp,vis=False)
+            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,5/32))
 
     def deload(self):
         g.bertran.unschedule(self.update_skin)
         g.bertran.unschedule(self.move_until)
+        g.bertran.unschedule(self.hit)
+        #g.bertran.unschedule(self.attack_hum)
 
         if hasattr(self,'skin_id'):
             g.sman.delete(self.skin_id)
@@ -830,6 +1031,10 @@ class Human():
         if hasattr(self,'label'):
             g.lman.delete(self.label)
             del self.label
+            g.sman.delete(self.label_life)
+            del self.label_life
+            g.sman.delete(self.label_conf)
+            del self.label_conf
 
         #print('deloaded',self.name)
 
@@ -905,11 +1110,9 @@ class Fan(Human):
 
     def update_env(self):
         super(Fan,self).update_env()
-        #print( list(map( lambda x:x.get('nom'),   list(filter(lambda x:x.get('type')=='hum',self.environ))  )) )
+
         if self.artists != [] and not self.keyids_voc:
-            #print(self.name,'est fan de',list(map(lambda x:x.name,self.artists)))
             for hum in self.hum_env:
-                #print(hum.get('nom'),list(map(lambda x:x.name,self.artists)))
                 if hum.name in list(map(lambda x:x.name,self.artists)):
                     exp = self.voc.omg_c_delta(hum.name)
                     print(self.name,':',exp)
@@ -1259,26 +1462,9 @@ class Perso(Rappeur):
         super(Perso,self).drop_plume()
 
     def be_hit(self,hitter):
-        #print(self.name,'hit by',hitter.name)
-        g.sman.filter(self.skin_id)
-        g.bertran.unschedule(self.un_hit)
-        g.bertran.schedule_once(self.un_hit, 0.4)
-
-        self.life -= hitter.damage
-        hitter.cred += 1
-        self.cred += 1
+        super(Perso,self).be_hit(hitter)
         self.credhud.update()
-
-        if self.life <= 0:
-            self.life = 0
         self.lifehud.update()
-
-        if (self.life <= 0 or self.cred > 100 or self.cred < -100) and 'die' not in self.doing:
-            self.die()
-
-        s=convert_huge_nb(hitter.damage)
-        pos = self.box.cx +r.randint(-10,10),self.box.fy
-        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=True)
 
     def release_son(self,son,fans,day,label):
         super(Perso,self).release_son(son,fans,day,label)
@@ -1345,48 +1531,3 @@ class Perso(Rappeur):
     def move(self,dir,street,speed=None):
         super(Perso,self).move(dir,street,speed)
         self.check_colli(street)
-
-    def check_colli(self,street):
-
-        ## CHANGER DANS PERSO
-        self.collis = []
-
-        for elem in list(map(lambda x:x.get('elem'),self.environ)):
-            if collisionAB(self.realbox,elem.realbox) :
-                self.collis.append(elem)
-
-        if len(self.collis) > 0:
-            self.collis.sort(key=lambda x:x.gey)
-            #print(list(map(lambda x:x.name,self.collis)))
-
-            y,yf = street.yyf
-            d = yf-y
-            yranges = [y]
-            for i in range(len(self.collis)):
-                yranges.append(y+(i+1)*(d/len(self.collis)))
-            #print(yranges)
-
-            k=0
-            for i in range(len(self.collis)):
-                if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
-                    k=i
-            colli_elem = self.collis[k]
-        else:
-            colli_elem = None
-
-
-        if self.element_colli != None:
-            if colli_elem != None:
-                if colli_elem != self.element_colli :
-                    self.element_colli.unhoover()
-                    self.element_colli = colli_elem
-                    self.element_colli.hoover()
-            else:
-                self.element_colli.unhoover()
-                self.element_colli = None
-        else:
-            if colli_elem != None:
-                self.element_colli = colli_elem
-                self.element_colli.hoover()
-
-        #print(self.element_colli)
