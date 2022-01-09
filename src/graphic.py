@@ -10,9 +10,12 @@ from math import *
 import src.utils as u
 from src import obj as o
 
-"""""""""""""""""""""""""""""""""""
- PART ONE : GRAPHIC STUFF
-"""""""""""""""""""""""""""""""""""
+
+'''''''''''''''''''''''''''''''''''''''
+'''''''PART ONE : GRAPHIC STUFF''''''''
+'''''''''''''''''''''''''''''''''''''''
+
+
 
 FPS = 0
 
@@ -342,7 +345,7 @@ class LabelManager():
             self.font = 'arial'
 
     def addLab(self,contenu,xy_pos=(0,0),alr_id=-1,vis=True,font_name=None,font_size=30,group='hud'
-                ,anchor = ('left','bottom'),color=(255,255,255,255),use_str_bien=False):
+                ,anchor = ('left','bottom'),color=(255,255,255,255),use_str_bien=False,w=20):
 
         if alr_id == -1:
             id = u.get_id('lbl')
@@ -359,7 +362,7 @@ class LabelManager():
             contenu = str(contenu)
 
         if use_str_bien:
-            contenu = u.str_bien(contenu)
+            contenu = u.str_bien(contenu,w)
 
         multi = '\n' in contenu
 
@@ -495,7 +498,7 @@ class ParticleManager():
         bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
-                ('center','center'),color=(255,255,255,255),key='normal',vis=True,use_str_bien=True):
+                ('center','center'),color=(255,255,255,255),key='normal',vis=True,use_str_bien=True,w=20):
 
         id = u.get_id('lab_part')
 
@@ -511,7 +514,7 @@ class ParticleManager():
             contenu = str(contenu)
 
         if use_str_bien:
-            contenu = u.str_bien(contenu)
+            contenu = u.str_bien(contenu,w)
 
         multi = '\n' in contenu
 
@@ -637,14 +640,16 @@ pman = ParticleManager()
 TEXTIDS = {}
 
 
-"""""""""""""""""""""""""""""""""""
- PART TWO : CCCC STUFF
-"""""""""""""""""""""""""""""""""""
 
+"""'''''''''''''''''''''''''''''''''
+'''''''PART TWO : CCCC STUFF''''''''
+'''''''''''''''''''''''''''''''''"""
+
+
+#### CYCLE -> rules day/night cycle
 
 MODE_COLOR = 1 ## 1 pour avoir des couleurs wtf et 0 pour la "réalité"
 
-#### CYCLE -> rules day/night cycle
 class Cycle():
 
     def __init__(self,perso=None,bg=None):
@@ -779,7 +784,6 @@ class Cycle():
         return p
 
 Cyc = Cycle()
-M = [0,0]
 
 #### CLOCK
 
@@ -805,6 +809,8 @@ bertran = Clock() # bertran c'est le S
 
 
 #### CURSOR
+
+M = [0,0]
 
 class Cursor():
 

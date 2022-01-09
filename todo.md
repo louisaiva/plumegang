@@ -1,14 +1,20 @@
 
+# ajouter des putains de moyens d'ameliorer la relation
+  pcq là tlm se fout sur la gueule
+  idées :
+    -> 'pk tu m'insultes' quand on recoit une insulte
+    -> possibilité de pas taper quand on sfait taper, mais demander pardon/pitié
+    -> compliments pop kan t qqun genti
+    -> une simple conv (bjr,au revoir,cv ?) augmente la relat°
+
+# que les bots passent des portes
+
 # hm error dans les bots ?
   j'ai eu 694 fans alors que y'avait apparement que 690 bots (+ alphonse)
   et en plus j'en ai tué en chemin et ça m'a pas baissé des fans
   --> à régler
 
 # tableau d'appreciation d'une personne
-  que les bots (et toi) aient des avis sur chaque personne qu'ils croisent
-  un mec qui t'a insulté bah tu l'aimes pas etc.
-  -> influence le langage utilisé par les bots pour te répondre, et tout en fait
-
   -> amis dès qu'ils te voient ils te disent "oh yo"
 
 # nodes de commuincation
@@ -52,7 +58,18 @@
 
 # animations mdr
 
+  et mettre genre des ptites anim des décors ça pourrait être lourdax (mais bon ça sera dans longtemps jimagijn)
+
+
+
+**DONE**
+
+# tableau d'appreciation d'une personne
+  que les bots (et toi) aient des avis sur chaque personne qu'ils croisent
+  un mec qui t'a insulté bah tu l'aimes pas etc.
+  -> influence le langage utilisé par les bots pour te répondre, et tout en fait
+
+# animations mdr
+
   alors deja finir les putains de 3 sprites pour le skin du poto alphonse,
   puis le poto pénis
-
-  et mettre genre des ptites anim des décors ça pourrait être lourdax (mais bon ça sera dans longtemps jimagijn)

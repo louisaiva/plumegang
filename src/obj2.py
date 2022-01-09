@@ -150,7 +150,7 @@ class Street():
 
     # bots
     def rand_pos(self):
-        x,y = random.randint(0,self.rxf),random.randint(*Y)
+        x,y = random.randint(1,self.rxf-p.SIZE_SPR-1),random.randint(*Y)
         return (x,y)
 
     def environ_lr(self,xl,xr):

@@ -229,7 +229,6 @@ class App():
 
         ### PERSOS
         g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
-        #g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,4))
         g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
         g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,30))
 
@@ -241,7 +240,6 @@ class App():
         g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
         g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
         g.TEXTIDS['utils'] = g.tman.loadImSeq('utils.png',(8,8))
-        #g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(8,8))
 
         qua = ['F','D','C','B','A','S']
         g.TEXTIDS['plume'] = {}
@@ -264,7 +262,7 @@ class App():
             g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
         del g.TEXTIDS['_son']
 
-        #g.TEXTIDS['gui'] = g.tman.loadImSeq('gui.png',(2,2))
+
         g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/sky.png')
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
@@ -731,6 +729,7 @@ class App():
 
             ## anchor / moving sprites
 
+            # ZONE/ITEMS
             if True:
 
                 #--# zones elem
@@ -749,6 +748,8 @@ class App():
                     #g.sman.modify(item.skin_id,(x_r,y_r))
                     item.move(x_r,y_r)
 
+            # PERSOS
+            if True:
                 #--# persos
                 ## update catalog:
                 o2.NY.CITY[self.perso.street].update_catalog(self.perso)
@@ -762,6 +763,12 @@ class App():
                     hum.update_lab()
                     hum.update()
 
+                for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
+                    hum.being_bot()
+                    hum.check_do()
+
+            # BG
+            if True:
 
                 #--# bg
                 w = g.sman.spr(self.sprids['bg.1']).width
@@ -788,11 +795,15 @@ class App():
 
                 g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
                 g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
+
+            # CAM
+            if True:
                 o2.NY.CITY[self.perso.street].modify(g.Cam.X+ g.GodCam.X,g.Cam.Y)
                 #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
                 g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street],self.keys[key.LSHIFT])
 
+            # if not pause, go streamin and particles
             if g.bertran.speed > 0:
 
                 ## particles
@@ -805,13 +816,6 @@ class App():
                     malus = 1-i*0.2
                     if chance < self.perso.nb_fans*malus:
                         random.choice(p.BOTS).stream(self.perso.disco[i])
-
-            ## perso
-
-            for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
-                #if type(hum) != p.Perso:# and hum != self.perso.poto:
-                hum.being_bot()
-                hum.check_do()
 
             text_lab = (self.perso.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.todo)),self.perso.doing)
             g.lman.set_text(self.lab_doing,text_lab)

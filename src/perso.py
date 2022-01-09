@@ -67,7 +67,7 @@ class Distroguy(Metier):
             #print(hum,'veut thune')
             if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
                 if o.distro.caisse[hum] > 0:
-                    exp = 'tu as ' + trunc(o.distro.caisse[hum],2) + ' $ de côté, tu les veux ?'
+                    exp = 'tu as ' + str(int(o.distro.caisse[hum])) + ' $ de côté, tu les veux ?'
                     self.act_cashback(hum,o.distro.caisse[hum])
                 elif o.distro.caisse[hum] < 0:
                     exp = 'mdr non tu nous dois '+str(int(-o.distro.caisse[hum]))+ ' balles batard'
@@ -78,9 +78,9 @@ class Distroguy(Metier):
         elif meaning == 'tu bosses?':
             if isinstance(hum, Rappeur) and hum not in o.distro.rappeurs:
                 exps = ['oue je fais de la thune en signant des rappeurs chez distrokid, ça pourrait t\'interesser !',
-                            'ici on accueille des rappeurs qui veulent poster des sons sur le web, ça t\'intéresse ?',
-                            'on signe des ptis rappeurs ici ! ça coûte pas cher pour poster tes sons, ça te dit ?',
-                            'oh mais t\'es rappeur ! ici on signe des artistes pour qu\'ils puissent être sur spotify etc ! ça te dit ?']
+                        'ici on accueille des rappeurs qui veulent poster des sons sur le web, ça t\'intéresse ?',
+                        'on signe des ptis rappeurs ici ! ça coûte pas cher pour poster tes sons, ça te dit ?',
+                        'oh mais t\'es rappeur ! ici on signe des artistes pour qu\'ils puissent être sur spotify etc ! ça te dit ?']
 
                 exp = r.choice(exps)
 
@@ -230,6 +230,48 @@ class Human():
         self.color = c['coral']
         self.rspeak()
 
+    ### GENERAL
+
+    def add_money(self,qté):
+        self.money += qté
+
+    def die(self):
+        self.do('die')
+        self.life = 0
+        self.damage = 0
+        self.speed = 0
+        self.yspeed = 0
+        if hasattr(self,'label_life'):
+            g.sman.delete(self.label_life)
+            del self.label_life
+            g.sman.delete(self.label_conf)
+            del self.label_conf
+
+        g.bertran.schedule_once(self.delete,4)
+
+    def delete(self,dt=0):
+
+        o2.NY.CITY[self.street].del_hum(self)
+        BOTS.remove(self)
+
+    # relations
+    def relup(self,hum,qté,cat='hate/like'):
+        if hum in self.relations:
+            self.relations[hum][cat] += qté
+            if self.relations[hum][cat] > 100:
+                self.relations[hum][cat] = 100
+            elif self.relations[hum][cat] < -100:
+                self.relations[hum][cat] = -100
+
+    def get_feel(self,hum):
+
+        if hum in self.relations:
+            #print(self.relations[hum]['hate/like'])
+            return self.relations[hum]['hate/like']
+
+
+    ### UPDATES
+
     def update_skin(self,dt=0.4,repeat=True):
         if hasattr(self,'skin_id'):
             max_roll = len(self.textids[self.doing[0]][self.dir])
@@ -247,9 +289,6 @@ class Human():
 
             if repeat:
                 g.bertran.schedule_once(self.update_skin, 0.2)
-
-    def add_money(self,qté):
-        self.money += qté
 
     def update_env(self):
         if self.alive:
@@ -302,12 +341,6 @@ class Human():
 
         self.check_colli(o2.NY.CITY[self.street])
 
-    def get_feel(self,hum):
-
-        if hum in self.relations:
-            #print(self.relations[hum]['hate/like'])
-            return self.relations[hum]['hate/like']
-
     def check_colli(self,street):
 
         ## CHANGER DANS PERSO
@@ -353,21 +386,98 @@ class Human():
         else:
             self.element_colli = colli_elem
 
+    def update(self):
 
-    ##
+        t = time.time()
 
-    def hit(self,dt=0):
-        if self.alive:
-            if 'heal' in self.doing:
-                self.done_todo()
-            self.do('hit')
-            if self.element_colli != None:
-                if isinstance(self.element_colli,Human):
-                    self.last_hit = time.time()
-                    self.relup(self.element_colli,self.damage,'peur/rassure')
-                    self.element_colli.be_hit(self)
-                elif type(self) == Perso:
-                    self.element_colli.activate(self)
+        #life
+        if self.life < self.max_life and not 'heal' in list(map(lambda x:x['lab'],self.todo)):
+            self.add_todo('heal',self.heal,20)
+
+        #speaking
+        if self.keyids_voc:
+            x,y = self.box.cx,self.box.fy + 150
+            #print(x,y)
+            g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
+            #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
+
+        #listening
+        todel = []
+        for voice in self.ear:
+            if t-voice['t'] > self.delay_earin:
+                todel.append(voice)
+        for voice in todel:
+            self.ear.remove(voice)
+        todel = []
+        for voice in self.selfear:
+            if t-voice['t'] > 5*self.delay_earin:
+                todel.append(voice)
+        for voice in todel:
+            self.selfear.remove(voice)
+
+        #act/dial
+        deleted_acts_dials = False
+        todel = []
+        for act in self.acts:
+            if t-act['t'] > act['delay']:
+                todel.append(act)
+                deleted_acts_dials = True
+        for act in todel:
+            self.acts.remove(act)
+        todel = []
+        for dial in self.dials:
+            if dial['delay'] != None and t-dial['t'] > dial['delay']:
+                todel.append(dial)
+                deleted_acts_dials = True
+        for dial in todel:
+            self.dials.remove(dial)
+        if deleted_acts_dials and self.roll != None:
+            self.roll.recreate()
+
+        #combatting
+        if (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) :
+            if t-self.last_hit > 5:
+                self.hits_in_row = 0
+                self.last_hit = 0
+        else:
+
+            ## confidence
+
+            gens_effrayants = 0
+            amis_rassurants = 0
+
+            for hum in self.hum_env:
+                if self.relations[hum]['peur/rassure'] < 0:
+                    gens_effrayants += self.relations[hum]['peur/rassure']
+                elif self.relations[hum]['peur/rassure'] > 0:
+                    amis_rassurants += self.relations[hum]['peur/rassure']
+
+            confidence = 100*self.life/self.max_life + gens_effrayants + amis_rassurants
+
+            if confidence > 100:
+                confidence = 100
+            elif confidence < 0:
+                confidence = 0
+
+            if int(confidence) != int(self.confidence):
+                if self.confidence > confidence:
+                    self.confidence -= 1
+                else:
+                    self.confidence += 1
+
+        #relations
+        for hum in self.relations:
+            if hum in self.hum_env:
+                self.relations[hum]['t'] += 1
+            else:
+                self.relations[hum]['t'] -= 0.1
+
+        if self.name == 'Delta':
+            pass
+            #print()
+
+
+    ## DOIN
 
     def do(self,action='nothing'):
 
@@ -419,6 +529,9 @@ class Human():
                 self.do()
             else:
                 self.undo(0,'move')
+
+
+    ## ACTION
 
     def move(self,dir,street,speed=None):
 
@@ -492,6 +605,28 @@ class Human():
 
         #print('tp : x',x,'y',y,'street',street,'\n')
 
+    def hit(self,dt=0):
+        if self.alive:
+
+            # on arrête le heal vu qu'on bouge
+            if 'heal' in self.doing:
+                self.done_todo()
+
+            # et on bouge
+            self.time_last_move = time.time()
+            self.do('hit')
+
+            # puis on vérifie si on touche qqchose
+            if self.element_colli != None:
+
+                if isinstance(self.element_colli,Human):
+                    # là c'est un humain
+                    self.last_hit = time.time()
+                    self.relup(self.element_colli,self.damage,'peur/rassure')
+                    self.element_colli.be_hit(self)
+                elif type(self) == Perso:
+                    # là c'est autre chose : si on est le perso on l'active
+                    self.element_colli.activate(self)
 
     def be_hit(self,hitter):
 
@@ -568,25 +703,6 @@ class Human():
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
             g.sman.filter(self.skin_id,(255,255,255))
-
-    def die(self):
-        self.do('die')
-        self.life = 0
-        self.damage = 0
-        self.speed = 0
-        self.yspeed = 0
-        if hasattr(self,'label_life'):
-            g.sman.delete(self.label_life)
-            del self.label_life
-            g.sman.delete(self.label_conf)
-            del self.label_conf
-
-        g.bertran.schedule_once(self.delete,4)
-
-    def delete(self,dt=0):
-
-        o2.NY.CITY[self.street].del_hum(self)
-        BOTS.remove(self)
 
 
     ## BOTS
@@ -682,7 +798,9 @@ class Human():
         self.todo.append(newtodo)
         self.todo.sort(key=lambda x:x.get('imp'),reverse=True)
 
-    #todo
+
+    ## TO DO
+
     def move_until(self,dt=0,objective=(0,0)):
 
         reached = False,False
@@ -803,16 +921,6 @@ class Human():
                 g.bertran.schedule_once(self.heal,0.1)
 
 
-    ## RELATIONS
-
-    def relup(self,hum,qté,cat='hate/like'):
-        if hum in self.relations:
-            self.relations[hum][cat] += qté
-            if self.relations[hum][cat] > 100:
-                self.relations[hum][cat] = 100
-            elif self.relations[hum][cat] < -100:
-                self.relations[hum][cat] = -100
-
     ## SPEAKING
 
     def say(self,exp):
@@ -824,10 +932,14 @@ class Human():
             if len(exp) > duree:
                 duree = len(exp)
 
+            w=20
+            if len(exp)>60:
+                w=(len(exp)//3) + 1
+
             # gaffe faut modifier aussi dans l'update
-            x,y = self.box.cx,self.box.fy + 100
+            x,y = self.box.cx,self.box.fy + 150
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                ,group='midup',vis=True,duree=duree)
+                                ,group='midup',vis=True,duree=duree,w=w)
 
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
@@ -931,12 +1043,12 @@ class Human():
             if exp:
                 self.say(exp)
 
-    ## ACTS
 
-    # ACT : { 't':float  ,  'delay':float/((((((None))))))  ,  'giver':hum  ,
-    #   'exp':str  ,  'fct':funct  ,  'param':[]  ,  'answer':str ,'id': unique str}
+    ## ACTS / DIALS
 
     def add_act(self,act):
+        # ACT : { 't':float  ,  'delay':float/((((((None))))))  ,  'giver':hum  ,
+        #   'exp':str  ,  'fct':funct  ,  'param':[]  ,  'answer':str ,'id': unique str}
         if not act['id'] in list(map(lambda x:x.get('id'),self.acts)):
             self.acts.append(act)
             if self.roll != None:
@@ -949,14 +1061,16 @@ class Human():
             if recreate and self.roll != None:
                 self.roll.recreate()
 
-    # DIAL : { 't':float  ,  'delay':float/None  ,   'meaning':str  , 'imp':int ,'id': unique str}
-    # (imp -> importance : plus c'est eleve plus ça va etre haut dans la roue -> concerne les warnings et les dialogues de situation)
-
-    # 100 : warning
-    #  50 : situation
-    #  10 : banal
-
     def add_dial(self,dial):
+
+        # DIAL : { 't':float  ,  'delay':float/None  ,   'meaning':str  , 'imp':int ,'id': unique str}
+        # (imp -> importance : plus c'est eleve plus ça va etre haut dans la roue -> concerne les warnings et les dialogues de situation)
+
+        # 100 : warning
+        #  80 : situation
+        #  50 : insulte
+        #  10 : banal
+
         if not dial['id'] in list(map(lambda x:x.get('id'),self.dials)):
             self.dials.append(dial)
             if self.roll != None:
@@ -972,97 +1086,9 @@ class Human():
     def empty_dial(self):
         self.dials = []
 
-    def update(self):
 
-        t = time.time()
+    ## SPR/LABELS
 
-        #life
-        if self.life < self.max_life and not 'heal' in list(map(lambda x:x['lab'],self.todo)):
-            self.add_todo('heal',self.heal,20)
-
-        #speaking
-        if self.keyids_voc:
-            x,y = self.box.cx,self.box.fy + 100
-            #print(x,y)
-            g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
-            #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
-
-        #listening
-        todel = []
-        for voice in self.ear:
-            if t-voice['t'] > self.delay_earin:
-                todel.append(voice)
-        for voice in todel:
-            self.ear.remove(voice)
-        todel = []
-        for voice in self.selfear:
-            if t-voice['t'] > 5*self.delay_earin:
-                todel.append(voice)
-        for voice in todel:
-            self.selfear.remove(voice)
-
-        #act/dial
-        deleted_acts_dials = False
-        todel = []
-        for act in self.acts:
-            if t-act['t'] > act['delay']:
-                todel.append(act)
-                deleted_acts_dials = True
-        for act in todel:
-            self.acts.remove(act)
-        todel = []
-        for dial in self.dials:
-            if dial['delay'] != None and t-dial['t'] > dial['delay']:
-                todel.append(dial)
-                deleted_acts_dials = True
-        for dial in todel:
-            self.dials.remove(dial)
-        if deleted_acts_dials and self.roll != None:
-            self.roll.recreate()
-
-        #combatting
-        if (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) :
-            if t-self.last_hit > 5:
-                self.hits_in_row = 0
-                self.last_hit = 0
-        else:
-
-            ## confidence
-
-            gens_effrayants = 0
-            amis_rassurants = 0
-
-            for hum in self.hum_env:
-                if self.relations[hum]['peur/rassure'] < 0:
-                    gens_effrayants += self.relations[hum]['peur/rassure']
-                elif self.relations[hum]['peur/rassure'] > 0:
-                    amis_rassurants += self.relations[hum]['peur/rassure']
-
-            confidence = 100*self.life/self.max_life + gens_effrayants + amis_rassurants
-
-            if confidence > 100:
-                confidence = 100
-            elif confidence < 0:
-                confidence = 0
-
-            if int(confidence) != int(self.confidence):
-                if self.confidence > confidence:
-                    self.confidence -= 1
-                else:
-                    self.confidence += 1
-
-        #relations
-        for hum in self.relations:
-            if hum in self.hum_env:
-                self.relations[hum]['t'] += 1
-            else:
-                self.relations[hum]['t'] -= 0.1
-
-        if self.name == 'Delta':
-            pass
-            #print()
-
-    ## label
     def load(self):
         if not hasattr(self,'skin_id'):
             self.roll_skin = 0
