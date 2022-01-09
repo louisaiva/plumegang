@@ -1,4 +1,8 @@
 
+# meilleure création de la ville :
+  qu'elle se déploit depuis une seule et unique rue celle de la maison
+  -> permet d'ouvrir des rues au fur et à mesure qu'on devient de plus en plus connu
+
 # ajouter des putains de moyens d'ameliorer la relation
   pcq là tlm se fout sur la gueule
   idées :

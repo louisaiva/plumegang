@@ -117,10 +117,10 @@ class App():
 
         ## PERSOS
 
-        self.perso = p.Perso(g.TEXTIDS['perso2'],fill=FILL_INV)
+        self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
         #o.distro.sign(self.perso)
         o2.NY.CITY['home'].set_owner(self.perso)
-        p.BOTS.append(p.Fan(g.TEXTIDS['persos'],o2.NY.CITY['home'].rand_pos(),street='home'))
+        p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
 
         self.perso.assign_poto(p.BOTS[-1])
 
@@ -135,9 +135,10 @@ class App():
             pos = street.rand_pos()
 
             if random.random() < 1/8 and len(names.rappeurs) > 0:
-                p.BOTS.append(p.Rappeur(g.TEXTIDS['perso2'],pos,street=street.name))
+                p.BOTS.append(p.Rappeur(g.TEXTIDS['rap'],pos,street=street.name))
             else:
-                p.BOTS.append(p.Fan(g.TEXTIDS['persos'],pos,street=street.name))
+                text = random.choice(['persos','perso2','perso3'])
+                p.BOTS.append(p.Fan(g.TEXTIDS[text],pos,street=street.name))
 
         for hum in p.BOTS:
             if hum.street != 'ghost':
@@ -229,8 +230,10 @@ class App():
 
         ### PERSOS
         g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
+        g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,30))
+        g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,30))
         g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
-        g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso2.png',(1,30))
+        g.TEXTIDS['rap'] = g.tman.loadImSeq('perso2.png',(1,30))
 
 
         # items
