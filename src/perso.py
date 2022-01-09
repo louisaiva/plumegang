@@ -51,8 +51,8 @@ class Distroguy(Metier):
         self.meanings.append('veut thune')
         self.meanings.append('tu bosses?')
 
-        self.dials['distroguy_dial_thune'] = { 't':0 , 'delay':None , 'meaning':'veut thune' , 'imp':50 , 'id':'distroguy_dial_thune' }
-        self.dials['distroguy_dial_sign'] = { 't':0 , 'delay':None , 'meaning':'tu bosses?' , 'imp':49 , 'id':'distroguy_dial_sign' }
+        self.dials['distroguy_dial_thune'] = { 't':0 , 'delay':None , 'meaning':'veut thune' , 'imp':81 , 'id':'distroguy_dial_thune' }
+        self.dials['distroguy_dial_sign'] = { 't':0 , 'delay':None , 'meaning':'tu bosses?' , 'imp':80 , 'id':'distroguy_dial_sign' }
 
         self.acts['distroguy_act_thune'] = { 't':0 , 'delay':10 , 'giver':self.perso  , 'exp':'prendre'
                                 , 'fct':o.distro.cashback , 'param':[] , 'answer':'merci' , 'id':'distroguy_act_thune'}
@@ -264,17 +264,16 @@ class Human():
             nb_hum_env = len(self.hum_env)
             nb_hum_oldenv = len(self.hum_oldenv)
 
-            hate = False
             for hum in self.hum_env:
                 if hum not in self.relations:
                     self.relations[hum] = {'t':1,'last':-1,'hate/like':r.randint(-100,100),'peur/rassure':0}
 
                 if self.relations[hum]['hate/like'] < -50:
-                    dial = { 't':time.time() , 'delay':None , 'meaning':'free insult' , 'imp':-self.relations[hum]['hate/like']-20 ,'id':'dial_insuult'}
+                    imp = -self.relations[hum]['hate/like']-20
+                    dial = { 't':time.time() , 'delay':None , 'meaning':'free insult' , 'imp':imp ,'id':'dial_insuult'}
                     self.add_dial(dial)
-                    hate = True
 
-            if not hate:
+            if not True in list(map(lambda x:self.relations[x]['hate/like'] < -50,self.relations)):
                 self.del_dial('dial_insuult')
 
             if nb_hum_oldenv > nb_hum_env:
@@ -493,23 +492,6 @@ class Human():
 
         #print('tp : x',x,'y',y,'street',street,'\n')
 
-    def update_lab(self):
-        if hasattr(self,'label'):
-            # label
-            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
-            g.lman.modify(self.label,pos)
-
-        if hasattr(self,'label_life'):
-            # spr life
-            size_lifebar = 150
-            size_fill = (self.life*size_lifebar)/self.max_life
-            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 10
-            g.sman.modify(self.label_life,(x,y),scale=(size_fill/32,None))
-            # spr confidence
-            size_lifebar = 150
-            size_fill = (self.confidence*size_lifebar)/100
-            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 15
-            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None))
 
     def be_hit(self,hitter):
 
@@ -614,6 +596,7 @@ class Human():
 
             if type(self) not in [Perso]:
 
+                #move
                 if r.random()>0.999:
                     x,y = self.gex + r.randint(-2000,2000), self.gey + r.randint(-20,20)
 
@@ -626,27 +609,32 @@ class Human():
                     #self.move_until(0,(x,y))
                     self.add_todo('move',self.move_until,param=[(x,y)])
 
+                #say the dial
                 if True :
                     #acting/dialing
                     exp = None
+                    chosen_dial = None
                     imp = 0
                     p = r.random()
-                    if p < 0.1:
+                    if p < 0.2:
                         exp = self.voc.random()
-                        imp = 10
+                        imp = 20
                     else:
                         ptot = sum(list(map(lambda x:x.get('imp'),self.dials)))
                         if ptot < 100:
                             ptot = 100
                         for dial in self.dials:
-                            prob = 0.1 + dial.get('imp')*0.9/ptot
+                            prob = 0.1 + dial.get('imp')*0.8/ptot
                             if p < prob:
+                                chosen_dial = dial
                                 exp = self.voc.exp(dial['meaning'])
                                 imp = dial.get('imp')
                                 break
 
                     p = r.random()
-                    if p < imp/10000:
+                    if p < imp/20000:
+                        if chosen_dial:
+                            self.del_dial(chosen_dial['id'])
                         self.say(exp)
 
             ##todo
@@ -1074,26 +1062,7 @@ class Human():
             pass
             #print()
 
-    ## hoover
-
-    def hoover(self):
-        if hasattr(self,'label'):
-            g.lman.unhide(self.label)
-        if hasattr(self,'label_life'):
-            g.sman.unhide(self.label_life)
-            g.sman.unhide(self.label_conf)
-            self._hoover = True
-
-    def unhoover(self):
-        if hasattr(self,'label'):
-            g.lman.unhide(self.label,True)
-        if hasattr(self,'label_life'):
-            g.sman.unhide(self.label_life,True)
-            g.sman.unhide(self.label_conf,True)
-            self._hoover = False
-
-    ## load deload
-
+    ## label
     def load(self):
         if not hasattr(self,'skin_id'):
             self.roll_skin = 0
@@ -1103,14 +1072,14 @@ class Human():
 
         if not hasattr(self,'label'):
             #label
-            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
+            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 30
             self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=self.grp)
 
         if not hasattr(self,'label_life') and self.alive:
             # spr life
             size_lifebar = 100
             size_fill = (self.life*size_lifebar)/self.max_life
-            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 10
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy +2
 
             self.label_life = g.sman.addSpr(g.TEXTIDS['utils'][5],(x,y),group=self.grp,vis=False)
             g.sman.modify(self.label_life,scale=(size_fill/32,5/32))
@@ -1118,7 +1087,7 @@ class Human():
             # spr confidence
             size_lifebar = 150
             size_fill = (self.confidence*size_lifebar)/100
-            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 15
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 7
 
             self.label_conf = g.sman.addSpr(g.TEXTIDS['utils'][6],(x,y),group=self.grp,vis=False)
             g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,5/32))
@@ -1144,21 +1113,54 @@ class Human():
 
         #print('deloaded',self.name)
 
+    def update_lab(self):
+        if hasattr(self,'label'):
+            # label
+            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 30
+            g.lman.modify(self.label,pos)
+
+        if hasattr(self,'label_life'):
+            # spr life
+            size_lifebar = 150
+            size_fill = (self.life*size_lifebar)/self.max_life
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 2
+            g.sman.modify(self.label_life,(x,y),scale=(size_fill/32,None))
+            # spr confidence
+            size_lifebar = 150
+            size_fill = (self.confidence*size_lifebar)/100
+            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 7
+            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None))
+
+    def hoover(self):
+        if hasattr(self,'label'):
+            g.lman.unhide(self.label)
+        if hasattr(self,'label_life'):
+            g.sman.unhide(self.label_life)
+            g.sman.unhide(self.label_conf)
+            self._hoover = True
+
+    def unhoover(self):
+        if hasattr(self,'label'):
+            g.lman.unhide(self.label,True)
+        if hasattr(self,'label_life'):
+            g.sman.unhide(self.label_life,True)
+            g.sman.unhide(self.label_conf,True)
+            self._hoover = False
     ##
+
+
 
     def _box(self):
         x,y,xf,yf = self.realbox
         w,h=xf-x,yf-y
         return box(x,y,w,h)
     box = property(_box)
-
     def _realbox(self):
         if hasattr(self,'skin_id'):
             return g.sman.box(self.skin_id)
         else:
             return 0,0,0,0
     realbox = property(_realbox)
-
     def _in_combat(self):
 
         in_c = False
@@ -1172,9 +1174,7 @@ class Human():
             self.hits_in_row = 0
 
         return in_c
-
     in_combat = property(_in_combat)
-
     def _alive(self):
         if self.life > 0:
             return True
@@ -1268,13 +1268,6 @@ class Guy(Fan):
     def update_env(self):
         super(Guy,self).update_env()
 
-        """tab_hum = list(filter(lambda x:x.get('type')=='hum',self.environ))
-        tab_hum = list(map(lambda x:x.get('elem'),tab_hum))
-        tab_hum_old = list(filter(lambda x:x.get('type')=='hum',self.old_env))
-        tab_hum_old = list(map(lambda x:x.get('elem'),tab_hum_old))"""
-
-        #print(list(map(lambda x:x.get('nom'),tab_hum)),list(map(lambda x:x.get('nom'),tab_hum_old)))
-
         ## RAJOUTE LES DIALS DU METIER AUX nouveaux VENUS
         for hum in self.hum_env:
             if hum not in self.hum_oldenv:
@@ -1301,6 +1294,36 @@ class Guy(Fan):
         else:
             # sinon on fait un comportement d'humain
             super(Guy,self).answer(voice)
+
+    ### label
+    def load(self):
+        super(Guy,self).load()
+        if not hasattr(self,'label_work'):
+            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 8
+            self.label_work = g.lman.addLab('-'+self.metier.name+'-',pos,anchor = ('center','bottom'),font_size=15,group=self.grp,vis=False,color=c['white'])
+
+    def deload(self):
+        super(Guy,self).deload()
+        if hasattr(self,'label_work'):
+            g.lman.delete(self.label_work)
+            del self.label_work
+
+    def update_lab(self):
+        super(Guy,self).update_lab()
+        if hasattr(self,'label_work'):
+            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 8
+            g.lman.modify(self.label_work,pos)
+
+    def hoover(self):
+        super(Guy,self).hoover()
+        if hasattr(self,'label_work'):
+            g.lman.unhide(self.label_work)
+
+    def unhoover(self):
+        super(Guy,self).unhoover()
+        if hasattr(self,'label_work'):
+            g.lman.unhide(self.label_work,True)
+    ### label
 
 # les rappeurs
 class Rappeur(Fan):
