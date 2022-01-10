@@ -84,9 +84,9 @@ class GroupManager():
         self.names_wo = {} ## give the name with the order
         self.orders = {} ## give the order with the name
 
-        names = ['back-3','back-2','back-1','back','back1','mid-1','mid','mid1','front','perso-1','hud-1','hud','hud1']
+        names = ['back-3','back-2','back-1','back','back1','backstreet','backstreet_anim','mid','mid1','front','perso-1','hud-1','hud','hud1']
         names += ['perso'] + ['perso'+str(i) for i in range(1,15)]
-        names += ['midup','hud2-1','hud2','hud21','ui-2','ui-1','ui','up-1','up']
+        names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 8
 
         for i in range(len(names)):

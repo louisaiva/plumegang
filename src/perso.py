@@ -939,7 +939,7 @@ class Human():
             # gaffe faut modifier aussi dans l'update
             x,y = self.box.cx,self.box.fy + 150
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                ,group='midup',vis=True,duree=duree,w=w)
+                                ,group='frontstreet',vis=True,duree=duree,w=w)
 
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))

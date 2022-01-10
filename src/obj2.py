@@ -30,9 +30,17 @@ class preStreet(line):
 
 class Street():
 
-    def __init__(self,preStreet,text=(None,None),box=box(0,-50,None)):
+    def __init__(self,preStreet,text=(None,None),anim=(None,None),box=box(0,-50,None)):
 
         self.text = text
+        self.anim_text = anim
+
+        ## self.text contient deux textures : text = ( back , mid )
+        ## self.anim_text contient deux tableaux : text = ( [back] , [mid] )
+        #       self.anim(dt) va être appelé et changer self.anim_text[0][i] en self.anim_text[0][i+1] et self.anim_text[1][i] en self.anim_text[1][i+1]
+        #       si l'un des deux tableaux est du None, self.anim(dt) ne s'en occupe simplement pas
+
+        self.cursor_anim = 0
 
         self.box = box
         self._x,self._y = self.box.xy
@@ -96,12 +104,19 @@ class Street():
                 hum.deload()
 
     def deload(self):
+        g.bertran.unschedule(self.anim)
         if hasattr(self,'streetbg'):
             g.sman.delete(self.streetbg)
             del self.streetbg
         if hasattr(self,'streetfg'):
             g.sman.delete(self.streetfg)
             del self.streetfg
+        if hasattr(self,'streetanimbg'):
+            g.sman.delete(self.streetanimbg)
+            del self.streetanimbg
+        if hasattr(self,'streetanimfg'):
+            g.sman.delete(self.streetanimfg)
+            del self.streetanimfg
 
         for zone in self.zones:
             self.zones[zone].deload()
@@ -117,9 +132,16 @@ class Street():
     def load(self):
 
         if self.text[0] != None:
-            self.streetbg = g.sman.addSpr(self.text[0],self.box.xy,group='mid-1')
+            self.streetbg = g.sman.addSpr(self.text[0],self.box.xy,group='backstreet')
         if self.text[1] != None:
-            self.streetfg = g.sman.addSpr(self.text[1],self.box.xy,group='midup')
+            self.streetfg = g.sman.addSpr(self.text[1],self.box.xy,group='frontstreet')
+        if self.anim_text[0] != None:
+            self.streetanimbg = g.sman.addSpr(self.anim_text[0][0],self.box.xy,group='backstreet1')
+        if self.anim_text[1] != None:
+            self.streetanimfg = g.sman.addSpr(self.anim_text[1][0],self.box.xy,group='frontstreet1')
+
+        if self.anim_text[0] != None or self.anim_text[1] != None:
+            g.bertran.schedule_interval_soft(self.anim,0.5)
 
         for zone in self.zones:
             self.zones[zone].load()
@@ -184,6 +206,24 @@ class Street():
                 elems.append(self.catalog[i])
         return elems
 
+    # anim
+    def anim(self,dt):
+
+        self.cursor_anim += 1
+        if self.anim_text[0] != None and self.cursor_anim >= len(self.anim_text[0]):
+            self.cursor_anim = 0
+        if self.anim_text[1] != None and self.cursor_anim >= len(self.anim_text[1]):
+            self.cursor_anim = 0
+
+        #print(self.cursor_anim)
+
+        if self.anim_text[0] != None:
+            g.sman.set_text(self.streetanimbg,self.anim_text[0][self.cursor_anim])
+        if self.anim_text[1] != None:
+            g.sman.set_text(self.streetanimfg,self.anim_text[1][self.cursor_anim])
+
+
+
     ###
 
     def _x(self):
@@ -193,6 +233,10 @@ class Street():
             g.sman.spr(self.streetbg).x = x
         if hasattr(self,'streetfg'):
             g.sman.spr(self.streetfg).x = x
+        if hasattr(self,'streetanimfg'):
+            g.sman.spr(self.streetanimfg).x = x
+        if hasattr(self,'streetanimbg'):
+            g.sman.spr(self.streetanimbg).x = x
         self._x = x
 
     def _rxf(self):
@@ -210,6 +254,10 @@ class Street():
             g.sman.spr(self.streetbg).y = y
         if hasattr(self,'streetfg'):
             g.sman.spr(self.streetfg).y = y
+        if hasattr(self,'streetanimfg'):
+            g.sman.spr(self.streetanimfg).y = y
+        if hasattr(self,'streetanimbg'):
+            g.sman.spr(self.streetanimbg).y = y
         self._y = y
     y = property(_y,_sety)
 
@@ -261,8 +309,8 @@ class Street():
 
 class House(Street):
 
-    def __init__(self,name='house1',text=(None,None),box=box(-1400,-50,5120)):
-        super(House,self).__init__(name,text,box)
+    def __init__(self,name='house1',text=(None,None),anim=(None,None),box=box(-1400,-50,5120)):
+        super(House,self).__init__(name,text,anim,box)
 
         self.owners = []
 
@@ -274,8 +322,8 @@ class House(Street):
 
 class Shop(House):
 
-    def __init__(self,name='shop1',text=(None,None),box=box(0,-50,5120)):
-        super(Shop,self).__init__(name,text,box)
+    def __init__(self,name='shop1',text=(None,None),anim=(None,None),box=box(0,-50,5120)):
+        super(Shop,self).__init__(name,text,anim,box)
 
         self.guys = []
         self.guys.append( p.Guy(g.TEXTIDS['guys'],self.rand_pos(),metier=p.Distroguy,street=self.name) )
@@ -387,18 +435,19 @@ def generate_map():
 
         if line == line_home:
             prestr = preStreet('home',line.x,line.y,line.x,line.y)
-            NY.add_streets(House(prestr,(g.TEXTIDS['bgmid'],g.TEXTIDS['bgup'])))
+            NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],g.TEXTIDS['home']['front']),(None,g.TEXTIDS['home']['frontanim'])))
+            #NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],g.TEXTIDS['home']['front']),(None,None)))
             connect(NY.CITY['home'],3200,NY.CITY[line.name],500,(False,True))
             LINES.append(prestr)
 
             #elif line == line_distro:
             prestr = preStreet('distrokid',line.x,line.y,line.x,line.y)
-            NY.add_streets(Shop(prestr,(g.TEXTIDS['distrokid']['mid'],None)))
+            NY.add_streets(Shop(prestr,(g.TEXTIDS['distrokid']['back'],None)))
             connect(NY.CITY['distrokid'],4215,NY.CITY[line.name],1500,(False,True))
             LINES.append(prestr)
 
             prestr = preStreet('maison de drake',line.x,line.y,line.x,line.y)
-            NY.add_streets(House(prestr,(g.TEXTIDS['bgmid'],None)))
+            NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],None)))
             connect(NY.CITY['maison de drake'],3200,NY.CITY[line.name],2500,(False,True))
             LINES.append(prestr)
 
