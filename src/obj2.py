@@ -4,6 +4,10 @@ enjoy
 """
 
 import json,os
+from colors import red, green, blue
+import colorama
+colorama.init()
+
 from src.utils import *
 from src import graphic as g
 from src import obj as o
@@ -154,7 +158,8 @@ class Street():
         for item in self.items:
             item.load()
 
-        print(len(list(self.zones)),'zones ---',len(self.humans),'humans ---',len(self.items),'items loaded')
+        print(red(self.name+' :'))
+        print(red('  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'))
 
         self.visible = True
         self.update_catalog()
@@ -306,8 +311,12 @@ class Street():
 
         return s
 
-class ModulStr():
-    pass
+class ModulStr(Street):
+
+    def __init__(self,preStreet,text=(None,None),anim=(None,None),box=box(-1400,-50,5120)):
+        super(ModulStr,self).__init__(preStreet,text,anim,box)
+
+
 
 class House(Street):
 
