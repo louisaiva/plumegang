@@ -136,12 +136,12 @@ class Street():
         if self.text[1] != None:
             self.streetfg = g.sman.addSpr(self.text[1],self.box.xy,group='frontstreet')
         if self.anim_text[0] != None:
-            self.streetanimbg = g.sman.addSpr(self.anim_text[0][0],self.box.xy,group='backstreet1')
+            self.streetanimbg = g.sman.addSpr(self.anim_text[0][0],self.box.xy,group='backstreet_anim')
         if self.anim_text[1] != None:
-            self.streetanimfg = g.sman.addSpr(self.anim_text[1][0],self.box.xy,group='frontstreet1')
+            self.streetanimfg = g.sman.addSpr(self.anim_text[1][0],self.box.xy,group='frontstreet_anim')
 
         if self.anim_text[0] != None or self.anim_text[1] != None:
-            g.bertran.schedule_interval_soft(self.anim,0.5)
+            g.bertran.schedule_interval_soft(self.anim,0.001)
 
         for zone in self.zones:
             self.zones[zone].load()
@@ -210,12 +210,9 @@ class Street():
     def anim(self,dt):
 
         self.cursor_anim += 1
-        if self.anim_text[0] != None and self.cursor_anim >= len(self.anim_text[0]):
+        if (self.anim_text[0] != None and self.cursor_anim >= len(self.anim_text[0])) or \
+                (self.anim_text[1] != None and self.cursor_anim >= len(self.anim_text[1])):
             self.cursor_anim = 0
-        if self.anim_text[1] != None and self.cursor_anim >= len(self.anim_text[1]):
-            self.cursor_anim = 0
-
-        #print(self.cursor_anim)
 
         if self.anim_text[0] != None:
             g.sman.set_text(self.streetanimbg,self.anim_text[0][self.cursor_anim])
@@ -435,14 +432,14 @@ def generate_map():
 
         if line == line_home:
             prestr = preStreet('home',line.x,line.y,line.x,line.y)
-            NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],g.TEXTIDS['home']['front']),(None,g.TEXTIDS['home']['frontanim'])))
+            NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],g.TEXTIDS['home']['front']),(g.TEXTIDS['home']['backanim'],g.TEXTIDS['home']['frontanim'])))
             #NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],g.TEXTIDS['home']['front']),(None,None)))
             connect(NY.CITY['home'],3200,NY.CITY[line.name],500,(False,True))
             LINES.append(prestr)
 
             #elif line == line_distro:
             prestr = preStreet('distrokid',line.x,line.y,line.x,line.y)
-            NY.add_streets(Shop(prestr,(g.TEXTIDS['distrokid']['back'],None)))
+            NY.add_streets(Shop(prestr,(g.TEXTIDS['distrokid']['back'],None),(g.TEXTIDS['distrokid']['backanim'],None)))
             connect(NY.CITY['distrokid'],4215,NY.CITY[line.name],1500,(False,True))
             LINES.append(prestr)
 

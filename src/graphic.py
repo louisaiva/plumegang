@@ -25,7 +25,7 @@ class ScreenManager():
         self.display = pyglet.canvas.get_display()
         self.screens = self.display.get_screens()
 
-        self.current_screen = self.screens[1]
+        self.current_screen = self.screens[0]
         #print(dir(self.current_screen))
 
     def update_screen(self,window):
@@ -94,7 +94,7 @@ class GroupManager():
 
     def getGroup(self,name):
         if name not in self.groups:
-            print('aie ce groupe n\'existe pas')
+            print('aie le groupe '+name+' n\'existe pas')
             return None
         else:
             return self.groups[name]

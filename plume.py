@@ -273,14 +273,13 @@ class App():
         g.TEXTIDS['home'] = {}
         g.TEXTIDS['home']['back'] = g.tman.loadIm('bg/home/home_back'+'.png')
         g.TEXTIDS['home']['front'] = g.tman.loadIm('bg/home/home_front'+'.png')
-        #g.TEXTIDS['home']['backanim'] = [g.tman.loadIm('bg/home/home_back'+str(i)+'.png') for i in range(1,5)]
-        g.TEXTIDS['home']['frontanim'] = [g.tman.loadIm('bg/home/home_anim'+str(i)+'.png') for i in range(1,5)]
+        g.TEXTIDS['home']['frontanim'] = [g.tman.loadIm('bg/home/home_fanim'+str(i)+'.png') for i in range(1,5)]
+        g.TEXTIDS['home']['backanim'] = [g.tman.loadIm('bg/home/home_banim'+str(i)+'.png') for i in range(1,5)]
 
         g.TEXTIDS['distrokid'] = {}
-        g.TEXTIDS['distrokid']['back'] = g.tman.loadIm('bg/distrokid_shop.png')
+        g.TEXTIDS['distrokid']['back'] = g.tman.loadIm('bg/distro/distrokid_shop.png')
+        g.TEXTIDS['distrokid']['backanim'] = [g.tman.loadIm('bg/distro/distrokid_anim'+str(i)+'.png') for i in range(1,5)]
 
-        #g.TEXTIDS['bgmid'] = g.tman.loadIm('bg/bg2'+'.png')
-        #g.TEXTIDS['bgup'] = g.tman.loadIm('bg/bg3'+'.png')
         g.TEXTIDS['street1_bg'] = g.tman.loadIm('bg/street1_bg'+'.png')
 
 
