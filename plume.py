@@ -266,9 +266,13 @@ class App():
         del g.TEXTIDS['_son']
 
 
+        # BG
+
         g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/sky.png')
         g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
         g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
+
+        # HOME
 
         g.TEXTIDS['home'] = {}
         g.TEXTIDS['home']['back'] = g.tman.loadIm('bg/home/home_back'+'.png')
@@ -276,11 +280,17 @@ class App():
         g.TEXTIDS['home']['frontanim'] = [g.tman.loadIm('bg/home/home_fanim'+str(i)+'.png') for i in range(1,5)]
         g.TEXTIDS['home']['backanim'] = [g.tman.loadIm('bg/home/home_banim'+str(i)+'.png') for i in range(1,5)]
 
+        # DISTRO
+
         g.TEXTIDS['distrokid'] = {}
         g.TEXTIDS['distrokid']['back'] = g.tman.loadIm('bg/distro/distrokid_shop.png')
         g.TEXTIDS['distrokid']['backanim'] = [g.tman.loadIm('bg/distro/distrokid_anim'+str(i)+'.png') for i in range(1,5)]
 
-        g.TEXTIDS['street1_bg'] = g.tman.loadIm('bg/street1_bg'+'.png')
+        # STREET
+
+        g.TEXTIDS['street'] = {}
+        #g.TEXTIDS['street1_bg'] = g.tman.loadIm('bg/street1_bg'+'.png')
+        g.TEXTIDS['street']['back'] = g.tman.loadIm('bg/street_back.png')
 
 
         ## sun moon stars

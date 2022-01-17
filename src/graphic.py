@@ -878,6 +878,8 @@ Cur = Cursor()
 SPEED = 20
 RSPEED = 100
 
+MOVE_Y = False
+
 class Camera():
 
     def __init__(self):
@@ -939,20 +941,21 @@ class Camera():
             #print(street.x,street.rxf)
 
             #Y
-            if persobox[3] > 19*scr.size[1]/20:
-                self.lessy()
-                moved[1] = True
-            elif persobox[1] < scr.size[1]/20:
-                self.morey()
-                moved[1] = True
+            if MOVE_Y:
+                if persobox[3] > 19*scr.size[1]/20:
+                    self.lessy()
+                    moved[1] = True
+                elif persobox[1] < scr.size[1]/20:
+                    self.morey()
+                    moved[1] = True
 
-            if not moved[1]:
-                self._dy = 0
-            if not moved[0]:
-                if run:
-                    self.update(persobox,street)
-                else:
-                    self._dx = 0
+                if not moved[1]:
+                    self._dy = 0
+                if not moved[0]:
+                    if run:
+                        self.update(persobox,street)
+                    else:
+                        self._dx = 0
 
 
     def tp(self,ge_x,real_x):

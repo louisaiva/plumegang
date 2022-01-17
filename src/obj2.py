@@ -10,7 +10,7 @@ from src import obj as o
 from src import perso as p
 import random as r
 
-Y = 100,175
+Y = 0,225
 
 # lines
 
@@ -57,6 +57,8 @@ class Street():
 
         self.catalog = [] ## ce tableau est un tableau ordonné selon les X contenant tous les éléments et leurs détails:
                             # x y type nom
+
+        self.Y = Y
 
     def modify(self,x=None,y=None):
         if x != None:
@@ -141,7 +143,7 @@ class Street():
             self.streetanimfg = g.sman.addSpr(self.anim_text[1][0],self.box.xy,group='frontstreet_anim')
 
         if self.anim_text[0] != None or self.anim_text[1] != None:
-            g.bertran.schedule_interval_soft(self.anim,0.001)
+            g.bertran.schedule_interval_soft(self.anim,0.1)
 
         for zone in self.zones:
             self.zones[zone].load()
@@ -266,7 +268,7 @@ class Street():
     xxf = property(_xxf)
 
     def _yyf(self):
-        return 100,175
+        return self.Y
     yyf = property(_yyf)
 
     def _w(self):
@@ -304,12 +306,16 @@ class Street():
 
         return s
 
+class ModulStr():
+    pass
+
 class House(Street):
 
     def __init__(self,name='house1',text=(None,None),anim=(None,None),box=box(-1400,-50,5120)):
         super(House,self).__init__(name,text,anim,box)
 
         self.owners = []
+        self.Y = (50,200)
 
     def set_owner(self,owner):
         self.owners.append(owner)
@@ -324,6 +330,7 @@ class Shop(House):
 
         self.guys = []
         self.guys.append( p.Guy(g.TEXTIDS['guys'],self.rand_pos(),metier=p.Distroguy,street=self.name) )
+        self.Y = (50,150)
 
     def openable(self,perso):
         return True
@@ -428,7 +435,7 @@ def generate_map():
 
     # we create streets + home
     for line in lines:
-        NY.add_streets(Street(line,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
+        NY.add_streets(Street(line,(g.TEXTIDS['street']['back'],None),box=box(-100,-50,(line.w+1)*width_between_streets+100)))
 
         if line == line_home:
             prestr = preStreet('home',line.x,line.y,line.x,line.y)
@@ -598,10 +605,10 @@ def connect(street1,x1,street2,x2,col=(True,True)):
     ##      -une à x1 dans la street1 pour passer dans la street2
     ##      -une à x2 dans la street2 pour passer dans la street1
 
-    door1 = o.Porte(street1,box(x1,225,270,400),street2,x2,makeCol=col[0])
+    door1 = o.Porte(street1,box(x1,250,270,400),street2,x2,makeCol=col[0])
     street1.assign_zones([door1])
 
-    door2 = o.Porte(street2,box(x2,225,270,400),street1,x1,makeCol=col[1])
+    door2 = o.Porte(street2,box(x2,250,270,400),street1,x1,makeCol=col[1])
     street2.assign_zones([door2])
 
 def draw_lines():

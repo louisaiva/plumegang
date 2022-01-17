@@ -601,6 +601,12 @@ class Human():
                 o2.NY.CITY[self.street].deload()
                 o2.NY.CITY[street.name].load()
                 self.street = street.name
+
+                if self.gey > o2.NY.CITY[self.street].yyf[1]:
+                    self.tp(y=o2.NY.CITY[self.street].yyf[1])
+                elif self.gey < o2.NY.CITY[self.street].yyf[0]:
+                    self.tp(y=o2.NY.CITY[self.street].yyf[0])
+
                 self.check_colli(street)
 
         #print('tp : x',x,'y',y,'street',street,'\n')
