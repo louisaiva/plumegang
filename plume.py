@@ -79,18 +79,18 @@ class App():
         self.bgdx = 0
 
         self.sprids = {}
-        self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'back-3')
+        self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'sky')
         g.sman.modify(self.sprids['bg-1'],scale=(0.75,0.75))
-        self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'back')
+        self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'bg_buildings_loin')
         g.sman.modify(self.sprids['bg.1'],scale=(0.75,0.75))
-        self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'back')
+        self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'bg_buildings_loin')
         g.sman.modify(self.sprids['bg.2'],scale=(0.75,0.75))
 
         rect = box(0,0,g.scr.w,250)
-        self.sprids['ground'] = g.sman.addCol(c['grey'],rect,'back1')
-        self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'back1')
+        self.sprids['ground'] = g.sman.addCol(c['grey'],rect,'bg_buildings_proche')
+        self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'bg_buildings_proche')
         g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
-        self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'back1')
+        self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'bg_buildings_proche')
         g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
         #self.sprids['bgmid'] = g.sman.addSpr(g.TEXTIDS['bgmid'],(-1000,-50),'mid-1')
         #g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))

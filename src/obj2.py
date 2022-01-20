@@ -110,19 +110,24 @@ class Street():
                 hum.deload()
 
     def deload(self):
+
         g.bertran.unschedule(self.anim)
-        if hasattr(self,'streetbg'):
-            g.sman.delete(self.streetbg)
-            del self.streetbg
-        if hasattr(self,'streetfg'):
-            g.sman.delete(self.streetfg)
-            del self.streetfg
-        if hasattr(self,'streetanimbg'):
-            g.sman.delete(self.streetanimbg)
-            del self.streetanimbg
-        if hasattr(self,'streetanimfg'):
-            g.sman.delete(self.streetanimfg)
-            del self.streetanimfg
+
+        ## MODIFIER DANS MODULSTR
+        if type(self) != ModulStr:
+
+            if hasattr(self,'streetbg'):
+                g.sman.delete(self.streetbg)
+                del self.streetbg
+            if hasattr(self,'streetfg'):
+                g.sman.delete(self.streetfg)
+                del self.streetfg
+            if hasattr(self,'streetanimbg'):
+                g.sman.delete(self.streetanimbg)
+                del self.streetanimbg
+            if hasattr(self,'streetanimfg'):
+                g.sman.delete(self.streetanimfg)
+                del self.streetanimfg
 
         for zone in self.zones:
             self.zones[zone].deload()
@@ -137,17 +142,20 @@ class Street():
 
     def load(self):
 
-        if self.text[0] != None:
-            self.streetbg = g.sman.addSpr(self.text[0],self.box.xy,group='backstreet')
-        if self.text[1] != None:
-            self.streetfg = g.sman.addSpr(self.text[1],self.box.xy,group='frontstreet')
-        if self.anim_text[0] != None:
-            self.streetanimbg = g.sman.addSpr(self.anim_text[0][0],self.box.xy,group='backstreet_anim')
-        if self.anim_text[1] != None:
-            self.streetanimfg = g.sman.addSpr(self.anim_text[1][0],self.box.xy,group='frontstreet_anim')
+        ## MODIFIER DANS MODULSTR
+        if type(self) != ModulStr:
 
-        if self.anim_text[0] != None or self.anim_text[1] != None:
-            g.bertran.schedule_interval_soft(self.anim,0.1)
+            if self.text[0] != None:
+                self.streetbg = g.sman.addSpr(self.text[0],self.box.xy,group='backstreet')
+            if self.text[1] != None:
+                self.streetfg = g.sman.addSpr(self.text[1],self.box.xy,group='frontstreet')
+            if self.anim_text[0] != None:
+                self.streetanimbg = g.sman.addSpr(self.anim_text[0][0],self.box.xy,group='backstreet_anim')
+            if self.anim_text[1] != None:
+                self.streetanimfg = g.sman.addSpr(self.anim_text[1][0],self.box.xy,group='frontstreet_anim')
+
+            if self.anim_text[0] != None or self.anim_text[1] != None:
+                g.bertran.schedule_interval_soft(self.anim,0.1)
 
         for zone in self.zones:
             self.zones[zone].load()
@@ -158,8 +166,7 @@ class Street():
         for item in self.items:
             item.load()
 
-        print(red(self.name+' :'))
-        print(red('  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'))
+        print(green(self.name+' :  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'))
 
         self.visible = True
         self.update_catalog()
@@ -242,13 +249,13 @@ class Street():
         if hasattr(self,'streetanimbg'):
             g.sman.spr(self.streetanimbg).x = x
         self._x = x
+    x = property(_x,_setx)
 
     def _rxf(self):
         if self.box.w == None:
             return None
         else:
             return self._x + self.box.w
-    x = property(_x,_setx)
     rxf= property(_rxf)
 
     def _y(self):
@@ -313,10 +320,37 @@ class Street():
 
 class ModulStr(Street):
 
-    def __init__(self,preStreet,text=(None,None),anim=(None,None),box=box(-1400,-50,5120)):
+    def __init__(self,preStreet,text=(None,None),anim=(None,None),box=box(0,-50,None)):
         super(ModulStr,self).__init__(preStreet,text,anim,box)
 
+        ## cette classe régit les routes principales
+                # affichage continu d'un sprite de route en TODO backstreet
+                # affichage des sprites des batiments à l'écran TODO backstreet
+                # affichage des sprites à l'avant à l'écran TODO frontstreet
 
+
+        ## route BACK
+        self.endless_road = (not self.w or self.w > 5120)
+
+    def load(self):
+
+        if self.text[0] != None:
+            self.streetbg = g.sman.addSpr(self.text[0],self.box.xy,group='backstreet')
+        if self.text[1] != None:
+            self.streetfg = g.sman.addSpr(self.text[1],self.box.xy,group='frontstreet')
+        if self.anim_text[0] != None:
+            self.streetanimbg = g.sman.addSpr(self.anim_text[0][0],self.box.xy,group='backstreet_anim')
+        if self.anim_text[1] != None:
+            self.streetanimfg = g.sman.addSpr(self.anim_text[1][0],self.box.xy,group='frontstreet_anim')
+
+        if self.anim_text[0] != None or self.anim_text[1] != None:
+            g.bertran.schedule_interval_soft(self.anim,0.1)
+
+        super(ModulStr,self).load()
+
+    def deload(self):
+
+        super(ModulStr,self).deload()
 
 class House(Street):
 

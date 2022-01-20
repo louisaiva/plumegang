@@ -84,7 +84,8 @@ class GroupManager():
         self.names_wo = {} ## give the name with the order
         self.orders = {} ## give the order with the name
 
-        names = ['back-3','back-2','back-1','back','back1','backstreet','backstreet_anim','mid','mid1','front','perso-1','hud-1','hud','hud1']
+        names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','backstreet','backstreet_anim','mid' # cleared
+                            ,'front','perso-1','hud-1','hud','hud1']
         names += ['perso'] + ['perso'+str(i) for i in range(1,15)]
         names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 8
@@ -212,7 +213,7 @@ class SpriteManager():
 
         return id
 
-    def addToGroup(self,id,group_name='back'):
+    def addToGroup(self,id,group_name='bg_buildings_loin'):
 
         group = gman.getGroup(group_name)
         self.sprites[id].group = group
@@ -388,7 +389,7 @@ class LabelManager():
 
         return id
 
-    def addToGroup(self,id,thg=['back',None],thg2=0,level_to_put_in=0):
+    def addToGroup(self,id,thg=['bg_buildings_loin',None],thg2=0,level_to_put_in=0):
 
         group = gman.createGroup(thg,thg2,level_to_put_in)
         #print('GROUP IS',group)
@@ -673,11 +674,11 @@ class Cycle():
         # (plus ce pourcentage se rapporche de 1 plus ça va devenir noir)
 
         self.sprids = {} # en plus on crée un dic qui va contenir les spr controlés directement par le cycle : type soleil, lune, etoile et meme weather ?
-        self.sprids['sun'] = sman.addSpr(TEXTIDS['sun'],(scr.w/2,0),'back-1')
+        self.sprids['sun'] = sman.addSpr(TEXTIDS['sun'],(scr.w/2,0),'moon_sun')
         sman.modify(self.sprids['sun'],scale=(0.75,0.75))
-        self.sprids['moon'] = sman.addSpr(TEXTIDS['moon'],(scr.w/4,0),'back-1')
+        self.sprids['moon'] = sman.addSpr(TEXTIDS['moon'],(scr.w/4,0),'moon_sun')
         sman.modify(self.sprids['moon'],scale=(0.75,0.75))
-        self.sprids['stars'] = sman.addSpr(TEXTIDS['stars'],(0,0),'back-2')
+        self.sprids['stars'] = sman.addSpr(TEXTIDS['stars'],(0,0),'stars')
         sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=0)
 
         #COLORS
@@ -949,13 +950,13 @@ class Camera():
                     self.morey()
                     moved[1] = True
 
-                if not moved[1]:
-                    self._dy = 0
-                if not moved[0]:
-                    if run:
-                        self.update(persobox,street)
-                    else:
-                        self._dx = 0
+            if not moved[1]:
+                self._dy = 0
+            if not moved[0]:
+                if run:
+                    self.update(persobox,street)
+                else:
+                    self._dx = 0
 
 
     def tp(self,ge_x,real_x):
