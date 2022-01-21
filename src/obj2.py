@@ -120,10 +120,9 @@ class Street():
         g.bertran.unschedule(self.anim)
 
         ## road
-        if hasattr(self,'road1'):
+        if hasattr(self,'road1') and hasattr(self,'road2'):
             g.sman.delete(self.road1)
             del self.road1
-        if hasattr(self,'road2'):
             g.sman.delete(self.road2)
             del self.road2
 
@@ -271,6 +270,8 @@ class Street():
         g.sman.modify(self.road1,(road1x,None))
         g.sman.modify(self.road2,(road2x,None))
 
+
+
     ###
 
     def _x(self):
@@ -284,10 +285,9 @@ class Street():
             g.sman.spr(self.streetanimfg).x = x
         if hasattr(self,'streetanimbg'):
             g.sman.spr(self.streetanimbg).x = x
-        if hasattr(self,'road1') and hasattr(self,'road2'):
-            g.sman.spr(self.road1).x = x
-            w = g.sman.spr(self.road1).width
-            g.sman.spr(self.road2).x = x+w
+
+        ## x des roads gérée dans self.verify_endless_road()
+
         self._x = x
     x = property(_x,_setx)
 
