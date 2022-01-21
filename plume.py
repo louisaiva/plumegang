@@ -290,7 +290,7 @@ class App():
 
         g.TEXTIDS['street'] = {}
         #g.TEXTIDS['street1_bg'] = g.tman.loadIm('bg/street1_bg'+'.png')
-        g.TEXTIDS['street']['back'] = g.tman.loadIm('bg/street_back.png')
+        g.TEXTIDS['street']['road'] = g.tman.loadIm('bg/street_back.png')
 
 
         ## sun moon stars
@@ -741,10 +741,10 @@ class App():
 
         if self.action == "play":
 
-            # STREETS
+            # STREETS LABEL
             g.lman.set_text(self.lab_street,self.perso.street)
 
-            # DAYS
+            # DAYS LABEL
             g.lman.set_text(self.lab_day,'DAY : '+str(g.Cyc.day))
 
             ## anchor / moving sprites
@@ -819,7 +819,6 @@ class App():
             # CAM
             if True:
                 o2.NY.CITY[self.perso.street].modify(g.Cam.X+ g.GodCam.X,g.Cam.Y)
-                #g.sman.modify(self.sprids['bgmid'],(g.Cam.X-1000,-50+g.Cam.Y))
 
                 g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street],self.keys[key.LSHIFT])
 

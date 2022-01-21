@@ -84,14 +84,16 @@ class GroupManager():
         self.names_wo = {} ## give the name with the order
         self.orders = {} ## give the order with the name
 
-        names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','backstreet','backstreet_anim','mid' # cleared
+        names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','road','buildings','backstreet','backstreet_anim','mid' # good
                             ,'front','perso-1','hud-1','hud','hud1']
         names += ['perso'] + ['perso'+str(i) for i in range(1,15)]
         names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','ui-2','ui-1','ui','up-1','up']
-        self.distance_btw = 8
+        self.distance_btw = 1
 
         for i in range(len(names)):
             self.addGroup(names[i],i*self.distance_btw)
+
+        #print(dir(self.groups['sky']))
 
     def getGroup(self,name):
         if name not in self.groups:
@@ -939,7 +941,6 @@ class Camera():
                     self.lessx()
                 moved[0] = True
 
-            #print(street.x,street.rxf)
 
             #Y
             if MOVE_Y:
@@ -950,6 +951,7 @@ class Camera():
                     self.morey()
                     moved[1] = True
 
+            ### applyin movement to sprites
             if not moved[1]:
                 self._dy = 0
             if not moved[0]:
@@ -957,7 +959,6 @@ class Camera():
                     self.update(persobox,street)
                 else:
                     self._dx = 0
-
 
     def tp(self,ge_x,real_x):
 
