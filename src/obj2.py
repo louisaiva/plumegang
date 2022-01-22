@@ -402,6 +402,29 @@ class Street():
 
         return s
 
+class Building(Street):
+
+    def __init__(self,name='bat1',textures={},box=box(0,-50,5120)):
+        super(Building,self).__init__(name,textures,box=box)
+
+        self.Y = (50,200)
+        self.houses = []
+
+        self.outside = False
+
+    def add_house(self,house):
+        self.houses.append(house)
+
+    def openable(self,perso):
+
+        if perso.cheat:
+            return True
+
+        for house in self.houses:
+            if house.openable(perso):
+                return True
+        return False
+
 class House(Street):
 
     def __init__(self,name='house1',textures={},box=box(-1400,-50,5120)):
@@ -416,6 +439,8 @@ class House(Street):
         self.owners.append(owner)
 
     def openable(self,perso):
+        if perso.cheat:
+            return True
         return perso in self.owners
 
 class Shop(House):
@@ -593,54 +618,64 @@ def generate_map():
 
 def generate_short_map():
 
+    rue = 'rue de la fromagerie'
+
     build_list = []
     zones = []
 
-    ## on organise build_list et on créé les différentes zones SAUF LES PORTES (parce qu'on a pas encore créé la street)
+    ## on organise build_list
     for i in range(k):
         if i >= 3:
             key = r.choice(builds_key)
             build_list.append(key)
-
-            if builds[key]['box']:
-                zone_box = builds[key]['box'].pop()
-
-                zone_box.y += 250
-                zone_box.x += i*W_BUILD
-
-                name = builds[key]['name'] + ' ' + str(i)
-
-                zone = o.Zone_ELEM(zone_box,name,makeCol=False)
-                zones.append(zone)
-
         elif i == 1:
             build_list.append(2)
-        elif i == 0:
-            build_list.append(1)
         else:
             build_list.append(i)
 
     ## on créé la street
     w = k*W_BUILD
-    NY.add_streets(Street(preStreet('street'),g.TEXTIDS['street'],build_list,box=box(0,-50,w)))
+    NY.add_streets(Street(preStreet(rue),g.TEXTIDS['street'],build_list,box=box(0,-50,w)))
+    NY.CITY[rue].assign_zones(zones)
 
-    #home + porte
-    NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
-    zone_box = builds[2]['box'].pop()
-    zone_box.y += 250
-    zone_box.x += W_BUILD
-    connect(NY.CITY['home'],3200,NY.CITY['street'],zone_box,(False,False))
-    print(zone_box)
+    ## HOME
+    if True:
 
-    #distrokid + porte
-    NY.add_streets(Shop(preStreet('distrokid'),g.TEXTIDS['distrokid']))
-    zone_box = builds[2]['box'].pop()
-    zone_box.y += 250
-    zone_box.x += 2*W_BUILD
-    connect(NY.CITY['distrokid'],4215,NY.CITY['street'],zone_box,(False,False))
+        # inside building
+        NY.add_streets(Building(preStreet('1 '+rue),g.TEXTIDS['inside']))
+        zone_box = builds[2]['box'].pop()
+        zone_box.y += 250
+        zone_box.x += W_BUILD
+        connect(NY.CITY['1 '+rue],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
 
-    NY.CITY['street'].assign_zones(zones)
+        #home + porte
+        NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
+        connect(NY.CITY['home'],3200,NY.CITY['1 '+rue],box(1500,250,300,400),(False,False))
+        NY.CITY['1 '+rue].add_house(NY.CITY['home'])
 
+    ## DISTROKID
+    if True:
+
+        #distrokid + porte
+        NY.add_streets(Shop(preStreet('distrokid'),g.TEXTIDS['distrokid']))
+        zone_box = builds[2]['box'].pop()
+        zone_box.y += 250
+        zone_box.x += 2*W_BUILD
+        connect(NY.CITY['distrokid'],4215,NY.CITY[rue],zone_box,(False,False))
+
+    ## CHAQUE BUILDING
+    for i in range(3,k):
+        if builds[build_list[i]]['box']:
+            zone_box = builds[build_list[i]]['box'].pop()
+
+            zone_box.y += 250
+            zone_box.x += i*W_BUILD
+
+            name = str(i) + ' ' +rue
+
+            # inside building
+            NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
+            connect(NY.CITY[name],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
 
 
 """'''''''''''''''''''''''''''''''''

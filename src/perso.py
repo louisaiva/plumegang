@@ -15,6 +15,7 @@ from src import voc as v
 
 SIZE_SPR = 256
 BOTS = []
+CHEAT = True
 
 #graphic
 
@@ -140,6 +141,8 @@ class Human():
         self.runspeed = 100
         self.id = get_id('hum')
         #self.play = 'play'
+
+        self.cheat = False
 
         #life
         self.life = 100
@@ -665,7 +668,7 @@ class Human():
 
 
         if (self.life <= 0) and 'die' not in self.doing:
-            print(hitter.name,'killed',self.name)
+            print(red(hitter.name + ' killed ' + self.name))
             self.die()
 
         if self.alive and type(self) != Perso:
@@ -1587,6 +1590,8 @@ class Perso(Rappeur):
         self.minirelhud = o.MiniRelHUD(self)
 
         o2.NY.CITY[self.street].add_hum(self)
+
+        self.cheat = CHEAT
 
         #self.load()
 

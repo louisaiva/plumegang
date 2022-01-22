@@ -125,6 +125,7 @@ class App():
         self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
         #o.distro.sign(self.perso)
         o2.NY.CITY['home'].set_owner(self.perso)
+        #o2.NY.CITY['inside'].set_owner(self.perso)
         p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
 
         self.perso.assign_poto(p.BOTS[-1])
@@ -293,6 +294,12 @@ class App():
             g.TEXTIDS['street'] = {}
             g.TEXTIDS['street']['road'] = g.tman.loadIm('bg/street_back.png')
             #g.TEXTIDS['street']['buildings'] = g.tman.loadIm('bg/building1.png')
+
+        # INSIDE BUILDING
+        if True:
+            g.TEXTIDS['inside'] = {}
+            g.TEXTIDS['inside']['back'] = g.tman.loadIm('bg/inside_building.png')
+
 
         ## BUILDINGS
         if True:
