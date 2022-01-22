@@ -254,7 +254,6 @@ class Street():
             g.sman.set_text(self.streetanimfg,self.textures['frontanim'][self.cursor_anim])
 
     # endless road and buildings
-
     def verify_endless_road(self):
 
         w = g.sman.spr(self.road1).width

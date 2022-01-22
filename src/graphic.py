@@ -735,6 +735,9 @@ class Cycle():
         else:
             sman.modify(self.sprids['stars'],opacity=0)
 
+    def update_tab(self,bg):
+        self.ext_sprids = bg
+
     def day_update(self):
 
         #general

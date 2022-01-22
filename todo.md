@@ -1,4 +1,7 @@
 
+https://www.konbini.com/fr/inspiration-2/scenes-de-vie-japonaises-reconstituees-gifs-animes-pixel-art/
+https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=pixel%7Ctyped&term_meta[]=art%7Ctyped&term_meta[]=city%7Ctyped
+
 # meilleure création de la ville :
   qu'elle se déploit depuis une seule et unique rue celle de la maison
   -> permet d'ouvrir des rues au fur et à mesure qu'on devient de plus en plus connu

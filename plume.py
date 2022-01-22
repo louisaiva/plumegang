@@ -289,8 +289,8 @@ class App():
         # STREET
 
         g.TEXTIDS['street'] = {}
-        #g.TEXTIDS['street1_bg'] = g.tman.loadIm('bg/street1_bg'+'.png')
         g.TEXTIDS['street']['road'] = g.tman.loadIm('bg/street_back.png')
+        g.TEXTIDS['street']['back'] = g.tman.loadIm('bg/building1.png')
 
 
         ## sun moon stars
