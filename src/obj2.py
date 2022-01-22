@@ -532,8 +532,10 @@ def generate_map():
     # we create streets + home
     for line in lines:
 
-        nb_builds = ((line.w+1)*width_between_streets+100)//1600
-        builds = [0 for _ in range(nb_builds)]
+        nb_builds = ((line.w+1)*width_between_streets+100)//1600 + 1
+        builds = []
+        for i in range(nb_builds):
+            builds.append(r.choice([0,1]))
 
         NY.add_streets(Street(line,g.TEXTIDS['street'],builds,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
 

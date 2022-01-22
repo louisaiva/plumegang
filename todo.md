@@ -1,10 +1,16 @@
 
-https://www.konbini.com/fr/inspiration-2/scenes-de-vie-japonaises-reconstituees-gifs-animes-pixel-art/
-https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=pixel%7Ctyped&term_meta[]=art%7Ctyped&term_meta[]=city%7Ctyped
+
+
+_ceci est le todo à faire hehe_
+
+
+**EN COURS**
+
 
 # meilleure création de la ville :
   qu'elle se déploit depuis une seule et unique rue celle de la maison
   -> permet d'ouvrir des rues au fur et à mesure qu'on devient de plus en plus connu
+  -> au début t'as qu'une station de métro
 
 # STREETS
 
@@ -22,7 +28,7 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
 
 # que les bots passent des portes
 
-# hm error dans les bots ?
+#  \!\ *nb bots ?* \!\_
   j'ai eu 694 fans alors que y'avait apparement que 690 bots (+ alphonse)
   et en plus j'en ai tué en chemin et ça m'a pas baissé des fans
   --> à régler
@@ -48,12 +54,13 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
 
         hop tu lui envoie un act et il te suit chez toi
 
-# bertran.get_time()
-  paouf : bug : quand on recoit un act le temps continue de filer si est en pause
+# \!\ *bertran.get_time()* \!\_
+  bug : quand on recoit un act le temps continue de filer si est en pause
   -> utiliser la clock bertran pour compter le temps qui passe pour les acts/dials ?
 
-# weather
-  ajouter de la plouiiii
+# \!\ *régler mauvais endroits streets map*  \!\_
+
+# ajouter de la plouiiii
 
 # LABELS
 
@@ -69,9 +76,15 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
 		-labels tu récup 50% voir moins (ça dépend de ton contrat, encore une fois plus tu paye cher plus tu gagnes)
 		-distrokid tu gagnes 100%
 
-# animations mdr
 
-  et mettre genre des ptites anim des décors ça pourrait être lourdax (mais bon ça sera dans longtemps jimagijn)
+
+
+
+
+
+
+
+
 
 
 
@@ -86,3 +99,10 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
 
   alors deja finir les putains de 3 sprites pour le skin du poto alphonse,
   puis le poto pénis
+  et mettre genre des ptites anim des décors ça pourrait être lourdax (mais bon ça sera dans longtemps jimagijn)
+
+
+**LINKS**
+
+https://www.konbini.com/fr/inspiration-2/scenes-de-vie-japonaises-reconstituees-gifs-animes-pixel-art/
+https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=pixel%7Ctyped&term_meta[]=art%7Ctyped&term_meta[]=city%7Ctyped

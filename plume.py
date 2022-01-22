@@ -294,7 +294,8 @@ class App():
 
         ## BUILDINGS
         g.TEXTIDS['build'] = {}
-        g.TEXTIDS['build'][0] = g.tman.loadIm('bg/building1.png')
+        g.TEXTIDS['build'][0] = g.tman.loadIm('bg/empty_build.png')
+        g.TEXTIDS['build'][1] = g.tman.loadIm('bg/building1.png')
 
 
         ## sun moon stars
