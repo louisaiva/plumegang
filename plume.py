@@ -229,92 +229,100 @@ class App():
     def create_organise_textures(self):
 
         ### PERSOS
-        g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
-        g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,30))
-        g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,30))
-        g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
-        g.TEXTIDS['rap'] = g.tman.loadImSeq('perso2.png',(1,30))
-
+        if True:
+            g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
+            g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,30))
+            g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,30))
+            g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
+            g.TEXTIDS['rap'] = g.tman.loadImSeq('perso2.png',(1,30))
 
         # items
-        g.TEXTIDS['_son'] = g.tman.loadImSeq('son.png',(1,6))
-        g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
-        g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
-        g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
-        g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
-        g.TEXTIDS['utils'] = g.tman.loadImSeq('utils.png',(8,8))
+        if True:
+            g.TEXTIDS['_son'] = g.tman.loadImSeq('son.png',(1,6))
+            g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
+            g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
+            g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
+            g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
+            g.TEXTIDS['utils'] = g.tman.loadImSeq('utils.png',(8,8))
 
-        qua = ['F','D','C','B','A','S']
-        g.TEXTIDS['plume'] = {}
-        for i in range(len(g.TEXTIDS['_plum'])):
-            g.TEXTIDS['plume'][qua[i]] = g.TEXTIDS['_plum'][i]
-        del g.TEXTIDS['_plum']
+            qua = ['F','D','C','B','A','S']
+            g.TEXTIDS['plume'] = {}
+            for i in range(len(g.TEXTIDS['_plum'])):
+                g.TEXTIDS['plume'][qua[i]] = g.TEXTIDS['_plum'][i]
+            del g.TEXTIDS['_plum']
 
-        g.TEXTIDS['phase'] = {}
-        for i in range(len(g.TEXTIDS['_phaz'])):
-            g.TEXTIDS['phase'][qua[i]] = g.TEXTIDS['_phaz'][i]
-        del g.TEXTIDS['_phaz']
+            g.TEXTIDS['phase'] = {}
+            for i in range(len(g.TEXTIDS['_phaz'])):
+                g.TEXTIDS['phase'][qua[i]] = g.TEXTIDS['_phaz'][i]
+            del g.TEXTIDS['_phaz']
 
-        g.TEXTIDS['instru'] = {}
-        for i in range(len(g.TEXTIDS['_instru'])):
-            g.TEXTIDS['instru'][qua[i]] = g.TEXTIDS['_instru'][i]
-        del g.TEXTIDS['_instru']
+            g.TEXTIDS['instru'] = {}
+            for i in range(len(g.TEXTIDS['_instru'])):
+                g.TEXTIDS['instru'][qua[i]] = g.TEXTIDS['_instru'][i]
+            del g.TEXTIDS['_instru']
 
-        g.TEXTIDS['son'] = {}
-        for i in range(len(g.TEXTIDS['_son'])):
-            g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
-        del g.TEXTIDS['_son']
-
+            g.TEXTIDS['son'] = {}
+            for i in range(len(g.TEXTIDS['_son'])):
+                g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
+            del g.TEXTIDS['_son']
 
         # BG
-
-        g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/sky.png')
-        g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
-        g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
+        if True:
+            g.TEXTIDS['bg-1'] = g.tman.loadIm('bg/sky.png')
+            g.TEXTIDS['bg'] = g.tman.loadIm('bg/bg'+'.png')
+            g.TEXTIDS['bg1'] = g.tman.loadIm('bg/bg1'+'.png')
 
         # HOME
-
-        g.TEXTIDS['home'] = {}
-        g.TEXTIDS['home']['back'] = g.tman.loadIm('bg/home/home_back'+'.png')
-        g.TEXTIDS['home']['front'] = g.tman.loadIm('bg/home/home_front'+'.png')
-        g.TEXTIDS['home']['frontanim'] = [g.tman.loadIm('bg/home/home_fanim'+str(i)+'.png') for i in range(1,5)]
-        g.TEXTIDS['home']['backanim'] = [g.tman.loadIm('bg/home/home_banim'+str(i)+'.png') for i in range(1,5)]
+        if True:
+            g.TEXTIDS['home'] = {}
+            g.TEXTIDS['home']['back'] = g.tman.loadIm('bg/home/home_back'+'.png')
+            g.TEXTIDS['home']['front'] = g.tman.loadIm('bg/home/home_front'+'.png')
+            g.TEXTIDS['home']['frontanim'] = [g.tman.loadIm('bg/home/home_fanim'+str(i)+'.png') for i in range(1,5)]
+            g.TEXTIDS['home']['backanim'] = [g.tman.loadIm('bg/home/home_banim'+str(i)+'.png') for i in range(1,5)]
 
         # DISTRO
-
-        g.TEXTIDS['distrokid'] = {}
-        g.TEXTIDS['distrokid']['back'] = g.tman.loadIm('bg/distro/distrokid_shop.png')
-        g.TEXTIDS['distrokid']['backanim'] = [g.tman.loadIm('bg/distro/distrokid_anim'+str(i)+'.png') for i in range(1,5)]
+        if True:
+            g.TEXTIDS['distrokid'] = {}
+            g.TEXTIDS['distrokid']['back'] = g.tman.loadIm('bg/distro/distrokid_shop.png')
+            g.TEXTIDS['distrokid']['backanim'] = [g.tman.loadIm('bg/distro/distrokid_anim'+str(i)+'.png') for i in range(1,5)]
 
         # STREET
-
-        g.TEXTIDS['street'] = {}
-        g.TEXTIDS['street']['road'] = g.tman.loadIm('bg/street_back.png')
-        #g.TEXTIDS['street']['buildings'] = g.tman.loadIm('bg/building1.png')
+        if True:
+            g.TEXTIDS['street'] = {}
+            g.TEXTIDS['street']['road'] = g.tman.loadIm('bg/street_back.png')
+            #g.TEXTIDS['street']['buildings'] = g.tman.loadIm('bg/building1.png')
 
         ## BUILDINGS
-        g.TEXTIDS['build'] = {}
-        g.TEXTIDS['build'][0] = g.tman.loadIm('bg/empty_build.png')
-        g.TEXTIDS['build'][1] = g.tman.loadIm('bg/building1.png')
+        if True:
+            g.TEXTIDS['build'] = {}
+
+            #builds lambda
+            b = g.tman.loadImSeq('bg/builds.png',(1,3))
+            for i in range(len(b)):
+                g.TEXTIDS['build'][i] = b[i]
+                g.builds.append(i)
+
+
 
 
         ## sun moon stars
-        g.TEXTIDS['moon'] = g.tman.loadIm('bg/moon.png')
-        g.TEXTIDS['sun'] = g.tman.loadIm('bg/sun.png')
-        g.TEXTIDS['stars'] = g.tman.loadIm('bg/stars.png')
-
+        if True:
+            g.TEXTIDS['moon'] = g.tman.loadIm('bg/moon.png')
+            g.TEXTIDS['sun'] = g.tman.loadIm('bg/sun.png')
+            g.TEXTIDS['stars'] = g.tman.loadIm('bg/stars.png')
 
         ##
+        if True:
 
-        g.TEXTIDS['steam'] = g.tman.addCol(20,20,c['lightgrey'])
-        g.TEXTIDS['steam2'] = g.tman.addCol(50,50,c['grey'])
+            g.TEXTIDS['steam'] = g.tman.addCol(20,20,c['lightgrey'])
+            g.TEXTIDS['steam2'] = g.tman.addCol(50,50,c['grey'])
 
-        ## huds
-        g.TEXTIDS['studhud'] = g.tman.loadIm('studhud.png')
-        g.TEXTIDS['ordhud'] = g.tman.loadIm('ordhud.png')
+            ## huds
+            g.TEXTIDS['studhud'] = g.tman.loadIm('studhud.png')
+            g.TEXTIDS['ordhud'] = g.tman.loadIm('ordhud.png')
 
-        ## effects
-        g.TEXTIDS['blur'] = g.tman.addCol(1,1,c['black'])
+            ## effects
+            g.TEXTIDS['blur'] = g.tman.addCol(1,1,c['black'])
 
     def get_current_screen(self):
 

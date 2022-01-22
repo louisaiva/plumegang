@@ -161,6 +161,7 @@ class TextureManager():
         self.batch.draw()
 
 tman,gman = TextureManager(),GroupManager()
+builds = []
 
 #manager who rules normal sprites
 class SpriteManager():

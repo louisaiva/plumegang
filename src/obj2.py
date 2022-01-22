@@ -175,7 +175,7 @@ class Street():
 
         ## buildings
         if self.build_list:
-            print(len(self.build_list),self.build_list)
+            #print(len(self.build_list),self.build_list)
 
             self.builds = []
 
@@ -535,7 +535,7 @@ def generate_map():
         nb_builds = ((line.w+1)*width_between_streets+100)//1600 + 1
         builds = []
         for i in range(nb_builds):
-            builds.append(r.choice([0,1]))
+            builds.append(r.choice(g.builds))
 
         NY.add_streets(Street(line,g.TEXTIDS['street'],builds,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
 

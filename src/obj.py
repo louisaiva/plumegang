@@ -635,13 +635,7 @@ class Porte(Zone_ELEM):
 
         if type(self.destination) in [o2.Street] or self.destination.openable(perso):
 
-            #perso.add_money(r.randint(20,230))
-            #perso.element_colli = None
-
-            #self.street.deload()
-            #self.destination.load()
             perso.tp(x=self.xdest,street=self.destination)
-            #perso.check_colli(self.destination)
             return self.destination.name
         else:
             g.pman.alert('you can\'t go here !')
