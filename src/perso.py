@@ -644,7 +644,7 @@ class Human():
             self.done_todo()
 
         ## skin
-        g.sman.filter(self.skin_id)
+        g.sman.add_filter(self.skin_id)
         g.bertran.unschedule(self.un_hit)
         g.bertran.schedule_once(self.un_hit, 0.4)
 
@@ -712,7 +712,7 @@ class Human():
 
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
-            g.sman.filter(self.skin_id,(255,255,255))
+            g.sman.del_filter(self.skin_id)
 
 
     ## BOTS

@@ -7,6 +7,8 @@ enjoy
 import pyglet,time,random
 from pyglet.window import key
 import pyglet.gl as gl
+import colorama
+colorama.init()
 
 from src.utils import *
 from src.colors import *
@@ -113,7 +115,10 @@ class App():
         #print(self.sprids['effects'])
 
         ## STREETS
-        o2.generate_map()
+        if o2.LOAD != 2:
+            o2.generate_map()
+        else:
+            o2.generate_short_map()
 
         ## PERSOS
 
@@ -128,7 +133,7 @@ class App():
         self.lab_doing = g.lman.addLab(self.perso.poto.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         ## FANS/RAPPEURS
-        n = 30*len(o2.NY.CITY)
+        n = 20*len(o2.NY)
         print(n,'bots in this game !')
         for i in range(n):
             street = o2.NY.rand_street()
@@ -180,10 +185,7 @@ class App():
 
         # distrokid
         zones = []
-        #zones.append(o.Ordi(1990,150,self.perso))
-        #zones.append(o.Studio(2640,225))
         zones.append(o.SimpleReleaser(1670,210,o.distro))
-        #zones.append(o.Distroguy(760,225))
         o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
@@ -230,7 +232,7 @@ class App():
 
         ### PERSOS
         if True:
-            g.TEXTIDS['persos'] = g.tman.loadImSeq('peti_perso.png',(1,30))
+            g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(1,30))
             g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,30))
             g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,30))
             g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
@@ -300,9 +302,7 @@ class App():
             b = g.tman.loadImSeq('bg/builds.png',(1,3))
             for i in range(len(b)):
                 g.TEXTIDS['build'][i] = b[i]
-                g.builds.append(i)
-
-
+                o2.builds_key.append(i)
 
 
         ## sun moon stars
@@ -519,7 +519,6 @@ class App():
             elif symbol == key.TAB:
                 self.perso.relhud.unhide(True)
 
-
     def on_close(self):
 
         print('\n\nNumber of lines :',compt(self.path))
@@ -725,7 +724,7 @@ class App():
             if self.keys[key.LEFT] or self.keys[key.RIGHT]:
                 if self.keys[key.RIGHT]:
                     g.GodCam.activate('R')
-                else:
+                if self.keys[key.LEFT]:
                     g.GodCam.activate()
             else:
                 g.GodCam.unactivate(self.perso)

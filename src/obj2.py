@@ -5,8 +5,6 @@ enjoy
 
 import json,os
 from colors import red, green, blue
-import colorama
-colorama.init()
 
 from src.utils import *
 from src import graphic as g
@@ -15,12 +13,17 @@ from src import perso as p
 import random as r
 
 Y = 0,225
+W_BUILD = 1600
+
+"""'''''''''''''''''''''''''''''''''
+'''''''PART ONE : STREETS'''''''''''
+'''''''''''''''''''''''''''''''''"""
 
 # lines
 
 class preStreet(line):
 
-    def __init__(self,name,xd,yd,xf,yf,connex=[]):
+    def __init__(self,name,xd=0,yd=0,xf=0,yf=0,connex=[]):
 
         super(preStreet,self).__init__(xd,yd,xf,yf)
         self.name = name
@@ -180,7 +183,7 @@ class Street():
             self.builds = []
 
             x,y = self.x,250
-            w = 1600
+            w = W_BUILD
 
             for i in range(len(self.build_list)):
                 build = self.build_list[i]
@@ -188,8 +191,6 @@ class Street():
                 self.builds.append(id)
                 g.Cyc.add_spr((id,0.3))
                 x+=w
-
-
 
         ## back front /back front anim
         if 'back' in self.textures:
@@ -319,7 +320,7 @@ class Street():
             dx = 0
             for id in self.builds:
                 g.sman.spr(id).x = x+dx
-                dx+=1600
+                dx+=W_BUILD
 
 
         ## x des roads gérée dans self.verify_endless_road()
@@ -347,7 +348,7 @@ class Street():
             g.sman.spr(self.streetanimbg).y = y
         """if hasattr(self,'builds'):
             for id in self.builds:
-                g.sman.spr(id).y = y"""
+                g.sman.spr(id).y = y+250"""
         if hasattr(self,'road1'):
             g.sman.spr(self.road1).y = y
         if hasattr(self,'road2'):
@@ -446,7 +447,10 @@ class Shop(House):
                 #self.guys.append(p.Human_to_Guy(self))
         super(Shop,self).update_catalog(perso)
 
-## CITY
+
+"""'''''''''''''''''''''''''''''''''
+'''''''PART TWO : CITY '''''''''''''
+'''''''''''''''''''''''''''''''''"""
 
 class CITY():
 
@@ -481,6 +485,13 @@ class CITY():
 
     #
 
+    def __len__(self):
+        x=0
+        for name in self.CITY:
+            if type(self.CITY[name]) == Street:
+                x+=1
+        return x
+
     def _w(self):
         return self.width
     w = property(_w)
@@ -489,21 +500,33 @@ NY = CITY()
 
 LINES = []
 
-LOAD = 1
-# permet de conserver une map si y'en a une bien (1) ou d'en recreer une à chaque fois (0)
+LOAD = 2
+# permet de conserver une map si y'en a une bien (1) ou d'en recreer une à chaque fois (0) ou de faire une map short (2)
 MAP_NAME = 'ny'
 # key à transmettre à la fonction de chargement pour selectionner une map créée
 
-#-------------------------------#
-#-------------------------------#
+"""'''''''''''''''''''''''''''''''''
+'''''''PART 3 : BUILDINGS ''''''''''
+'''''''''''''''''''''''''''''''''"""
 
+builds = {
+        0:{'name':'empty' , 'box':None },
+        1:{'name':'stand' , 'box':box(370,0,500,420) },
+        2:{'name':'batiment' , 'box':box(200,100,470,420) },
+}
+
+builds_key = []
+
+
+"""'''''''''''''''''''''''''''''''''
+'''''''PART 4 : GENERATION '''''''''
+'''''''''''''''''''''''''''''''''"""
 k = 20
 
 MAP = k,k
 nb_lines = k
 
 def generate_map():
-
     global LINES
 
     lines = []
@@ -532,10 +555,10 @@ def generate_map():
     # we create streets + home
     for line in lines:
 
-        nb_builds = ((line.w+1)*width_between_streets+100)//1600 + 1
+        nb_builds = ((line.w+1)*width_between_streets+100)//W_BUILD + 1
         builds = []
         for i in range(nb_builds):
-            builds.append(r.choice(g.builds))
+            builds.append(r.choice(builds_key))
 
         NY.add_streets(Street(line,g.TEXTIDS['street'],builds,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
 
@@ -567,6 +590,63 @@ def generate_map():
 
     # we draw the whole NY.CITY
     #draw_lines()
+
+def generate_short_map():
+
+    build_list = []
+    zones = []
+
+    ## on organise build_list et on créé les différentes zones SAUF LES PORTES (parce qu'on a pas encore créé la street)
+    for i in range(k):
+        if i >= 3:
+            key = r.choice(builds_key)
+            build_list.append(key)
+
+            if builds[key]['box']:
+                zone_box = builds[key]['box'].pop()
+
+                zone_box.y += 250
+                zone_box.x += i*W_BUILD
+
+                name = builds[key]['name'] + ' ' + str(i)
+
+                zone = o.Zone_ELEM(zone_box,name,makeCol=False)
+                zones.append(zone)
+
+        elif i == 1:
+            build_list.append(2)
+        elif i == 0:
+            build_list.append(1)
+        else:
+            build_list.append(i)
+
+    ## on créé la street
+    w = k*W_BUILD
+    NY.add_streets(Street(preStreet('street'),g.TEXTIDS['street'],build_list,box=box(0,-50,w)))
+
+    #home + porte
+    NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
+    zone_box = builds[2]['box'].pop()
+    zone_box.y += 250
+    zone_box.x += W_BUILD
+    connect(NY.CITY['home'],3200,NY.CITY['street'],zone_box,(False,False))
+    print(zone_box)
+
+    #distrokid + porte
+    NY.add_streets(Shop(preStreet('distrokid'),g.TEXTIDS['distrokid']))
+    zone_box = builds[2]['box'].pop()
+    zone_box.y += 250
+    zone_box.x += 2*W_BUILD
+    connect(NY.CITY['distrokid'],4215,NY.CITY['street'],zone_box,(False,False))
+
+    NY.CITY['street'].assign_zones(zones)
+
+
+
+"""'''''''''''''''''''''''''''''''''
+'''''''PART 5 : USEFUL FONCTIONS''''
+'''''''''''''''''''''''''''''''''"""
+
 
 def create_rand_lines():
 
@@ -701,16 +781,21 @@ def rand_line(i):
 
     return preStreet('street'+str(i),xdep,ydep,xfin,yfin)
 
-def connect(street1,x1,street2,x2,col=(False,False)):
+def connect(street1,box1,street2,box2,col=(False,False)):
 
     ## crée 2 portes :
     ##      -une à x1 dans la street1 pour passer dans la street2
     ##      -une à x2 dans la street2 pour passer dans la street1
 
-    door1 = o.Porte(street1,box(x1,250,270,400),street2,x2,makeCol=col[0])
+    if type(box1) != box:
+        box1 = box(box1,250,270,400)
+    if type(box2) != box:
+        box2 = box(box2,250,270,400)
+
+    door1 = o.Porte(street1,box1,street2,box2.x,makeCol=col[0])
     street1.assign_zones([door1])
 
-    door2 = o.Porte(street2,box(x2,250,270,400),street1,x1,makeCol=col[1])
+    door2 = o.Porte(street2,box2,street1,box1.x,makeCol=col[1])
     street2.assign_zones([door2])
 
 def draw_lines():

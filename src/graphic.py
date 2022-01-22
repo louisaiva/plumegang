@@ -161,7 +161,6 @@ class TextureManager():
         self.batch.draw()
 
 tman,gman = TextureManager(),GroupManager()
-builds = []
 
 #manager who rules normal sprites
 class SpriteManager():
@@ -173,6 +172,8 @@ class SpriteManager():
         self.sprites = {}
 
         self.ids = []
+
+        self.filters = {}
 
     def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True):
 
@@ -278,6 +279,8 @@ class SpriteManager():
                 y -= self.sprites[sprid].width/2
                 self.sprites[sprid].update(x=x,y=y)
 
+
+    #filter
     def filter(self,sprid,color=(255,0,0)):
 
         if type(sprid) == type([]):
@@ -289,6 +292,49 @@ class SpriteManager():
                 self.filter(sprid[id],color)
         else:
             self.sprites[sprid].color = color
+
+    def update_filter(self,sprid):
+
+        if sprid in self.filters and len(self.filters[sprid]) != 0:
+
+            #print('debut :',self.filters[sprid])
+            r,g,b = 0,0,0
+            tot_st = 0
+
+            for filterid in self.filters[sprid]:
+                col,st = self.filters[sprid][filterid]
+                r+=col[0]*st
+                g+=col[1]*st
+                b+=col[2]*st
+                tot_st += st
+
+            moy_st = tot_st/len(self.filters[sprid])
+            r/=tot_st
+            g/=tot_st
+            b/=tot_st
+
+            final_color = (255-r*moy_st,255-g*moy_st,255-b*moy_st)
+            #print('fin :',final_color)
+            self.filter(sprid,final_color)
+
+    def add_filter(self,sprid,color=(0,255,255),strengh=1,filterid='hit'):
+
+        ### ATTENTION !! POUR LES FILTRES IL FAUT ENVOYER LA COULEUR INVERSE
+        ## on veut du rouge à l'écran ? add_filter( (0,255,255) )
+
+        if sprid not in self.filters:
+            self.filters[sprid] = {}
+        self.filters[sprid][filterid] = (color,strengh)
+        self.update_filter(sprid)
+
+    def del_filter(self,sprid,filterid='hit'):
+        if sprid in self.filters and filterid in self.filters[sprid]:
+            del self.filters[sprid][filterid]
+            if len(self.filters[sprid]) == 0:
+                del self.filters[sprid]
+            else:
+                self.update_filter(sprid)
+        self.filter(sprid,(255,255,255))
 
     def spr(self,id):
         if id in self.sprites:
@@ -712,15 +758,12 @@ class Cycle():
 
         ## bg
         for id,prc in self.ext_sprids+self.plus_sprids:
-            rr= 255-255*prc*r
-            gg= 255-255*prc*g
-            bb= 255-255*prc*b
-            sman.filter(id,[rr,gg,bb])
+            sman.add_filter(id,[255*r,255*g,255*b],prc,'env')
 
         ## sun
         ysun = p*4*scr.h-0.6*scr.h
         sman.modify(self.sprids['sun'],pos=(None,ysun))
-        sman.filter(self.sprids['sun'],[255-255*r,255-255*g,255-255*b])
+        sman.add_filter(self.sprids['sun'],[255*r,255*g,255*b],1,'env')
 
         ## moon
         pm = p-0.5
@@ -728,7 +771,7 @@ class Cycle():
             pm = 1+pm
         ymoon = pm*4*scr.h-1.2*scr.h
         sman.modify(self.sprids['moon'],pos=(None,ymoon))
-        sman.filter(self.sprids['moon'],[255-255*0.5*r,255-255*0.5*g,255-255*0.5*b])
+        sman.add_filter(self.sprids['moon'],[255*r,255*g,255*b],0.5,'env')
 
         ## stars
         if p >= 0.8:
@@ -944,13 +987,13 @@ class Camera():
                 moved[0] = True
 
             if xf != None and street.rxf < scr.size[0]:
-                if run:
+                if street.rxf < scr.size[0] - self.runspeed:
                     self.rmorex()
                 else:
                     self.morex()
                 moved[0] = True
             elif x != None and street.x > 0:
-                if run:
+                if street.x > self.runspeed:
                     self.rlessx()
                 else:
                     self.lessx()

@@ -6,6 +6,7 @@ enjoy
 
 
 import random,os,ctypes,time
+from colors import red, green, blue
 #from __future__ import division
 from io import BytesIO
 import win32clipboard
@@ -27,6 +28,9 @@ class box():
         self.h = h
         self.x = x
         self.y = y
+
+    def pop(self):
+        return box(*self.xywh)
 
     def _wh(self):
         return self.w,self.h
@@ -70,6 +74,11 @@ class box():
     fx = property(_fx)
     fy = property(_fy)
     realbox = property(_realbox)
+
+    def __str__(self):
+
+        s = blue('box: ') + ' x:'+str(self.x) + ' y:'+str(self.y)+ ' w:'+str(self.w)+ ' h:'+str(self.h)
+        return s
 
 class line():
 

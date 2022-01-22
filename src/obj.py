@@ -680,8 +680,8 @@ class Zone_ACTIV(Zone_ELEM):
 
 class Distrib(Zone_ELEM):
 
-    def __init__(self,x,y):
-        super(Distrib,self).__init__(box(x,y,100,200),'ez cash','red','mid',makeCol=True)
+    def __init__(self,x,y,w=100,h=200,make_col=True):
+        super(Distrib,self).__init__(box(x,y,w,h),'ez cash','red','mid',makeCol=make_col)
 
     def activate(self,perso):
         super(Distrib,self).activate(perso)
