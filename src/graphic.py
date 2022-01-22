@@ -655,7 +655,7 @@ MODE_COLOR = 1 ## 1 pour avoir des couleurs wtf et 0 pour la "réalité"
 
 class Cycle():
 
-    def __init__(self,perso=None,bg=None):
+    def __init__(self):
 
         # general
 
@@ -666,6 +666,8 @@ class Cycle():
 
         self.day = 1 # nb de jour
 
+        self.plus_sprids = []
+
     def launch(self,perso,bg):
 
         self.perso = perso
@@ -674,6 +676,8 @@ class Cycle():
 
         self.ext_sprids = bg # tableau contenant les ids des sprites à colorer et le pourcentage d'effectif que le cycle a sur lui
         # (plus ce pourcentage se rapporche de 1 plus ça va devenir noir)
+
+        #self.plus_sprids = [] # pareil mais en bonus (ce tableau là va être modifié souvent)
 
         self.sprids = {} # en plus on crée un dic qui va contenir les spr controlés directement par le cycle : type soleil, lune, etoile et meme weather ?
         self.sprids['sun'] = sman.addSpr(TEXTIDS['sun'],(scr.w/2,0),'moon_sun')
@@ -706,7 +710,7 @@ class Cycle():
         r,g,b = self.R(p),self.G(p),self.B(p)
 
         ## bg
-        for id,prc in self.ext_sprids:
+        for id,prc in self.ext_sprids+self.plus_sprids:
             rr= 255-255*prc*r
             gg= 255-255*prc*g
             bb= 255-255*prc*b
@@ -735,8 +739,15 @@ class Cycle():
         else:
             sman.modify(self.sprids['stars'],opacity=0)
 
-    def update_tab(self,bg):
-        self.ext_sprids = bg
+    def add_spr(self,spr):
+        self.plus_sprids.append(spr)
+
+    def del_spr(self,spr):
+        if spr in self.plus_sprids:
+            self.plus_sprids.remove(spr)
+
+    def empty_plus(self):
+        self.plus_sprids = []
 
     def day_update(self):
 

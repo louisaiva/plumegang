@@ -290,7 +290,11 @@ class App():
 
         g.TEXTIDS['street'] = {}
         g.TEXTIDS['street']['road'] = g.tman.loadIm('bg/street_back.png')
-        g.TEXTIDS['street']['back'] = g.tman.loadIm('bg/building1.png')
+        #g.TEXTIDS['street']['buildings'] = g.tman.loadIm('bg/building1.png')
+
+        ## BUILDINGS
+        g.TEXTIDS['build'] = {}
+        g.TEXTIDS['build'][0] = g.tman.loadIm('bg/building1.png')
 
 
         ## sun moon stars
@@ -774,7 +778,7 @@ class App():
                 ## update catalog:
                 o2.NY.CITY[self.perso.street].update_catalog(self.perso)
                 #print(self.perso.street)
-                for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
+                for hum in o2.NY.CITY[self.perso.street].humans:
                     #print(hum)
                     x_r = hum.gex + g.Cam.X + g.GodCam.X
                     y_r = hum.gey + g.Cam.Y
@@ -783,7 +787,7 @@ class App():
                     hum.update_lab()
                     hum.update()
 
-                for hum in o2.NY.CITY[self.perso.street].humans + [self.perso]:
+                for hum in o2.NY.CITY[self.perso.street].humans:
                     hum.being_bot()
                     hum.check_do()
 

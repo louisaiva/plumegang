@@ -599,8 +599,12 @@ class Human():
             if self.street != street.name:
                 self.element_colli = None
                 o2.NY.CITY[self.street].deload()
-                o2.NY.CITY[street.name].load()
+
+                o2.NY.CITY[self.street].del_hum(self)
+                o2.NY.CITY[street.name].add_hum(self)
                 self.street = street.name
+
+                o2.NY.CITY[self.street].load()
 
                 if self.gey > o2.NY.CITY[self.street].yyf[1]:
                     self.tp(y=o2.NY.CITY[self.street].yyf[1])
@@ -1101,6 +1105,8 @@ class Human():
             self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
 
             self.update_skin()
+            if self.outside:
+                g.Cyc.add_spr((self.skin_id,0.2))
 
         if not hasattr(self,'label'):
             #label
@@ -1130,6 +1136,8 @@ class Human():
         g.bertran.unschedule(self.be_hit)
         g.bertran.unschedule(self.bigdoing['funct'])
         self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
+
+        g.Cyc.del_spr((self.skin_id,0.2))
 
         if hasattr(self,'skin_id'):
             g.sman.delete(self.skin_id)
@@ -1181,7 +1189,9 @@ class Human():
     ##
 
 
-
+    def _outside(self):
+        return o2.NY.CITY[self.street].outside
+    outside = property(_outside)
     def _box(self):
         x,y,xf,yf = self.realbox
         w,h=xf-x,yf-y
@@ -1576,7 +1586,9 @@ class Perso(Rappeur):
         self.relhud = o.RelHUD(self)
         self.minirelhud = o.MiniRelHUD(self)
 
-        self.load()
+        o2.NY.CITY[self.street].add_hum(self)
+
+        #self.load()
 
     # cheat
     def cheat(self):

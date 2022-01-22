@@ -6,6 +6,12 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
   qu'elle se déploit depuis une seule et unique rue celle de la maison
   -> permet d'ouvrir des rues au fur et à mesure qu'on devient de plus en plus connu
 
+# STREETS
+
+  -faire des escalators qui montent/descendent pour aller d'une rue horizontale à une rue verticale
+  -ajouter metro :
+    stations de metro disponibles dans différentes rues : permet de se déplacer plus vite, potentiellement fuir police
+
 # ajouter des putains de moyens d'ameliorer la relation
   pcq là tlm se fout sur la gueule
   idées :

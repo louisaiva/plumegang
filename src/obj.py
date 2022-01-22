@@ -618,7 +618,7 @@ class SimpleReleaser(Zone_ELEM):
 
 class Porte(Zone_ELEM):
 
-    def __init__(self,street,box,destination,xdest,makeCol=True):
+    def __init__(self,street,box,destination,xdest,makeCol=False):
 
         super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=makeCol)
         self.destination = destination
@@ -651,7 +651,7 @@ class Porte(Zone_ELEM):
 
 class Item(Zone_ELEM):
 
-    def __init__(self,item,poscentrale,street,size=100):
+    def __init__(self,item,poscentrale,street,size=64):
         nom = str(item.owner)+'\'s plume'
 
         pos = poscentrale[0]-size/2,poscentrale[1]

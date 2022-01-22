@@ -34,15 +34,18 @@ class preStreet(line):
 
 class Street():
 
-    def __init__(self,preStreet,textures={},box=box(0,-50,None)):
+    def __init__(self,preStreet,textures={},buildings=None,box=box(0,-50,None)):
 
         self.textures = textures
+        self.build_list = buildings
 
         # self.textures['back'] = img/None
         # self.textures['front'] = img/None
         # self.textures['frontanim'] = img/None
         # self.textures['backanim'] = img/None
         # self.textures['road'] = img/None
+
+        self.outside = True
 
 
         self.cursor_anim = 0
@@ -118,6 +121,7 @@ class Street():
     def deload(self):
 
         g.bertran.unschedule(self.anim)
+        g.Cyc.empty_plus()
 
         ## road
         if hasattr(self,'road1') and hasattr(self,'road2'):
@@ -125,6 +129,10 @@ class Street():
             del self.road1
             g.sman.delete(self.road2)
             del self.road2
+        ## build
+        if hasattr(self,'builds'):
+            g.sman.delete(self.builds)
+            del self.builds
 
 
         ## back front /back front anim
@@ -161,6 +169,27 @@ class Street():
             w = g.sman.spr(self.road1).width
             self.road2 = g.sman.addSpr(self.textures['road'],(self.x+w,self.y),group='road')
             self.roaddx = 0
+
+            g.Cyc.add_spr((self.road1,0.3))
+            g.Cyc.add_spr((self.road2,0.3))
+
+        ## buildings
+        if self.build_list:
+            print(len(self.build_list),self.build_list)
+
+            self.builds = []
+
+            x,y = self.x,250
+            w = 1600
+
+            for i in range(len(self.build_list)):
+                build = self.build_list[i]
+                id = g.sman.addSpr(g.TEXTIDS['build'][build],(x,y),group='buildings')
+                self.builds.append(id)
+                g.Cyc.add_spr((id,0.3))
+                x+=w
+
+
 
         ## back front /back front anim
         if 'back' in self.textures:
@@ -199,8 +228,8 @@ class Street():
             self.catalog.append( {'x':hum.gex,'y':hum.gey,'type':'hum','nom':hum.name,'elem':hum} )
         for item in self.items:
             self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name,'elem':item} )
-        if perso != None:
-            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name,'elem':perso} )
+        """if perso != None:
+            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name,'elem':perso} )"""
 
         self.catalog.sort(key=lambda x:x.get('x'))
 
@@ -269,6 +298,8 @@ class Street():
         g.sman.modify(self.road1,(road1x,None))
         g.sman.modify(self.road2,(road2x,None))
 
+    def verify_builds(self):
+        pass
 
 
     ###
@@ -284,6 +315,12 @@ class Street():
             g.sman.spr(self.streetanimfg).x = x
         if hasattr(self,'streetanimbg'):
             g.sman.spr(self.streetanimbg).x = x
+        if hasattr(self,'builds'):
+            dx = 0
+            for id in self.builds:
+                g.sman.spr(id).x = x+dx
+                dx+=1600
+
 
         ## x des roads gérée dans self.verify_endless_road()
 
@@ -308,6 +345,9 @@ class Street():
             g.sman.spr(self.streetanimfg).y = y
         if hasattr(self,'streetanimbg'):
             g.sman.spr(self.streetanimbg).y = y
+        """if hasattr(self,'builds'):
+            for id in self.builds:
+                g.sman.spr(id).y = y"""
         if hasattr(self,'road1'):
             g.sman.spr(self.road1).y = y
         if hasattr(self,'road2'):
@@ -364,10 +404,12 @@ class Street():
 class House(Street):
 
     def __init__(self,name='house1',textures={},box=box(-1400,-50,5120)):
-        super(House,self).__init__(name,textures,box)
+        super(House,self).__init__(name,textures,box=box)
 
         self.owners = []
         self.Y = (50,200)
+
+        self.outside = False
 
     def set_owner(self,owner):
         self.owners.append(owner)
@@ -378,11 +420,13 @@ class House(Street):
 class Shop(House):
 
     def __init__(self,name='shop1',textures={},box=box(0,-50,5120)):
-        super(Shop,self).__init__(name,textures,box)
+        super(Shop,self).__init__(name,textures,box=box)
 
         self.guys = []
         self.guys.append( p.Guy(g.TEXTIDS['guys'],self.rand_pos(),metier=p.Distroguy,street=self.name) )
         self.Y = (50,150)
+
+        self.outside = False
 
     def openable(self,perso):
         return True
@@ -487,24 +531,28 @@ def generate_map():
 
     # we create streets + home
     for line in lines:
-        NY.add_streets(Street(line,g.TEXTIDS['street'],box=box(-100,-50,(line.w+1)*width_between_streets+100)))
+
+        nb_builds = ((line.w+1)*width_between_streets+100)//1600
+        builds = [0 for _ in range(nb_builds)]
+
+        NY.add_streets(Street(line,g.TEXTIDS['street'],builds,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
 
         if line == line_home:
             prestr = preStreet('home',line.x,line.y,line.x,line.y)
             NY.add_streets(House(prestr,g.TEXTIDS['home']))
             #NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],g.TEXTIDS['home']['front']),(None,None)))
-            connect(NY.CITY['home'],3200,NY.CITY[line.name],500,(False,True))
+            connect(NY.CITY['home'],3200,NY.CITY[line.name],500,(False,False))
             LINES.append(prestr)
 
             #elif line == line_distro:
             prestr = preStreet('distrokid',line.x,line.y,line.x,line.y)
             NY.add_streets(Shop(prestr,g.TEXTIDS['distrokid']))
-            connect(NY.CITY['distrokid'],4215,NY.CITY[line.name],1500,(False,True))
+            connect(NY.CITY['distrokid'],4215,NY.CITY[line.name],1500,(False,False))
             LINES.append(prestr)
 
             prestr = preStreet('maison de drake',line.x,line.y,line.x,line.y)
             NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],None)))
-            connect(NY.CITY['maison de drake'],3200,NY.CITY[line.name],2500,(False,True))
+            connect(NY.CITY['maison de drake'],3200,NY.CITY[line.name],2500,(False,False))
             LINES.append(prestr)
 
 
@@ -651,7 +699,7 @@ def rand_line(i):
 
     return preStreet('street'+str(i),xdep,ydep,xfin,yfin)
 
-def connect(street1,x1,street2,x2,col=(True,True)):
+def connect(street1,x1,street2,x2,col=(False,False)):
 
     ## crée 2 portes :
     ##      -une à x1 dans la street1 pour passer dans la street2
