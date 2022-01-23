@@ -270,6 +270,9 @@ class Street():
                 elems.append(self.catalog[i])
         return elems
 
+    def get_random_nb_bots(self):
+        return r.randint(10,30)
+
     # anim
     def anim(self,dt):
 
@@ -425,6 +428,9 @@ class Building(Street):
                 return True
         return False
 
+    def get_random_nb_bots(self):
+        return r.randint(0,2)
+
 class House(Street):
 
     def __init__(self,name='house1',textures={},box=box(-1400,-50,5120)):
@@ -442,6 +448,9 @@ class House(Street):
         if perso.cheat:
             return True
         return perso in self.owners
+
+    def get_random_nb_bots(self):
+        return r.randint(0,2)
 
 class Shop(House):
 
@@ -472,6 +481,8 @@ class Shop(House):
                 #self.guys.append(p.Human_to_Guy(self))
         super(Shop,self).update_catalog(perso)
 
+    def get_random_nb_bots(self):
+        return r.randint(1,3)
 
 """'''''''''''''''''''''''''''''''''
 '''''''PART TWO : CITY '''''''''''''
@@ -618,7 +629,7 @@ def generate_map():
 
 def generate_short_map():
 
-    rue = 'kamour Str.'
+    rue = 'kamour str.'
 
     build_list = []
     zones = []
@@ -641,17 +652,18 @@ def generate_short_map():
     ## HOME
     if True:
 
+        name = '1- '+rue
         # inside building
-        NY.add_streets(Building(preStreet('1  '+rue),g.TEXTIDS['inside']))
+        NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
         zone_box = builds[2]['box'].pop()
         zone_box.y += 250
         zone_box.x += W_BUILD
-        connect(NY.CITY['1  '+rue],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
+        connect(NY.CITY[name],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
 
         #home + porte
         NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
-        connect(NY.CITY['home'],3200,NY.CITY['1  '+rue],box(1500,250,300,400),(False,False))
-        NY.CITY['1  '+rue].add_house(NY.CITY['home'])
+        connect(NY.CITY['home'],3200,NY.CITY[name],box(1500,250,300,400),(False,False))
+        NY.CITY[name].add_house(NY.CITY['home'])
 
     ## DISTROKID
     if True:
@@ -671,11 +683,18 @@ def generate_short_map():
             zone_box.y += 250
             zone_box.x += i*W_BUILD
 
-            name = str(i) + '  ' +rue
+            name = str(i) + '- ' +rue
 
             # inside building
             NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
             connect(NY.CITY[name],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
+
+            ## CHAQUE APPART DANS CHAQUE BUILDING
+            for j in range(4):
+                house_name = '1'+chr(65+j) +'-' + str(i) + ' '+rue
+                NY.add_streets(House(preStreet(house_name),g.TEXTIDS['home']))
+                connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False))
+                NY.CITY[name].add_house(NY.CITY[house_name])
 
 
 """'''''''''''''''''''''''''''''''''

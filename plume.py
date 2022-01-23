@@ -123,37 +123,36 @@ class App():
         ## PERSOS
 
         self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
-        #o.distro.sign(self.perso)
         o2.NY.CITY['home'].set_owner(self.perso)
-        #o2.NY.CITY['inside'].set_owner(self.perso)
-        p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
 
+        #poto
+        p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
         self.perso.assign_poto(p.BOTS[-1])
 
 
-        self.lab_doing = g.lman.addLab(self.perso.poto.doing,(1880,1050),font_size=20,anchor=('right','top'))
+        self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         ## FANS/RAPPEURS
-        n = 100*len(o2.NY)
-        print(n,'bots in this game !')
-        for i in range(n):
-            street = o2.NY.rand_street()
-            pos = street.rand_pos()
 
-            if random.random() < 1/8 and len(names.rappeurs) > 0:
-                p.BOTS.append(p.Rappeur(g.TEXTIDS['rap'],pos,street=street.name))
-            else:
-                text = random.choice(['persos','perso2','perso3'])
-                p.BOTS.append(p.Fan(g.TEXTIDS[text],pos,street=street.name))
+        # add hum to p.BOTS for each street
+        for str in o2.NY.CITY:
+            street = o2.NY.CITY[str]
+            if street.name != 'home':
+                n_str = street.get_random_nb_bots()
+                for i in range(n_str):
+                    pos = street.rand_pos()
+                    if random.random() < 1/8 and len(names.rappeurs) > 0:
+                        hum = p.Rappeur(g.TEXTIDS['rap'],pos,street=street.name)
+                    else:
+                        text = random.choice(['persos','perso2','perso3'])
+                        hum = p.Fan(g.TEXTIDS[text],pos,street=street.name)
+                    p.BOTS.append(hum)
 
+        # adding all hum to their street
         for hum in p.BOTS:
-            if hum.street != 'ghost':
-                o2.NY.CITY[hum.street].add_hum(hum)
-            else:
-                o2.NY.Ghost.add_hum(hum)
+            o2.NY.CITY[hum.street].add_hum(hum)
 
-        ## GUYS
-
+        print(len(p.BOTS),'bots in this game !')
 
         ## cycle
 
