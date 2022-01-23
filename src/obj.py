@@ -682,13 +682,29 @@ class Zone_ACTIV(Zone_ELEM):
     def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True,position='back'):
         super(Zone_ACTIV,self).__init__(box,name,textid,group,long,makeCol,position)
 
+        self.activate_inv = True
+        self.inv_already_vis = False
+
     def activate(self,perso):
         super(Zone_ACTIV,self).activate(perso)
         self.activated = True
 
+        if perso.invhud.visible :
+            self.inv_already_vis = True
+        else:
+            self.inv_already_vis = False
+            perso.invhud.unhide()
+
+        perso.invhud.eff_detail()
+        perso.invhud.autorize_deta = False
+
     def close(self,perso):
         self.activated = False
         perso.do()
+
+        if not self.inv_already_vis:
+            perso.invhud.unhide(True)
+        perso.invhud.autorize_deta = True
 
 class Distrib(Zone_ELEM):
 
@@ -718,8 +734,6 @@ class Ordi(Zone_ACTIV):
         else:
             perso.do('wait')
             self.hud.unhide()
-            perso.invhud.eff_detail()
-            perso.invhud.autorize_deta = False
 
     def deactivate(self,dt):
         super(Ordi,self).deactivate(0)
@@ -731,7 +745,6 @@ class Ordi(Zone_ACTIV):
     def close(self,perso):
         super(Ordi,self).close(perso)
         self.hud.unhide(True)
-        perso.invhud.autorize_deta = True
 
 class Studio(Zone_ACTIV):
 
@@ -751,10 +764,7 @@ class Studio(Zone_ACTIV):
             self.hud.assemble(perso)
         else:
             perso.do('wait')
-            perso.invhud.unhide()
             self.hud.unhide()
-            perso.invhud.eff_detail()
-            perso.invhud.autorize_deta = False
 
     def deactivate(self,dt):
         super(Studio,self).deactivate(0)
@@ -766,7 +776,6 @@ class Studio(Zone_ACTIV):
     def close(self,perso):
         super(Studio,self).close(perso)
         self.hud.unhide(True)
-        perso.invhud.autorize_deta = True
 
     def assemble(self,perso):
 
@@ -794,8 +803,6 @@ class Lit(Zone_ACTIV):
         else:
             perso.do('wait')
             self.hud.unhide()
-            perso.invhud.eff_detail()
-            perso.invhud.autorize_deta = False
 
     def deactivate(self,dt):
         super(Lit,self).deactivate(0)
@@ -808,8 +815,6 @@ class Lit(Zone_ACTIV):
         super(Lit,self).close(perso)
         self.hud.delete_phase()
         self.hud.unhide(True)
-        perso.invhud.autorize_deta = True
-        #perso.invhud.unhide(True)
 
     def write(self,perso):
 

@@ -126,7 +126,8 @@ class App():
         o2.NY.CITY['home'].set_owner(self.perso)
 
         #poto
-        p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
+        p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['voisin'].rand_pos(),street='voisin'))
+        o2.NY.CITY['voisin'].set_owner(p.BOTS[-1])
         self.perso.assign_poto(p.BOTS[-1])
 
 
@@ -137,7 +138,7 @@ class App():
         # add hum to p.BOTS for each street
         for str in o2.NY.CITY:
             street = o2.NY.CITY[str]
-            if street.name != 'home':
+            if street.name not in ['home','voisin']:
                 n_str = street.get_random_nb_bots()
                 for i in range(n_str):
                     pos = street.rand_pos()

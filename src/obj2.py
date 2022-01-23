@@ -665,6 +665,12 @@ def generate_short_map():
         connect(NY.CITY['home'],3200,NY.CITY[name],box(1500,250,300,400),(False,False))
         NY.CITY[name].add_house(NY.CITY['home'])
 
+        #maison du voisin
+        NY.add_streets(House(preStreet('voisin'),g.TEXTIDS['home']))
+        connect(NY.CITY['voisin'],3200,NY.CITY[name],box(2500,250,300,400),(False,False))
+        NY.CITY[name].add_house(NY.CITY['voisin'])
+
+
     ## DISTROKID
     if True:
 

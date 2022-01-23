@@ -480,6 +480,20 @@ class Human():
             pass
             #print()
 
+    def force_anim(self,perc,action='act',dir='L'):
+
+        n = len(self.textids[action][dir])
+        # il faut au moins que y'en ai 2 sinon ça beug
+
+        if perc > 0.95:
+            g.sman.set_text(self.skin_id,self.textids[action][dir][n-1])
+            return 0
+
+        dp = 0.8/(n-1)
+        for i in range(n-1):
+            if perc > 0.2 + i*dp and perc <= 0.2 + (i+1)*dp:
+                g.sman.set_text(self.skin_id,self.textids[action][dir][i])
+
 
     ## DOIN
 
@@ -533,20 +547,6 @@ class Human():
                 self.do()
             else:
                 self.undo(0,'move')
-
-    def force_anim(self,perc,action='act',dir='L'):
-
-        n = len(self.textids[action][dir])
-        # il faut au moins que y'en ai 2 sinon ça beug
-
-        if perc > 0.95:
-            g.sman.set_text(self.skin_id,self.textids[action][dir][n-1])
-            return 0
-
-        dp = 0.8/(n-1)
-        for i in range(n-1):
-            if perc > 0.2 + i*dp and perc <= 0.2 + (i+1)*dp:
-                g.sman.set_text(self.skin_id,self.textids[action][dir][i])
 
     ## ACTION
 
