@@ -534,11 +534,23 @@ class Human():
             else:
                 self.undo(0,'move')
 
+    def force_anim(self,perc,action='act',dir='L'):
+
+        n = len(self.textids[action][dir])
+        # il faut au moins que y'en ai 2 sinon ça beug
+
+        if perc > 0.95:
+            g.sman.set_text(self.skin_id,self.textids[action][dir][n-1])
+            return 0
+
+        dp = 0.8/(n-1)
+        for i in range(n-1):
+            if perc > 0.2 + i*dp and perc <= 0.2 + (i+1)*dp:
+                g.sman.set_text(self.skin_id,self.textids[action][dir][i])
 
     ## ACTION
 
     def movedt(self,dt,dir,street,speed=None,again=4):
-        print('wow')
         self.move(dir,street,speed)
         if again > 0:
             g.bertran.schedule_once(self.movedt,0.001,dir,street,again=again-1)
@@ -567,11 +579,11 @@ class Human():
                     self.gex-=speed
                     moved = True
 
+            # up/down
             if dir == 'up':
                 if maxy[1] > self.gey+self.yspeed:
                     self.gey+=self.yspeed
                     moved = True
-
             elif dir == 'down':
                 if maxy[0] < self.gey-self.yspeed :
                     self.gey-=self.yspeed
@@ -580,59 +592,40 @@ class Human():
             ## check activations
             if type(self) == Perso:
                 if dir == 'up':
+                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'front':
+                        self.element_colli.close(self)
                     if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
 
                         # launch longpress
                         if key.Z not in g.longpress:
                             g.longpress[key.Z] = time.time()
 
-                        #get cooldown percentage
+                        #get cooldown percentage + anim
                         perc = g.cooldown_one(key.Z)
-                        #print(perc)
-                        if perc > 0.95:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][4])
-                        elif perc > 0.8:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][3])
-                        elif perc > 0.6:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][2])
-                        elif perc > 0.4:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][1])
-                        elif perc > 0.2:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][0])
+                        self.force_anim(perc,self.element_colli.perso_anim)
 
                         #activating
                         if perc > 1:
                             self.element_colli.activate(self)
-                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'front':
-                        self.element_colli.close(self)
 
                 elif dir == 'down':
+                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
+                        self.element_colli.close(self)
                     if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
 
                         # launch longpress
                         if key.S not in g.longpress:
                             g.longpress[key.S] = time.time()
 
-                        #get cooldown percentage
+                        #get cooldown percentage + anim
                         perc = g.cooldown_one(key.S)
-                        #print(perc)
-                        if perc > 0.95:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][4])
-                        elif perc > 0.8:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][3])
-                        elif perc > 0.6:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][2])
-                        elif perc > 0.4:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][1])
-                        elif perc > 0.2:
-                            g.sman.set_text(self.skin_id,self.textids['door']['L'][0])
+                        self.force_anim(perc,self.element_colli.perso_anim)
 
                         #activating
                         if perc > 1:
                             self.element_colli.activate(self)
-                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
-                        self.element_colli.close(self)
 
+            ## checking thg
             if moved :
                 if 'heal' in self.doing:
                     self.done_todo()
@@ -1483,6 +1476,10 @@ class Rappeur(Fan):
             self.textids['door'] = {}
             self.textids['door']['R'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
             self.textids['door']['L'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
+
+            self.textids['act'] = {}
+            self.textids['act']['R'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
+            self.textids['act']['L'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
 
         self.qua_score = 0
 

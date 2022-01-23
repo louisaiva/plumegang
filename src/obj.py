@@ -534,6 +534,7 @@ class Zone_ELEM(Zone):
         # si 'mid', inactivable (prendre avec E)
 
         self.position = position
+        self.perso_anim = 'act'
 
 
         self.name = name
@@ -634,6 +635,7 @@ class Porte(Zone_ELEM):
         self.destination = destination
         self.street = street
         self.xdest = xdest
+        self.perso_anim = 'door'
 
         self.deload()
 
@@ -700,7 +702,7 @@ class Distrib(Zone_ELEM):
 class Ordi(Zone_ACTIV):
 
     def __init__(self,x,y,perso):
-        super(Ordi,self).__init__(box(x,y,230,260),'ordi','red','mid',makeCol=False,long=True,position='front')
+        super(Ordi,self).__init__(box(x,y,230,260+150),'ordi','red','mid',makeCol=False,long=True,position='front')
 
         self.hud = MarketHUD(perso)
 

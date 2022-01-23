@@ -171,7 +171,7 @@ class App():
 
         # à la maison
         zones = []
-        zones.append(o.Ordi(1990,150,self.perso))
+        zones.append(o.Ordi(1990,0,self.perso))
         zones.append(o.Studio(2640,225))
         zones.append(o.Market(450,210))
         zones.append(o.Lit(-600,225))
@@ -237,7 +237,7 @@ class App():
             g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,30))
             g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,30))
             g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
-            g.TEXTIDS['rap'] = g.tman.loadImSeq('perso2.png',(1,30))
+            g.TEXTIDS['rap'] = g.tman.loadImSeq('perso2.png',(1,40))
 
         # items
         if True:
@@ -423,17 +423,6 @@ class App():
 
     def on_key_press(self,symbol,modifiers):
 
-        ## longpress, press time toussa toussa
-        #g.longpress[symbol] = time.time()
-        if symbol in [key.E,key.Z,key.S]:
-            if symbol == key.S and key.Z in g.time_press:
-                del g.time_press[key.Z]
-            elif symbol == key.Z and key.S in g.time_press:
-                del g.time_press[key.S]
-            if symbol not in g.time_press:
-                g.time_press[symbol] = 0
-
-
         ## real keys
         if symbol == key.F1:
             self.screen_capture()
@@ -522,9 +511,6 @@ class App():
     def on_key_release(self,symbol,modifiers):
 
         if symbol in g.longpress:
-            if symbol in [key.E,key.Z,key.S] and symbol in g.time_press:
-                g.time_press[symbol] += (time.time()-g.longpress[symbol])
-                print(g.time_press[symbol])
             del g.longpress[symbol]
 
         if self.action == "play" and self.perso.alive:

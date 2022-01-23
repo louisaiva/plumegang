@@ -699,21 +699,8 @@ TEXTIDS = {}
 
 keys = []
 longpress = {}
-time_press = {} # for Z,S,E
 
 cooldown = 0.5
-
-def cooldown_reached(key):
-
-    t = 0
-    if key in longpress:
-        t = time.time()-longpress[key]
-    if key in time_press:
-        if time_press[key] + t > cooldown:
-            time_press[key] = 0
-            longpress[key] = time.time()
-            return True
-    return False
 
 def cooldown_one(key):
     if key in longpress:
