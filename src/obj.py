@@ -523,8 +523,18 @@ class Zone_ELEM(Zone):
 
     ## HOOVER WITH MOVEMENT OF PERSO
 
-    def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True):
+    def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True,position='back'):
         super(Zone_ELEM,self).__init__(box,textid,group,makeCol)
+
+        ## la position est différente que la pos !! (louis du futur stp trouve un autre nom là cé éclaté)
+        #   elle régule la position de la zone PAR RAPPORT au perso afin de l'activer correctement
+        #   3 positions : 'back','front','mid' :
+        # si 'back', le perso doit monter (Z) pour activer la zone
+        # si 'front', le perso doit descendre (S) pour activer la zone
+        # si 'mid', inactivable (prendre avec E)
+
+        self.position = position
+
 
         self.name = name
         self.longpress = long
@@ -667,8 +677,8 @@ class Item(Zone_ELEM):
 
 class Zone_ACTIV(Zone_ELEM):
 
-    def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True):
-        super(Zone_ACTIV,self).__init__(box,name,textid,group,long,makeCol)
+    def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True,position='back'):
+        super(Zone_ACTIV,self).__init__(box,name,textid,group,long,makeCol,position)
 
     def activate(self,perso):
         super(Zone_ACTIV,self).activate(perso)
@@ -690,7 +700,7 @@ class Distrib(Zone_ELEM):
 class Ordi(Zone_ACTIV):
 
     def __init__(self,x,y,perso):
-        super(Ordi,self).__init__(box(x,y,230,260),'ordi','red','mid',makeCol=False,long=True)
+        super(Ordi,self).__init__(box(x,y,230,260),'ordi','red','mid',makeCol=False,long=True,position='front')
 
         self.hud = MarketHUD(perso)
 

@@ -5,6 +5,7 @@ enjoy
 
 import random as r
 import json,time,pyglet
+from pyglet.window import key
 from src.colors import *
 from src.utils import *
 from src import graphic as g
@@ -538,7 +539,7 @@ class Human():
 
     def move(self,dir,street,speed=None):
 
-        if hasattr(self,'skin_id'):
+        if hasattr(self,'skin_id') and self.alive :
 
             maxx = street.xxf
             maxy = street.yyf
@@ -546,9 +547,11 @@ class Human():
             if not speed:
                 speed = self.speed
 
-            if 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing:
+            moved = False
 
-                moved = False
+            #R/L
+            if 'write' not in self.doing and 'wait' not in self.doing:
+
                 if dir == 'R' :
                     if (maxx[1] == None or maxx[1] > self.gex+speed+g.sman.spr(self.skin_id).width ):
                         self.gex+=speed
@@ -558,33 +561,56 @@ class Human():
                     self.gex-=speed
                     moved = True
 
-                elif dir == 'up' and maxy[1] > self.gey+self.yspeed:
+            if dir == 'up':
+                if maxy[1] > self.gey+self.yspeed:
                     self.gey+=self.yspeed
                     moved = True
 
-                elif dir == 'down' and maxy[0] < self.gey-self.yspeed :
+            elif dir == 'down':
+                if maxy[0] < self.gey-self.yspeed :
                     self.gey-=self.yspeed
                     moved = True
 
-                if moved :
-                    if 'heal' in self.doing:
-                        self.done_todo()
+            ## check activations
+            if type(self) == Perso:
+                if dir == 'up':
+                    if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
+                        if key.Z not in g.longpress:
+                            g.longpress[key.Z] = time.time()
+                        print(g.time_press,g.longpress)
+                        if g.cooldown_reached(key.Z):
+                            self.element_colli.activate(self)
+                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'front':
+                        self.element_colli.close(self)
 
-                    if dir in ['R','L']:
-                        if self.dir != dir:
-                            self.dir = dir
-                            self.do('move')
-                            self.update_skin(repeat=False)
-                        else:
-                            self.do('move')
+                elif dir == 'down':
+                    if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
+                        if key.S not in g.longpress:
+                            g.longpress[key.S] = time.time()
+                        if g.cooldown_reached(key.S):
+                            self.element_colli.activate(self)
+                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
+                        self.element_colli.close(self)
+
+            if moved :
+                if 'heal' in self.doing:
+                    self.done_todo()
+
+                if dir in ['R','L']:
+                    if self.dir != dir:
+                        self.dir = dir
+                        self.do('move')
+                        self.update_skin(repeat=False)
                     else:
                         self.do('move')
-                    self.update_lab()
-                    self.update()
+                else:
+                    self.do('move')
+                self.update_lab()
+                self.update()
 
-                    self.time_last_move = time.time()
-                elif speed > self.speed:
-                    self.move(dir,street)
+                self.time_last_move = time.time()
+            elif speed > self.speed:
+                self.move(dir,street)
 
     def tp(self,x=None,y=None,street=None):
 
@@ -637,9 +663,6 @@ class Human():
                     self.last_hit = time.time()
                     self.relup(self.element_colli,self.damage,'peur/rassure')
                     self.element_colli.be_hit(self)
-                elif type(self) == Perso:
-                    # là c'est autre chose : si on est le perso on l'active
-                    self.element_colli.activate(self)
 
     def be_hit(self,hitter):
 

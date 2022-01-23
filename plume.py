@@ -213,10 +213,10 @@ class App():
         self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
 
         # keys
-        self.keys = key.KeyStateHandler()
-        self.window.push_handlers(self.keys)
-        self.longpress = {}
-        self.cooldown = 0.5
+        g.keys = key.KeyStateHandler()
+        self.window.push_handlers(g.keys)
+        #g.longpress = {}
+        #g.cooldown = 0.5
 
         # clicks
         self.clicks = {'L':False,'R':False,'M':[0,0]}
@@ -405,7 +405,7 @@ class App():
         newwin = pyglet.window.Window(screen=screen)
         newwin.set_fullscreen()
         newwin.push_handlers(self)
-        newwin.push_handlers(self.keys)
+        newwin.push_handlers(g.keys)
 
         # on supprime l'ancienne window
         self.window.close()
@@ -423,21 +423,27 @@ class App():
 
     def on_key_press(self,symbol,modifiers):
 
+        ## longpress, press time toussa toussa
+        #g.longpress[symbol] = time.time()
+        if symbol in [key.E,key.Z,key.S]:
+            if symbol == key.S and key.Z in g.time_press:
+                del g.time_press[key.Z]
+            elif symbol == key.Z and key.S in g.time_press:
+                del g.time_press[key.S]
+            if symbol not in g.time_press:
+                g.time_press[symbol] = 0
+
+
+        ## real keys
         if symbol == key.F1:
             self.screen_capture()
 
         if self.action == "play":
 
-            self.longpress[symbol] = time.time()
-
             if symbol == key.ESCAPE:
-                if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso,p.Guy] and self.perso.element_colli.activated:
-                    self.perso.element_colli.close(self.perso)
+                self.change_action('pause')
+                if not ESK_QUIT:
                     return pyglet.event.EVENT_HANDLED
-                else:
-                    self.change_action('pause')
-                    if not ESK_QUIT:
-                        return pyglet.event.EVENT_HANDLED
             #affiche les différents OrderedGroup d'affichage
             elif symbol == key.G:
 
@@ -515,8 +521,11 @@ class App():
 
     def on_key_release(self,symbol,modifiers):
 
-        if symbol in self.longpress:
-            del self.longpress[symbol]
+        if symbol in g.longpress:
+            if symbol in [key.E,key.Z,key.S] and symbol in g.time_press:
+                g.time_press[symbol] += (time.time()-g.longpress[symbol])
+                print(g.time_press[symbol])
+            del g.longpress[symbol]
 
         if self.action == "play" and self.perso.alive:
 
@@ -706,32 +715,23 @@ class App():
             if not self.gameover:
 
                 speed = self.perso.speed
-                if self.keys[key.LSHIFT]:
+                if g.keys[key.LSHIFT]:
                     speed = self.perso.runspeed
 
                 ## moving perso
-                if self.keys[key.Q]:
+                if g.keys[key.Q]:
                     self.perso.move('L',o2.NY.CITY[self.perso.street],speed)
-                if self.keys[key.D]:
+                if g.keys[key.D]:
                     self.perso.move('R',o2.NY.CITY[self.perso.street],speed)
-
-                if self.keys[key.Z]:
+                if g.keys[key.Z]:
                     self.perso.move('up',o2.NY.CITY[self.perso.street])
-                if self.keys[key.S]:
+                if g.keys[key.S]:
                     self.perso.move('down',o2.NY.CITY[self.perso.street])
 
-                if self.keys[key.E]:
-                    if self.perso.element_colli != None and type(self.perso.element_colli) not in [p.Human,p.Fan,p.Rappeur,p.Perso,p.Guy]:
-                        if self.perso.element_colli.longpress:
-                            if time.time() - self.longpress[key.E] > self.cooldown:
-                                self.longpress[key.E] = time.time()
-                                self.perso.element_colli.activate(self.perso)
-                                self.perso.do('hit')
-
-            if self.keys[key.LEFT] or self.keys[key.RIGHT]:
-                if self.keys[key.RIGHT]:
+            if g.keys[key.LEFT] or g.keys[key.RIGHT]:
+                if g.keys[key.RIGHT]:
                     g.GodCam.activate('R')
-                if self.keys[key.LEFT]:
+                if g.keys[key.LEFT]:
                     g.GodCam.activate()
             else:
                 g.GodCam.unactivate(self.perso)
@@ -839,7 +839,7 @@ class App():
             if True:
                 o2.NY.CITY[self.perso.street].modify(g.Cam.X+ g.GodCam.X,g.Cam.Y)
 
-                g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street],self.keys[key.LSHIFT])
+                g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street],g.keys[key.LSHIFT])
 
             # if not pause, go streamin and particles
             if g.bertran.speed > 0:
