@@ -596,6 +596,9 @@ class Human():
                         self.element_colli.close(self)
                     if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
 
+                        #we are moving -> stop heal and ...
+                        moved = True
+
                         # launch longpress
                         if key.Z not in g.longpress:
                             g.longpress[key.Z] = time.time()
@@ -612,6 +615,9 @@ class Human():
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
                         self.element_colli.close(self)
                     if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
+
+                        #we are moving -> stop heal and ...
+                        moved = True
 
                         # launch longpress
                         if key.S not in g.longpress:

@@ -618,7 +618,7 @@ def generate_map():
 
 def generate_short_map():
 
-    rue = 'rue de la fromagerie'
+    rue = 'kamour Str.'
 
     build_list = []
     zones = []
@@ -642,16 +642,16 @@ def generate_short_map():
     if True:
 
         # inside building
-        NY.add_streets(Building(preStreet('1 '+rue),g.TEXTIDS['inside']))
+        NY.add_streets(Building(preStreet('1  '+rue),g.TEXTIDS['inside']))
         zone_box = builds[2]['box'].pop()
         zone_box.y += 250
         zone_box.x += W_BUILD
-        connect(NY.CITY['1 '+rue],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
+        connect(NY.CITY['1  '+rue],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
 
         #home + porte
         NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
-        connect(NY.CITY['home'],3200,NY.CITY['1 '+rue],box(1500,250,300,400),(False,False))
-        NY.CITY['1 '+rue].add_house(NY.CITY['home'])
+        connect(NY.CITY['home'],3200,NY.CITY['1  '+rue],box(1500,250,300,400),(False,False))
+        NY.CITY['1  '+rue].add_house(NY.CITY['home'])
 
     ## DISTROKID
     if True:
@@ -671,7 +671,7 @@ def generate_short_map():
             zone_box.y += 250
             zone_box.x += i*W_BUILD
 
-            name = str(i) + ' ' +rue
+            name = str(i) + '  ' +rue
 
             # inside building
             NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))

@@ -134,7 +134,7 @@ class App():
         self.lab_doing = g.lman.addLab(self.perso.poto.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
         ## FANS/RAPPEURS
-        n = 50*len(o2.NY)
+        n = 100*len(o2.NY)
         print(n,'bots in this game !')
         for i in range(n):
             street = o2.NY.rand_street()
