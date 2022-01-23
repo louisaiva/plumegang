@@ -695,7 +695,7 @@ TEXTIDS = {}
 '''''''PART TWO : CCCC STUFF''''''''
 '''''''''''''''''''''''''''''''''"""
 
-#### KEYS ->  Not graphic nor C but t'as capté
+#### KEYS ->  Not graphic nor C but t'as capté ya un K ça passe
 
 keys = []
 longpress = {}
@@ -715,6 +715,14 @@ def cooldown_reached(key):
             return True
     return False
 
+def cooldown_one(key):
+    if key in longpress:
+        perc = (time.time()-longpress[key])/cooldown
+        if perc > 1:
+            longpress[key] = time.time()
+        return perc
+
+    return 0
 
 
 #### CYCLE -> rules day/night cycle

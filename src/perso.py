@@ -537,6 +537,12 @@ class Human():
 
     ## ACTION
 
+    def movedt(self,dt,dir,street,speed=None,again=4):
+        print('wow')
+        self.move(dir,street,speed)
+        if again > 0:
+            g.bertran.schedule_once(self.movedt,0.001,dir,street,again=again-1)
+
     def move(self,dir,street,speed=None):
 
         if hasattr(self,'skin_id') and self.alive :
@@ -575,19 +581,54 @@ class Human():
             if type(self) == Perso:
                 if dir == 'up':
                     if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
+
+                        # launch longpress
                         if key.Z not in g.longpress:
                             g.longpress[key.Z] = time.time()
-                        print(g.time_press,g.longpress)
-                        if g.cooldown_reached(key.Z):
+
+                        #get cooldown percentage
+                        perc = g.cooldown_one(key.Z)
+                        #print(perc)
+                        if perc > 0.95:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][4])
+                        elif perc > 0.8:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][3])
+                        elif perc > 0.6:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][2])
+                        elif perc > 0.4:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][1])
+                        elif perc > 0.2:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][0])
+
+                        #activating
+                        if perc > 1:
                             self.element_colli.activate(self)
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'front':
                         self.element_colli.close(self)
 
                 elif dir == 'down':
                     if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
+
+                        # launch longpress
                         if key.S not in g.longpress:
                             g.longpress[key.S] = time.time()
-                        if g.cooldown_reached(key.S):
+
+                        #get cooldown percentage
+                        perc = g.cooldown_one(key.S)
+                        #print(perc)
+                        if perc > 0.95:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][4])
+                        elif perc > 0.8:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][3])
+                        elif perc > 0.6:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][2])
+                        elif perc > 0.4:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][1])
+                        elif perc > 0.2:
+                            g.sman.set_text(self.skin_id,self.textids['door']['L'][0])
+
+                        #activating
+                        if perc > 1:
                             self.element_colli.activate(self)
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
                         self.element_colli.close(self)
@@ -612,7 +653,7 @@ class Human():
             elif speed > self.speed:
                 self.move(dir,street)
 
-    def tp(self,x=None,y=None,street=None):
+    def tp(self,x=None,y=None,street=None,arrival='back'):
 
         if x != None:
             oldx = self.box.x
@@ -635,10 +676,14 @@ class Human():
 
                 o2.NY.CITY[self.street].load()
 
-                if self.gey > o2.NY.CITY[self.street].yyf[1]:
+                if arrival == 'back':
                     self.tp(y=o2.NY.CITY[self.street].yyf[1])
-                elif self.gey < o2.NY.CITY[self.street].yyf[0]:
-                    self.tp(y=o2.NY.CITY[self.street].yyf[0])
+                    self.gey+=4*self.yspeed
+                    g.bertran.schedule_once(self.movedt,0.1,'down',o2.NY.CITY[self.street])
+                elif arrival == 'front':
+                    self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
+                    self.gey-=4*self.yspeed
+                    g.bertran.schedule_once(self.movedt,0.1,'up',o2.NY.CITY[self.street])
 
                 self.check_colli(street)
 
@@ -1434,6 +1479,10 @@ class Rappeur(Fan):
             self.textids['heal'] = {}
             self.textids['heal']['R'] = [textids[15+2],textids[16+2]]
             self.textids['heal']['L'] = [textids[15+2],textids[16+2]]
+
+            self.textids['door'] = {}
+            self.textids['door']['R'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
+            self.textids['door']['L'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
 
         self.qua_score = 0
 
