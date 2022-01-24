@@ -66,96 +66,100 @@ class App():
 
     def init(self):
 
-        ##  TEXTURES
+        # textures/sprites
+        if True:
 
-        self.create_organise_textures()
+            ##  TEXTURES
 
-        ## Cursor
-        #image = pyglet.image.load('cursor.png')
-        g.Cur.init(self.window,g.TEXTIDS['utils'])
+            self.create_organise_textures()
 
-        ## SPRITES
+            ## Cursor
+            g.Cur.init(self.window,g.TEXTIDS['utils'])
 
-        self.bgx,self.bgy = 0,250
-        self.bg1dx = 0
-        self.bgdx = 0
+            ## SPRITES
 
-        self.sprids = {}
-        self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'sky')
-        g.sman.modify(self.sprids['bg-1'],scale=(0.75,0.75))
-        self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'bg_buildings_loin')
-        g.sman.modify(self.sprids['bg.1'],scale=(0.75,0.75))
-        self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'bg_buildings_loin')
-        g.sman.modify(self.sprids['bg.2'],scale=(0.75,0.75))
+            self.bgx,self.bgy = 0,250
+            self.bg1dx = 0
+            self.bgdx = 0
 
-        rect = box(0,0,g.scr.w,250)
-        self.sprids['ground'] = g.sman.addCol(c['grey'],rect,'bg_buildings_proche')
-        self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'bg_buildings_proche')
-        g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
-        self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'bg_buildings_proche')
-        g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
-        #self.sprids['bgmid'] = g.sman.addSpr(g.TEXTIDS['bgmid'],(-1000,-50),'mid-1')
-        #g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
+            self.sprids = {}
+            self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'sky')
+            g.sman.modify(self.sprids['bg-1'],scale=(0.75,0.75))
+            self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'bg_buildings_loin')
+            g.sman.modify(self.sprids['bg.1'],scale=(0.75,0.75))
+            self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'bg_buildings_loin')
+            g.sman.modify(self.sprids['bg.2'],scale=(0.75,0.75))
 
-        #self.circle = g.sman.addCircle(g.scr.c,100,group='up')
-        #cir = pyglet.shapes.Circle(g.scr.cx,g.scr.cy,100,batch=g.tman.batch)
+            rect = box(0,0,g.scr.w,250)
+            self.sprids['ground'] = g.sman.addCol(c['grey'],rect,'bg_buildings_proche')
+            self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'bg_buildings_proche')
+            g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
+            self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'bg_buildings_proche')
+            g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
 
-        ## sprites effects
+            ## sprites effects
 
-        self.sprids['effects'] = {}
-        sizes = []
-        for scr in g.scr.screens:
-            if (scr.width,scr.height) not in sizes:
-                sizes.append((scr.width,scr.height))
+            self.sprids['effects'] = {}
+            sizes = []
+            for scr in g.scr.screens:
+                if (scr.width,scr.height) not in sizes:
+                    sizes.append((scr.width,scr.height))
 
-        for size in sizes:
-            self.sprids['effects'][size] = g.sman.addSpr(g.TEXTIDS['blur'],group='up-1',vis=False)
-            g.sman.modify(self.sprids['effects'][size],scale=size,opacity=150)
+            for size in sizes:
+                self.sprids['effects'][size] = g.sman.addSpr(g.TEXTIDS['blur'],group='up-1',vis=False)
+                g.sman.modify(self.sprids['effects'][size],scale=size,opacity=150)
 
-        #print(self.sprids['effects'])
+            #print(self.sprids['effects'])
 
-        ## STREETS
-        if o2.LOAD != 2:
-            o2.generate_map()
-        else:
-            o2.generate_short_map()
+        # streets
+        if True:
+            ## STREETS
+            if o2.LOAD != 2:
+                o2.generate_map()
+            else:
+                o2.generate_short_map()
 
-        ## PERSOS
+        # humans
+        if True:
 
-        self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
-        o2.NY.CITY['home'].set_owner(self.perso)
+            print(p.BOTS)
+            ## PERSOS
+            self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
+            p.BOTS.append(self.perso)
+            o2.NY.CITY['home'].set_owner(self.perso)
 
-        #poto
-        p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['voisin'].rand_pos(),street='voisin'))
-        o2.NY.CITY['voisin'].set_owner(p.BOTS[-1])
-        self.perso.assign_poto(p.BOTS[-1])
+            #poto
+            p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['voisin'].rand_pos(),street='voisin'))
+            o2.NY.CITY['voisin'].set_owner(p.BOTS[-1])
+            self.perso.assign_poto(p.BOTS[-1])
 
 
-        self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
+            self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
-        ## FANS/RAPPEURS
+            ## FANS/RAPPEURS
 
-        # add hum to p.BOTS for each street
-        for str in o2.NY.CITY:
-            street = o2.NY.CITY[str]
-            if street.name not in ['home','voisin']:
-                n_str = street.get_random_nb_bots()
-                for i in range(n_str):
-                    pos = street.rand_pos()
-                    if random.random() < 1/8 and len(names.rappeurs) > 0:
-                        hum = p.Rappeur(g.TEXTIDS['rap'],pos,street=street.name)
-                    else:
-                        text = random.choice(['persos','perso2','perso3'])
-                        hum = p.Fan(g.TEXTIDS[text],pos,street=street.name)
-                    p.BOTS.append(hum)
+            # add hum to p.BOTS for each street
+            for str in o2.NY.CITY:
+                street = o2.NY.CITY[str]
+                if street.name not in ['home','voisin']:
+                    n_str = street.get_random_nb_bots()
+                    for i in range(n_str):
+                        pos = street.rand_pos()
+                        if random.random() < 1/8 and len(names.rappeurs) > 0:
+                            hum = p.Rappeur(g.TEXTIDS['rap'],pos,street=street.name)
+                        else:
+                            text = random.choice(['persos','perso2','perso3'])
+                            hum = p.Fan(g.TEXTIDS[text],pos,street=street.name)
+                        p.BOTS.append(hum)
 
-        # adding all hum to their street
-        for hum in p.BOTS:
-            o2.NY.CITY[hum.street].add_hum(hum)
+            # adding all hum to their street
+            for hum in p.BOTS:
+                o2.NY.CITY[hum.street].add_hum(hum)
 
-        print(len(p.BOTS),'bots in this game !')
+            print(p.BOTS)
+            print(len(p.BOTS),'bots in this game !')
 
-        ## cycle
+        # cycle
 
         tabcolor = [(self.sprids['bg-1'],1),
                     (self.sprids['bg.1'],0.9),
@@ -163,71 +167,73 @@ class App():
                     (self.sprids['bg1.1'],0.7),
                     (self.sprids['bg1.2'],0.7),
                     (self.sprids['ground'],0.7)]
-
-        #g.Cyc = g.Cycle(self.perso,tabcolor)
         g.Cyc.launch(self.perso,tabcolor)
 
-        ## ZONES
+        # zones
+        if True:
 
-        # à la maison
-        zones = []
-        zones.append(o.Ordi(1990,0,self.perso))
-        zones.append(o.Studio(2640,225))
-        zones.append(o.Market(450,210))
-        zones.append(o.Lit(-600,225))
-        o2.NY.CITY['home'].assign_zones(zones)
+            ## ZONES
+            # à la maison
+            zones = []
+            zones.append(o.Ordi(1990,0,self.perso))
+            zones.append(o.Studio(2640,225))
+            zones.append(o.Market(450,210))
+            zones.append(o.Lit(-600,225))
+            o2.NY.CITY['home'].assign_zones(zones)
 
-        # ez cash
-        zones = []
-        zones.append(o.Distrib(2900,225))
-        street = o2.NY.rand_street().name
-        o2.NY.CITY[street].assign_zones(zones)
-        print('let\'s find the',street,'!')
+            # ez cash
+            zones = []
+            zones.append(o.Distrib(2900,225))
+            street = o2.NY.rand_street().name
+            o2.NY.CITY[street].assign_zones(zones)
+            print('let\'s find the',street,'!')
 
-        # distrokid
-        zones = []
-        zones.append(o.SimpleReleaser(1670,210,o.distro))
-        o2.NY.CITY['distrokid'].assign_zones(zones)
-
-
-        o2.NY.CITY[self.perso.street].load()
+            # distrokid
+            zones = []
+            zones.append(o.SimpleReleaser(1670,210,o.distro))
+            o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
-        ## items
-        self.this_hud_caught_an_item = None
+            o2.NY.CITY[self.perso.street].load()
 
-        ## END
+        # lot of stuff : hud/end/menu/labels/keys/clicks/final
+        if True:
 
-        self.tick = 0
-        self.day = 0
-        self.duree_day = 60 # en secondes
-        self.gameover = False
+            ## items
+            self.this_hud_caught_an_item = None
 
-        # menu
-        self.create_menu()
+            ## END
 
-        # labels
+            self.tick = 0
+            self.day = 0
+            self.duree_day = 60 # en secondes
+            self.gameover = False
 
-        self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_name=1,font_size=32,anchor=('left','top'))
-        self.lab_day = g.lman.addLab('DAY : 0',(20,1060-50),group='up',font_name=1,font_size=32,anchor=('left','top'))
-        self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
+            # menu
+            self.create_menu()
 
-        # keys
-        g.keys = key.KeyStateHandler()
-        self.window.push_handlers(g.keys)
-        #g.longpress = {}
-        #g.cooldown = 0.5
+            # labels
 
-        # clicks
-        self.clicks = {'L':False,'R':False,'M':[0,0]}
-        self.mouse_speed = 0
+            self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_name=1,font_size=32,anchor=('left','top'))
+            self.lab_day = g.lman.addLab('DAY : 0',(20,1060-50),group='up',font_name=1,font_size=32,anchor=('left','top'))
+            self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
 
-        # final
-        self.action = "play" # play pause
-        self.playing = True
+            # keys
+            g.keys = key.KeyStateHandler()
+            self.window.push_handlers(g.keys)
+            #g.longpress = {}
+            #g.cooldown = 0.5
 
-        pyglet.clock.schedule_interval(self.gameloop,0.0000001)
-        pyglet.app.run()
+            # clicks
+            self.clicks = {'L':False,'R':False,'M':[0,0]}
+            self.mouse_speed = 0
+
+            # final
+            self.action = "play" # play pause
+            self.playing = True
+
+            pyglet.clock.schedule_interval(self.gameloop,0.0000001)
+            pyglet.app.run()
 
     def create_organise_textures(self):
 

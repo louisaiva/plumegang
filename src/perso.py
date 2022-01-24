@@ -374,15 +374,30 @@ class Human():
             colli_elem = None
 
         if type(self) == Perso:
+
             if self.element_colli != None:
                 if colli_elem != None:
                     if colli_elem != self.element_colli :
                         self.element_colli.unhoover()
                         self.element_colli = colli_elem
                         self.element_colli.hoover()
+
+                        ## on reinitialise les keys d'activation (ZS activaiton)
+                        if key.Z in g.longpress:
+                            del g.longpress[key.Z]
+                        if key.S in g.longpress:
+                            del g.longpress[key.S]
+
                 else:
                     self.element_colli.unhoover()
                     self.element_colli = None
+
+                    ## on reinitialise les keys d'activation (ZS activaiton)
+                    if key.Z in g.longpress:
+                        del g.longpress[key.Z]
+                    if key.S in g.longpress:
+                        del g.longpress[key.S]
+
             else:
                 if colli_elem != None:
                     self.element_colli = colli_elem
@@ -685,8 +700,6 @@ class Human():
                     g.bertran.schedule_once(self.movedt,0.1,'up',o2.NY.CITY[self.street])
 
                 self.check_colli(street)
-
-        #print('tp : x',x,'y',y,'street',street,'\n')
 
     def hit(self,dt=0):
         if self.alive:
@@ -1207,9 +1220,8 @@ class Human():
         g.bertran.unschedule(self.bigdoing['funct'])
         self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
 
-        g.Cyc.del_spr((self.skin_id,0.2))
-
         if hasattr(self,'skin_id'):
+            g.Cyc.del_spr((self.skin_id,0.2))
             g.sman.delete(self.skin_id)
             del self.skin_id
         if hasattr(self,'label'):
@@ -1259,6 +1271,13 @@ class Human():
     ##
 
 
+    def __repr__(self):
+        s = self.name +' ('+red(self.type) + ')'+' ['+ blue(self.street)+'] '
+        return s
+
+    def _type(self):
+        return 'HUMAN'
+    type = property(_type)
     def _outside(self):
         return o2.NY.CITY[self.street].outside
     outside = property(_outside)
@@ -1363,6 +1382,10 @@ class Fan(Human):
 
         return s + ' ' + self.name
 
+    def _type(self):
+        return 'FAN'
+    type = property(_type)
+
 # travaille dans un shop ou autre
 class Guy(Fan):
 
@@ -1435,7 +1458,10 @@ class Guy(Fan):
         super(Guy,self).unhoover()
         if hasattr(self,'label_work'):
             g.lman.unhide(self.label_work,True)
-    ### label
+
+    def _type(self):
+        return 'GUY'
+    type = property(_type)
 
 # les rappeurs
 class Rappeur(Fan):
@@ -1639,6 +1665,11 @@ class Rappeur(Fan):
     def add_money(self,qté):
         self.money += qté
 
+    def _type(self):
+        return 'RAPPER'
+    type = property(_type)
+
+
 #toa
 class Perso(Rappeur):
 
@@ -1787,3 +1818,7 @@ class Perso(Rappeur):
     def _in_combat(self):
         return (time.time()-self.last_hit < 5)
     in_combat = property(_in_combat)
+
+    def _type(self):
+        return 'PERSO'
+    type = property(_type)
