@@ -630,44 +630,74 @@ class App():
                 if o2.NY.CITY[self.perso.street].zones[zone].activated:
 
                     if zone == 'lit':
-                        if o2.NY.CITY[self.perso.street].zones['lit'].hud.ui != None :
-                            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['lit'].hud) : #check si il peut catch
+                        zone = o2.NY.CITY[self.perso.street].zones['lit']
+                        if zone.hud.ui != None :
+                            if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == zone.hud) : #check si il peut catch
 
-                                caught_dropped = o2.NY.CITY[self.perso.street].zones['lit'].hud.catch_or_drop(x,y,self.perso)
+                                caught_dropped = zone.hud.catch_or_drop(x,y,self.perso)
 
                                 if caught_dropped == 1: # means caught
-                                    self.this_hud_caught_an_item = o2.NY.CITY[self.perso.street].zones['lit'].hud
+
+                                    if not g.keys[key.LSHIFT]:
+                                        # signifie qu'on prend le hud
+                                        self.this_hud_caught_an_item = zone.hud
+                                    else:
+                                        # attrapage rapide dans l'inventaire
+                                        self.perso.invhud.catch(zone.hud.ui.phase)
+                                        o2.NY.CITY[self.perso.street].zones['lit'].hud.delete_phase()
+                                        letsbacktnothingcaught = True
+
                                 elif caught_dropped == -1: # means dropped
                                     letsbacktnothingcaught = True
 
                                 self.on_mouse_motion(x,y,0,0)
 
                     elif zone == 'studio':
-                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['studio'].hud) : #check si il peut catch
-                            caught_dropped = o2.NY.CITY[self.perso.street].zones['studio'].hud.catch_or_drop(x,y,self.perso)
+                        zone = o2.NY.CITY[self.perso.street].zones['studio']
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == zone.hud) : #check si il peut catch
+                            caught_dropped = zone.hud.catch_or_drop(x,y,self.perso)
 
                             if caught_dropped == 1: # means caught
-                                self.this_hud_caught_an_item = o2.NY.CITY[self.perso.street].zones['studio'].hud
+
+                                if not g.keys[key.LSHIFT]:
+                                    # signifie qu'on prend le hud
+                                    self.this_hud_caught_an_item = zone.hud
+                                else:
+                                    # attrapage rapide dans l'inventaire
+                                    self.perso.invhud.catch(zone.hud.item_caught.item)
+                                    zone.hud.item_caught.delete()
+                                    zone.hud.item_caught = None
+                                    letsbacktnothingcaught = True
+
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
 
-                            #self.on_mouse_motion(x,y,0,0)
+                            self.on_mouse_motion(x,y,0,0)
 
                     elif zone == 'ordi':
-                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['ordi'].hud) : #check si il peut catch
+                        zone = o2.NY.CITY[self.perso.street].zones['ordi']
+                        if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == zone.hud) : #check si il peut catch
 
-                            if o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis['main'] != None and self.perso not in o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis['main'].item.owners:
-                                g.Cur.start_long_press(o2.NY.CITY[self.perso.street].zones['ordi'].hud.uis['main'].box,o2.NY.CITY[self.perso.street].zones['ordi'].hud.buy_instru)
+                            if zone.hud.uis['main'] != None and self.perso not in zone.hud.uis['main'].item.owners:
+                                g.Cur.start_long_press(zone.hud.uis['main'].box,zone.hud.buy_instru)
 
-
-                            caught_dropped = o2.NY.CITY[self.perso.street].zones['ordi'].hud.catch_or_drop(x,y)
+                            caught_dropped = zone.hud.catch_or_drop(x,y)
 
                             if caught_dropped == 1: # means caught
-                                self.this_hud_caught_an_item = o2.NY.CITY[self.perso.street].zones['ordi'].hud
+
+                                if not g.keys[key.LSHIFT]:
+                                    # signifie qu'on prend le hud
+                                    self.this_hud_caught_an_item = zone.hud
+                                else:
+                                    # attrapage rapide dans l'inventaire
+                                    self.perso.invhud.catch(zone.hud.item_caught.item)
+                                    zone.hud.item_caught.delete()
+                                    zone.hud.item_caught = None
+                                    letsbacktnothingcaught = True
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
 
-                            #self.on_mouse_motion(x,y,0,0)
+                            self.on_mouse_motion(x,y,0,0)
 
             # inventUI
             if self.perso.invhud.visible:
@@ -676,7 +706,15 @@ class App():
                     caught_dropped = self.perso.invhud.catch_or_drop(x,y)
 
                     if caught_dropped == 1: # means caught
-                        self.this_hud_caught_an_item = self.perso.invhud
+
+                        if not g.keys[key.LSHIFT]:
+                            # signifie qu'on prend le hud
+                            self.this_hud_caught_an_item = self.perso.invhud
+                        else:
+                            # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
+                            self.perso.invhud.quick_catch_and_drop(self.perso.invhud.item_caught.item)
+                            letsbacktnothingcaught = True
+
                     elif caught_dropped == -1: # means dropped
                         self.this_hud_caught_an_item = None
 

@@ -679,24 +679,32 @@ class Item(Zone_ELEM):
 
 class Zone_ACTIV(Zone_ELEM):
 
-    def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True,position='back'):
+    def __init__(self,box,name='thing',textid='white',group='mid',long=False,makeCol=True,position='back',hud=None):
         super(Zone_ACTIV,self).__init__(box,name,textid,group,long,makeCol,position)
 
         self.activate_inv = True
         self.inv_already_vis = False
 
+        if hud:
+            self.hud = hud
+        else:
+            self.hud = HUD()
+
     def activate(self,perso):
         super(Zone_ACTIV,self).activate(perso)
         self.activated = True
 
-        if perso.invhud.visible :
-            self.inv_already_vis = True
-        else:
-            self.inv_already_vis = False
-            perso.invhud.unhide()
+        if not self.hud.visible:
+            ## première activation
 
-        perso.invhud.eff_detail()
-        perso.invhud.autorize_deta = False
+            if perso.invhud.visible :
+                self.inv_already_vis = True
+            else:
+                self.inv_already_vis = False
+                perso.invhud.unhide()
+
+            perso.invhud.eff_detail()
+            perso.invhud.autorize_deta = False
 
     def close(self,perso):
         self.activated = False
@@ -706,21 +714,10 @@ class Zone_ACTIV(Zone_ELEM):
             perso.invhud.unhide(True)
         perso.invhud.autorize_deta = True
 
-class Distrib(Zone_ELEM):
-
-    def __init__(self,x,y,w=100,h=200,make_col=True):
-        super(Distrib,self).__init__(box(x,y,w,h),'ez cash','red','mid',makeCol=make_col)
-
-    def activate(self,perso):
-        super(Distrib,self).activate(perso)
-        perso.add_money(r.randint(20,230))
-
 class Ordi(Zone_ACTIV):
 
     def __init__(self,x,y,perso):
-        super(Ordi,self).__init__(box(x,y,230,260+150),'ordi','red','mid',makeCol=False,long=True,position='front')
-
-        self.hud = MarketHUD(perso)
+        super(Ordi,self).__init__(box(x,y,230,260+150),'ordi','red','mid',makeCol=False,long=True,position='front',hud=MarketHUD(perso))
 
     def activate(self,perso):
         super(Ordi,self).activate(perso)
@@ -749,9 +746,7 @@ class Ordi(Zone_ACTIV):
 class Studio(Zone_ACTIV):
 
     def __init__(self,x,y):
-        super(Studio,self).__init__(box(x,y,50,200),'studio','blue','mid',makeCol=False,long=True)
-
-        self.hud = StudHUD()
+        super(Studio,self).__init__(box(x,y,50,200),'studio','blue','mid',makeCol=False,long=True,hud=StudHUD())
 
     def activate(self,perso):
         super(Studio,self).activate(perso)
@@ -788,9 +783,7 @@ class Studio(Zone_ACTIV):
 class Lit(Zone_ACTIV):
 
     def __init__(self,x,y):
-        super(Lit,self).__init__(box(x,y,300,150),'lit','darkgreen','mid',long=True)
-
-        self.hud = WriteHUD()
+        super(Lit,self).__init__(box(x,y,300,150),'lit','darkgreen','mid',long=True,hud=WriteHUD())
 
     def activate(self,perso):
         super(Lit,self).activate(perso)
@@ -822,6 +815,15 @@ class Lit(Zone_ACTIV):
             phase = perso.plume.drop_phase()
             #aff_phase(phase)
             self.hud.write(phase)
+
+class Distrib(Zone_ELEM):
+
+    def __init__(self,x,y,w=100,h=200,make_col=True):
+        super(Distrib,self).__init__(box(x,y,w,h),'ez cash','red','mid',makeCol=make_col)
+
+    def activate(self,perso):
+        super(Distrib,self).activate(perso)
+        perso.add_money(r.randint(20,230))
 
 
 """""""""""""""""""""""""""""""""""
@@ -2062,6 +2064,43 @@ class InventHUD(HUD):
                     self.item_caught = ui
                     return 1
         return 0
+
+    def quick_catch_and_drop(self,item):
+
+        if self.perso.element_colli != None and self.perso.element_colli.activated:
+
+            if type(self.perso.element_colli) == Lit and item.type() == 'Phase':
+                self.perso.element_colli.hud.write(item)
+                self.remove(self.item_caught)
+                self.item_caught = None
+
+            elif type(self.perso.element_colli) == Ordi and item.type() == 'Instru':
+                self.perso.element_colli.hud.inspect(item)
+                self.remove(self.item_caught)
+                self.item_caught = None
+
+            elif type(self.perso.element_colli) == Studio:
+
+                if item.type() == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                    self.perso.element_colli.hud.catch(item)
+                    self.remove(self.item_caught)
+                    self.item_caught = None
+
+                elif item.type() == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                    self.perso.element_colli.hud.catch(item)
+                    self.remove(self.item_caught)
+                    self.item_caught = None
+
+                else:
+                    self.item_caught.check_pressed()
+
+            else:
+                self.item_caught.check_pressed()
+
+        else:
+            self.remove(self.item_caught)
+            self.item_caught = None
+            return -1
 
     def remove(self,item,up=True):
 
