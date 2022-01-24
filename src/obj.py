@@ -597,7 +597,6 @@ class Zone_ELEM(Zone):
 
     def load(self):
         if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
-            #g.sman.delete(self.skin_id)
             self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group)
             w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
             g.sman.modify(self.skin_id,scale=(self.box.w/w,self.box.h/h))
@@ -629,13 +628,18 @@ class SimpleReleaser(Zone_ELEM):
 
 class Porte(Zone_ELEM):
 
-    def __init__(self,street,box,destination,xdest,makeCol=False):
+    def __init__(self,street,box,destination,xdest,makeCol=False,text=None):
 
-        super(Porte,self).__init__(box,destination.name,'grey','mid',makeCol=makeCol)
+        super(Porte,self).__init__(box,get_id(destination.name),'grey','mid',makeCol=makeCol)
         self.destination = destination
         self.street = street
         self.xdest = xdest
         self.perso_anim = 'door'
+
+        if not text:
+            self.labtext = destination.name
+        else:
+            self.labtext = text
 
         self.deload()
 
@@ -652,6 +656,10 @@ class Porte(Zone_ELEM):
         else:
             g.pman.alert('you can\'t go here !')
             #print('You can\'t go here !' )
+
+    def load(self):
+        super(Porte,self).load()
+        g.lman.set_text(self.label,self.labtext)
 
 #------# elements item
 

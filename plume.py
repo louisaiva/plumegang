@@ -129,12 +129,12 @@ class App():
             o2.NY.CITY['home'].set_owner(self.perso)
 
             #poto
-            p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['voisin'].rand_pos(),street='voisin'))
-            o2.NY.CITY['voisin'].set_owner(p.BOTS[-1])
+            p.BOTS.append(p.Rappeur(g.TEXTIDS['rap'],o2.NY.CITY['home'].rand_pos(),street='home'))
+            o2.NY.CITY['home'].set_owner(p.BOTS[-1])
             self.perso.assign_poto(p.BOTS[-1])
 
 
-            self.lab_doing = g.lman.addLab(self.perso.doing,(1880,1050),font_size=20,anchor=('right','top'))
+            self.lab_doing = g.lman.addLab(self.perso.poto.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
             ## FANS/RAPPEURS
 
@@ -885,7 +885,7 @@ class App():
                     if chance < self.perso.nb_fans*malus:
                         random.choice(p.BOTS).stream(self.perso.disco[i])
 
-            text_lab = (self.perso.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.todo)),self.perso.doing)
+            text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
             g.lman.set_text(self.lab_doing,text_lab)
             self.perso.hud.update()
             self.perso.bigmap.update()

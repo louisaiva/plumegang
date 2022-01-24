@@ -64,6 +64,9 @@ class Street():
         self.humans = []
         self.items = []
 
+
+        self.neighbor = {}
+
         self.visible = False
 
         self.catalog = [] ## ce tableau est un tableau ordonné selon les X contenant tous les éléments et leurs détails:
@@ -85,6 +88,9 @@ class Street():
     def assign_zones(self,zones):
         for zone in zones:
             self.zones[zone.name] = zone
+
+            if isinstance(zone,o.Porte) and zone.destination not in self.neighbor:
+                self.neighbor[zone.destination] = {'door':zone}
 
     def add_item(self,item):
         if type(item) == type([]):
@@ -273,6 +279,13 @@ class Street():
     def get_random_nb_bots(self):
         return r.randint(10,30)
 
+    def get_rd_neighbor(self):
+        return r.choice([x for x in self.neighbor])
+
+    def get_neighbor_door(self,street):
+        if street in self.neighbor:
+            return self.neighbor[street]['door']
+
     # anim
     def anim(self,dt):
 
@@ -304,6 +317,7 @@ class Street():
 
     def verify_builds(self):
         pass
+
 
 
     ###
@@ -670,7 +684,6 @@ def generate_short_map():
         connect(NY.CITY['voisin'],3200,NY.CITY[name],box(2500,250,300,400),(False,False))
         NY.CITY[name].add_house(NY.CITY['voisin'])
 
-
     ## DISTROKID
     if True:
 
@@ -697,9 +710,10 @@ def generate_short_map():
 
             ## CHAQUE APPART DANS CHAQUE BUILDING
             for j in range(4):
+                labtext = (None,'1'+chr(65+j))
                 house_name = '1'+chr(65+j) +'-' + str(i) + ' '+rue
                 NY.add_streets(House(preStreet(house_name),g.TEXTIDS['home']))
-                connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False))
+                connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
                 NY.CITY[name].add_house(NY.CITY[house_name])
 
 
@@ -841,7 +855,7 @@ def rand_line(i):
 
     return preStreet('street'+str(i),xdep,ydep,xfin,yfin)
 
-def connect(street1,box1,street2,box2,col=(False,False)):
+def connect(street1,box1,street2,box2,col=(False,False),labs=(None,None)):
 
     ## crée 2 portes :
     ##      -une à x1 dans la street1 pour passer dans la street2
@@ -852,10 +866,10 @@ def connect(street1,box1,street2,box2,col=(False,False)):
     if type(box2) != box:
         box2 = box(box2,250,270,400)
 
-    door1 = o.Porte(street1,box1,street2,box2.x,makeCol=col[0])
+    door1 = o.Porte(street1,box1,street2,box2.x,makeCol=col[0],text=labs[0])
     street1.assign_zones([door1])
 
-    door2 = o.Porte(street2,box2,street1,box1.x,makeCol=col[1])
+    door2 = o.Porte(street2,box2,street1,box1.x,makeCol=col[1],text=labs[1])
     street2.assign_zones([door2])
 
 def draw_lines():

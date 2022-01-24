@@ -581,6 +581,7 @@ class Human():
                 speed = self.speed
 
             moved = False
+            activated_smthg = False
 
             #R/L
             if 'write' not in self.doing and 'wait' not in self.doing:
@@ -646,6 +647,43 @@ class Human():
                         if perc > 1:
                             self.element_colli.activate(self)
 
+            else:
+                if dir == 'up':
+                    if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'back':
+
+                        #we are moving -> stop heal and ...
+                        moved = True
+
+                        # launch longpress
+                        if (self,'Z') not in g.longpress:
+                            g.longpress[(self,'Z')] = time.time()
+
+                        #get cooldown percentage + anim
+                        perc = g.cooldown_one((self,'Z'))
+                        self.force_anim(perc,self.element_colli.perso_anim)
+
+                        #activating
+                        if perc > 1:
+                            self.element_colli.activate(self)
+
+                if dir == 'down':
+                    if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'front':
+
+                        #we are moving -> stop heal and ...
+                        moved = True
+
+                        # launch longpress
+                        if (self,'S') not in g.longpress:
+                            g.longpress[(self,'S')] = time.time()
+
+                        #get cooldown percentage + anim
+                        perc = g.cooldown_one((self,'S'))
+                        self.force_anim(perc,self.element_colli.perso_anim)
+
+                        #activating
+                        if perc > 1:
+                            self.element_colli.activate(self)
+
             ## checking thg
             if moved :
                 if 'heal' in self.doing:
@@ -664,7 +702,7 @@ class Human():
                 self.update()
 
                 self.time_last_move = time.time()
-            elif speed > self.speed:
+            elif not activated_smthg and speed > self.speed:
                 self.move(dir,street)
 
     def tp(self,x=None,y=None,street=None,arrival='back'):
@@ -673,7 +711,8 @@ class Human():
             oldx = self.box.x
             self.gex = x
             self.update_lab()
-            g.Cam.tp(self.gex,oldx)
+            if type(self) == Perso:
+                g.Cam.tp(self.gex,oldx)
 
         if y != None:
             self.gey = y
@@ -682,24 +721,26 @@ class Human():
         if street != None:
             if self.street != street.name:
                 self.element_colli = None
-                o2.NY.CITY[self.street].deload()
+                if type(self) == Perso:
+                    o2.NY.CITY[self.street].deload()
 
                 o2.NY.CITY[self.street].del_hum(self)
                 o2.NY.CITY[street.name].add_hum(self)
                 self.street = street.name
 
-                o2.NY.CITY[self.street].load()
+                if type(self) == Perso:
+                    o2.NY.CITY[self.street].load()
 
-                if arrival == 'back':
-                    self.tp(y=o2.NY.CITY[self.street].yyf[1])
-                    self.gey+=4*self.yspeed
-                    g.bertran.schedule_once(self.movedt,0.1,'down',o2.NY.CITY[self.street])
-                elif arrival == 'front':
-                    self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
-                    self.gey-=4*self.yspeed
-                    g.bertran.schedule_once(self.movedt,0.1,'up',o2.NY.CITY[self.street])
+                    if arrival == 'back':
+                        self.tp(y=o2.NY.CITY[self.street].yyf[1])
+                        self.gey+=4*self.yspeed
+                        g.bertran.schedule_once(self.movedt,0.1,'down',o2.NY.CITY[self.street])
+                    elif arrival == 'front':
+                        self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
+                        self.gey-=4*self.yspeed
+                        g.bertran.schedule_once(self.movedt,0.1,'up',o2.NY.CITY[self.street])
 
-                self.check_colli(street)
+                    self.check_colli(street)
 
     def hit(self,dt=0):
         if self.alive:
@@ -768,10 +809,10 @@ class Human():
                 # soit on est une tafiole et on fuit
 
                 if self.confidence > 80:
-                    self.add_todo('atak',self.attack_hum,80,[hitter])
+                    self.add_todo('atak_'+hitter.id,self.attack_hum,80,[hitter])
                     #self.attack_hum(0,hitter)
                 elif self.confidence > 40 and self.hits_in_row > 1:
-                    self.add_todo('atak',self.attack_hum,80,[hitter])
+                    self.add_todo('atak_'+hitter.id,self.attack_hum,80,[hitter])
 
             if self.confidence > 80:
                 self.rsay('tveux mourir?')
@@ -780,13 +821,13 @@ class Human():
             elif self.confidence > 20:
                 g.bertran.unschedule(self.hit)
                 g.bertran.unschedule(self.attack_hum)
-                self.add_todo('fuir',self.fuir,100,[hitter,1000])
+                self.add_todo('fuir_'+hitter.id,self.fuir,100,[hitter,1000])
                 self.add_todo('heal',self.heal,90)
                 self.rsay('moi fuir')
             else:
                 g.bertran.unschedule(self.hit)
                 g.bertran.unschedule(self.attack_hum)
-                self.add_todo('fuir',self.fuir,100,[hitter])
+                self.add_todo('fuir_'+hitter.id,self.fuir,100,[hitter])
                 self.add_todo('heal',self.heal,90)
                 self.rsay('aled')
 
@@ -806,17 +847,15 @@ class Human():
             if type(self) not in [Perso]:
 
                 #move
-                if r.random()>0.999:
-                    x,y = self.gex + r.randint(-2000,2000), self.gey + r.randint(-20,20)
-
-
-                    if x > o2.NY.CITY[self.street].rxf :
-                        x = o2.NY.CITY[self.street].rxf
-                    elif x < o2.NY.CITY[self.street].x:
-                        x = o2.NY.CITY[self.street].x
+                choice = r.random()
+                if choice>0.999:
+                    x,y = o2.NY.CITY[self.street].rand_pos()
 
                     #self.move_until(0,(x,y))
-                    self.add_todo('move',self.move_until,param=[(x,y)])
+                    self.add_todo('move_'+str(x)+'_'+str(y),self.move_until,param=[(x,y)])
+                elif choice < 0.01: # change street
+                    dest = o2.NY.CITY[self.street].get_rd_neighbor()
+                    self.add_todo('go_street_'+dest.name,self.go_to_street,imp=10,param=[dest])
 
                 #say the dial
                 if True :
@@ -849,6 +888,7 @@ class Human():
             ##todo
             if len(self.todo) > 0 and self.bigdoing != self.todo[0]:
 
+                g.bertran.unschedule(self.bigdoing['funct'])
                 self.bigdoing = self.todo[0]
                 self.todo[0]['funct'](0,*self.todo[0]['param'])
 
@@ -869,27 +909,32 @@ class Human():
         # nouveau todo
         newtodo = {'lab':lab,'funct':funct,'imp':imp,'param':param}
 
+
         # on vérifie qu'il y est pas déjà et on supprim si jamai
         if funct == self.fuir:
             for todo in list(filter(lambda x:x['funct'] == self.attack_hum,self.todo)):
                 if todo['param'][0] == param[0]:
                     self.todo.remove(todo)
 
-            for todo in list(filter(lambda x:x['funct'] == self.fuir,self.todo)):
-                if todo['param'] == param:
-                    self.todo.remove(todo)
+        if newtodo not in self.todo:
 
-        if funct == self.heal:
-            for todo in list(filter(lambda x:x['funct'] == self.heal,self.todo)):
+            # on remplace si y'a meme lab
+            self.del_todo(lab)
+
+            # on ajoute le nouveau et on reclasse
+            self.todo.append(newtodo)
+            self.todo.sort(key=lambda x:x.get('imp'),reverse=True)
+
+    def del_todo(self,lab):
+
+        if type(lab) == type(''):
+            # on delete suivant un lab précis
+            for todo in list(filter(lambda x:x['lab'] == lab,self.todo)):
                 self.todo.remove(todo)
-
-        if funct == self.move_until:
-            for todo in list(filter(lambda x:x['funct'] == self.move_until,self.todo)):
+        else:
+            # on delete suivant une fonction
+            for todo in list(filter(lambda x:x['funct'] == lab,self.todo)):
                 self.todo.remove(todo)
-
-        # on ajoute le nouveau et on reclasse
-        self.todo.append(newtodo)
-        self.todo.sort(key=lambda x:x.get('imp'),reverse=True)
 
 
     ## TO DO
@@ -920,33 +965,70 @@ class Human():
         else:
             self.done_todo()
 
-    def follow_hum(self,dt,target,strengh=1):
-        # the more strengh is high, the more the hum will follow the target
+    def go_to_street(self,dt,street):
 
-        reached = False,False
-        x,y = target.gex,target.gey
-        speed = strengh*(self.speed/10)
-        if speed > self.runspeed:
-            speed = self.runspeed
+        reached = False
+        door = o2.NY.CITY[self.street].get_neighbor_door(street)
+        x,fx = door.box.x,door.box.fx
 
         #x
-        if self.gex + self.speed >= x and self.gex <= x:
-            reached = True,reached[1]
-        elif self.gex > x:
-            self.move('L',o2.NY.CITY[self.street],speed)
+        if self.gex >= x and self.gex <= fx:
+            reached = True
+        elif self.gex > fx:
+            self.move('L',o2.NY.CITY[self.street])
         elif self.gex < x:
-            self.move('R',o2.NY.CITY[self.street],speed)
+            self.move('R',o2.NY.CITY[self.street])
 
-        #y
-        if self.gey + self.speed >= y and self.gey <= y:
-            reached = reached[0],True
-        elif self.gey > y:
-            self.move('down',o2.NY.CITY[self.street])
-        elif self.gey < y:
-            self.move('up',o2.NY.CITY[self.street])
+        if reached:
 
-        if reached != (True,True) and self.alive and not 'nothing' in self.doing:
-            g.bertran.schedule_once(self.follow_hum,0.01,target,strengh)
+            # on est au bon x
+            #-> on doit bouger en y jusqu'à traverser la porte
+
+            position = door.position
+
+            #y
+            if position == 'back':
+                self.move('up',o2.NY.CITY[self.street])
+            elif position == 'front':
+                self.move('down',o2.NY.CITY[self.street])
+
+        if self.street == street.name:
+            #print('finii')
+            self.del_todo(self.move_until)
+            self.del_todo('go_street_'+street.name)
+            self.done_todo()
+        elif self.alive:
+            g.bertran.schedule_once(self.go_to_street,0.01,street)
+
+    def follow_hum(self,dt,target,strengh=1):
+        # the more strengh is high, the more the hum will follow the target
+        pass
+
+        """
+            reached = False,False
+            x,y = target.gex,target.gey
+            speed = strengh*(self.speed/10)
+            if speed > self.runspeed:
+                speed = self.runspeed
+
+            #x
+            if self.gex + self.speed >= x and self.gex <= x:
+                reached = True,reached[1]
+            elif self.gex > x:
+                self.move('L',o2.NY.CITY[self.street],speed)
+            elif self.gex < x:
+                self.move('R',o2.NY.CITY[self.street],speed)
+
+            #y
+            if self.gey + self.speed >= y and self.gey <= y:
+                reached = reached[0],True
+            elif self.gey > y:
+                self.move('down',o2.NY.CITY[self.street])
+            elif self.gey < y:
+                self.move('up',o2.NY.CITY[self.street])
+
+            if reached != (True,True) and self.alive and not 'nothing' in self.doing:
+                g.bertran.schedule_once(self.follow_hum,0.01,target,strengh)"""
 
     def attack_hum(self,dt,target):
 
@@ -1129,7 +1211,7 @@ class Human():
                 #print(prob_tapé)
                 p = r.random()
                 if p < prob_tapé/2:
-                    self.add_todo('atak',self.attack_hum,80,[hum])
+                    self.add_todo('atak_'+hum.id,self.attack_hum,80,[hum])
                 if p < prob_tapé:
                     exp = self.voc.exp('free insult')
 
@@ -1621,7 +1703,7 @@ class Rappeur(Fan):
                 g.sman.delete(self.label_plume)
                 del self.label_plume
 
-        elif self.plume != None:
+        elif self.plume != None and hasattr(self,'label'):
             x = g.lman.labels[self.label].x
             y = g.lman.labels[self.label].y
 
