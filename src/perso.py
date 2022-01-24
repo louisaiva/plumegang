@@ -143,7 +143,7 @@ class Human():
         self.id = get_id('hum')
         #self.play = 'play'
 
-        self.cheat = False
+        self.cheat = True
 
         #life
         self.life = 100
@@ -978,12 +978,12 @@ class Human():
 
         reached = False
         door = o2.NY.CITY[self.street].get_neighbor_door(street)
-        x,fx = door.box.x,door.box.fx
+        x = door.box.x
 
         #x
-        if self.gex >= x and self.gex <= fx:
+        if self.gex + self.speed >= x and self.gex <= x:
             reached = True
-        elif self.gex > fx:
+        elif self.gex > x:
             self.move('L',o2.NY.CITY[self.street])
         elif self.gex < x:
             self.move('R',o2.NY.CITY[self.street])
@@ -1004,7 +1004,7 @@ class Human():
         if self.street == street.name:
             #print('finii')
             self.del_todo(self.move_until)
-            self.del_todo('go_street_'+street.name)
+            self.del_todo(self.go_to_street)
             self.done_todo()
         elif self.alive:
             g.bertran.schedule_once(self.go_to_street,0.01,street)

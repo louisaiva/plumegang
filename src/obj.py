@@ -569,7 +569,7 @@ class Zone_ELEM(Zone):
     def activate(self,perso):
 
         print(perso.name,'just activated',self.name)
-        if hasattr(self,'label'):
+        if hasattr(self,'label') and isinstance(perso,p.Perso):
             g.lman.modify(self.label,color=self.color)
 
             g.bertran.schedule_once(self.deactivate,0.5)

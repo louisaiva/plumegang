@@ -129,7 +129,7 @@ class App():
             o2.NY.CITY['home'].set_owner(self.perso)
 
             #poto
-            p.BOTS.append(p.Rappeur(g.TEXTIDS['rap'],o2.NY.CITY['home'].rand_pos(),street='home'))
+            p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
             o2.NY.CITY['home'].set_owner(p.BOTS[-1])
             self.perso.assign_poto(p.BOTS[-1])
 
