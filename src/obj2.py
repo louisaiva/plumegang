@@ -227,7 +227,7 @@ class Street():
         self.visible = True
         self.update_catalog()
 
-    def update_catalog(self,perso=None):
+    def update_catalog(self):
         self.catalog = []
         for zone in self.zones:
             self.catalog.append( {'x':self.zones[zone].box.cx,'y':self.zones[zone].box.cy,'type':'zone','nom':self.zones[zone].name,'elem':self.zones[zone]} )
@@ -235,8 +235,6 @@ class Street():
             self.catalog.append( {'x':hum.gex,'y':hum.gey,'type':'hum','nom':hum.name,'elem':hum} )
         for item in self.items:
             self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name,'elem':item} )
-        """if perso != None:
-            self.catalog.append( {'x':perso.gex,'y':perso.gey,'type':'hum','nom':perso.name,'elem':perso} )"""
 
         self.catalog.sort(key=lambda x:x.get('x'))
 
@@ -485,7 +483,7 @@ class Shop(House):
         """if not hum.alive:
             self.guys.remove(hum)"""
 
-    def update_catalog(self,perso=None):
+    def update_catalog(self):
         for guy in self.guys:
             if not guy.alive:
                 print('wtf alphonse mort')
@@ -493,7 +491,7 @@ class Shop(House):
                 g.pman.alert(exp)
                 self.guys.remove(guy)
                 #self.guys.append(p.Human_to_Guy(self))
-        super(Shop,self).update_catalog(perso)
+        super(Shop,self).update_catalog()
 
     def get_random_nb_bots(self):
         return r.randint(1,3)

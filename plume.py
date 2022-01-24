@@ -122,7 +122,6 @@ class App():
         # humans
         if True:
 
-            print(p.BOTS)
             ## PERSOS
             self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
             p.BOTS.append(self.perso)
@@ -772,9 +771,6 @@ class App():
 
     def refresh(self):
 
-        #print(g.Cam.X)
-
-
         ## FPS
         dt = time.time() - self.lab_fps_time
         self.lab_fps_time = time.time()
@@ -821,10 +817,8 @@ class App():
             if True:
                 #--# persos
                 ## update catalog:
-                o2.NY.CITY[self.perso.street].update_catalog(self.perso)
-                #print(self.perso.street)
+                o2.NY.CITY[self.perso.street].update_catalog()
                 for hum in o2.NY.CITY[self.perso.street].humans:
-                    #print(hum)
                     x_r = hum.gex + g.Cam.X + g.GodCam.X
                     y_r = hum.gey + g.Cam.Y
                     g.sman.modify(hum.skin_id,(x_r,y_r))
@@ -835,6 +829,19 @@ class App():
                 for hum in o2.NY.CITY[self.perso.street].humans:
                     hum.being_bot()
                     hum.check_do()
+
+            # NEIGHBOR STREETS
+            if True:
+
+                for street in o2.NY.CITY[self.perso.street].neighbor:
+                    #print('updating',street.name)
+                    street.update_catalog()
+                    for hum in street.humans:
+                        hum.update_env()
+                        hum.update_lab()
+                        hum.update()
+                        hum.being_bot()
+                        hum.check_do()
 
             # BG
             if True:

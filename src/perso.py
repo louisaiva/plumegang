@@ -505,17 +505,18 @@ class Human():
 
     def force_anim(self,perc,action='act',dir='L'):
 
-        n = len(self.textids[action][dir])
-        # il faut au moins que y'en ai 2 sinon ça beug
+        if hasattr(self,'skin_id'):
+            n = len(self.textids[action][dir])
+            # il faut au moins que y'en ai 2 sinon ça beug
 
-        if perc > 0.95:
-            g.sman.set_text(self.skin_id,self.textids[action][dir][n-1])
-            return 0
+            if perc > 0.95:
+                g.sman.set_text(self.skin_id,self.textids[action][dir][n-1])
+                return 0
 
-        dp = 0.8/(n-1)
-        for i in range(n-1):
-            if perc > 0.2 + i*dp and perc <= 0.2 + (i+1)*dp:
-                g.sman.set_text(self.skin_id,self.textids[action][dir][i])
+            dp = 0.8/(n-1)
+            for i in range(n-1):
+                if perc > 0.2 + i*dp and perc <= 0.2 + (i+1)*dp:
+                    g.sman.set_text(self.skin_id,self.textids[action][dir][i])
 
 
     ## DOIN
@@ -580,7 +581,7 @@ class Human():
 
     def move(self,dir,street,speed=None):
 
-        if hasattr(self,'skin_id') and self.alive :
+        if self.alive :
 
             maxx = street.xxf
             maxy = street.yyf
@@ -595,7 +596,7 @@ class Human():
             if 'write' not in self.doing and 'wait' not in self.doing:
 
                 if dir == 'R' :
-                    if (maxx[1] == None or maxx[1] > self.gex+speed+g.sman.spr(self.skin_id).width ):
+                    if (maxx[1] == None or maxx[1] > self.gex+speed+SIZE_SPR ):
                         self.gex+=speed
                         moved = True
 
@@ -777,9 +778,10 @@ class Human():
             self.done_todo()
 
         ## skin
-        g.sman.add_filter(self.skin_id)
-        g.bertran.unschedule(self.un_hit)
-        g.bertran.schedule_once(self.un_hit, 0.4)
+        if hasattr(self,'skin_id'):
+            g.sman.add_filter(self.skin_id)
+            g.bertran.unschedule(self.un_hit)
+            g.bertran.schedule_once(self.un_hit, 0.4)
 
         dmg = hitter.damage + r.randint(-5,5)
 
@@ -1109,21 +1111,25 @@ class Human():
 
     def say(self,exp):
         if self.alive:
-            if self.keyids_voc:
-                g.pman.delete(self.keyids_voc)
 
-            duree = 20
-            if len(exp) > duree:
-                duree = len(exp)
+            ## on affiche le label que si on se situe dans la bonne street évidemment
+            if o2.NY.CITY[self.street].visible:
 
-            w=20
-            if len(exp)>60:
-                w=(len(exp)//3) + 1
+                duree = 20
+                if len(exp) > duree:
+                    duree = len(exp)
 
-            # gaffe faut modifier aussi dans l'update
-            x,y = self.box.cx,self.box.fy + 150
-            self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                ,group='frontstreet',vis=True,duree=duree,w=w)
+                w=20
+                if len(exp)>60:
+                    w=(len(exp)//3) + 1
+
+                if self.keyids_voc:
+                    g.pman.delete(self.keyids_voc)
+
+                # gaffe faut modifier aussi dans l'update
+                x,y = self.box.cx,self.box.fy + 150
+                self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
+                                    ,group='frontstreet',vis=True,duree=duree,w=w)
 
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
