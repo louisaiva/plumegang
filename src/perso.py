@@ -351,15 +351,17 @@ class Human():
                 #dial = { 't':time.time() , 'delay':None , 'meaning':'au revoir' , 'imp':20 ,'id':'dial_bye'}
                 #self.add_dial(dial)
 
-        self.check_colli(o2.NY.CITY[self.street])
+        self.check_colli()
 
-    def check_colli(self,street):
+    def check_colli(self):
+
+        street = o2.NY.CITY[self.street]
 
         ## CHANGER DANS PERSO
         self.collis = []
 
         for elem in list(map(lambda x:x.get('elem'),self.environ)):
-            if collisionAB(self.realbox,elem.realbox) :
+            if collisionAB(self.gebox,elem.gebox) :
                 self.collis.append(elem)
 
         if len(self.collis) > 0:
@@ -574,14 +576,17 @@ class Human():
 
     ## ACTION
 
-    def movedt(self,dt,dir,street,speed=None,again=4):
-        self.move(dir,street,speed)
+    def movedt(self,dt,dir,speed=None,again=4):
+        self.move(dir,speed)
         if again > 0:
-            g.bertran.schedule_once(self.movedt,0.001,dir,street,again=again-1)
+            g.bertran.schedule_once(self.movedt,0.001,dir,again=again-1)
 
-    def move(self,dir,street,speed=None):
+    def move(self,dir,speed=None):
+
 
         if self.alive :
+
+            street = o2.NY.CITY[self.street]
 
             maxx = street.xxf
             maxy = street.yyf
@@ -657,6 +662,7 @@ class Human():
                             self.element_colli.activate(self)
             else:
                 if dir == 'up':
+                    #print(self.name,'up')
                     if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
@@ -712,8 +718,9 @@ class Human():
                 self.update()
 
                 self.time_last_move = time.time()
+                self.check_colli()
             elif not activated_smthg and speed > self.speed:
-                self.move(dir,street)
+                self.move(dir)
 
     def tp(self,x=None,y=None,street=None,arrival='back'):
 
@@ -741,16 +748,16 @@ class Human():
                 if type(self) == Perso:
                     o2.NY.CITY[self.street].load()
 
-                    if arrival == 'back':
-                        self.tp(y=o2.NY.CITY[self.street].yyf[1])
-                        self.gey+=4*self.yspeed
-                        g.bertran.schedule_once(self.movedt,0.1,'down',o2.NY.CITY[self.street])
-                    elif arrival == 'front':
-                        self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
-                        self.gey-=4*self.yspeed
-                        g.bertran.schedule_once(self.movedt,0.1,'up',o2.NY.CITY[self.street])
+                if arrival == 'back':
+                    self.tp(y=o2.NY.CITY[self.street].yyf[1])
+                    self.gey+=4*self.yspeed
+                    g.bertran.schedule_once(self.movedt,0.1,'down')
+                elif arrival == 'front':
+                    self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
+                    self.gey-=4*self.yspeed
+                    g.bertran.schedule_once(self.movedt,0.1,'up')
 
-                    self.check_colli(street)
+                self.check_colli()
 
     def hit(self,dt=0):
         if self.alive:
@@ -864,7 +871,7 @@ class Human():
 
                     #self.move_until(0,(x,y))
                     self.add_todo('move_'+str(x)+'_'+str(y),self.move_until,param=[(x,y)])
-                elif choice < 0.01: # change street
+                elif choice < 0.00001: # change street
                     dest = o2.NY.CITY[self.street].get_rd_neighbor()
                     self.add_todo('go_street_'+dest.name,self.go_to_street,imp=10,param=[dest])
 
@@ -959,17 +966,17 @@ class Human():
         if self.gex + self.speed >= x and self.gex <= x:
             reached = True,reached[1]
         elif self.gex > x:
-            self.move('L',o2.NY.CITY[self.street])
+            self.move('L')
         elif self.gex < x:
-            self.move('R',o2.NY.CITY[self.street])
+            self.move('R')
 
         #y
         if self.gey + self.speed >= y and self.gey <= y:
             reached = reached[0],True
         elif self.gey > y:
-            self.move('down',o2.NY.CITY[self.street])
+            self.move('down')
         elif self.gey < y:
-            self.move('up',o2.NY.CITY[self.street])
+            self.move('up')
 
         if reached != (True,True) and self.alive and not 'nothing' in self.doing:
             g.bertran.schedule_once(self.move_until,0.01,objective)
@@ -980,95 +987,72 @@ class Human():
 
         reached = False
         door = o2.NY.CITY[self.street].get_neighbor_door(street)
-        x = door.box.x
-
-        #x
-        if self.gex + self.speed >= x and self.gex <= x:
-            reached = True
-        elif self.gex > x:
-            self.move('L',o2.NY.CITY[self.street])
-        elif self.gex < x:
-            self.move('R',o2.NY.CITY[self.street])
-
-        if reached:
-
-            # on est au bon x
-            #-> on doit bouger en y jusqu'à traverser la porte
-
-            position = door.position
-
-            #y
-            if position == 'back':
-                self.move('up',o2.NY.CITY[self.street])
-            elif position == 'front':
-                self.move('down',o2.NY.CITY[self.street])
-
-        if self.street == street.name:
-            #print('finii')
-            self.del_todo(self.move_until)
-            self.del_todo(self.go_to_street)
-            self.done_todo()
-        elif self.alive:
-            g.bertran.schedule_once(self.go_to_street,0.01,street)
-
-    def follow_hum(self,dt,target,strengh=1):
-        # the more strengh is high, the more the hum will follow the target
-        pass
-
-        """
-            reached = False,False
-            x,y = target.gex,target.gey
-            speed = strengh*(self.speed/10)
-            if speed > self.runspeed:
-                speed = self.runspeed
+        if door != None:
+            x = door.box.x
 
             #x
             if self.gex + self.speed >= x and self.gex <= x:
-                reached = True,reached[1]
+                reached = True
             elif self.gex > x:
-                self.move('L',o2.NY.CITY[self.street],speed)
+                self.move('L')
             elif self.gex < x:
-                self.move('R',o2.NY.CITY[self.street],speed)
+                self.move('R')
 
-            #y
-            if self.gey + self.speed >= y and self.gey <= y:
-                reached = reached[0],True
-            elif self.gey > y:
-                self.move('down',o2.NY.CITY[self.street])
-            elif self.gey < y:
-                self.move('up',o2.NY.CITY[self.street])
+            if reached:
 
-            if reached != (True,True) and self.alive and not 'nothing' in self.doing:
-                g.bertran.schedule_once(self.follow_hum,0.01,target,strengh)"""
+                # on est au bon x
+                #-> on doit bouger en y jusqu'à traverser la porte
+
+                position = door.position
+
+                #y
+                if position == 'back':
+                    self.move('up')
+                elif position == 'front':
+                    self.move('down')
+
+            if self.street == street.name:
+                #print('finii')
+                self.del_todo(self.move_until)
+                self.del_todo(self.go_to_street)
+                self.done_todo()
+            elif self.alive:
+                g.bertran.schedule_once(self.go_to_street,0.01,street)
 
     def attack_hum(self,dt,target):
 
         if self.alive and target.alive:
-            x,y = target.gex,target.gey
-            speed = self.speed
 
-            #x
-            if target == self.element_colli:
-                dt = r.randint(1,2)/10
-                g.bertran.schedule_once(self.hit,dt)
-                g.bertran.schedule_once(self.attack_hum,r.randint(2,5)/10,target)
+            if target.street != self.street:
+                dest = o2.NY.CITY[target.street]
+                self.add_todo('go_street_'+dest.name,self.go_to_street,imp=self.bigdoing['imp']+1,param=[dest])
             else:
-                if target in self.collis:
-                    #y
-                    if self.gey > y:
-                        self.move('down',o2.NY.CITY[self.street])
-                    elif self.gey < y:
-                        self.move('up',o2.NY.CITY[self.street])
 
-                if self.gex > x:
-                    self.move('L',o2.NY.CITY[self.street],speed)
-                elif self.gex < x:
-                    self.move('R',o2.NY.CITY[self.street],speed)
+                x,y = target.gex,target.gey
+                speed = self.speed
 
-                if self.alive and not 'nothing' in self.doing:
-                    g.bertran.schedule_once(self.attack_hum,0.01,target)
+                #x
+                if target == self.element_colli:
+                    dt = r.randint(1,2)/10
+                    g.bertran.schedule_once(self.hit,dt)
+                    g.bertran.schedule_once(self.attack_hum,r.randint(2,5)/10,target)
                 else:
-                    self.done_todo()
+                    if target in self.collis:
+                        #y
+                        if self.gey > y:
+                            self.move('down')
+                        elif self.gey < y:
+                            self.move('up')
+
+                    if self.gex > x:
+                        self.move('L',speed)
+                    elif self.gex < x:
+                        self.move('R',speed)
+
+                    if self.alive and not 'nothing' in self.doing:
+                        g.bertran.schedule_once(self.attack_hum,0.01,target)
+                    else:
+                        self.done_todo()
         elif not target.alive:
             self.done_todo()
 
@@ -1079,9 +1063,9 @@ class Human():
             speed = self.speed
 
             if self.gex > x:
-                self.move('R',o2.NY.CITY[self.street],speed)
+                self.move('R',speed)
             else:
-                self.move('L',o2.NY.CITY[self.street],speed)
+                self.move('L',speed)
 
             if self.alive and abs(self.gex-x) < safety_distance and not 'nothing' in self.doing:
                 g.bertran.schedule_once(self.fuir,0.01,target)
@@ -1387,8 +1371,11 @@ class Human():
         if hasattr(self,'skin_id'):
             return g.sman.box(self.skin_id)
         else:
-            return 0,0,0,0
+            return 0,0,SIZE_SPR,SIZE_SPR
     realbox = property(_realbox)
+    def _gebox(self):
+        return self.gex,self.gey,self.gex+SIZE_SPR,self.gey+SIZE_SPR
+    gebox = property(_gebox)
     def _in_combat(self):
 
         in_c = False
@@ -1792,7 +1779,7 @@ class Perso(Rappeur):
         self.relhud = o.RelHUD(self)
         self.minirelhud = o.MiniRelHUD(self)
 
-        o2.NY.CITY[self.street].add_hum(self)
+        #o2.NY.CITY[self.street].add_hum(self)
 
         self.cheat = CHEAT
 
@@ -1907,10 +1894,6 @@ class Perso(Rappeur):
 
 
     ## colli hoover
-
-    def move(self,dir,street,speed=None):
-        super(Perso,self).move(dir,street,speed)
-        self.check_colli(street)
 
     def _in_combat(self):
         return (time.time()-self.last_hit < 5)

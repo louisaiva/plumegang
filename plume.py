@@ -749,13 +749,13 @@ class App():
 
                 ## moving perso
                 if g.keys[key.Q]:
-                    self.perso.move('L',o2.NY.CITY[self.perso.street],speed)
+                    self.perso.move('L',speed)
                 if g.keys[key.D]:
-                    self.perso.move('R',o2.NY.CITY[self.perso.street],speed)
+                    self.perso.move('R',speed)
                 if g.keys[key.Z]:
-                    self.perso.move('up',o2.NY.CITY[self.perso.street])
+                    self.perso.move('up')
                 if g.keys[key.S]:
-                    self.perso.move('down',o2.NY.CITY[self.perso.street])
+                    self.perso.move('down')
 
             if g.keys[key.LEFT] or g.keys[key.RIGHT]:
                 if g.keys[key.RIGHT]:
@@ -834,7 +834,6 @@ class App():
             if True:
 
                 for street in o2.NY.CITY[self.perso.street].neighbor:
-                    #print('updating',street.name)
                     street.update_catalog()
                     for hum in street.humans:
                         hum.update_env()

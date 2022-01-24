@@ -514,8 +514,10 @@ class Zone():
 
     def _realbox(self):
         return self.x,self.y,self.x+self.w,self.y+self.h
-
     realbox = property(_realbox)
+    def _gebox(self):
+        return self.gex,self.gey,self.gex+self.w,self.gey+self.h
+    gebox = property(_gebox)
 
 #------# elements
 

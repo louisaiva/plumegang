@@ -223,6 +223,7 @@ class Street():
             item.load()
 
         print(green(self.name+' :  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'))
+        #print([x.name for x in self.neighbor])
 
         self.visible = True
         self.update_catalog()
