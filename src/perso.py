@@ -226,6 +226,14 @@ class Human():
             self.textids['heal']['R'] = [textids[15],textids[16]]
             self.textids['heal']['L'] = [textids[15],textids[16]]
 
+            self.textids['door'] = {}
+            self.textids['door']['R'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
+            self.textids['door']['L'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
+
+            self.textids['act'] = {}
+            self.textids['act']['R'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
+            self.textids['act']['L'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
+
         self.grp = group
 
         ##### HOOOOVER
@@ -646,7 +654,6 @@ class Human():
                         #activating
                         if perc > 1:
                             self.element_colli.activate(self)
-
             else:
                 if dir == 'up':
                     if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'back':
@@ -664,6 +671,7 @@ class Human():
 
                         #activating
                         if perc > 1:
+                            del g.longpress[(self,'Z')]
                             self.element_colli.activate(self)
 
                 if dir == 'down':
@@ -682,6 +690,7 @@ class Human():
 
                         #activating
                         if perc > 1:
+                            del g.longpress[(self,'S')]
                             self.element_colli.activate(self)
 
             ## checking thg

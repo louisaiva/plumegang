@@ -653,7 +653,7 @@ class Porte(Zone_ELEM):
 
             perso.tp(x=self.xdest,street=self.destination)
             return self.destination.name
-        else:
+        elif isinstance(perso,p.Perso):
             g.pman.alert('you can\'t go here !')
             #print('You can\'t go here !' )
 

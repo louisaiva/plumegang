@@ -239,10 +239,10 @@ class App():
 
         ### PERSOS
         if True:
-            g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(1,30))
-            g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,30))
-            g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,30))
-            g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,30))
+            g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(1,40))
+            g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,40))
+            g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,40))
+            g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,40))
             g.TEXTIDS['rap'] = g.tman.loadImSeq('perso2.png',(1,40))
 
         # items
