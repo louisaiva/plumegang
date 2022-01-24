@@ -106,3 +106,15 @@ _ceci est le todo à faire hehe_
 
 https://www.konbini.com/fr/inspiration-2/scenes-de-vie-japonaises-reconstituees-gifs-animes-pixel-art/
 https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=pixel%7Ctyped&term_meta[]=art%7Ctyped&term_meta[]=city%7Ctyped
+
+
+**IDEES**
+
+# mode histoire
+
+# pote beatmaker qui t'aide au début
+
+# mixer de plume :
+  deux "A" -> une "A+"
+  -> pour faire une S il faut 16 384 F
+  -> X = 131 072 F

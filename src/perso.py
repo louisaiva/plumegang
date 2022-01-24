@@ -141,9 +141,8 @@ class Human():
         self.yspeed = 5
         self.runspeed = 100
         self.id = get_id('hum')
-        #self.play = 'play'
 
-        self.cheat = True
+        self.cheat = False
 
         #life
         self.life = 100
@@ -241,6 +240,7 @@ class Human():
         self._hoover = False
         self.color = c['coral']
         self.rspeak()
+        self.loaded = False
 
     ### GENERAL
 
@@ -424,7 +424,7 @@ class Human():
             self.add_todo('heal',self.heal,20)
 
         #speaking
-        if self.keyids_voc:
+        if self.keyids_voc and self.loaded:
             x,y = self.box.cx,self.box.fy + 150
             #print(x,y)
             g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
@@ -582,7 +582,6 @@ class Human():
             g.bertran.schedule_once(self.movedt,0.001,dir,again=again-1)
 
     def move(self,dir,speed=None):
-
 
         if self.alive :
 
@@ -792,10 +791,12 @@ class Human():
 
         dmg = hitter.damage + r.randint(-5,5)
 
-        ## label +57
-        s=convert_huge_nb(dmg)
-        pos = self.box.cx +r.randint(-10,10),self.box.fy
-        g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=True)
+        ## on affiche le label que si on se situe dans la bonne street évidemment
+        if self.loaded:
+            ## label +57
+            s=convert_huge_nb(dmg)
+            pos = self.box.cx +r.randint(-10,10),self.box.fy
+            g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=o2.NY.CITY[self.street].visible)
 
         ## dmging
         self.life -= dmg
@@ -871,7 +872,7 @@ class Human():
 
                     #self.move_until(0,(x,y))
                     self.add_todo('move_'+str(x)+'_'+str(y),self.move_until,param=[(x,y)])
-                elif choice < 0.00001: # change street
+                elif choice < 0.001: # change street
                     dest = o2.NY.CITY[self.street].get_rd_neighbor()
                     self.add_todo('go_street_'+dest.name,self.go_to_street,imp=10,param=[dest])
 
@@ -998,6 +999,8 @@ class Human():
             elif self.gex < x:
                 self.move('R')
 
+            activated = False
+
             if reached:
 
                 # on est au bon x
@@ -1005,13 +1008,18 @@ class Human():
 
                 position = door.position
 
+
                 #y
                 if position == 'back':
                     self.move('up')
+                    if (self,'Z') not in g.longpress:
+                        activated = True
                 elif position == 'front':
                     self.move('down')
+                    if (self,'S') not in g.longpress:
+                        activated = True
 
-            if self.street == street.name:
+            if activated or self.street == street.name:
                 #print('finii')
                 self.del_todo(self.move_until)
                 self.del_todo(self.go_to_street)
@@ -1097,23 +1105,23 @@ class Human():
         if self.alive:
 
             ## on affiche le label que si on se situe dans la bonne street évidemment
-            if o2.NY.CITY[self.street].visible:
+            #if o2.NY.CITY[self.street].visible:
 
-                duree = 20
-                if len(exp) > duree:
-                    duree = len(exp)
+            duree = 20
+            if len(exp) > duree:
+                duree = len(exp)
 
-                w=20
-                if len(exp)>60:
-                    w=(len(exp)//3) + 1
+            w=20
+            if len(exp)>60:
+                w=(len(exp)//3) + 1
 
-                if self.keyids_voc:
-                    g.pman.delete(self.keyids_voc)
+            if self.keyids_voc:
+                g.pman.delete(self.keyids_voc)
 
-                # gaffe faut modifier aussi dans l'update
-                x,y = self.box.cx,self.box.fy + 150
-                self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                    ,group='frontstreet',vis=True,duree=duree,w=w)
+            # gaffe faut modifier aussi dans l'update
+            x,y = self.box.cx,self.box.fy + 150
+            self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
+                                    ,group='frontstreet',vis=o2.NY.CITY[self.street].visible,duree=duree,w=w)
 
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
@@ -1294,12 +1302,19 @@ class Human():
             self.label_conf = g.sman.addSpr(g.TEXTIDS['utils'][6],(x,y),group=self.grp,vis=False)
             g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,5/32))
 
+        #speaking
+        if self.keyids_voc:
+            g.pman.unhide_single(self.keyids_voc)
+
+        self.loaded = True
+
     def deload(self):
         g.bertran.unschedule(self.update_skin)
         g.bertran.unschedule(self.hit)
         g.bertran.unschedule(self.be_hit)
         g.bertran.unschedule(self.bigdoing['funct'])
         self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
+
 
         if hasattr(self,'skin_id'):
             g.Cyc.del_spr((self.skin_id,0.2))
@@ -1314,7 +1329,11 @@ class Human():
             g.sman.delete(self.label_conf)
             del self.label_conf
 
-        #print('deloaded',self.name)
+        #speaking
+        if self.keyids_voc:
+            g.pman.unhide_single(self.keyids_voc,True)
+
+        self.loaded = False
 
     def update_lab(self):
         if hasattr(self,'label'):

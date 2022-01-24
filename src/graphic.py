@@ -674,6 +674,18 @@ class ParticleManager():
                 elif hide == True and self.labels[key][id].color[3] != 0:
                     self.labels[key][id].color = [*self.labels[key][id].color[:3],0]
 
+    def unhide_single(self,keyid,hide=False):
+        key,id = keyid
+        if key in self.sprites and id in self.sprites[key]:
+            if self.sprites[key][id].visible != (not hide):
+                self.sprites[key][id].visible = (not hide)
+
+        elif key in self.labels and id in self.labels[key]:
+            if hide == False and self.labels[key][id].color[3] == 0:
+                self.labels[key][id].color = [*self.labels[key][id].color[:3],255]
+            elif hide == True and self.labels[key][id].color[3] != 0:
+                self.labels[key][id].color = [*self.labels[key][id].color[:3],0]
+
     def delete(self,keyid):
         key,id = keyid
         if key in self.labels and id in self.labels[key]:
