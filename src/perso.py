@@ -149,6 +149,9 @@ class Human():
         self.max_life = 100
         self.damage = r.randint(10, 15)
 
+        #items
+        self.keys = []
+
         #états
         self.cred = r.randint(-50,50)
         self.confidence = 100 #compris entre 0 et 100 -> décrit la peur (0) et la confidence (100)
@@ -265,6 +268,10 @@ class Human():
 
         o2.NY.CITY[self.street].del_hum(self)
         BOTS.remove(self)
+
+    def add_key(self,street):
+        if street not in self.keys:
+            self.keys.append(street)
 
     # relations
     def relup(self,hum,qté,cat='hate/like'):
@@ -778,6 +785,10 @@ class Human():
                     self.relup(self.element_colli,self.damage,'peur/rassure')
                     self.element_colli.be_hit(self)
 
+                elif isinstance(self.element_colli,o.Item):
+                    # là c'est un item
+                    self.element_colli.activate(self)
+
     def be_hit(self,hitter):
 
         if self.bigdoing['lab'] == 'heal':
@@ -988,7 +999,7 @@ class Human():
 
         reached = False
         door = o2.NY.CITY[self.street].get_neighbor_door(street)
-        if door != None:
+        if door != None and door.openable(self):
             x = door.box.x
 
             #x
@@ -999,8 +1010,6 @@ class Human():
             elif self.gex < x:
                 self.move('R')
 
-            activated = False
-
             if reached:
 
                 # on est au bon x
@@ -1008,24 +1017,21 @@ class Human():
 
                 position = door.position
 
-
                 #y
                 if position == 'back':
                     self.move('up')
-                    if (self,'Z') not in g.longpress:
-                        activated = True
                 elif position == 'front':
                     self.move('down')
-                    if (self,'S') not in g.longpress:
-                        activated = True
 
-            if activated or self.street == street.name:
+            if self.street == street.name:
                 #print('finii')
                 self.del_todo(self.move_until)
                 self.del_todo(self.go_to_street)
                 self.done_todo()
             elif self.alive:
                 g.bertran.schedule_once(self.go_to_street,0.01,street)
+        else:
+            self.done_todo()
 
     def attack_hum(self,dt,target):
 

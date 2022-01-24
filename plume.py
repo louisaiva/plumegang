@@ -125,11 +125,11 @@ class App():
             ## PERSOS
             self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
             p.BOTS.append(self.perso)
-            o2.NY.CITY['home'].set_owner(self.perso)
+            o2.NY.CITY['home'].add_owner(self.perso)
 
             #poto
             p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
-            o2.NY.CITY['home'].set_owner(p.BOTS[-1])
+            o2.NY.CITY['home'].add_owner(p.BOTS[-1])
             self.perso.assign_poto(p.BOTS[-1])
 
 
@@ -140,7 +140,7 @@ class App():
             # add hum to p.BOTS for each street
             for str in o2.NY.CITY:
                 street = o2.NY.CITY[str]
-                if street.name not in ['home','voisin']:
+                if street.name not in ['home']:
                     n_str = street.get_random_nb_bots()
                     for i in range(n_str):
                         pos = street.rand_pos()
@@ -150,6 +150,8 @@ class App():
                             text = random.choice(['persos','perso2','perso3'])
                             hum = p.Fan(g.TEXTIDS[text],pos,street=street.name)
                         p.BOTS.append(hum)
+                        if isinstance(street,o2.House):
+                            street.add_owner(hum)
 
             # adding all hum to their street
             for hum in p.BOTS:

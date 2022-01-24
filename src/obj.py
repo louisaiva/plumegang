@@ -651,17 +651,32 @@ class Porte(Zone_ELEM):
     def activate(self,perso):
         super(Porte,self).activate(perso)
 
-        if type(self.destination) in [o2.Street] or self.destination.openable(perso):
-
+        if self.openable(perso):
             perso.tp(x=self.xdest,street=self.destination)
             return self.destination.name
         elif isinstance(perso,p.Perso):
             g.pman.alert('you can\'t go here !')
-            #print('You can\'t go here !' )
 
     def load(self):
         super(Porte,self).load()
         g.lman.set_text(self.label,self.labtext)
+
+    def openable(self,perso):
+
+        if self.destination.free_access:
+            return True
+
+        if self.destination in perso.keys:
+            return True
+
+        if perso.cheat:
+            return True
+
+        if isinstance(self.street,o2.House) and isinstance(self.destination,o2.Building):
+            return True
+
+        return False
+
 
 #------# elements item
 

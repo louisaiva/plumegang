@@ -49,6 +49,7 @@ class Street():
         # self.textures['road'] = img/None
 
         self.outside = True
+        self.free_access = True
 
 
         self.cursor_anim = 0
@@ -427,19 +428,13 @@ class Building(Street):
         self.houses = []
 
         self.outside = False
+        self.free_access = False
 
     def add_house(self,house):
         self.houses.append(house)
-
-    def openable(self,perso):
-
-        if perso.cheat:
-            return True
-
-        for house in self.houses:
-            if house.openable(perso):
-                return True
-        return False
+        house.set_building(self)
+        for owner in house.owners:
+            owner.add_key(self)
 
     def get_random_nb_bots(self):
         return r.randint(0,2)
@@ -453,17 +448,21 @@ class House(Street):
         self.Y = (50,200)
 
         self.outside = False
+        self.free_access = False
 
-    def set_owner(self,owner):
+        self.building = None
+
+    def add_owner(self,owner):
         self.owners.append(owner)
-
-    def openable(self,perso):
-        if perso.cheat:
-            return True
-        return perso in self.owners
+        owner.add_key(self)
+        if self.building:
+            owner.add_key(self.building)
 
     def get_random_nb_bots(self):
         return r.randint(0,2)
+
+    def set_building(self,build):
+        self.building = build
 
 class Shop(House):
 
@@ -475,9 +474,7 @@ class Shop(House):
         self.Y = (50,150)
 
         self.outside = False
-
-    def openable(self,perso):
-        return True
+        self.free_access = True
 
     def del_hum(self,hum):
         super(Shop,self).del_hum(hum)
