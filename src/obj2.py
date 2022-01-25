@@ -782,7 +782,7 @@ def create_map():
 
     ## JUSQU'A 5 on reste à ~60 fps, au delà la rue principale commence à être bondée
 
-    nb_iterations = 4
+    nb_iterations = 7
     #-> à la fin on se retrouve avec 2**3 = 8 rues
     n = 1
 
@@ -814,7 +814,7 @@ def create_map():
             else:
                 x,y = rue.x - x_new , rue.y + x_old
 
-            print(rue.x,rue.y,x_new,x_old,red(' -> '),x,y)
+            #print(rue.x,rue.y,x_new,x_old,red(' -> '),x,y)
 
             # on crée la rue
             newrue = preRue(nom,x,y,lon,vert)
@@ -827,7 +827,7 @@ def create_map():
     x_distro = rues[0].place_door_rd('distro')
     rues[0].place_door(0,'home')
 
-    print(rues)
+    #print(rues)
     ## TRANSFORMATION RUES EN STREETS
 
     connexions = []
