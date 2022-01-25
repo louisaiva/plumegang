@@ -959,7 +959,8 @@ class Map(HUD):
         self.pad = 25
         self.box = box(area.x+self.pad,area.y+self.pad,area.w-2*self.pad,area.h-2*self.pad)
 
-        self.larg_street = 10#int((self.box.w/3)/o2.MAP[0])
+        self.larg_street = 18
+        self.small_larg = 6
         w = self.larg_street*3*o2.MAP[0]
         self.box = box(scrw/2-w/2,scrh/2-w/2,w,w)
 
@@ -976,33 +977,35 @@ class Map(HUD):
 
     def create_map(self):
 
+        coo = {}
         for street in o2.NY.CITY:
             street = o2.NY.CITY[street]
 
             if type(street) == o2.Street:
 
+                coo[street.name] = ''
                 vert = street.pre.vert
-                print(street.name, street.line)
+                print(street.name, street.line,street.pre.w)
 
                 if not vert:
-                    x = g.scr.cx + street.line[0][0]*self.larg_street
-                    y = g.scr.cy + street.line[0][1]*self.larg_street
+                    x = g.scr.cx + street.pre.x*self.larg_street
+                    y = g.scr.cy + self.larg_street/2 -self.small_larg/2 + street.pre.y*self.larg_street
                 else:
-                    x = g.scr.cx + self.larg_street
-                    y = g.scr.cy + street.line[0][1]*self.larg_street
+                    x = g.scr.cx + self.larg_street/2 -self.small_larg/2 + street.pre.x*self.larg_street
+                    y = g.scr.cy + street.pre.y*self.larg_street
 
                 if vert:
-                    w,h=self.larg_street,street.pre.w*self.larg_street+self.larg_street
+                    w,h=self.small_larg,street.pre.w*self.larg_street
                 else:
-                    h,w=self.larg_street,street.pre.w*self.larg_street+self.larg_street
+                    h,w=self.small_larg,street.pre.w*self.larg_street
                 #print(street.name)
                 self.addCol(street.name,box(x,y,w,h),color=c['delta_purple'],group='hud2')
 
             elif street.name == 'home':
                 w,h=self.larg_street,self.larg_street
 
-                x=g.scr.cx + street.line[0][0]*3*self.larg_street
-                y = g.scr.cy + street.line[1][1]*3*self.larg_street
+                x = g.scr.cx + street.pre.x*self.larg_street
+                y = g.scr.cy + street.pre.y*self.larg_street
                 self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud2')
 
     def update(self):
@@ -1012,14 +1015,14 @@ class Map(HUD):
         # get pos
         if type(street) == o2.Street: # si le perso se trouve dans une rue
 
-            perc = self.perso.gex/street.xxf[1]
+            perc = street.get_pos(self.perso)
 
             vert = street.pre.vert
             if vert:
-                x = g.sman.spr(self.sprids[street.name]).x + self.larg_street/2
-                y = g.sman.spr(self.sprids[street.name]).y + g.sman.spr(self.sprids[street.name]).height + self.larg_street/2 - perc*g.sman.spr(self.sprids[street.name]).height
+                x = g.sman.spr(self.sprids[street.name]).x - self.larg_street/2 +self.small_larg/2 + self.larg_street/2
+                y = g.sman.spr(self.sprids[street.name]).y + perc*g.sman.spr(self.sprids[street.name]).height
             else:
-                y = g.sman.spr(self.sprids[street.name]).y + self.larg_street/2
+                y = g.sman.spr(self.sprids[street.name]).y - self.larg_street/2 +self.small_larg/2 + self.larg_street/2
                 x = g.sman.spr(self.sprids[street.name]).x + perc*g.sman.spr(self.sprids[street.name]).width
 
         elif street.name == 'home': # si le perso se trouve dans une maison
@@ -1030,10 +1033,9 @@ class Map(HUD):
         if type(street) == o2.Street or street.name == 'home':
             # create and or change pos
             if not 'perso_spr' in self.sprids:
-                #self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(x,y), group='hud21')
-                self.addCol( 'perso_spr',box(x,y,self.larg_street,self.larg_street),color=c['red'],group='hud21')
+                self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(x,y), group='hud21')
                 scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
-                #g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
+                g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
             else:
                 g.sman.modify(self.sprids['perso_spr'],pos=(x,y),anchor='center')
 

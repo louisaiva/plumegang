@@ -249,10 +249,11 @@ class App():
         ### PERSOS
         if True:
 
+            #
+
             keys = ['perso','perso2','perso3','guy','rapper']
             for x in keys:
-                g.TEXTIDS[x] = g.tman.loadImSeq(x+'.png',(1,40))
-
+                g.TEXTIDS[x] = g.tman.loadImSeq(x+'.png',(1,40),8)
             p.update_textures(keys)
 
         # items
@@ -294,7 +295,7 @@ class App():
         # HOME
         if True:
             g.TEXTIDS['home'] = {}
-            g.TEXTIDS['home']['back'] = g.tman.loadIm('bg/home/home_back'+'.png')
+            g.TEXTIDS['home']['back'] = g.tman.loadIm('bg/home/home_back'+'.png',10)
             g.TEXTIDS['home']['front'] = g.tman.loadIm('bg/home/home_front'+'.png')
             g.TEXTIDS['home']['frontanim'] = [g.tman.loadIm('bg/home/home_fanim'+str(i)+'.png') for i in range(1,5)]
             g.TEXTIDS['home']['backanim'] = [g.tman.loadIm('bg/home/home_banim'+str(i)+'.png') for i in range(1,5)]
@@ -924,8 +925,8 @@ class App():
                 self.time_events = g.lman.addLab('',(20,900),group='up',font_size=20,anchor=('left','top'))
                 self.time_ref = g.lman.addLab('',(20,875),group='up',font_size=20,anchor=('left','top'))
                 self.time_draw = g.lman.addLab('',(20,850),group='up',font_size=20,anchor=('left','top'))
-
             self.tick += 1
+
 
             t = time.time()
             # EVENTS
@@ -936,16 +937,22 @@ class App():
             # CLR
             self.window.clear()
 
+            gl.glEnable(gl.GL_TEXTURE_2D)
+            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+            #
+
             t = time.time()
             # RFRSH
             self.refresh()
             g.lman.set_text(self.time_ref,'ref : '+trunc(time.time()-t,3))
 
-
+            #
             t = time.time()
             # DRW
             self.draw()
             g.lman.set_text(self.time_draw,'draw : '+trunc(time.time()-t,3))
+
+            #self.window.flip()
 
         else:
             print('\n\nNumber of lines :',compt(self.path))

@@ -13,6 +13,7 @@ from src import names as n
 from src import obj as o
 from src import obj2 as o2
 from src import voc as v
+import pyglet.gl as gl
 
 SIZE_SPR = 256
 BOTS = []
@@ -349,6 +350,8 @@ class Human():
             g.sman.set_text(self.skin_id,self.textids[self.doing[0]][self.dir][self.roll_skin])
             if g.sman.spr(self.skin_id).width != SIZE_SPR:
                 sc = SIZE_SPR//g.sman.spr(self.skin_id).width
+                gl.glEnable(gl.GL_TEXTURE_2D)
+
                 g.sman.modify(self.skin_id,scale=(sc,sc))
 
             self.roll_skin += 1

@@ -10,6 +10,10 @@ from math import *
 import src.utils as u
 from src import obj as o
 
+import pyglet.gl as gl
+#gl.glEnable(gl.GL_TEXTURE_2D)
+#glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+
 
 '''''''''''''''''''''''''''''''''''''''
 '''''''PART ONE : GRAPHIC STUFF''''''''
@@ -123,12 +127,13 @@ class TextureManager():
 
         self.batch = pyglet.graphics.Batch()
 
-    def loadImSeq(self,path2,size):
+    def loadImSeq(self,path2,size,scale=None):
 
         # size décrit le nb de tiles en w et en h
 
         path3 = '/item/'
         img = pyglet.image.load(self.path+path3+path2)
+
         textures = pyglet.image.ImageGrid(img, *size)
 
         ids = []
@@ -140,11 +145,20 @@ class TextureManager():
             ids.append(id)
         return ids
 
-    def loadIm(self,path2):
+    def loadIm(self,path2,scale=None):
+
 
         path3 = '/item/'
         id = u.get_id('img')
         img = pyglet.image.load(self.path+path3+path2)
+
+        """if scale != None:
+            #gl.glEnable(gl.GL_TEXTURE_2D)
+
+            img.width = img.width*scale # resize from 8x8 to 16x16
+            img.height = img.height*scale
+            print(img.width,img.height)"""
+
         self.textures[id] = img
         self.ids.append(id)
         return id
@@ -158,6 +172,9 @@ class TextureManager():
         return id
 
     def draw(self):
+
+
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
         self.batch.draw()
         #print(len(sman.sprites))#,'    ',sman.ids)
 
@@ -185,6 +202,7 @@ class SpriteManager():
         else:
             id =alr_id
         #print(id)
+
 
 
         self.sprites[id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
@@ -245,7 +263,9 @@ class SpriteManager():
                 self.sprites[tabids].visible = (not hide)
 
     def set_text(self,sprid,textid):
+
         if self.sprites[sprid].image != tman.textures[textid]:
+
             self.sprites[sprid].image = tman.textures[textid]
 
     def modify(self,sprid,pos=None,scale=None,group=None,opacity=None,anchor=None):
@@ -273,6 +293,7 @@ class SpriteManager():
                 self.sprites[sprid].opacity = opacity
 
         # final updating positon and scale
+        #
         self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
 
         if anchor:

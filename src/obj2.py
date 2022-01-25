@@ -294,6 +294,12 @@ class Street():
         x,y = random.randint(1,self.rxf-p.SIZE_SPR-1),random.randint(*Y)
         return (x,y)
 
+    def get_pos(self,hum):
+        if hum in self.humans:
+            #print(self.box.x)
+            gex = (hum.gex+p.SIZE_SPR/2) # position centrale du perso
+            return (gex-self.box.x)/(self.box.fx-self.box.x)
+
     def environ_lr(self,xl,xr):
         if xl > xr :
             xr,xl=xl,xr
@@ -776,7 +782,7 @@ def create_map():
 
     ## JUSQU'A 5 on reste à ~60 fps, au delà la rue principale commence à être bondée
 
-    nb_iterations = 1
+    nb_iterations = 4
     #-> à la fin on se retrouve avec 2**3 = 8 rues
     n = 1
 
@@ -814,7 +820,7 @@ def create_map():
             newrue = preRue(nom,x,y,lon,vert)
 
             # on place la nouvelle porte
-            newrue.place_door_rd(rue.name)
+            newrue.place_door(x_new,rue.name)
             newrues.append(newrue)
         rues += newrues
 
