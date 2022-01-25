@@ -203,7 +203,7 @@ class App():
 
 
 
-        o2.NY.CITY[self.perso.street].load()
+            o2.NY.CITY[self.perso.street].load()
 
         # lot of stuff : hud/end/menu/labels/keys/clicks/final
         if True:
@@ -321,11 +321,27 @@ class App():
         ## BUILDINGS
         if True:
             g.TEXTIDS['build'] = {}
+            g.TEXTIDS['backbuild'] = {}
 
-            #builds lambda
-            b = g.tman.loadImSeq('bg/builds.png',(1,4))
-            for i in range(len(b)):
-                g.TEXTIDS['build'][i] = b[i]
+            nb_build = 4
+
+            #builds : separating front (first 1500x of each build) and back (100x left)
+            id = g.tman.loadIm('bg/builds.png')
+            img = g.tman.textures[id]
+
+            h = o2.H_BUILD
+            w_tot = o2.W_BUILD + o2.W_BACK
+            for i in range(nb_build):
+                #front
+                w = o2.W_BUILD
+                text = img.get_region(i*w_tot, 0, w,h)
+                g.TEXTIDS['build'][i] = g.tman.addText(text)
+
+                #back
+                w = o2.W_BACK
+                text = img.get_region(i*w_tot + o2.W_BUILD, 0, w,h)
+                g.TEXTIDS['backbuild'][i] = g.tman.addText(text)
+
                 o2.builds_key.append(i)
 
 
@@ -491,6 +507,12 @@ class App():
                 elif symbol == key.F:
                     #self.perso.speak()
                     self.perso.rollspeak(g.M)
+
+                elif symbol == key.V:
+                    # on assigne le bot le plus proche à être le poto
+                    if len(self.perso.hum_env) > 0:
+                        bot = self.perso.hum_env[0]
+                        self.perso.assign_poto(bot)
 
                 elif symbol == key.M:
                     self.perso.bigmap.rollhide()

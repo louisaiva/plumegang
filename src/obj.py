@@ -538,6 +538,7 @@ class Zone_ELEM(Zone):
         self.position = position
         self.perso_anim = 'act'
 
+        self.cooldown = 0.5
 
         self.name = name
         self.labtext = name
@@ -631,13 +632,16 @@ class SimpleReleaser(Zone_ELEM):
 
 class Porte(Zone_ELEM):
 
-    def __init__(self,street,box,destination,xdest,makeCol=False,text=None):
+    def __init__(self,street,box,destination,xdest,makeCol=False,text=None,anim='door'):
 
         super(Porte,self).__init__(box,get_id(destination.name),'grey','mid',makeCol=makeCol)
         self.destination = destination
         self.street = street
         self.xdest = xdest
-        self.perso_anim = 'door'
+        self.perso_anim = anim
+
+        if anim == 'stairs':
+            self.cooldown = 1
 
         if text != None:
             self.labtext = text
@@ -653,7 +657,8 @@ class Porte(Zone_ELEM):
         super(Porte,self).activate(perso)
 
         if self.openable(perso):
-            perso.tp(x=self.xdest,street=self.destination)
+            x = self.xdest + r.randint(0,self.box.w)-self.box.w/2
+            perso.tp(x=x,street=self.destination)
             return self.destination.name
         elif isinstance(perso,p.Perso):
             g.pman.alert('you can\'t go here !')

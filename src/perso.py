@@ -34,7 +34,7 @@ def update_textures(keys):
         persos_skins.append(x)
         textures[x] = {}
 
-        if x != 'rapper':
+        if x != 'rapper': # NORMAL
             textures[x]['nothing'] = {}
             textures[x]['nothing']['R'] = [textids[0],textids[1]]
             textures[x]['nothing']['L'] = [textids[2],textids[3]]
@@ -70,7 +70,11 @@ def update_textures(keys):
             textures[x]['act'] = {}
             textures[x]['act']['R'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
             textures[x]['act']['L'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
-        else:
+
+            textures[x]['stairs'] = {}
+            textures[x]['stairs']['R'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
+            textures[x]['stairs']['L'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
+        else: # RAPPER
             textures[x]['nothing'] = {}
             textures[x]['nothing']['R'] = [textids[0],textids[1],textids[2]]
             textures[x]['nothing']['L'] = [textids[3],textids[4],textids[5]]
@@ -106,6 +110,10 @@ def update_textures(keys):
             textures[x]['act'] = {}
             textures[x]['act']['R'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
             textures[x]['act']['L'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
+
+            textures[x]['stairs'] = {}
+            textures[x]['stairs']['R'] = [textids[19+10],textids[20+10],textids[21+10],textids[22+10]]
+            textures[x]['stairs']['L'] = [textids[19+10],textids[20+10],textids[21+10],textids[22+10]]
 
 
 """""""""""""""""""""""""""""""""""
@@ -692,7 +700,7 @@ class Human():
                             g.longpress[key.Z] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one(key.Z)
+                        perc = g.cooldown_one(key.Z,self.element_colli)
                         self.force_anim(perc,self.element_colli.perso_anim)
 
                         #activating
@@ -712,7 +720,7 @@ class Human():
                             g.longpress[key.S] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one(key.S)
+                        perc = g.cooldown_one(key.S,self.element_colli)
                         self.force_anim(perc,self.element_colli.perso_anim)
 
                         #activating
@@ -731,7 +739,7 @@ class Human():
                             g.longpress[(self,'Z')] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one((self,'Z'))
+                        perc = g.cooldown_one((self,'Z'),self.element_colli)
                         self.force_anim(perc,self.element_colli.perso_anim)
 
                         #activating
@@ -750,7 +758,7 @@ class Human():
                             g.longpress[(self,'S')] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one((self,'S'))
+                        perc = g.cooldown_one((self,'S'),self.element_colli)
                         self.force_anim(perc,self.element_colli.perso_anim)
 
                         #activating
@@ -1797,7 +1805,6 @@ class Rappeur(Fan):
         return 'RAPPER'
     type = property(_type)
 
-
 #toa
 class Perso(Rappeur):
 
@@ -1822,8 +1829,6 @@ class Perso(Rappeur):
         self.bigmap = o.Map(self)
         self.relhud = o.RelHUD(self)
         self.minirelhud = o.MiniRelHUD(self)
-
-        #o2.NY.CITY[self.street].add_hum(self)
 
         self.cheat = CHEAT
 
@@ -1934,6 +1939,7 @@ class Perso(Rappeur):
 
     def assign_poto(self,hum):
         self.poto = hum
+        print(hum.name,'assigned to potooooo')
         self.minirelhud.assign_target(self.poto)
 
 

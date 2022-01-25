@@ -147,19 +147,17 @@ class TextureManager():
 
     def loadIm(self,path2,scale=None):
 
-
         path3 = '/item/'
         id = u.get_id('img')
         img = pyglet.image.load(self.path+path3+path2)
 
-        """if scale != None:
-            #gl.glEnable(gl.GL_TEXTURE_2D)
-
-            img.width = img.width*scale # resize from 8x8 to 16x16
-            img.height = img.height*scale
-            print(img.width,img.height)"""
-
         self.textures[id] = img
+        self.ids.append(id)
+        return id
+
+    def addText(self,text):
+        id = u.get_id('img')
+        self.textures[id] = text
         self.ids.append(id)
         return id
 
@@ -736,9 +734,10 @@ TEXTIDS = {}
 keys = []
 longpress = {}
 
-cooldown = 0.5
+#cooldown = 0.5
 
-def cooldown_one(key):
+def cooldown_one(key,obj):
+    cooldown = obj.cooldown
     if key in longpress:
         perc = (time.time()-longpress[key])/cooldown
         if perc > 1:

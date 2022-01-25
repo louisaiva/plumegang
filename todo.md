@@ -17,6 +17,7 @@ _ceci est le todo à faire hehe_
   -faire des escalators qui montent/descendent pour aller d'une rue horizontale à une rue verticale
   -ajouter metro :
     stations de metro disponibles dans différentes rues : permet de se déplacer plus vite, potentiellement fuir police
+  -faire des quartiers
 
 # ajouter des putains de moyens d'ameliorer la relation
   pcq là tlm se fout sur la gueule

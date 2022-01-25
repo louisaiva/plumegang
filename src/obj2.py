@@ -13,7 +13,9 @@ from src import perso as p
 import random as r
 
 Y = 0,225
-W_BUILD = 1600
+W_BUILD = 1500
+W_BACK = 100
+H_BUILD = 830
 
 """'''''''''''''''''''''''''''''''''
 '''''''PART ONE : STREETS'''''''''''
@@ -196,6 +198,8 @@ class Street():
         if hasattr(self,'builds'):
             g.sman.delete(self.builds)
             del self.builds
+            g.sman.delete(self.backbuilds)
+            del self.backbuilds
 
 
         ## back front /back front anim
@@ -238,9 +242,10 @@ class Street():
 
         ## buildings
         if self.build_list:
-            #print(len(self.build_list),self.build_list)
 
+            #avant/back
             self.builds = []
+            self.backbuilds = []
 
             x,y = self.x,250
             w = W_BUILD
@@ -248,8 +253,11 @@ class Street():
             for i in range(len(self.build_list)):
                 build = self.build_list[i]
                 id = g.sman.addSpr(g.TEXTIDS['build'][build],(x,y),group='buildings')
+                backid = g.sman.addSpr(g.TEXTIDS['backbuild'][build],(x+w,y),group='road')
                 self.builds.append(id)
+                self.backbuilds.append(backid)
                 g.Cyc.add_spr((id,0.3))
+                g.Cyc.add_spr((backid,0.3))
                 x+=w
 
         ## back front /back front anim
@@ -340,7 +348,7 @@ class Street():
         return elems
 
     def get_random_nb_bots(self):
-        return r.randint(self.long//2,self.long)
+        return r.randint(self.long//8,self.long//4)
 
     def get_rd_neighbor(self):
         return r.choice([x for x in self.neighbor])
@@ -398,9 +406,11 @@ class Street():
             g.sman.spr(self.streetanimbg).x = x
         if hasattr(self,'builds'):
             dx = 0
-            for id in self.builds:
-                g.sman.spr(id).x = x+dx
+            for i in range(len(self.builds)):
+
+                g.sman.spr(self.builds[i]).x = x+dx
                 dx+=W_BUILD
+                g.sman.spr(self.backbuilds[i]).x = x+dx
 
 
         ## x des roads gérée dans self.verify_endless_road()
@@ -791,7 +801,7 @@ def create_map():
     ## JUSQU'A 5 on reste à ~60 fps, au delà la rue principale commence à être bondée
     #  chaque rue peut avoir un maximum que 4 rues voisines sinon ça va être le sbeul
 
-    nb_iterations = 10
+    nb_iterations = 5
     #-> à la fin on se retrouve avec 2**3 = 8 rues
     n = 1
 
@@ -857,7 +867,7 @@ def create_map():
         for i in range(rue.long):
             if rue.cont[i] == 0:
                 #print(builds_key)
-                key = r.choice(list(filter(lambda x:x!=3,builds_key)))
+                key = r.choice(list(filter(lambda x:x not in [1,3],builds_key)))
                 build_list.append(key)
             else:
                 build_list.append(3)
@@ -934,7 +944,7 @@ def create_map():
 
     for st1,zonebox,st2,x2 in connexions:
 
-        connect_solo(NY.CITY[st1],zonebox,NY.CITY[st2],x2)
+        connect_solo(NY.CITY[st1],zonebox,NY.CITY[st2],x2,anim='stairs')
 
 
 
@@ -1093,7 +1103,7 @@ def connect(street1,box1,street2,box2,col=(False,False),labs=(None,None)):
     door2 = o.Porte(street2,box2,street1,box1.x,makeCol=col[1],text=labs[1])
     street2.assign_zones([door2])
 
-def connect_solo(street1,box1,street2,x2,col=False,labs=None):
+def connect_solo(street1,box1,street2,x2,col=False,labs=None,anim='door'):
 
     ## crée 1 porte :
     ##      -à x1 dans la street1 pour passer dans la street2
@@ -1101,9 +1111,8 @@ def connect_solo(street1,box1,street2,x2,col=False,labs=None):
     if type(box1) != box:
         box1 = box(box1,250,270,400)
 
-    door = o.Porte(street1,box1,street2,x2,makeCol=col,text=labs)
+    door = o.Porte(street1,box1,street2,x2,makeCol=col,text=labs,anim=anim)
     street1.assign_zones([door])
-
 
 def draw_lines():
 
