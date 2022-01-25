@@ -18,7 +18,93 @@ SIZE_SPR = 256
 BOTS = []
 CHEAT = True
 
-#graphic
+
+"""'''''''''''''''''''''''''''''''''
+'''''''TEXTURES TAB'''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
+
+persos_skins = []
+textures = {}
+def update_textures(keys):
+    global textures,persos_skins
+
+    for x in keys:
+        textids = g.TEXTIDS[x]
+        persos_skins.append(x)
+        textures[x] = {}
+
+        if x != 'rapper':
+            textures[x]['nothing'] = {}
+            textures[x]['nothing']['R'] = [textids[0],textids[1]]
+            textures[x]['nothing']['L'] = [textids[2],textids[3]]
+
+            textures[x]['move'] = {}
+            textures[x]['move']['R'] = [textids[4],textids[5]]
+            textures[x]['move']['L'] = [textids[6],textids[7]]
+
+            textures[x]['hit'] = {}
+            textures[x]['hit']['R'] = [textids[8]]
+            textures[x]['hit']['L'] = [textids[9]]
+
+            textures[x]['write'] = {}
+            textures[x]['write']['R'] = [textids[10],textids[11]]
+            textures[x]['write']['L'] = [textids[12],textids[13]]
+
+            textures[x]['wait'] = {}
+            textures[x]['wait']['R'] = [textids[0]]
+            textures[x]['wait']['L'] = [textids[2]]
+
+            textures[x]['die'] = {}
+            textures[x]['die']['R'] = [textids[14]]
+            textures[x]['die']['L'] = [textids[14]]
+
+            textures[x]['heal'] = {}
+            textures[x]['heal']['R'] = [textids[15],textids[16]]
+            textures[x]['heal']['L'] = [textids[15],textids[16]]
+
+            textures[x]['door'] = {}
+            textures[x]['door']['R'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
+            textures[x]['door']['L'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
+
+            textures[x]['act'] = {}
+            textures[x]['act']['R'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
+            textures[x]['act']['L'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
+        else:
+            textures[x]['nothing'] = {}
+            textures[x]['nothing']['R'] = [textids[0],textids[1],textids[2]]
+            textures[x]['nothing']['L'] = [textids[3],textids[4],textids[5]]
+
+            textures[x]['move'] = {}
+            textures[x]['move']['R'] = [textids[6],textids[7]]
+            textures[x]['move']['L'] = [textids[8],textids[9]]
+
+            textures[x]['hit'] = {}
+            textures[x]['hit']['R'] = [textids[10]]
+            textures[x]['hit']['L'] = [textids[11]]
+
+            textures[x]['write'] = {}
+            textures[x]['write']['R'] = [textids[10+2],textids[11+2]]
+            textures[x]['write']['L'] = [textids[12+2],textids[13+2]]
+
+            textures[x]['wait'] = {}
+            textures[x]['wait']['R'] = [textids[0]]
+            textures[x]['wait']['L'] = [textids[3]]
+
+            textures[x]['die'] = {}
+            textures[x]['die']['R'] = [textids[14+2]]
+            textures[x]['die']['L'] = [textids[14+2]]
+
+            textures[x]['heal'] = {}
+            textures[x]['heal']['R'] = [textids[15+2],textids[16+2]]
+            textures[x]['heal']['L'] = [textids[15+2],textids[16+2]]
+
+            textures[x]['door'] = {}
+            textures[x]['door']['R'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
+            textures[x]['door']['L'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
+
+            textures[x]['act'] = {}
+            textures[x]['act']['R'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
+            textures[x]['act']['L'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
 
 
 """""""""""""""""""""""""""""""""""
@@ -132,7 +218,7 @@ class Distroguy(Metier):
 
 class Human():
 
-    def __init__(self,textids,pos,name='John',group='perso',street='street1'):
+    def __init__(self,key_skin,pos,name='John',group='perso',street='street1'):
         # general
 
         self.name = name
@@ -197,44 +283,7 @@ class Human():
         self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
 
         # skins
-        if type(self) not in []:
-
-            self.textids = {}
-            self.textids['nothing'] = {}
-            self.textids['nothing']['R'] = [textids[0],textids[1]]
-            self.textids['nothing']['L'] = [textids[2],textids[3]]
-
-            self.textids['move'] = {}
-            self.textids['move']['R'] = [textids[4],textids[5]]
-            self.textids['move']['L'] = [textids[6],textids[7]]
-
-            self.textids['hit'] = {}
-            self.textids['hit']['R'] = [textids[8]]
-            self.textids['hit']['L'] = [textids[9]]
-
-            self.textids['write'] = {}
-            self.textids['write']['R'] = [textids[10],textids[11]]
-            self.textids['write']['L'] = [textids[12],textids[13]]
-
-            self.textids['wait'] = {}
-            self.textids['wait']['R'] = [textids[0]]
-            self.textids['wait']['L'] = [textids[2]]
-
-            self.textids['die'] = {}
-            self.textids['die']['R'] = [textids[14]]
-            self.textids['die']['L'] = [textids[14]]
-
-            self.textids['heal'] = {}
-            self.textids['heal']['R'] = [textids[15],textids[16]]
-            self.textids['heal']['L'] = [textids[15],textids[16]]
-
-            self.textids['door'] = {}
-            self.textids['door']['R'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
-            self.textids['door']['L'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
-
-            self.textids['act'] = {}
-            self.textids['act']['R'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
-            self.textids['act']['L'] = [textids[17+5],textids[18+5],textids[19+5],textids[20+5],textids[21+5]]
+        self.textids = textures[key_skin]
 
         self.grp = group
 
@@ -1278,35 +1327,38 @@ class Human():
     ## SPR/LABELS
 
     def load(self):
-        if not hasattr(self,'skin_id'):
-            self.roll_skin = 0
-            self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
 
-            self.update_skin()
-            if self.outside:
-                g.Cyc.add_spr((self.skin_id,0.2))
+        if True:
 
-        if not hasattr(self,'label'):
-            #label
-            pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 30
-            self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=self.grp)
+            if not hasattr(self,'skin_id'):
+                self.roll_skin = 0
+                self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
 
-        if not hasattr(self,'label_life') and self.alive:
-            # spr life
-            size_lifebar = 100
-            size_fill = (self.life*size_lifebar)/self.max_life
-            x,y = self.box.cx-size_lifebar/2 , self.box.fy +2
+                self.update_skin()
+                if self.outside:
+                    g.Cyc.add_spr((self.skin_id,0.2))
 
-            self.label_life = g.sman.addSpr(g.TEXTIDS['utils'][5],(x,y),group=self.grp,vis=False)
-            g.sman.modify(self.label_life,scale=(size_fill/32,5/32))
+            if not hasattr(self,'label'):
+                #label
+                pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 30
+                self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=self.grp)
 
-            # spr confidence
-            size_lifebar = 150
-            size_fill = (self.confidence*size_lifebar)/100
-            x,y = self.box.cx-size_lifebar/2 , self.box.fy + 7
+            if not hasattr(self,'label_life') and self.alive:
+                # spr life
+                size_lifebar = 100
+                size_fill = (self.life*size_lifebar)/self.max_life
+                x,y = self.box.cx-size_lifebar/2 , self.box.fy +2
 
-            self.label_conf = g.sman.addSpr(g.TEXTIDS['utils'][6],(x,y),group=self.grp,vis=False)
-            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,5/32))
+                self.label_life = g.sman.addSpr(g.TEXTIDS['utils'][5],(x,y),group=self.grp,vis=False)
+                g.sman.modify(self.label_life,scale=(size_fill/32,5/32))
+
+                # spr confidence
+                size_lifebar = 150
+                size_fill = (self.confidence*size_lifebar)/100
+                x,y = self.box.cx-size_lifebar/2 , self.box.fy + 7
+
+                self.label_conf = g.sman.addSpr(g.TEXTIDS['utils'][6],(x,y),group=self.grp,vis=False)
+                g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,5/32))
 
         #speaking
         if self.keyids_voc:
@@ -1424,12 +1476,12 @@ class Human():
 # les gens que tu croises dans la rue
 class Fan(Human):
 
-    def __init__(self,textids,pos,name=None,street='street1'):
+    def __init__(self,key_skin,pos,name=None,street='street1'):
 
         if name == None:
             name = r.choice(n.names)
 
-        super(Fan,self).__init__(textids,pos,name,group='perso',street=street)
+        super(Fan,self).__init__(key_skin,pos,name,group='perso',street=street)
 
 
         rge = [ r.randint(-100,100),r.randint(-100,100) ]
@@ -1498,9 +1550,9 @@ class Fan(Human):
 # travaille dans un shop ou autre
 class Guy(Fan):
 
-    def __init__(self,textids,pos,name='Alphonse',metier=Metier,street='street1'):
+    def __init__(self,key_skin,pos,name='Alphonse',metier=Metier,street='street1'):
 
-        super(Guy,self).__init__(textids,pos,name,street=street)
+        super(Guy,self).__init__(key_skin,pos,name,street=street)
 
         ## check if in BOTS (souvent les guys sont ajoutés directement depuis leur shop)
         if self not in BOTS:
@@ -1575,52 +1627,15 @@ class Guy(Fan):
 # les rappeurs
 class Rappeur(Fan):
 
-    def __init__(self,textids,pos,name=None,street='street1'):
+    def __init__(self,key_skin,pos,name=None,street='street1'):
 
         if name == None:
             name = r.choice(n.rappeurs)
             n.rappeurs.remove(name)
 
-        super(Rappeur,self).__init__(textids,pos,name,street=street)
+        super(Rappeur,self).__init__(key_skin,pos,name,street=street)
 
-        if type(self) != Fan:
-            # skins
-            self.textids = {}
-            self.textids['nothing'] = {}
-            self.textids['nothing']['R'] = [textids[0],textids[1],textids[2]]
-            self.textids['nothing']['L'] = [textids[3],textids[4],textids[5]]
-
-            self.textids['move'] = {}
-            self.textids['move']['R'] = [textids[6],textids[7]]
-            self.textids['move']['L'] = [textids[8],textids[9]]
-
-            self.textids['hit'] = {}
-            self.textids['hit']['R'] = [textids[10]]
-            self.textids['hit']['L'] = [textids[11]]
-
-            self.textids['write'] = {}
-            self.textids['write']['R'] = [textids[10+2],textids[11+2]]
-            self.textids['write']['L'] = [textids[12+2],textids[13+2]]
-
-            self.textids['wait'] = {}
-            self.textids['wait']['R'] = [textids[0]]
-            self.textids['wait']['L'] = [textids[3]]
-
-            self.textids['die'] = {}
-            self.textids['die']['R'] = [textids[14+2]]
-            self.textids['die']['L'] = [textids[14+2]]
-
-            self.textids['heal'] = {}
-            self.textids['heal']['R'] = [textids[15+2],textids[16+2]]
-            self.textids['heal']['L'] = [textids[15+2],textids[16+2]]
-
-            self.textids['door'] = {}
-            self.textids['door']['R'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
-            self.textids['door']['L'] = [textids[19],textids[20],textids[21],textids[22],textids[23]]
-
-            self.textids['act'] = {}
-            self.textids['act']['R'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
-            self.textids['act']['L'] = [textids[19+5],textids[20+5],textids[21+5],textids[22+5],textids[23+5]]
+        #self.textids = text_rap
 
         self.qua_score = 0
 
@@ -1699,15 +1714,16 @@ class Rappeur(Fan):
 
     def load(self):
         super(Rappeur,self).load()
-        if not hasattr(self,'label_plume') and self.plume != None:
-            x = g.lman.labels[self.label].x
-            y = g.lman.labels[self.label].y
+        if False:
+            if not hasattr(self,'label_plume') and self.plume != None:
+                x = g.lman.labels[self.label].x
+                y = g.lman.labels[self.label].y
 
-            self.label_plume = g.sman.addSpr(g.TEXTIDS[self.plume.type().lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
+                self.label_plume = g.sman.addSpr(g.TEXTIDS[self.plume.type().lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
 
-            sc = g.lman.labels[self.label].content_height
-            w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
-            g.sman.modify(self.label_plume,scale=(sc/w,sc/h))
+                sc = g.lman.labels[self.label].content_height
+                w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
+                g.sman.modify(self.label_plume,scale=(sc/w,sc/h))
 
         #print('loaded',self.name)
 
@@ -1782,9 +1798,9 @@ class Rappeur(Fan):
 #toa
 class Perso(Rappeur):
 
-    def __init__(self,textids,pos=(400,175),name='Delta',street='home',fill=True):
+    def __init__(self,key_skin,pos=(400,175),name='Delta',street='home',fill=True):
 
-        super(Perso,self).__init__(textids,pos,name,street=street)
+        super(Perso,self).__init__(key_skin,pos,name,street=street)
 
         self.max_life = 500
         #self.damage = 10

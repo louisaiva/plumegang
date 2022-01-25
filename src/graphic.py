@@ -159,6 +159,7 @@ class TextureManager():
 
     def draw(self):
         self.batch.draw()
+        #print(len(sman.sprites))#,'    ',sman.ids)
 
 tman,gman = TextureManager(),GroupManager()
 
@@ -177,11 +178,13 @@ class SpriteManager():
 
     def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True):
 
+
         if alr_id == -1:
             id = u.get_id('spr')
             self.ids.append(id)
         else:
             id =alr_id
+        #print(id)
 
 
         self.sprites[id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)

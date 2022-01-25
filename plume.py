@@ -111,24 +111,30 @@ class App():
 
             #print(self.sprids['effects'])
 
+
         # streets
         if True:
             ## STREETS
-            if o2.LOAD != 2:
+            if o2.LOAD < 2:
                 o2.generate_map()
-            else:
+            elif o2.LOAD == 2:
                 o2.generate_short_map()
+            elif o2.LOAD == 3:
+                o2.create_map()
+
 
         # humans
         if True:
 
+            #print(red('OOOOOOOOOOOOOOOOOOOOOOOOOOOO'))
             ## PERSOS
-            self.perso = p.Perso(g.TEXTIDS['rap'],fill=FILL_INV)
+            self.perso = p.Perso('rapper',fill=FILL_INV)
             p.BOTS.append(self.perso)
-            o2.NY.CITY['home'].add_owner(self.perso)
+            #o2.NY.CITY['home'].add_owner(self.perso)
 
+            #print(blue('OOOOOOOOOOOOOOOOOOOOOOOOOOOO'))
             #poto
-            p.BOTS.append(p.Fan(g.TEXTIDS['perso3'],o2.NY.CITY['home'].rand_pos(),street='home'))
+            p.BOTS.append(p.Fan('perso3',o2.NY.CITY['home'].rand_pos(),street='home'))
             o2.NY.CITY['home'].add_owner(p.BOTS[-1])
             self.perso.assign_poto(p.BOTS[-1])
 
@@ -145,10 +151,10 @@ class App():
                     for i in range(n_str):
                         pos = street.rand_pos()
                         if random.random() < 1/8 and len(names.rappeurs) > 0:
-                            hum = p.Rappeur(g.TEXTIDS['rap'],pos,street=street.name)
+                            hum = p.Rappeur('rapper',pos,street=street.name)
                         else:
-                            text = random.choice(['persos','perso2','perso3'])
-                            hum = p.Fan(g.TEXTIDS[text],pos,street=street.name)
+                            text = random.choice(['perso','perso2','perso3'])
+                            hum = p.Fan(text,pos,street=street.name)
                         p.BOTS.append(hum)
                         if isinstance(street,o2.House):
                             street.add_owner(hum)
@@ -157,7 +163,8 @@ class App():
             for hum in p.BOTS:
                 o2.NY.CITY[hum.street].add_hum(hum)
 
-            print(p.BOTS)
+            if len(p.BOTS) < 200:
+                print(p.BOTS)
             print(len(p.BOTS),'bots in this game !')
 
         # cycle
@@ -195,7 +202,8 @@ class App():
             o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
-            o2.NY.CITY[self.perso.street].load()
+
+        o2.NY.CITY[self.perso.street].load()
 
         # lot of stuff : hud/end/menu/labels/keys/clicks/final
         if True:
@@ -240,11 +248,12 @@ class App():
 
         ### PERSOS
         if True:
-            g.TEXTIDS['persos'] = g.tman.loadImSeq('perso.png',(1,40))
-            g.TEXTIDS['perso2'] = g.tman.loadImSeq('perso_2.png',(1,40))
-            g.TEXTIDS['perso3'] = g.tman.loadImSeq('perso_3.png',(1,40))
-            g.TEXTIDS['guys'] = g.tman.loadImSeq('guy.png',(1,40))
-            g.TEXTIDS['rap'] = g.tman.loadImSeq('perso2.png',(1,40))
+
+            keys = ['perso','perso2','perso3','guy','rapper']
+            for x in keys:
+                g.TEXTIDS[x] = g.tman.loadImSeq(x+'.png',(1,40))
+
+            p.update_textures(keys)
 
         # items
         if True:
@@ -313,7 +322,7 @@ class App():
             g.TEXTIDS['build'] = {}
 
             #builds lambda
-            b = g.tman.loadImSeq('bg/builds.png',(1,3))
+            b = g.tman.loadImSeq('bg/builds.png',(1,4))
             for i in range(len(b)):
                 g.TEXTIDS['build'][i] = b[i]
                 o2.builds_key.append(i)
@@ -796,6 +805,8 @@ class App():
 
             ## anchor / moving sprites
 
+            #print(len(self.sprids),self.sprids)
+
             # ZONE/ITEMS
             if True:
 
@@ -910,21 +921,31 @@ class App():
                 self.lab_fps_time = time.time()
                 self.lab_fps1 = []
 
-            self.tick += 1
-            #print(self.tick)
+                self.time_events = g.lman.addLab('',(20,900),group='up',font_size=20,anchor=('left','top'))
+                self.time_ref = g.lman.addLab('',(20,875),group='up',font_size=20,anchor=('left','top'))
+                self.time_draw = g.lman.addLab('',(20,850),group='up',font_size=20,anchor=('left','top'))
 
+            self.tick += 1
+
+            t = time.time()
             # EVENTS
             self.events()
+            g.lman.set_text(self.time_events,'event : '+trunc(time.time()-t,3))
 
             gl.glClearColor(1/4,1/4,1/4,1)
             # CLR
             self.window.clear()
 
+            t = time.time()
             # RFRSH
             self.refresh()
+            g.lman.set_text(self.time_ref,'ref : '+trunc(time.time()-t,3))
 
+
+            t = time.time()
             # DRW
             self.draw()
+            g.lman.set_text(self.time_draw,'draw : '+trunc(time.time()-t,3))
 
         else:
             print('\n\nNumber of lines :',compt(self.path))

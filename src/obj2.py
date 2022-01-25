@@ -33,6 +33,51 @@ class preStreet(line):
     def add_conn(self,street,x):
         self.connex.append((street.name,x))
 
+class preRue(line):
+
+    def __init__(self,nom,x,y,long,vert=False):
+
+        if vert:
+            super(preRue,self).__init__(x,y,x,y+long)
+        else:
+            super(preRue,self).__init__(x,y,x+long,y)
+
+        self.name = nom
+        self.long = long
+        self.cont = [0 for i in range(self.long)]
+        self.connex = []
+
+    def empl_rd_door(self):
+
+        i = r.randint(1,self.long-2)
+        while self.cont[i] != 0:
+            i = r.randint(1,self.long-2)
+
+        return i
+
+    def place_door(self,x,nom):
+        self.cont[x] = nom
+        self.connex.append((nom,x))
+
+    def place_door_rd(self,nom):
+
+        x = self.empl_rd_door()
+        self.place_door(x,nom)
+        return x
+
+    def __repr__(self):
+
+        s = self.name + red(' -> ')
+
+        for x in self.cont:
+            if x == 0:
+                s += '. '
+            else:
+                s+=x+ ' '
+
+        return s+'\n'
+
+
 ## streets
 
 class Street():
@@ -223,7 +268,11 @@ class Street():
         for item in self.items:
             item.load()
 
-        print(green(self.name+' :  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'))
+        nbh = len(self.humans)
+        for street in self.neighbor:
+            nbh += len(street.humans)
+
+        print(green(self.name),blue('('+str(self.long)+' blocks)'),green(':  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'),blue('('+str(nbh)+' humans)'))
         #print([x.name for x in self.neighbor])
 
         self.visible = True
@@ -277,7 +326,7 @@ class Street():
         return elems
 
     def get_random_nb_bots(self):
-        return r.randint(10,30)
+        return r.randint(self.long//2,self.long)
 
     def get_rd_neighbor(self):
         return r.choice([x for x in self.neighbor])
@@ -388,6 +437,14 @@ class Street():
         return self.box.w
     w = property(_w)
 
+    def _long(self):
+        if type(self.pre) == preStreet:
+            return self.pre.w
+        elif type(self.pre) == preRue:
+            return self.pre.long
+    long = property(_long)
+
+
     ##
 
     def _range(self):
@@ -470,7 +527,7 @@ class Shop(House):
         super(Shop,self).__init__(name,textures,box=box)
 
         self.guys = []
-        self.guys.append( p.Guy(g.TEXTIDS['guys'],self.rand_pos(),metier=p.Distroguy,street=self.name) )
+        self.guys.append( p.Guy('guy',self.rand_pos(),metier=p.Distroguy,street=self.name) )
         self.Y = (50,150)
 
         self.outside = False
@@ -504,7 +561,7 @@ class CITY():
         self.width = 0
         self.CITY = {}
 
-        self.Ghost = Street(preStreet('ghost',1,1,2,1),box=box(0,-50,50))
+        #self.Ghost = Street(preStreet('ghost',1,1,2,1),box=box(0,-50,50))
 
     def add_streets(self,street):
         if type(street) == []:
@@ -546,7 +603,7 @@ NY = CITY()
 
 LINES = []
 
-LOAD = 2
+LOAD = 3
 # permet de conserver une map si y'en a une bien (1) ou d'en recreer une à chaque fois (0) ou de faire une map short (2)
 MAP_NAME = 'ny'
 # key à transmettre à la fonction de chargement pour selectionner une map créée
@@ -559,6 +616,7 @@ builds = {
         0:{'name':'empty' , 'box':None },
         1:{'name':'stand' , 'box':box(370,0,500,420) },
         2:{'name':'batiment' , 'box':box(200,100,470,420) },
+        3:{'name':'stairs' , 'box':box(500,100,300,420) },
 }
 
 builds_key = []
@@ -711,6 +769,156 @@ def generate_short_map():
                 NY.add_streets(House(preStreet(house_name),g.TEXTIDS['home']))
                 connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
                 NY.CITY[name].add_house(NY.CITY[house_name])
+
+def create_map():
+
+    ## la map part d'une rue simple et unique et puis s'étend de celle là
+
+    ## JUSQU'A 5 on reste à ~60 fps, au delà la rue principale commence à être bondée
+
+    nb_iterations = 1
+    #-> à la fin on se retrouve avec 2**3 = 8 rues
+    n = 1
+
+    #pos_doors = {} # stocke les positions des portes de chaque rue (pour pas avoir deux rues au même endroit tsé)
+
+    ## RUES
+    rue_princ = 'kamour str.'
+    lon = r.randint(5*(nb_iterations+1), 10*(nb_iterations+1))
+
+    rues = [ preRue(rue_princ,0,0,lon) ]
+
+    for i in range(nb_iterations):
+        newrues = []
+        for rue in rues:
+
+            #general
+            nom = 'rue '+str(n)
+            n+=1
+            lon = r.randint(5*(nb_iterations-i), 10*(nb_iterations-i))
+            vert = not rue.vert
+
+            # on prend au hasard les pos des portes
+            x_new = r.randint(1,lon-2)
+            x_old = rue.place_door_rd(nom)
+
+            # on calcule la position de départ de la nouvelle rue:
+            if vert:
+                x,y = rue.x + x_old , rue.y - x_new
+            else:
+                x,y = rue.x - x_new , rue.y + x_old
+
+            print(rue.x,rue.y,x_new,x_old,red(' -> '),x,y)
+
+            # on crée la rue
+            newrue = preRue(nom,x,y,lon,vert)
+
+            # on place la nouvelle porte
+            newrue.place_door_rd(rue.name)
+            newrues.append(newrue)
+        rues += newrues
+
+    x_distro = rues[0].place_door_rd('distro')
+    rues[0].place_door(0,'home')
+
+    print(rues)
+    ## TRANSFORMATION RUES EN STREETS
+
+    connexions = []
+
+    for rue in rues:
+
+        nom = rue.name
+
+        build_list = []
+        #print(len(rue.cont),rue.long)
+
+        ## on organise build_list
+        for i in range(rue.long):
+            if rue.cont[i] == 0:
+                #print(builds_key)
+                key = r.choice(list(filter(lambda x:x!=3,builds_key)))
+                build_list.append(key)
+            else:
+                build_list.append(3)
+
+        if nom == rue_princ:
+            build_list[0] = 2
+            build_list[x_distro] = 2
+
+        ## on créé la street
+        w = rue.long*W_BUILD
+        NY.add_streets(Street(rue,g.TEXTIDS['street'],build_list,box=box(0,-50,w)))
+
+        if nom == rue_princ:
+
+            ## HOME
+            name = 'kedulov gang'
+            # inside building
+            NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
+            zone_box = builds[2]['box'].pop()
+            zone_box.y += 250
+            connect(NY.CITY[name],box(600,250,400,400),NY.CITY[nom],zone_box,(False,False))
+
+            #home + porte
+            NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
+            connect(NY.CITY['home'],3200,NY.CITY[name],box(1500,250,300,400),(False,False))
+            NY.CITY[name].add_house(NY.CITY['home'])
+
+            #maison du voisin
+            NY.add_streets(House(preStreet('voisin'),g.TEXTIDS['home']))
+            connect(NY.CITY['voisin'],3200,NY.CITY[name],box(2500,250,300,400),(False,False))
+            NY.CITY[name].add_house(NY.CITY['voisin'])
+
+            ## DISTROKID
+
+            #distrokid + porte
+            NY.add_streets(Shop(preStreet('distrokid'),g.TEXTIDS['distrokid']))
+            zone_box = builds[2]['box'].pop()
+            zone_box.y += 250
+            zone_box.x += x_distro*W_BUILD
+            connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
+
+        for i in range(rue.long):
+
+            ## On créé un BUILDING
+            if rue.cont[i] == 0 and builds[build_list[i]]['box']:
+                zone_box = builds[build_list[i]]['box'].pop()
+
+                zone_box.y += 250
+                zone_box.x += i*W_BUILD
+
+                name = str(i) + '- ' +nom
+
+                # inside building
+                NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
+                connect(NY.CITY[name],box(600,250,400,400),NY.CITY[nom],zone_box,(False,False))
+
+                ## CHAQUE APPART DANS CHAQUE BUILDING
+                for j in range(4):
+                    labtext = (None,'1'+chr(65+j))
+                    house_name = '1'+chr(65+j) +'-' + str(i) + ' '+nom
+                    NY.add_streets(House(preStreet(house_name),g.TEXTIDS['home']))
+                    connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
+                    NY.CITY[name].add_house(NY.CITY[house_name])
+
+            elif rue.cont[i] != 0 and rue.cont[i] not in ['distro','home']:
+                ## On connecte les rues
+                #print(build_list[i])
+                zone_box = builds[build_list[i]]['box'].pop()
+                dx = zone_box.x
+                zone_box.y += 250
+                zone_box.x += i*W_BUILD
+                x2 = list(filter(lambda x:x.name == rue.cont[i],rues))[0].cont.index(nom)*W_BUILD+dx
+                connexions.append( [nom,zone_box,rue.cont[i],x2] )
+
+    for st1,zonebox,st2,x2 in connexions:
+
+        connect_solo(NY.CITY[st1],zonebox,NY.CITY[st2],x2)
+
+
+#create_map()
+
 
 
 """'''''''''''''''''''''''''''''''''
@@ -867,6 +1075,18 @@ def connect(street1,box1,street2,box2,col=(False,False),labs=(None,None)):
 
     door2 = o.Porte(street2,box2,street1,box1.x,makeCol=col[1],text=labs[1])
     street2.assign_zones([door2])
+
+def connect_solo(street1,box1,street2,x2,col=False,labs=None):
+
+    ## crée 1 porte :
+    ##      -à x1 dans la street1 pour passer dans la street2
+
+    if type(box1) != box:
+        box1 = box(box1,250,270,400)
+
+    door = o.Porte(street1,box1,street2,x2,makeCol=col,text=labs)
+    street1.assign_zones([door])
+
 
 def draw_lines():
 

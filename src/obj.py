@@ -494,7 +494,7 @@ distro = Distrokid()
 
 class Zone():
 
-    def __init__(self,box,textid='white',group='mid',makeCol=True):
+    def __init__(self,box,textid='white',group='mid',makeCol=False):
 
         if makeCol:
             if textid[:4] == 'text':
@@ -540,13 +540,14 @@ class Zone_ELEM(Zone):
 
 
         self.name = name
+        self.labtext = name
         self.longpress = long
 
         self.box = box
 
         # label
-        pos = box.x + box.w/2 , box.y + box.h + 20
-        self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=group)
+        #pos = box.x + box.w/2 , box.y + box.h + 20
+        #self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=group)
 
         self.color = c['coral']
 
@@ -570,7 +571,7 @@ class Zone_ELEM(Zone):
 
     def activate(self,perso):
 
-        print(perso.name,'just activated',self.name)
+        print(perso.name,'just activated',self.labtext)
         if hasattr(self,'label') and isinstance(perso,p.Perso):
             g.lman.modify(self.label,color=self.color)
 
@@ -606,7 +607,7 @@ class Zone_ELEM(Zone):
         if not hasattr(self,'label'):
             # label
             pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
-            self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
+            self.label = g.lman.addLab(self.labtext,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
 
 class Market(Zone_ELEM):
 
@@ -638,10 +639,10 @@ class Porte(Zone_ELEM):
         self.xdest = xdest
         self.perso_anim = 'door'
 
-        if not text:
-            self.labtext = destination.name
-        else:
+        if text != None:
             self.labtext = text
+        else:
+            self.labtext = destination.name
 
         self.deload()
 
@@ -656,10 +657,6 @@ class Porte(Zone_ELEM):
             return self.destination.name
         elif isinstance(perso,p.Perso):
             g.pman.alert('you can\'t go here !')
-
-    def load(self):
-        super(Porte,self).load()
-        g.lman.set_text(self.label,self.labtext)
 
     def openable(self,perso):
 
@@ -962,7 +959,7 @@ class Map(HUD):
         self.pad = 25
         self.box = box(area.x+self.pad,area.y+self.pad,area.w-2*self.pad,area.h-2*self.pad)
 
-        self.larg_street = int((self.box.w/3)/o2.MAP[0])
+        self.larg_street = 10#int((self.box.w/3)/o2.MAP[0])
         w = self.larg_street*3*o2.MAP[0]
         self.box = box(scrw/2-w/2,scrh/2-w/2,w,w)
 
@@ -985,30 +982,31 @@ class Map(HUD):
             if type(street) == o2.Street:
 
                 vert = street.pre.vert
+                print(street.name, street.line)
+
+                if not vert:
+                    x = g.scr.cx + street.line[0][0]*self.larg_street
+                    y = g.scr.cy + street.line[0][1]*self.larg_street
+                else:
+                    x = g.scr.cx + self.larg_street
+                    y = g.scr.cy + street.line[0][1]*self.larg_street
 
                 if vert:
-                    x = self.box.x + street.line[0][0]*3*self.larg_street+self.larg_street
-                    y = self.box.fy - street.line[1][1]*3*self.larg_street
+                    w,h=self.larg_street,street.pre.w*self.larg_street+self.larg_street
                 else:
-                    x = self.box.x + street.line[0][0]*3*self.larg_street
-                    y = self.box.fy - street.line[0][1]*3*self.larg_street-self.larg_street
-
-                if vert:
-                    w,h=self.larg_street,street.pre.w*3*self.larg_street+self.larg_street
-                else:
-                    h,w=self.larg_street,street.pre.w*3*self.larg_street+self.larg_street
+                    h,w=self.larg_street,street.pre.w*self.larg_street+self.larg_street
                 #print(street.name)
                 self.addCol(street.name,box(x,y,w,h),color=c['delta_purple'],group='hud2')
 
-            else:
+            elif street.name == 'home':
                 w,h=self.larg_street,self.larg_street
 
-                x=self.box.x + street.line[0][0]*3*self.larg_street
-                y = self.box.fy - street.line[1][1]*3*self.larg_street
+                x=g.scr.cx + street.line[0][0]*3*self.larg_street
+                y = g.scr.cy + street.line[1][1]*3*self.larg_street
                 self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud2')
 
     def update(self):
-
+        #return 0
         street = o2.NY.CITY[self.perso.street]
 
         # get pos
@@ -1024,18 +1022,20 @@ class Map(HUD):
                 y = g.sman.spr(self.sprids[street.name]).y + self.larg_street/2
                 x = g.sman.spr(self.sprids[street.name]).x + perc*g.sman.spr(self.sprids[street.name]).width
 
-        else: # si le perso se trouve dans une maison
+        elif street.name == 'home': # si le perso se trouve dans une maison
             x,y = g.sman.spr(self.sprids[street.name]).position
             x += self.larg_street/2
             y += self.larg_street/2
 
-        # create and or change pos
-        if not 'perso_spr' in self.sprids:
-            self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(x,y), group='hud21')
-            scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
-            g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
-        else:
-            g.sman.modify(self.sprids['perso_spr'],pos=(x,y),anchor='center')
+        if type(street) == o2.Street or street.name == 'home':
+            # create and or change pos
+            if not 'perso_spr' in self.sprids:
+                #self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(x,y), group='hud21')
+                self.addCol( 'perso_spr',box(x,y,self.larg_street,self.larg_street),color=c['red'],group='hud21')
+                scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
+                #g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
+            else:
+                g.sman.modify(self.sprids['perso_spr'],pos=(x,y),anchor='center')
 
 class PersoHUD(HUD):
 
