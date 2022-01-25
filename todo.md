@@ -118,3 +118,8 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
   deux "A" -> une "A+"
   -> pour faire une S il faut 16 384 F
   -> X = 131 072 F
+
+# \\!\\ amélioration de perf :
+  -> la fonction g.sman.addCol() pas du tout optimisée:
+    recrée une texture à chaque fois qu'on l'appelle, il faudrait plutot créer une texture
+    par couleur et rescale le sprite pour avoir la bonne taille -> a faire

@@ -77,6 +77,14 @@ class preRue(line):
 
         return s+'\n'
 
+    def _nb_voisins(self):
+
+        n = 0
+        for x in self.cont:
+            if x != 0:
+                n+=1
+        return n
+    nb_voisins = property(_nb_voisins)
 
 ## streets
 
@@ -781,8 +789,9 @@ def create_map():
     ## la map part d'une rue simple et unique et puis s'étend de celle là
 
     ## JUSQU'A 5 on reste à ~60 fps, au delà la rue principale commence à être bondée
+    #  chaque rue peut avoir un maximum que 4 rues voisines sinon ça va être le sbeul
 
-    nb_iterations = 7
+    nb_iterations = 10
     #-> à la fin on se retrouve avec 2**3 = 8 rues
     n = 1
 
@@ -791,37 +800,42 @@ def create_map():
     ## RUES
     rue_princ = 'kamour str.'
     lon = r.randint(5*(nb_iterations+1), 10*(nb_iterations+1))
+    if nb_iterations > 4:
+        lon = r.randint(5*4, 10*4)
 
     rues = [ preRue(rue_princ,0,0,lon) ]
 
     for i in range(nb_iterations):
         newrues = []
         for rue in rues:
+            if rue.nb_voisins < 4:
 
-            #general
-            nom = 'rue '+str(n)
-            n+=1
-            lon = r.randint(5*(nb_iterations-i), 10*(nb_iterations-i))
-            vert = not rue.vert
+                #general
+                nom = 'rue '+str(n)
+                n+=1
+                lon = r.randint(5*(nb_iterations-i), 10*(nb_iterations-i))
+                if nb_iterations-i > 4:
+                    lon = r.randint(5*4, 10*4)
+                vert = not rue.vert
 
-            # on prend au hasard les pos des portes
-            x_new = r.randint(1,lon-2)
-            x_old = rue.place_door_rd(nom)
+                # on prend au hasard les pos des portes
+                x_new = r.randint(1,lon-2)
+                x_old = rue.place_door_rd(nom)
 
-            # on calcule la position de départ de la nouvelle rue:
-            if vert:
-                x,y = rue.x + x_old , rue.y - x_new
-            else:
-                x,y = rue.x - x_new , rue.y + x_old
+                # on calcule la position de départ de la nouvelle rue:
+                if vert:
+                    x,y = rue.x + x_old , rue.y - x_new
+                else:
+                    x,y = rue.x - x_new , rue.y + x_old
 
-            #print(rue.x,rue.y,x_new,x_old,red(' -> '),x,y)
+                #print(rue.x,rue.y,x_new,x_old,red(' -> '),x,y)
 
-            # on crée la rue
-            newrue = preRue(nom,x,y,lon,vert)
+                # on crée la rue
+                newrue = preRue(nom,x,y,lon,vert)
 
-            # on place la nouvelle porte
-            newrue.place_door(x_new,rue.name)
-            newrues.append(newrue)
+                # on place la nouvelle porte
+                newrue.place_door(x_new,rue.name)
+                newrues.append(newrue)
         rues += newrues
 
     x_distro = rues[0].place_door_rd('distro')
@@ -921,9 +935,6 @@ def create_map():
     for st1,zonebox,st2,x2 in connexions:
 
         connect_solo(NY.CITY[st1],zonebox,NY.CITY[st2],x2)
-
-
-#create_map()
 
 
 
