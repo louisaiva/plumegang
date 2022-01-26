@@ -555,8 +555,6 @@ class Building(Street):
     def add_house(self,house):
         self.houses.append(house)
         house.set_building(self)
-        for owner in house.owners:
-            owner.add_key(self)
 
     def get_random_nb_bots(self):
         return r.randint(0,2)
@@ -576,9 +574,7 @@ class House(Street):
 
     def add_owner(self,owner):
         self.owners.append(owner)
-        owner.add_key(self)
-        if self.building:
-            owner.add_key(self.building)
+        owner.grab(o.Key(self))
 
     def get_random_nb_bots(self):
         return r.randint(0,2)

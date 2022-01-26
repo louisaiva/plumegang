@@ -670,17 +670,11 @@ class App():
                     elif self.this_hud_caught_an_item == self.perso.invhud:
 
                         # the inventory
-                        for uitype in self.perso.invhud.inventory:
-                            for ui in self.perso.invhud.inventory[uitype]:
+                        for uitype in self.perso.invhud.uis:
+                            for ui in self.perso.invhud.uis[uitype]:
                                 if ui.caught:
                                     ui.move(x,y)
                                     ui.check_mouse(x,y)
-
-                        # menus
-                        """for menu in self.perso.invhud.btns:
-                            if self.perso.invhud.btns[menu].caught:
-                                ui.move(x,y)
-                                ui.check_mouse(x,y)"""
 
                 #print(self.this_hud_caught_an_item)
 
@@ -713,7 +707,7 @@ class App():
                                         self.this_hud_caught_an_item = zone.hud
                                     else:
                                         # attrapage rapide dans l'inventaire
-                                        self.perso.invhud.catch(zone.hud.ui.phase)
+                                        self.perso.grab(zone.hud.ui.phase)
                                         o2.NY.CITY[self.perso.street].zones['lit'].hud.delete_phase()
                                         letsbacktnothingcaught = True
 
@@ -734,7 +728,7 @@ class App():
                                     self.this_hud_caught_an_item = zone.hud
                                 else:
                                     # attrapage rapide dans l'inventaire
-                                    self.perso.invhud.catch(zone.hud.item_caught.item)
+                                    self.perso.grab(zone.hud.item_caught.item)
                                     zone.hud.item_caught.delete()
                                     zone.hud.item_caught = None
                                     letsbacktnothingcaught = True
@@ -760,7 +754,7 @@ class App():
                                     self.this_hud_caught_an_item = zone.hud
                                 else:
                                     # attrapage rapide dans l'inventaire
-                                    self.perso.invhud.catch(zone.hud.item_caught.item)
+                                    self.perso.grab(zone.hud.item_caught.item)
                                     zone.hud.item_caught.delete()
                                     zone.hud.item_caught = None
                                     letsbacktnothingcaught = True

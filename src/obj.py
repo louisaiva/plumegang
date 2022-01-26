@@ -403,11 +403,9 @@ class Key():
     def __init__(self,street):
 
         self.target = street
-        if street.name == 'distrokid':
-            print('oh yo')
 
-    def __str__(self):
-        return 'key for '+self.target.name
+    """def __str__(self):
+        return 'key for '+self.target.name"""
 
 
 """'''''''''''''''''''''''''''''''''
@@ -720,8 +718,6 @@ class Item(Zone_ELEM):
 
     def activate(self,perso):
 
-        if isinstance(self.item,Plume) and isinstance(perso,p.Rappeur):
-            perso.drop(perso.plume)
         o2.NY.CITY[self.street].del_item(self)
         perso.grab(self.item)
 
@@ -760,12 +756,15 @@ class Zone_ACTIV(Zone_ELEM):
             perso.invhud.autorize_deta = False
 
     def close(self,perso):
-        self.activated = False
-        perso.do()
 
-        if not self.inv_already_vis:
-            perso.invhud.unhide(True)
-        perso.invhud.autorize_deta = True
+        #print(self.hud.visible,self.activated)
+        if self.hud.visible:
+            self.activated = False
+            perso.do()
+
+            if not self.inv_already_vis:
+                perso.invhud.unhide(True)
+            perso.invhud.autorize_deta = True
 
 class Ordi(Zone_ACTIV):
 
@@ -829,7 +828,7 @@ class Studio(Zone_ACTIV):
 
         son = perso.creer_son()
         if son != None:
-            perso.invhud.catch(son)
+            perso.grab(son)
         else:
             print('Frerooooo t\'as besoin d\'une instru et de 4 phases pour faire un son tu vas ou commas ?')
 
@@ -1593,7 +1592,7 @@ class WriteHUD(HUD):
             if collisionAX(self.box.realbox,(x,y)):
                 self.write(self.ui.phase)
             elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
-                perso.invhud.catch(self.ui.phase)
+                perso.grab(self.ui.phase)
                 self.delete_phase()
             else:
                 self.delete_phase()
@@ -1686,7 +1685,7 @@ class StudHUD(HUD):
                     return 0
 
             elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
-                perso.invhud.catch(self.item_caught.item)
+                perso.grab(self.item_caught.item)
                 self.item_caught.delete()
                 self.item_caught = None
             else:
@@ -1801,7 +1800,7 @@ class MarketHUD(HUD):
             if collisionAX(self.box.realbox,(x,y)):
                 self.inspect(self.item_caught.item)
             elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
-                self.perso.invhud.catch(self.item_caught.item)
+                self.perso.grab(self.item_caught.item)
             self.item_caught.delete()
             self.item_caught = None
             return -1
@@ -1835,7 +1834,7 @@ class MarketHUD(HUD):
         if self.uis['main'] != None:
 
             if self.perso in self.uis['main'].item.owners:
-                self.perso.invhud.catch(self.uis['main'].item)
+                self.perso.grab(self.uis['main'].item)
             elif self.old_main_pos != None and self.old_main_pos <= 3:
                 self.uis['instru'+str(self.old_main_pos)] = Invent_UI(self.boxs['instru'+str(self.old_main_pos)],self.uis['main'].item,self.visible,(0.4,0.4))
             self.delete_ui('main')
@@ -1917,7 +1916,7 @@ class MarketHUD(HUD):
         super(MarketHUD,self).unhide(hide)
 
         if hide and self.item_caught != None:
-            perso.invhud.catch(self.item_caught.item)
+            perso.grab(self.item_caught.item)
             self.item_caught.delete()
             self.item_caught = None
 
@@ -1937,11 +1936,12 @@ class InventHUD(HUD):
         self.item_caught = None
 
         # inventory
-        self.inventory = {}
-        self.inventory['phase'] = []
-        self.inventory['instru'] = []
-        self.inventory['son'] = []
-        self.inventory['general'] = []
+        self.uis = {}
+        self.uis['phase'] = []
+        self.uis['instru'] = []
+        self.uis['son'] = []
+        self.uis['general'] = []
+        self.uis['plume'] = []
 
         ### GENERAL
 
@@ -1964,6 +1964,10 @@ class InventHUD(HUD):
         self.menu = 'general'
         self.menu_boxs = []
         self.btns = {}
+
+        self.menus_cont = {}
+        self.menus_cont['general'] = ['general']
+        self.menus_cont['sound'] = ['phase','instru','son','plume']
 
         w = int(self.box2.w/len(self.menus))
         for i in range(len(self.menus)):
@@ -1994,21 +1998,25 @@ class InventHUD(HUD):
         ### LABEL inv
         self.addLab('inv_lab','inventory',(self.box.cx,self.box.fy-50),font_name=1,anchor=('center','center'))
 
-        if fill:
+        if fill and False:
             #self.update()
             for i in range(r.randint(2,10)):
                 ins = Instru(r.random(),r.choice(btmakers))
                 ins.add_owner(self.perso)
-                self.catch(ins)
+                self.perso.grab(ins)
             for i in range(r.randint(2,10)):
                 ph = []
                 for i in range(4):
                     ph.append(Phase(rqua(),rcred()))
                 instru = Instru(r.random(),r.choice(btmakers))
 
-                self.catch(Son(instru,ph))
+                self.perso.grab(Son(instru,ph))
 
-    def catch(self,item):
+    # add/del/update
+
+    def add_ui(self,item):
+
+        print('add',item)
 
         vis = True
         if not self.visible:
@@ -2018,93 +2026,149 @@ class InventHUD(HUD):
         if not isinstance(item,Sound_item) and self.menu == 'sound':
             vis = False
 
-        ui = Invent_UI(box(w=self.padding,h=self.padding),item,vis)
-
-        # on l'ajoute à l'inventaire
         if isinstance(item,Sound_item):
-            self.inventory[type(item).__name__.lower()].append(ui)
+            scale = (0.25,0.25)
         else:
-            self.inventory['general'].append(ui)
+            scale = (1,1)
+
+        ui = Invent_UI(box(w=self.padding,h=self.padding),item,vis,scale=scale)
+
+        # on stocke l'ui
+        if isinstance(item,Sound_item):
+            self.uis[type(item).__name__.lower()].append(ui)
+        else:
+            self.uis['general'].append(ui)
 
         self.update()
 
-        #print(self.inventory)
+        #print(self.uis)
+
+    def del_ui(self,item,up=True):
+
+        #print(self.uis,item)
+        #print(list(map(lambda x:x.item,self.uis['general'])))
+
+        if type(item) == type([]):
+            for subitem in item:
+                self.del_ui(subitem,False)
+        elif item != None:
+            if isinstance(item,Sound_item):
+                ui = list(filter(lambda x:x.item == item,self.uis[type(item).__name__.lower()]))[0]
+                ui.delete()
+                self.uis[type(item).__name__.lower()].remove(ui)
+            else:
+                ui = list(filter(lambda x:x.item == item,self.uis['general']))[0]
+                #print(self.uis['general'])
+                ui.delete()
+                self.uis['general'].remove(ui)
+
+        if up:
+            self.update()
 
     def update(self):
+
+        #self.create_uis()
 
         if self.menu == 'sound':
             yf = self.box2.fy
 
-            #sons
-            if self.inventory['son'] != []:
-                self.addLab('sons_lab','sons',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
-                yf -= self.padding2*2
+            for cquecé in self.menus_cont[self.menu]:
+                tab = self.uis[cquecé]
+                if tab != []:
+                    cquecé = type(tab[0].item).__name__.lower()
+                    self.addLab(cquecé+'s_lab',cquecé+'s',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
+                    yf -= self.padding2*2
 
-                self.inventory['son'].sort(reverse=True)
+                    self.uis[cquecé].sort(reverse=True)
 
-                for i in range(len(self.inventory['son'])):
+                    for i in range(len(self.uis[cquecé])):
 
-                    x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
-                    y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
+                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                        y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
 
-                    self.inventory['son'][i].move(x,y)
-                yf -= (self.padding + self.lilpadding2)*((len(self.inventory['son'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
-            else:
-                if 'sons_lab' in self.labids:
-                    g.lman.delete(self.labids['sons_lab'])
-                    del self.labids['sons_lab']
+                        self.uis[cquecé][i].move(x,y)
+                    yf -= (self.padding + self.lilpadding2)*((len(self.uis[cquecé])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+                else:
+                    if (cquecé+'s_lab') in self.labids:
+                        g.lman.delete(self.labids[cquecé+'s_lab'])
+                        del self.labids[cquecé+'s_lab']
 
-            #instrus
-            if self.inventory['instru'] != []:
-                self.addLab('instrus_lab','instrus',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
-                yf -= self.padding2*2
+            """#sons
+                if self.uis['son'] != []:
+                    self.addLab('sons_lab','sons',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
+                    yf -= self.padding2*2
 
-                self.inventory['instru'].sort(reverse=True)
+                    self.uis['son'].sort(reverse=True)
 
-                for i in range(len(self.inventory['instru'])):
+                    for i in range(len(self.uis['son'])):
 
-                    x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
-                    y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
+                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                        y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
 
-                    self.inventory['instru'][i].move(x,y)
-                yf -= (self.padding + self.lilpadding2)*((len(self.inventory['instru'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
-            else:
-                if 'instrus_lab' in self.labids:
-                    g.lman.delete(self.labids['instrus_lab'])
-                    del self.labids['instrus_lab']
+                        self.uis['son'][i].move(x,y)
+                    yf -= (self.padding + self.lilpadding2)*((len(self.uis['son'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+                else:
+                    if 'sons_lab' in self.labids:
+                        g.lman.delete(self.labids['sons_lab'])
+                        del self.labids['sons_lab']
 
-            #phases
-            if self.inventory['phase'] != []:
-                self.addLab('phases_lab','phases',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
-                yf -= self.padding2*2
+                #instrus
+                if self.uis['instru'] != []:
+                    self.addLab('instrus_lab','instrus',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
+                    yf -= self.padding2*2
 
-                self.inventory['phase'].sort(reverse=True)
+                    self.uis['instru'].sort(reverse=True)
 
-                for i in range(len(self.inventory['phase'])):
+                    for i in range(len(self.uis['instru'])):
 
-                    x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
-                    y = yf + self.padding/2 - (self.padding + self.lilpadding2 )*(i//4 + 1)
+                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                        y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
 
-                    self.inventory['phase'][i].move(x,y)
-                yf -= (self.padding + self.lilpadding2)*((len(self.inventory['phase'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
-            else:
-                if 'phases_lab' in self.labids:
-                    g.lman.delete(self.labids['phases_lab'])
-                    del self.labids['phases_lab']
+                        self.uis['instru'][i].move(x,y)
+                    yf -= (self.padding + self.lilpadding2)*((len(self.uis['instru'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+                else:
+                    if 'instrus_lab' in self.labids:
+                        g.lman.delete(self.labids['instrus_lab'])
+                        del self.labids['instrus_lab']
+
+                #phases
+                if self.uis['phase'] != []:
+                    self.addLab('phases_lab','phases',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
+                    yf -= self.padding2*2
+
+                    self.uis['phase'].sort(reverse=True)
+
+                    for i in range(len(self.uis['phase'])):
+
+                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                        y = yf + self.padding/2 - (self.padding + self.lilpadding2 )*(i//4 + 1)
+
+                        self.uis['phase'][i].move(x,y)
+                    yf -= (self.padding + self.lilpadding2)*((len(self.uis['phase'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+                else:
+                    if 'phases_lab' in self.labids:
+                        g.lman.delete(self.labids['phases_lab'])
+                        del self.labids['phases_lab']"""
 
         elif self.menu == 'general':
             yf = self.box2.fy
-            #sons
-            if self.inventory['general'] != []:
-                #self.inventory['son'].sort(reverse=True)
+            k = 0
 
-                for i in range(len(self.inventory['general'])):
+            #tab = [y for x in self.menus_cont[self.menu] for y in x]
 
-                    x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+            for cquecé in self.menus_cont[self.menu]:
+                tab = self.uis[cquecé]
+                for i in range(len(tab)):
+
+                    x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*((i+k)%4)
                     y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
+                    k+=1
 
-                    self.inventory['general'][i].move(x,y)
-                yf -= (self.padding + self.lilpadding2)*((len(self.inventory['general'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
+                    tab[i].move(x,y)
+            #yf -= (self.padding + self.lilpadding2)*((len(tab)-1)//4 + 1) + self.lilpadding - self.lilpadding2
+
+
+    # general
 
     def unhide(self,hide=False):
         super(InventHUD,self).unhide(hide)
@@ -2115,11 +2179,8 @@ class InventHUD(HUD):
             self.item_caught = None
             self.update()
 
-        if self.menu == 'general':
-            for ui in self.inventory['general']:
-                ui.unhide(hide)
-        elif self.menu == 'sound':
-            for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
+        for cquecé in self.menus_cont[self.menu]:
+            for ui in self.uis[cquecé]:
                 ui.unhide(hide)
 
         for menu in self.btns:
@@ -2146,14 +2207,14 @@ class InventHUD(HUD):
                 elif self.perso.element_colli != None and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
 
                     if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
+                        self.perso.drop(self.item_caught.item,create=False)
                         self.perso.element_colli.hud.write(self.item_caught.item)
-                        self.remove(self.item_caught)
                         self.item_caught = None
                         return -1
 
                     elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
                         self.perso.element_colli.hud.inspect(self.item_caught.item)
-                        self.remove(self.item_caught)
+                        self.perso.drop(self.item_caught.item,create=False)
                         self.item_caught = None
                         return -1
 
@@ -2161,12 +2222,12 @@ class InventHUD(HUD):
 
                         if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
                             self.perso.element_colli.hud.catch(self.item_caught.item)
-                            self.remove(self.item_caught)
+                            self.perso.drop(self.item_caught.item,create=False)
                             self.item_caught = None
                             return -1
                         elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
                             self.perso.element_colli.hud.catch(self.item_caught.item)
-                            self.remove(self.item_caught)
+                            self.perso.drop(self.item_caught.item,create=False)
                             self.item_caught = None
                             return -1
 
@@ -2177,19 +2238,30 @@ class InventHUD(HUD):
                         self.item_caught.check_pressed()
 
                 else:
-                    self.remove(self.item_caught)
+                    self.perso.drop(self.item_caught.item)
                     self.item_caught = None
                     return -1
 
         else:
             ## on check touu pour vwar si on en catch
 
-            for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
+            if self.menu == 'sound':
+                for x in self.menus_cont[self.menu]:
+                    tab = self.uis[x]
+                    for ui in tab:
+                        ui.check_pressed()
+                        if ui.caught:
+                            self.item_caught = ui
+                            return 1
 
-                ui.check_pressed()
-                if ui.caught:
-                    self.item_caught = ui
-                    return 1
+            elif self.menu == 'general':
+                for ui in self.uis['general']:
+
+                    ui.check_pressed()
+                    if ui.caught:
+                        self.item_caught = ui
+                        return 1
+
         return 0
 
     def quick_catch_and_drop(self,item):
@@ -2198,24 +2270,24 @@ class InventHUD(HUD):
 
             if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
                 self.perso.element_colli.hud.write(item)
-                self.remove(self.item_caught)
+                self.perso.drop(self.item_caught.item)
                 self.item_caught = None
 
             elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
                 self.perso.element_colli.hud.inspect(item)
-                self.remove(self.item_caught)
+                self.perso.drop(self.item_caught.item)
                 self.item_caught = None
 
             elif type(self.perso.element_colli) == Studio:
 
                 if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
                     self.perso.element_colli.hud.catch(item)
-                    self.remove(self.item_caught)
+                    self.perso.drop(self.item_caught.item)
                     self.item_caught = None
 
                 elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
                     self.perso.element_colli.hud.catch(item)
-                    self.remove(self.item_caught)
+                    self.perso.drop(self.item_caught.item)
                     self.item_caught = None
 
                 else:
@@ -2225,32 +2297,17 @@ class InventHUD(HUD):
                 self.item_caught.check_pressed()
 
         else:
-            self.remove(self.item_caught)
+            self.perso.drop(self.item_caught.item)
             self.item_caught = None
             return -1
-
-    def remove(self,item,up=True):
-
-        if type(item) == type([]):
-            for subitem in item:
-                self.remove(subitem,False)
-        elif item != None:
-            item.delete()
-            if isinstance(item.item,Sound_item):
-                self.inventory[type(item.item).__name__.lower()].remove(item)
-            else:
-                self.inventory['general'].remove(item)
-
-        if up:
-            self.update()
 
     def check_hoover(self,x,y):
 
         # inventory
         something_to_aff = False
 
-        for uitype in self.inventory:
-            for ui in self.inventory[uitype]:
+        for cquecé in self.menus_cont[self.menu]:
+            for ui in self.uis[cquecé]:
                 ui.check_mouse(x,y)
                 if ui._hoover:
                     something_to_aff = True
@@ -2262,6 +2319,7 @@ class InventHUD(HUD):
         # menus
         for menu in self.btns:
             self.btns[menu].check_mouse(x,y)
+
 
     ## de base
 
@@ -2291,7 +2349,7 @@ class InventHUD(HUD):
     def __str__(self):
         s = ''
         #print('waw')
-        for item in self.inventory['son']+self.inventory['instru']+self.inventory['phase']:
+        for item in self.uis['son']+self.uis['instru']+self.uis['phase']:
             s+=str(item.item)+'\n'
         return s
 
@@ -2309,39 +2367,40 @@ class InventHUD(HUD):
             self.detaids['spr'] = {}
             self.detaids['lab'] = {}
 
-            #skin
-            self.addSpr('detail_spr',g.TEXTIDS[type(ui.item).__name__.lower()][convert_quality(ui.item.quality)[0]],detail=True)
-            #self.detaids.append(self.sprids['detail_spr'])
-            g.sman.modify(self.detaids['spr']['detail_spr'],scale=(0.5,0.5))
-            g.sman.modify(self.detaids['spr']['detail_spr'],( self.box3.cx - g.sman.spr(self.detaids['spr']['detail_spr']).width/2 , self.box3.fy - 80 - g.sman.spr(self.detaids['spr']['detail_spr']).height/2 ))
-            y = g.sman.spr(self.detaids['spr']['detail_spr']).y
+            if isinstance(ui.item,Sound_item):
+                #skin
+                self.addSpr('detail_spr',g.TEXTIDS[type(ui.item).__name__.lower()][convert_quality(ui.item.quality)[0]],detail=True)
+                #self.detaids.append(self.sprids['detail_spr'])
+                g.sman.modify(self.detaids['spr']['detail_spr'],scale=(0.5,0.5))
+                g.sman.modify(self.detaids['spr']['detail_spr'],( self.box3.cx - g.sman.spr(self.detaids['spr']['detail_spr']).width/2 , self.box3.fy - 80 - g.sman.spr(self.detaids['spr']['detail_spr']).height/2 ))
+                y = g.sman.spr(self.detaids['spr']['detail_spr']).y
 
-            #qua
-            self.addLab('detail_qua',convert_quality(ui.item.quality), ( self.box3.cx , y - 2*self.padding2 ), anchor = ('center','center'),detail=True)
-            #self.detaids.append(self.detaids['lab']['detail_qua'])
-            y = g.lman.labels[self.detaids['lab']['detail_qua']].y
+                #qua
+                self.addLab('detail_qua',convert_quality(ui.item.quality), ( self.box3.cx , y - 2*self.padding2 ), anchor = ('center','center'),detail=True)
+                #self.detaids.append(self.detaids['lab']['detail_qua'])
+                y = g.lman.labels[self.detaids['lab']['detail_qua']].y
 
-            #cred / author
-            if type(ui.item).__name__ != 'Instru':
+                #cred / author
+                if type(ui.item).__name__ != 'Instru':
 
-                self.addLab('detail_cred',convert_cred(ui.item.cred), ( self.box3.cx , y - self.padding ), anchor = ('center','center'),detail=True)
-                #    self.detaids.append(self.detaids['lab']['detail_cred'])
-                y = g.lman.labels[self.detaids['lab']['detail_cred']].y
+                    self.addLab('detail_cred',convert_cred(ui.item.cred), ( self.box3.cx , y - self.padding ), anchor = ('center','center'),detail=True)
+                    #    self.detaids.append(self.detaids['lab']['detail_cred'])
+                    y = g.lman.labels[self.detaids['lab']['detail_cred']].y
 
-            else:
-                self.addLab('detail_aut',ui.item.author.name, ( self.box3.cx , y - self.padding ),font_name=0, anchor = ('center','center'),font_size = 20,detail=True)
-                #    self.detaids.append(self.detaids['lab']['detail_aut'])
-                y = g.lman.labels[self.detaids['lab']['detail_aut']].y
+                else:
+                    self.addLab('detail_aut',ui.item.author.name, ( self.box3.cx , y - self.padding ),font_name=0, anchor = ('center','center'),font_size = 20,detail=True)
+                    #    self.detaids.append(self.detaids['lab']['detail_aut'])
+                    y = g.lman.labels[self.detaids['lab']['detail_aut']].y
 
-            # phase
-            if type(ui.item).__name__ == 'Phase':
+                # phase
+                if type(ui.item).__name__ == 'Phase':
 
-                tab = ui.item.content.split(' ')
-                #content = tab[0] + ' ' + tab[1] + '\n' + ' '.join(tab[2:])
+                    tab = ui.item.content.split(' ')
+                    #content = tab[0] + ' ' + tab[1] + '\n' + ' '.join(tab[2:])
 
-                self.addLab('detail_cont','\n'.join(tab), ( self.box3.cx , y - self.padding ),font_name=0, anchor = ('center','center'),font_size = 15,detail=True,color=c['black'])
-                #    self.detaids.append(self.detaids['lab']['detail_aut'])
-                y = g.lman.labels[self.detaids['lab']['detail_cont']].y
+                    self.addLab('detail_cont','\n'.join(tab), ( self.box3.cx , y - self.padding ),font_name=0, anchor = ('center','center'),font_size = 15,detail=True,color=c['black'])
+                    #    self.detaids.append(self.detaids['lab']['detail_aut'])
+                    y = g.lman.labels[self.detaids['lab']['detail_cont']].y
 
 
             ## FINISH
@@ -2374,33 +2433,27 @@ class InventHUD(HUD):
         if self.menu != menu:
 
             if self.menu == 'sound':
-                ## cache l'ancien inventaire
-                for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
+                if 'sons_lab' in self.labids:
+                    g.lman.delete(self.labids['sons_lab'])
+                    del self.labids['sons_lab']
+                if 'instrus_lab' in self.labids:
+                    g.lman.delete(self.labids['instrus_lab'])
+                    del self.labids['instrus_lab']
+                if 'phases_lab' in self.labids:
+                    g.lman.delete(self.labids['phases_lab'])
+                    del self.labids['phases_lab']
+                if 'plumes_lab' in self.labids:
+                    g.lman.delete(self.labids['plumes_lab'])
+                    del self.labids['plumes_lab']
+
+            for cquecé in self.menus_cont[self.menu]:
+                for ui in self.uis[cquecé]:
                     ui.unhide(True)
-                if True:
-                    if 'sons_lab' in self.labids:
-                        g.lman.delete(self.labids['sons_lab'])
-                        del self.labids['sons_lab']
-                    if 'instrus_lab' in self.labids:
-                        g.lman.delete(self.labids['instrus_lab'])
-                        del self.labids['instrus_lab']
-                    if 'phases_lab' in self.labids:
-                        g.lman.delete(self.labids['phases_lab'])
-                        del self.labids['phases_lab']
-
-                ## affiche le nouveau
-                for ui in self.inventory['general']:
-                    ui.unhide()
-
-            elif self.menu == 'general':
-                ## cache l'ancien inventaire
-                for ui in self.inventory['general']:
-                    ui.unhide(True)
-                ## affiche le nouveau
-                for ui in self.inventory['phase']+self.inventory['son']+self.inventory['instru']:
-                    ui.unhide()
-
             self.menu = menu
+            for cquecé in self.menus_cont[self.menu]:
+                for ui in self.uis[cquecé]:
+                    ui.unhide()
+
             self.update()
 
 
@@ -2552,11 +2605,13 @@ class Item_UI(Zone_UI):
         self.caught = False
         self.dropped = False
 
+        self.scale = scale
+
     def catch(self):
         self.caught = True
         self.dropped = False
         g.sman.unhide(self.itemspr)
-        g.sman.modify(self.itemspr,scale=(0.5,0.5),group='ui')
+        g.sman.modify(self.itemspr,scale=(self.scale[0]*2,self.scale[1]*2),group='ui')
         self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
 
         pos = self.box.cx , self.box.fy + 20

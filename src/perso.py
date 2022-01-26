@@ -236,8 +236,16 @@ class Human():
         self.yspeed = 5
         self.runspeed = 100
         self.id = get_id('hum')
-
         self.cheat = False
+
+        #inventory
+        self.inventory = {}
+        self.inventory['son'] = []
+        self.inventory['phase'] = []
+        self.inventory['instru'] = []
+        self.inventory['key'] = []
+        self.inventory['plume'] = []
+
 
         #life
         self.life = 100
@@ -330,10 +338,6 @@ class Human():
 
         o2.NY.CITY[self.street].del_hum(self)
         BOTS.remove(self)
-
-    def add_key(self,street):
-        if street not in self.keys:
-            self.keys.append(street)
 
     # relations
     def relup(self,hum,qté,cat='hate/like'):
@@ -721,6 +725,7 @@ class Human():
 
                 elif dir == 'down':
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
+
                         self.element_colli.close(self)
                     if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
 
@@ -940,20 +945,20 @@ class Human():
         if hasattr(self,'skin_id'):
             g.sman.del_filter(self.skin_id)
 
-    def drop(self,thg):
+    def drop(self,thg,create=True):
 
         droppin = False
-        if type(thg) == o.Key:
-            if thg.target in self.keys:
-                droppin = True
-                self.keys.remove(thg.target)
 
-        elif type(thg) == o.Plume and isinstance(self,Rappeur) and self.plume == thg:
+        if type(thg) == o.Plume and isinstance(self,Rappeur) and self.plume == thg:
             droppin = True
             if isinstance(self,Perso) : self.plumhud.delete()
             self.plume = None
+        else:
+            self.inventory[type(thg).__name__.lower()].remove(thg)
+            if isinstance(self,Perso) : self.invhud.del_ui(thg)
+            droppin = True
 
-        if droppin:
+        if droppin and create:
             w,h = self.box.wh
             x,y = self.gex,self.gey
             dx = 0
@@ -965,14 +970,14 @@ class Human():
 
     def grab(self,thg):
 
-        if type(thg) == o.Plume and isinstance(self,Rappeur):
+        if type(thg) == o.Plume and isinstance(self,Rappeur) and self.plume == None:
             if isinstance(self,Perso):
                 if self.plume != None : self.plumhud.delete()
                 self.plumhud = o.PlumHUD(thg)
             self.plume = thg
-        elif type(thg) == o.Key:
-            if thg.target not in self.keys:
-                self.keys.append(thg.target)
+        else:
+            self.inventory[type(thg).__name__.lower()].append(thg)
+            if isinstance(self,Perso) : self.invhud.add_ui(thg)
 
 
     ## BOTS
@@ -1711,8 +1716,6 @@ class Rappeur(Fan):
         self.plume = o.rplum(self.name)
 
     def rplum(self):
-        if self.plume != None:
-            self.plume.delete()
         self.plume = o.rplum(self.name)
 
     def release_son(self,son,fans,day,label):
