@@ -16,6 +16,7 @@ Y = 0,225
 W_BUILD = 1500
 W_BACK = 100
 H_BUILD = 830
+W_SIDE = 800
 
 """'''''''''''''''''''''''''''''''''
 '''''''PART ONE : STREETS'''''''''''
@@ -248,8 +249,17 @@ class Street():
             self.backbuilds = []
 
             x,y = self.x,250
-            w = W_BUILD
 
+            #sides
+            if True:
+                self.side = g.sman.addSpr(g.TEXTIDS['build']['side'],(x,y),group='buildings')
+                self.backside = g.sman.addSpr(g.TEXTIDS['backbuild']['side'],(x+W_SIDE,y),group='road')
+                g.Cyc.add_spr((self.side,0.3))
+                g.Cyc.add_spr((self.backside,0.3))
+
+            x+=W_SIDE
+            w = W_BUILD
+            #builds
             for i in range(len(self.build_list)):
                 build = self.build_list[i]
                 id = g.sman.addSpr(g.TEXTIDS['build'][build],(x,y),group='buildings')
@@ -405,13 +415,16 @@ class Street():
         if hasattr(self,'streetanimbg'):
             g.sman.spr(self.streetanimbg).x = x
         if hasattr(self,'builds'):
-            dx = 0
+            dx = W_SIDE
             for i in range(len(self.builds)):
 
                 g.sman.spr(self.builds[i]).x = x+dx
                 dx+=W_BUILD
                 g.sman.spr(self.backbuilds[i]).x = x+dx
 
+        if hasattr(self,'side'):
+            g.sman.spr(self.side).x = x
+            g.sman.spr(self.backside).x = x+W_SIDE
 
         ## x des roads gérée dans self.verify_endless_road()
 
@@ -641,6 +654,7 @@ builds = {
         1:{'name':'stand' , 'box':box(370,0,500,420) },
         2:{'name':'batiment' , 'box':box(200,100,470,420) },
         3:{'name':'stairs' , 'box':box(500,100,300,420) },
+        'side':{'name':'side', 'box':None}
 }
 
 builds_key = []
@@ -877,7 +891,7 @@ def create_map():
             build_list[x_distro] = 2
 
         ## on créé la street
-        w = rue.long*W_BUILD
+        w = rue.long*W_BUILD+2*W_SIDE
         NY.add_streets(Street(rue,g.TEXTIDS['street'],build_list,box=box(0,-50,w)))
 
         if nom == rue_princ:
@@ -887,6 +901,7 @@ def create_map():
             # inside building
             NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
             zone_box = builds[2]['box'].pop()
+            zone_box.x += W_SIDE
             zone_box.y += 250
             connect(NY.CITY[name],box(600,250,400,400),NY.CITY[nom],zone_box,(False,False))
 
@@ -906,7 +921,7 @@ def create_map():
             NY.add_streets(Shop(preStreet('distrokid'),g.TEXTIDS['distrokid']))
             zone_box = builds[2]['box'].pop()
             zone_box.y += 250
-            zone_box.x += x_distro*W_BUILD
+            zone_box.x += x_distro*W_BUILD+W_SIDE
             connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
 
         for i in range(rue.long):
@@ -916,7 +931,7 @@ def create_map():
                 zone_box = builds[build_list[i]]['box'].pop()
 
                 zone_box.y += 250
-                zone_box.x += i*W_BUILD
+                zone_box.x += i*W_BUILD+W_SIDE
 
                 name = str(i) + '- ' +nom
 
@@ -938,8 +953,8 @@ def create_map():
                 zone_box = builds[build_list[i]]['box'].pop()
                 dx = zone_box.x
                 zone_box.y += 250
-                zone_box.x += i*W_BUILD
-                x2 = list(filter(lambda x:x.name == rue.cont[i],rues))[0].cont.index(nom)*W_BUILD+dx
+                zone_box.x += i*W_BUILD+W_SIDE
+                x2 = list(filter(lambda x:x.name == rue.cont[i],rues))[0].cont.index(nom)*W_BUILD+dx+W_SIDE
                 connexions.append( [nom,zone_box,rue.cont[i],x2] )
 
     for st1,zonebox,st2,x2 in connexions:

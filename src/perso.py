@@ -1353,7 +1353,7 @@ class Human():
 
                 self.update_skin()
                 if self.outside:
-                    g.Cyc.add_spr((self.skin_id,0.2))
+                    g.Cyc.add_spr((self.skin_id,0.3))
 
             if not hasattr(self,'label'):
                 #label
@@ -1392,7 +1392,7 @@ class Human():
 
 
         if hasattr(self,'skin_id'):
-            g.Cyc.del_spr((self.skin_id,0.2))
+            g.Cyc.del_spr((self.skin_id,0.3))
             g.sman.delete(self.skin_id)
             del self.skin_id
         if hasattr(self,'label'):

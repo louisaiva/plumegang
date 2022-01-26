@@ -331,15 +331,30 @@ class App():
 
             h = o2.H_BUILD
             w_tot = o2.W_BUILD + o2.W_BACK
+
+            #sides
+            if True:
+                #front
+                w = o2.W_SIDE
+                text = img.get_region(0, 0, w,h)
+                g.TEXTIDS['build']['side'] = g.tman.addText(text)
+
+                #back
+                w = o2.W_BACK
+                text = img.get_region(o2.W_SIDE, 0, w,h)
+                g.TEXTIDS['backbuild']['side'] = g.tman.addText(text)
+
+            x = o2.W_BACK+o2.W_SIDE
+
             for i in range(nb_build):
                 #front
                 w = o2.W_BUILD
-                text = img.get_region(i*w_tot, 0, w,h)
+                text = img.get_region(i*w_tot+x, 0, w,h)
                 g.TEXTIDS['build'][i] = g.tman.addText(text)
 
                 #back
                 w = o2.W_BACK
-                text = img.get_region(i*w_tot + o2.W_BUILD, 0, w,h)
+                text = img.get_region(i*w_tot+x + o2.W_BUILD, 0, w,h)
                 g.TEXTIDS['backbuild'][i] = g.tman.addText(text)
 
                 o2.builds_key.append(i)
