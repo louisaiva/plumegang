@@ -28,7 +28,7 @@ if ' ' in CURRENT_PATH:
 
 ESK_QUIT = 0
 ## pour éviter d'avoir à passer par le menu
-FILL_INV = 0
+FILL_INV = 1
 ## pour remplir ou non l'inventaire au debut
 
 class App():
@@ -225,10 +225,10 @@ class App():
 
             # labels
 
-            self.lab_fps = g.lman.addLab('',(20,1060),group='up',font_name=1,font_size=32,anchor=('left','top'))
-            self.lab_day = g.lman.addLab('',(20,1060-50),group='up',font_name=1,font_size=32,anchor=('left','top'))
-            self.lab_time = g.lman.addLab('',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
-            self.lab_street = g.lman.addLab('',(20,100),group='up',font_name=1,font_size=20,anchor=('left','bottom'))
+            self.lab_fps = g.lman.addLab('',(10,1080),group='up',font_name=1,font_size=32,anchor=('left','top'))
+            self.lab_day = g.lman.addLab('',(10,1080-32),group='up',font_name=1,font_size=32,anchor=('left','top'))
+            self.lab_time = g.lman.addLab('',(10,1080-32-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
+            self.lab_street = g.lman.addLab('',(10,100),group='up',font_name=1,font_size=20,anchor=('left','bottom'))
 
             # keys
             g.keys = key.KeyStateHandler()
@@ -668,11 +668,19 @@ class App():
                     if self.this_hud_caught_an_item == None:
                         self.perso.invhud.check_hoover(x,y)
                     elif self.this_hud_caught_an_item == self.perso.invhud:
+
+                        # the inventory
                         for uitype in self.perso.invhud.inventory:
                             for ui in self.perso.invhud.inventory[uitype]:
                                 if ui.caught:
                                     ui.move(x,y)
                                     ui.check_mouse(x,y)
+
+                        # menus
+                        """for menu in self.perso.invhud.btns:
+                            if self.perso.invhud.btns[menu].caught:
+                                ui.move(x,y)
+                                ui.check_mouse(x,y)"""
 
                 #print(self.this_hud_caught_an_item)
 
@@ -781,6 +789,8 @@ class App():
                         self.this_hud_caught_an_item = None
 
                     self.on_mouse_motion(x,y,0,0)
+
+                self.perso.invhud.check_press_btns(x,y)
 
             if letsbacktnothingcaught:
                 self.this_hud_caught_an_item = None
@@ -970,9 +980,9 @@ class App():
                 self.lab_fps_time = time.time()
                 self.lab_fps1 = []
 
-                self.time_events = g.lman.addLab('',(20,900),group='up',font_size=20,anchor=('left','top'))
-                self.time_ref = g.lman.addLab('',(20,875),group='up',font_size=20,anchor=('left','top'))
-                self.time_draw = g.lman.addLab('',(20,850),group='up',font_size=20,anchor=('left','top'))
+                self.time_events = g.lman.addLab('',(600,0),group='up',font_size=20,anchor=('left','bottom'))
+                self.time_ref = g.lman.addLab('',(800,0),group='up',font_size=20,anchor=('left','bottom'))
+                self.time_draw = g.lman.addLab('',(960,0),group='up',font_size=20,anchor=('left','bottom'))
             self.tick += 1
 
 

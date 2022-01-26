@@ -96,7 +96,7 @@ class GroupManager():
 
         names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','road','buildings','backstreet','backstreet_anim','mid' # good
                             ,'front','perso-1','hud-1','hud','hud1']
-        names += ['perso'+str(i) for i in range(self.nb_perso_group,-1,-1)]
+        names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
         names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','hud22','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 1
 
