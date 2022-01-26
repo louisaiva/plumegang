@@ -1277,6 +1277,12 @@ class Human():
 
             elif meaning == 'free insult':
                 hum = voice['h']
+                if hum not in self.relations:
+                    self.relations[hum] = {'t':1,'last':-1,'hate/like':r.randint(-100,100),'peur/rassure':0}
+                    if self.relations[hum]['hate/like'] < -50:
+                        imp = -self.relations[hum]['hate/like']-20
+                        dial = { 't':time.time() , 'delay':None , 'meaning':'free insult' , 'imp':imp ,'id':'dial_insuult'}
+                        self.add_dial(dial)
 
                 prob_tapé = self.confidence*(-self.relations[hum]['hate/like'])/10000
                 self.relup(hum,-10)

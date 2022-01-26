@@ -70,6 +70,10 @@ class ScreenManager():
         return self.screen.height/2
     cy = property(_cy)
 
+    def _cxy(self):
+        return self.cx,self.cy
+    cxy = property(_cxy)
+
 
     def _c(self):
         return self.cx,self.cy

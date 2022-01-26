@@ -867,7 +867,7 @@ def create_map():
         for i in range(rue.long):
             if rue.cont[i] == 0:
                 #print(builds_key)
-                key = r.choice(list(filter(lambda x:x not in [1,3],builds_key)))
+                key = r.choice(list(filter(lambda x:x not in [3],builds_key)))
                 build_list.append(key)
             else:
                 build_list.append(3)

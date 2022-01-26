@@ -6,6 +6,7 @@ enjoy
 import random as r
 import json,time,pyglet
 from src.colors import *
+from colors import red, green, blue
 from src.utils import *
 from src import graphic as g
 from src import names as n
@@ -496,11 +497,12 @@ class Zone():
 
     def __init__(self,box,textid='white',group='mid',makeCol=False):
 
+        if textid[:4] == 'text':
+            self.text_id = textid
+        elif makeCol:
+            self.text_id = g.tman.addCol(*box.wh,c[textid])
+
         if makeCol:
-            if textid[:4] == 'text':
-                self.text_id = textid
-            else:
-                self.text_id = g.tman.addCol(*box.wh,c[textid])
             self.skin_id = g.sman.addSpr(self.text_id,box.xy,group)
             w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
             g.sman.modify(self.skin_id,scale=(box.w/w,box.h/h))
@@ -600,6 +602,7 @@ class Zone_ELEM(Zone):
             del self.label
 
     def load(self):
+
         if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
             self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group)
             w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
@@ -686,20 +689,23 @@ class Item(Zone_ELEM):
 
     def __init__(self,item,poscentrale,street,size=64):
         nom = str(item.owner)+'\'s plume'
+        print(blue('wow item apparu'),street,)
 
         pos = poscentrale[0]-size/2,poscentrale[1]
+        #pos = g.scr.cxy
 
-        super(Item,self).__init__(box(*pos,size,size),nom,g.TEXTIDS[item.type().lower()][convert_quality(item.quality)[0]],group='perso')
+        super(Item,self).__init__(box(*pos,size,size),nom,g.TEXTIDS[item.type().lower()][convert_quality(item.quality)[0]],group='perso',makeCol=False)
         o2.NY.CITY[street].add_item(self)
         self.item = item
         self.street = street
 
     def activate(self,perso):
 
-        print(perso.name,'took',self.name)
-        o2.NY.CITY[self.street].del_item(self)
-        perso.drop_plume()
-        perso.grab_plume(self.item)
+        if isinstance(perso,p.Rappeur):
+            print(perso.name,'took',self.name)
+            o2.NY.CITY[self.street].del_item(self)
+            perso.drop_plume()
+            perso.grab_plume(self.item)
 
 
 #------# active elements
