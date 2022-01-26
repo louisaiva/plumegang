@@ -227,7 +227,7 @@ class Distroguy(Metier):
 
 class Human():
 
-    def __init__(self,key_skin,pos,name='John',group='perso',street='street1'):
+    def __init__(self,key_skin,pos,name='John',group='perso0',street='street1'):
         # general
 
         self.name = name
@@ -355,6 +355,14 @@ class Human():
 
     def update_skin(self,dt=0.4,repeat=True):
         if hasattr(self,'skin_id'):
+
+            ## change the right group compared to y pos
+
+            k = int(g.gman.nb_perso_group*self.gey/o2.maxY)
+            #print(k)
+            g.sman.modify(self.skin_id,group='perso'+str(k))
+
+            ## roll the animation
             max_roll = len(self.textids[self.doing[0]][self.dir])
             if self.roll_skin >= max_roll:
                 self.roll_skin = 0
@@ -1536,7 +1544,7 @@ class Fan(Human):
         if name == None:
             name = r.choice(n.names)
 
-        super(Fan,self).__init__(key_skin,pos,name,group='perso',street=street)
+        super(Fan,self).__init__(key_skin,pos,name,group='perso0',street=street)
 
 
         rge = [ r.randint(-100,100),r.randint(-100,100) ]

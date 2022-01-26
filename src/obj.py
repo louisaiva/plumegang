@@ -703,7 +703,7 @@ class Item(Zone_ELEM):
         else:
             text = g.TEXTIDS['items'][type(item).__name__.lower()]
 
-        super(Item,self).__init__(box(*pos,size,size),nom,text,group='perso',makeCol=False)
+        super(Item,self).__init__(box(*pos,size,size),nom,text,group='perso0',makeCol=False)
         self.labtext = type(item).__name__.lower()
         o2.NY.CITY[street].add_item(self)
         self.item = item

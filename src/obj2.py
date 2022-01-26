@@ -13,6 +13,7 @@ from src import perso as p
 import random as r
 
 Y = 0,225
+maxY = 300
 W_BUILD = 1500
 W_BACK = 100
 H_BUILD = 830
