@@ -1011,6 +1011,7 @@ class Map(HUD):
     def create_map(self):
 
         for street in o2.NY.CITY:
+            #print(street.name)
             street = o2.NY.CITY[street]
 
             if type(street) == o2.Street:
@@ -1029,7 +1030,7 @@ class Map(HUD):
                     w,h=self.small_larg,street.pre.w*self.larg_street
                 else:
                     h,w=self.small_larg,street.pre.w*self.larg_street
-                #print(street.name)
+
                 self.addCol(street.name,box(x,y,w,h),color=c['delta_purple'],group='hud2')
 
             elif street.name == 'home':
@@ -1037,7 +1038,14 @@ class Map(HUD):
 
                 x = g.scr.cx + street.pre.x*self.larg_street
                 y = g.scr.cy + street.pre.y*self.larg_street
-                self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud2')
+                self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud21')
+
+            elif isinstance(street,o2.Shop) or isinstance(street,o2.SpecialHouse):
+                w,h=self.larg_street,self.larg_street
+
+                x = g.scr.cx + street.pre.x*self.larg_street
+                y = g.scr.cy + street.pre.y*self.larg_street
+                self.addCol(street.name,box(x,y,w,h),color=c['blue'],group='hud21')
 
     def update(self):
 
@@ -1065,7 +1073,7 @@ class Map(HUD):
             if type(street) == o2.Street or street.name == 'home':
                 # create and or change pos
                 if not 'perso_spr' in self.sprids:
-                    self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(x,y), group='hud21')
+                    self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(x,y), group='hud22')
                     scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
                     g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
                 else:

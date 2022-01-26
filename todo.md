@@ -6,17 +6,8 @@ _ceci est le todo à faire hehe_
 
 **EN COURS**
 
-
-# meilleure création de la ville :
-  qu'elle se déploit depuis une seule et unique rue celle de la maison
-  -> permet d'ouvrir des rues au fur et à mesure qu'on devient de plus en plus connu
-  -> au début t'as qu'une station de métro
-
-# STREETS
-
-  -faire des escalators qui montent/descendent pour aller d'une rue horizontale à une rue verticale
-  -ajouter metro :
-    stations de metro disponibles dans différentes rues : permet de se déplacer plus vite, potentiellement fuir police
+# street
+  stations de metro disponibles dans différentes rues : permet de se déplacer plus vite, potentiellement fuir police
   -faire des quartiers
 
 # ajouter des putains de moyens d'ameliorer la relation
@@ -26,8 +17,6 @@ _ceci est le todo à faire hehe_
     -> possibilité de pas taper quand on sfait taper, mais demander pardon/pitié
     -> compliments pop kan t qqun genti
     -> une simple conv (bjr,au revoir,cv ?) augmente la relat°
-
-# que les bots passent des portes
 
 #  \!\ *nb bots ?* \!\_
   j'ai eu 694 fans alors que y'avait apparement que 690 bots (+ alphonse)
@@ -59,7 +48,6 @@ _ceci est le todo à faire hehe_
   bug : quand on recoit un act le temps continue de filer si est en pause
   -> utiliser la clock bertran pour compter le temps qui passe pour les acts/dials ?
 
-# \!\ *régler mauvais endroits streets map*  \!\_
 
 # ajouter de la plouiiii
 
@@ -78,12 +66,12 @@ _ceci est le todo à faire hehe_
 		-distrokid tu gagnes 100%
 
 
-
-
-
-
-
-
+# BATIMENTS SPECIAUX A AJOUTER:
+  -centre commercial
+  -petit shop pour acheter tout et r
+  -metro
+  -shop de son
+  -bars (open mic ?)
 
 
 
@@ -101,6 +89,20 @@ _ceci est le todo à faire hehe_
   alors deja finir les putains de 3 sprites pour le skin du poto alphonse,
   puis le poto pénis
   et mettre genre des ptites anim des décors ça pourrait être lourdax (mais bon ça sera dans longtemps jimagijn)
+
+# meilleure création de la ville :
+    qu'elle se déploit depuis une seule et unique rue celle de la maison
+    -> permet d'ouvrir des rues au fur et à mesure qu'on devient de plus en plus connu
+    -> au début t'as qu'une station de métro
+
+# STREETS
+
+  -faire des escalators qui montent/descendent pour aller d'une rue horizontale à une rue verticale
+
+# que les bots passent des portes
+
+# \!\ *régler mauvais endroits streets map*  \!\_
+
 
 
 **LINKS**
