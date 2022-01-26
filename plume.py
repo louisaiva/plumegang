@@ -130,7 +130,7 @@ class App():
             ## PERSOS
             self.perso = p.Perso('rapper',fill=FILL_INV)
             p.BOTS.append(self.perso)
-            #o2.NY.CITY['home'].add_owner(self.perso)
+            o2.NY.CITY['home'].add_owner(self.perso)
 
             #print(blue('OOOOOOOOOOOOOOOOOOOOOOOOOOOO'))
             #poto
@@ -155,9 +155,14 @@ class App():
                         else:
                             text = random.choice(['perso','perso2','perso3'])
                             hum = p.Fan(text,pos,street=street.name)
+
                         p.BOTS.append(hum)
                         if isinstance(street,o2.House):
                             street.add_owner(hum)
+                        if not isinstance(street,o2.House) and random.random()>0.01:
+                            # si le gars n'a pas de maison on lui en donne une, sauf s'il est sdf mdr
+                            o2.NY.rd_house().add_owner(hum)
+
 
             # adding all hum to their street
             for hum in p.BOTS:
@@ -192,7 +197,7 @@ class App():
             # ez cash
             zones = []
             zones.append(o.Distrib(2900,225))
-            street = o2.NY.rand_street().name
+            street = o2.NY.rd_street().name
             o2.NY.CITY[street].assign_zones(zones)
             print('let\'s find the',street,'!')
 
@@ -262,7 +267,6 @@ class App():
             g.TEXTIDS['_phaz'] = g.tman.loadImSeq('phaz.png',(1,6))
             g.TEXTIDS['_instru'] = g.tman.loadImSeq('instru.png',(1,6))
             g.TEXTIDS['_plum'] = g.tman.loadImSeq('plum.png',(1,6))
-            g.TEXTIDS['item'] = g.tman.loadImSeq('item.png',(6,6))
             g.TEXTIDS['utils'] = g.tman.loadImSeq('utils.png',(8,8))
 
             qua = ['F','D','C','B','A','S']
@@ -285,6 +289,12 @@ class App():
             for i in range(len(g.TEXTIDS['_son'])):
                 g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
             del g.TEXTIDS['_son']
+
+            ## items
+            g.TEXTIDS['ux'] = g.tman.loadImSeq('items.png',(1,40))
+            g.TEXTIDS['items'] = {}
+
+            g.TEXTIDS['items']['key'] = g.TEXTIDS['ux'][3]
 
         # BG
         if True:
@@ -504,9 +514,9 @@ class App():
             if self.perso.alive:
 
                 if symbol == key.A:
-                    self.perso.drop_plume()
+                    self.perso.drop(self.perso.plume)
 
-                elif symbol == key.E:
+                elif symbol == key.SPACE:
                     self.perso.hit()
 
                 elif symbol == key.X:
@@ -516,7 +526,7 @@ class App():
                     if self.perso.plume != None:
                         self.perso.plumhud.rollhide()
 
-                elif symbol == key.I:
+                elif symbol == key.E:
                     self.perso.invhud.rollhide()
 
                 elif symbol == key.F:

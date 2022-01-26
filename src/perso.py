@@ -17,7 +17,7 @@ import pyglet.gl as gl
 
 SIZE_SPR = 256
 BOTS = []
-CHEAT = True
+CHEAT = False
 
 
 """'''''''''''''''''''''''''''''''''
@@ -314,6 +314,10 @@ class Human():
         self.damage = 0
         self.speed = 0
         self.yspeed = 0
+
+        for key in self.keys:
+            self.drop(o.Key(key))
+
         if hasattr(self,'label_life'):
             g.sman.delete(self.label_life)
             del self.label_life
@@ -927,6 +931,40 @@ class Human():
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
             g.sman.del_filter(self.skin_id)
+
+    def drop(self,thg):
+
+        droppin = False
+        if type(thg) == o.Key:
+            if thg.target in self.keys:
+                droppin = True
+                self.keys.remove(thg.target)
+
+        elif type(thg) == o.Plume and isinstance(self,Rappeur) and self.plume == thg:
+            droppin = True
+            if isinstance(self,Perso) : self.plumhud.delete()
+            self.plume = None
+
+        if droppin:
+            w,h = self.box.wh
+            x,y = self.gex,self.gey
+            dx = 0
+            if self.dir == 'R':
+                dx += 150
+            else:
+                dx -= 150
+            o.Item(thg,(x+w/2+dx,y),self.street)
+
+    def grab(self,thg):
+
+        if type(thg) == o.Plume and isinstance(self,Rappeur):
+            if isinstance(self,Perso):
+                if self.plume != None : self.plumhud.delete()
+                self.plumhud = o.PlumHUD(thg)
+            self.plume = thg
+        elif type(thg) == o.Key:
+            if thg.target not in self.keys:
+                self.keys.append(thg.target)
 
 
     ## BOTS
@@ -1669,23 +1707,6 @@ class Rappeur(Fan):
             self.plume.delete()
         self.plume = o.rplum(self.name)
 
-    def drop_plume(self):
-        if self.plume != None:
-            w,h = self.box.wh
-            x,y = self.gex,self.gey
-            dx = 0
-            if self.dir == 'R':
-                dx += 150
-            else:
-                dx -= 150
-            o.Item(self.plume,(x+w/2+dx,y),self.street)
-            self.plume = self.plume.delete()
-
-    def grab_plume(self,plume):
-        if self.plume != None:
-            self.plume.delete()
-        self.plume = plume
-
     def release_son(self,son,fans,day,label):
         self.disco.append(son)
         son.release(self,day,label)
@@ -1708,7 +1729,7 @@ class Rappeur(Fan):
         self.update_scores()
 
     def die(self):
-        self.drop_plume()
+        self.drop(self.plume)
         super(Rappeur,self).die()
 
     # env
@@ -1736,7 +1757,7 @@ class Rappeur(Fan):
                 x = g.lman.labels[self.label].x
                 y = g.lman.labels[self.label].y
 
-                self.label_plume = g.sman.addSpr(g.TEXTIDS[self.plume.type().lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
+                self.label_plume = g.sman.addSpr(g.TEXTIDS[type(self.plume).__name__.lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
 
                 sc = g.lman.labels[self.label].content_height
                 w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
@@ -1767,7 +1788,7 @@ class Rappeur(Fan):
             x = g.lman.labels[self.label].x
             y = g.lman.labels[self.label].y
 
-            self.label_plume = g.sman.addSpr(g.TEXTIDS[self.plume.type().lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
+            self.label_plume = g.sman.addSpr(g.TEXTIDS[type(self.plume).__name__.lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
 
             sc = g.lman.labels[self.label].content_height
             w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
@@ -1819,7 +1840,7 @@ class Perso(Rappeur):
         super(Perso,self).__init__(key_skin,pos,name,street=street)
 
         self.max_life = 500
-        #self.damage = 10
+        self.damage = 40
         self.life = self.max_life
         self.speed = g.SPEED
         self.runspeed = g.RSPEED
@@ -1866,17 +1887,6 @@ class Perso(Rappeur):
             self.plumhud.delete()
         super(Perso,self).rplum()
         self.plumhud = o.PlumHUD(self.plume)
-
-    def grab_plume(self,plume):
-        if self.plume != None:
-            self.plumhud.delete()
-        super(Perso,self).grab_plume(plume)
-        self.plumhud = o.PlumHUD(self.plume)
-
-    def drop_plume(self):
-        if self.plume != None:
-            self.plumhud.delete()
-        super(Perso,self).drop_plume()
 
     def be_hit(self,hitter):
         super(Perso,self).be_hit(hitter)

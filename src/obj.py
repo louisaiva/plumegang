@@ -14,9 +14,9 @@ from src import obj2 as o2
 from src import perso as p
 from collections import OrderedDict
 
-"""""""""""""""""""""""""""""""""""
- INIT
-"""""""""""""""""""""""""""""""""""
+"""'''''''''''''''''''''''''''''''''
+'''''''INIT'''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
 
 QUALITIES = ['F'
             ,'D-','D','D+'
@@ -60,10 +60,10 @@ with open('src/mots.json','r', encoding="utf-8") as f:
 
 THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','tristesse','notoriété','chill','rap']
 
-"""""""""""""""""""""""""""""""""""
- USEFUL FUNCTIONS
-"""""""""""""""""""""""""""""""""""
 
+"""'''''''''''''''''''''''''''''''''
+'''''''USEFUL FUNCTIONS'''''''''''''
+'''''''''''''''''''''''''''''''''"""
 def test():
 
     quality = r.random()
@@ -76,9 +76,9 @@ def test():
     for i in range(20):
         phaz = []
         for i in range(4):
-            phaz.append(plum.drop_phase())
+            phaz.append(plum.rd_phase())
         btmker = Btmaker(r.random())
-        Son(btmker.drop_instru(),phaz)
+        Son(btmker.rd_instru(),phaz)
 
     #return Plume(quality,cred)
 
@@ -141,7 +141,7 @@ def rinstru(bt=None):
     if bt == None:
         bt = r.choice(btmakers)
 
-    return bt.drop_instru()
+    return bt.rd_instru()
 
 def rbt():
     return Btmaker(rqua())
@@ -206,12 +206,17 @@ def instru_price(ins):
 
     return int(price + (-0.1+r.random()/5)*price)
 
-"""""""""""""""""""""""""""""""""""
- BASIK
-"""""""""""""""""""""""""""""""""""
+"""'''''''''''''''''''''''''''''''''
+'''''''SOUND ITEMS''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
+
+class Sound_item():
+
+    def __lt__(self, other):
+         return self.quality < other.quality
 
 #------# plum
-class Plume():
+class Plume(Sound_item):
 
     def __init__(self,owner,qua,cred):
 
@@ -224,15 +229,12 @@ class Plume():
         # skins
         #self.hud = PlumHUD(self)
 
-    def delete(self):
-        return None
-
     def rplum(self):
 
         self.quality = r.random()
         self.cred = r.randint(-100,100)
 
-    def drop_phase(self):
+    def rd_phase(self):
 
         x = 2
         qua = (self.quality*x + r.random())/(x+1)
@@ -246,17 +248,11 @@ class Plume():
 
         return phase
 
-    def type(self):
-        return 'Plume'
-
-    def __lt__(self, other):
-         return self.quality < other.quality
-
     def __str__(self):
-        return 'plume ' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + str(self.cred)
+        return str(self.owner)+'\'s plume'
 
 #------# phases
-class Phase():
+class Phase(Sound_item):
 
     def __init__(self,quality,cred,):
 
@@ -283,14 +279,8 @@ class Phase():
 
         return s
 
-    def __lt__(self, other):
-         return self.quality < other.quality
-
     def __str__(self):
-        return 'phase ' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + str(self.cred) + ' || ' + self.content + ' ('+ self.them+')'
-
-    def type(self):
-        return 'Phase'
+        return 'phase ' + convert_quality(self.quality)
 
 #------# instrus
 class Btmaker():
@@ -303,7 +293,7 @@ class Btmaker():
 
         self.quality = qua
 
-    def drop_instru(self):
+    def rd_instru(self):
 
         x = 2
         qua = (self.quality*x + r.random())/(x+1)
@@ -319,7 +309,7 @@ btmakers = []
 for name in n.btmakers:
     btmakers.append(Btmaker(rqua(),name))
 
-class Instru():
+class Instru(Sound_item):
 
     def __init__(self,qua,author):
 
@@ -332,17 +322,12 @@ class Instru():
     def add_owner(self,owner):
         self.owners.append(owner)
 
-    def __lt__(self, other):
-         return self.quality < other.quality
-
     def __str__(self):
-        return 'instru' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + self.author.name
+        return 'instru' + '  ' +convert_quality(self.quality) + '  ' + self.author.name
 
-    def type(self):
-        return 'Instru'
 
 #------# sons
-class Son():
+class Son(Sound_item):
 
     def __init__(self,instru,phases,name='cheh'):
 
@@ -401,18 +386,28 @@ class Son():
         self.author.addstream()
         self.label.stream(self)
 
-    def __lt__(self, other):
-         return self.quality < other.quality
-
     def __str__(self):
         return 'son   ' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + str(self.cred)
 
-    def type(self):
-        return 'Son'
 
-"""""""""""""""""""""""""""""""""""
- LABELS
-"""""""""""""""""""""""""""""""""""
+
+"""'''''''''''''''''''''''''''''''''
+'''''''ITEMS''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
+
+class Key():
+
+    def __init__(self,street):
+
+        self.target = street
+
+    def __str__(self):
+        return 'key for '+self.target.name
+
+
+"""'''''''''''''''''''''''''''''''''
+'''''''LABELS'''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
 
 class Label():
 
@@ -489,9 +484,9 @@ class Distrokid(Label):
 distro = Distrokid()
 
 
-"""""""""""""""""""""""""""""""""""
- ZONES
-"""""""""""""""""""""""""""""""""""
+"""'''''''''''''''''''''''''''''''''
+'''''''ZONES''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
 
 class Zone():
 
@@ -680,6 +675,14 @@ class Porte(Zone_ELEM):
         if isinstance(self.street,o2.House) and isinstance(self.destination,o2.Building):
             return True
 
+        if isinstance(self.destination,o2.Building):
+            for house in self.destination.houses:
+                if house.free_access:
+                    return True
+
+                if house in perso.keys:
+                    return True
+
         return False
 
 
@@ -688,24 +691,30 @@ class Porte(Zone_ELEM):
 class Item(Zone_ELEM):
 
     def __init__(self,item,poscentrale,street,size=64):
-        nom = str(item.owner)+'\'s plume'
-        print(blue('wow item apparu'),street,)
+        nom = str(item)
 
         pos = poscentrale[0]-size/2,poscentrale[1]
-        #pos = g.scr.cxy
 
-        super(Item,self).__init__(box(*pos,size,size),nom,g.TEXTIDS[item.type().lower()][convert_quality(item.quality)[0]],group='perso',makeCol=False)
+        text = 'white'
+        if isinstance(item,Sound_item):
+            text = g.TEXTIDS[type(item).__name__.lower()][convert_quality(item.quality)[0]]
+        else:
+            text = g.TEXTIDS['items'][type(item).__name__.lower()]
+
+        super(Item,self).__init__(box(*pos,size,size),nom,text,group='perso',makeCol=False)
+        self.labtext = type(item).__name__.lower()
         o2.NY.CITY[street].add_item(self)
         self.item = item
         self.street = street
 
     def activate(self,perso):
 
-        if isinstance(perso,p.Rappeur):
-            print(perso.name,'took',self.name)
-            o2.NY.CITY[self.street].del_item(self)
-            perso.drop_plume()
-            perso.grab_plume(self.item)
+        if isinstance(self.item,Plume) and isinstance(perso,p.Rappeur):
+            perso.drop(perso.plume)
+        o2.NY.CITY[self.street].del_item(self)
+        perso.grab(self.item)
+
+        print(perso.name,'took',self.name)
 
 
 #------# active elements
@@ -845,7 +854,7 @@ class Lit(Zone_ACTIV):
     def write(self,perso):
 
         if perso.plume != None:
-            phase = perso.plume.drop_phase()
+            phase = perso.plume.rd_phase()
             #aff_phase(phase)
             self.hud.write(phase)
 
@@ -859,9 +868,9 @@ class Distrib(Zone_ELEM):
         perso.add_money(r.randint(20,230))
 
 
-"""""""""""""""""""""""""""""""""""
- HUD
-"""""""""""""""""""""""""""""""""""
+"""'''''''''''''''''''''''''''''''''
+'''''''HUD  ''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
 
 #------# hud
 
@@ -1084,7 +1093,7 @@ class PersoHUD(HUD):
         xcoin = self.box.cx
         ycoin = self.lab('name').y  - self.padding
 
-        self.addSpr('coin_spr',g.TEXTIDS['item'][0],(xcoin,ycoin - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+        self.addSpr('coin_spr',g.TEXTIDS['ux'][0],(xcoin,ycoin - g.tman.textures[g.TEXTIDS['ux'][0]].height/2))
         self.addLab('coin_lab',convert_huge_nb(self.perso.money),(xcoin ,ycoin),font_name=1,font_size=20,color=c['yellow'],anchor=('right','center'))
 
         ## fans
@@ -1092,7 +1101,7 @@ class PersoHUD(HUD):
         xfan = self.box.cx
         yfan = self.lab('coin_lab').y - self.padding
 
-        self.addSpr('fan_spr',g.TEXTIDS['item'][1],(xfan,yfan - g.tman.textures[g.TEXTIDS['item'][1]].height/2))
+        self.addSpr('fan_spr',g.TEXTIDS['ux'][1],(xfan,yfan - g.tman.textures[g.TEXTIDS['ux'][1]].height/2))
         self.addLab('fan_lab',convert_huge_nb(self.perso.nb_fans),(xfan ,yfan),font_name=1,font_size=20,color=c['lightgreen'],anchor=('right','center'))
 
         ## fans
@@ -1100,7 +1109,7 @@ class PersoHUD(HUD):
         xstream = self.box.cx
         ystream = self.lab('fan_lab').y - self.padding
 
-        self.addSpr('stream_spr',g.TEXTIDS['item'][2],(xstream,ystream - g.tman.textures[g.TEXTIDS['item'][2]].height/2))
+        self.addSpr('stream_spr',g.TEXTIDS['ux'][2],(xstream,ystream - g.tman.textures[g.TEXTIDS['ux'][2]].height/2))
         self.addLab('stream_lab',convert_huge_nb(self.perso.nb_streams),(xstream ,ystream),font_name=1,font_size=20,color=c['lightblue'],anchor=('right','center'))
 
 
@@ -1650,7 +1659,7 @@ class StudHUD(HUD):
             ## on check kelui pour vwar si on l'drop
 
             if collisionAX(self.box.realbox,(x,y)):
-                if self.item_caught.item.type() != 'Son':
+                if type(self.item_caught.item).__name__ != 'Son':
                     self.catch(self.item_caught.item)
                     self.item_caught.delete()
                     self.item_caught = None
@@ -1682,14 +1691,14 @@ class StudHUD(HUD):
 
     def catch(self,thg):
 
-        if thg.type() == 'Phase' and self.phases < 4:
+        if type(thg).__name__ == 'Phase' and self.phases < 4:
             for lab in self.uis:
                 if lab[:3] == 'pha' and self.uis[lab] == None:
                     self.uis[lab] = Invent_UI(self.boxs[lab],thg,self.visible,scale=(0.4,0.4))
                     self.phases+=1
                     break
 
-        elif thg.type() == 'Instru' and self.instru == 0:
+        elif type(thg).__name__ == 'Instru' and self.instru == 0:
             self.uis['instru'] = Invent_UI(self.boxs['instru'],thg,self.visible,scale=(0.4,0.4))
             self.instru = 1
         else:
@@ -1821,7 +1830,7 @@ class MarketHUD(HUD):
         self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),font_name=1,anchor=('center','center'),color=c['white'],font_size=50)
         self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
         self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),font_name=1,anchor=('right','center'),color=c['yellow'],font_size=30)
-        self.addSpr('main_price',g.TEXTIDS['item'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+        self.addSpr('main_price',g.TEXTIDS['ux'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['ux'][0]].height/2))
 
         if self.perso in ins.owners:
             status,color = "purchased",c['green']
@@ -1867,7 +1876,7 @@ class MarketHUD(HUD):
             self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),anchor=('center','center'),color=c['white'],font_name=1,font_size=50)
             self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
             self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),anchor=('right','center'),color=c['yellow'],font_name=1,font_size=30)
-            self.addSpr('main_price',g.TEXTIDS['item'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['item'][0]].height/2))
+            self.addSpr('main_price',g.TEXTIDS['ux'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['ux'][0]].height/2))
 
             if self.perso in ins.owners:
                 status,color = "purchased",c['green']
@@ -1970,7 +1979,7 @@ class InventHUD(HUD):
     def catch(self,item):
 
         ui = Invent_UI(box(w=self.padding,h=self.padding),item,self.visible)
-        self.inventory[item.type().lower()].append(ui)
+        self.inventory[type(item).__name__.lower()].append(ui)
 
         self.update()
 
@@ -2068,13 +2077,13 @@ class InventHUD(HUD):
 
                 elif self.perso.element_colli != None and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
 
-                    if type(self.perso.element_colli) == Lit and self.item_caught.item.type() == 'Phase':
+                    if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
                         self.perso.element_colli.hud.write(self.item_caught.item)
                         self.remove(self.item_caught)
                         self.item_caught = None
                         return -1
 
-                    elif type(self.perso.element_colli) == Ordi and self.item_caught.item.type() == 'Instru':
+                    elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
                         self.perso.element_colli.hud.inspect(self.item_caught.item)
                         self.remove(self.item_caught)
                         self.item_caught = None
@@ -2082,12 +2091,12 @@ class InventHUD(HUD):
 
                     elif type(self.perso.element_colli) == Studio:
 
-                        if self.item_caught.item.type() == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                        if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
                             self.perso.element_colli.hud.catch(self.item_caught.item)
                             self.remove(self.item_caught)
                             self.item_caught = None
                             return -1
-                        elif self.item_caught.item.type() == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                        elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
                             self.perso.element_colli.hud.catch(self.item_caught.item)
                             self.remove(self.item_caught)
                             self.item_caught = None
@@ -2119,24 +2128,24 @@ class InventHUD(HUD):
 
         if self.perso.element_colli != None and self.perso.element_colli.activated:
 
-            if type(self.perso.element_colli) == Lit and item.type() == 'Phase':
+            if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
                 self.perso.element_colli.hud.write(item)
                 self.remove(self.item_caught)
                 self.item_caught = None
 
-            elif type(self.perso.element_colli) == Ordi and item.type() == 'Instru':
+            elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
                 self.perso.element_colli.hud.inspect(item)
                 self.remove(self.item_caught)
                 self.item_caught = None
 
             elif type(self.perso.element_colli) == Studio:
 
-                if item.type() == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
                     self.perso.element_colli.hud.catch(item)
                     self.remove(self.item_caught)
                     self.item_caught = None
 
-                elif item.type() == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
                     self.perso.element_colli.hud.catch(item)
                     self.remove(self.item_caught)
                     self.item_caught = None
@@ -2159,7 +2168,7 @@ class InventHUD(HUD):
                 self.remove(subitem,False)
         elif item != None:
             item.delete()
-            self.inventory[item.item.type().lower()].remove(item)
+            self.inventory[type(item.item).__name__.lower()].remove(item)
 
         if up:
             self.update()
@@ -2225,7 +2234,7 @@ class InventHUD(HUD):
             self.detaids['lab'] = {}
 
             #skin
-            self.addSpr('detail_spr',g.TEXTIDS[ui.item.type().lower()][convert_quality(ui.item.quality)[0]],detail=True)
+            self.addSpr('detail_spr',g.TEXTIDS[type(ui.item).__name__.lower()][convert_quality(ui.item.quality)[0]],detail=True)
             #self.detaids.append(self.sprids['detail_spr'])
             g.sman.modify(self.detaids['spr']['detail_spr'],scale=(0.5,0.5))
             g.sman.modify(self.detaids['spr']['detail_spr'],( self.box3.cx - g.sman.spr(self.detaids['spr']['detail_spr']).width/2 , self.box3.fy - 80 - g.sman.spr(self.detaids['spr']['detail_spr']).height/2 ))
@@ -2237,7 +2246,7 @@ class InventHUD(HUD):
             y = g.lman.labels[self.detaids['lab']['detail_qua']].y
 
             #cred / author
-            if ui.item.type() != 'Instru':
+            if type(ui.item).__name__ != 'Instru':
 
                 self.addLab('detail_cred',convert_cred(ui.item.cred), ( self.box3.cx , y - self.padding ), anchor = ('center','center'),detail=True)
                 #    self.detaids.append(self.detaids['lab']['detail_cred'])
@@ -2249,7 +2258,7 @@ class InventHUD(HUD):
                 y = g.lman.labels[self.detaids['lab']['detail_aut']].y
 
             # phase
-            if ui.item.type() == 'Phase':
+            if type(ui.item).__name__ == 'Phase':
 
                 tab = ui.item.content.split(' ')
                 #content = tab[0] + ' ' + tab[1] + '\n' + ' '.join(tab[2:])
@@ -2278,9 +2287,9 @@ class InventHUD(HUD):
 
 
 
-"""""""""""""""""""""""""""""""""""
- UI
-"""""""""""""""""""""""""""""""""""
+"""'''''''''''''''''''''''''''''''''
+'''''''  UI ''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
 
 #------# ui
 
@@ -2485,7 +2494,7 @@ class Invent_UI(Item_UI):
     def __init__(self,box,item,spr_vis=False,scale=(0.25,0.25)):
         #print(spr_vis)
 
-        cquecé = item.type()
+        cquecé = type(item).__name__
 
         lab_text = cquecé +' '+ convert_quality(item.quality)
         col = c[convert_quality(item.quality)[0]]

@@ -201,6 +201,12 @@ class Street():
             del self.builds
             g.sman.delete(self.backbuilds)
             del self.backbuilds
+        ## side
+        if hasattr(self,'side'):
+            g.sman.delete(self.side)
+            del self.side
+            g.sman.delete(self.backside)
+            del self.backside
 
 
         ## back front /back front anim
@@ -558,6 +564,9 @@ class House(Street):
     def set_building(self,build):
         self.building = build
 
+class PrivateHouse(House):
+    pass
+
 class Shop(House):
 
     def __init__(self,name='shop1',textures={},box=box(0,-50,5120)):
@@ -611,7 +620,7 @@ class CITY():
     def percentage(self,street):
         return street.w / self.w
 
-    def rand_street(self):
+    def rd_street(self):
 
         k = r.random()
         d = 0
@@ -622,6 +631,9 @@ class CITY():
             d+=self.percentage(street)
         return list(self.CITY.values())[0]
 
+    def rd_house(self):
+
+        return r.choice( list(filter( lambda x:isinstance(x,PrivateHouse),self.CITY.values())) )
 
     #
 
@@ -906,14 +918,22 @@ def create_map():
             connect(NY.CITY[name],box(600,250,400,400),NY.CITY[nom],zone_box,(False,False))
 
             #home + porte
-            NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
+            NY.add_streets(PrivateHouse(preStreet('home'),g.TEXTIDS['home']))
             connect(NY.CITY['home'],3200,NY.CITY[name],box(1500,250,300,400),(False,False))
             NY.CITY[name].add_house(NY.CITY['home'])
 
             #maison du voisin
-            NY.add_streets(House(preStreet('voisin'),g.TEXTIDS['home']))
+            NY.add_streets(PrivateHouse(preStreet('voisin'),g.TEXTIDS['home']))
             connect(NY.CITY['voisin'],3200,NY.CITY[name],box(2500,250,300,400),(False,False))
             NY.CITY[name].add_house(NY.CITY['voisin'])
+
+            ## 2 autres voisins
+            for j in range(2,4):
+                labtext = (None,'1'+chr(65+j))
+                house_name = '1'+chr(65+j) +'-' + name
+                NY.add_streets(PrivateHouse(preStreet(house_name),g.TEXTIDS['home']))
+                connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
+                NY.CITY[name].add_house(NY.CITY[house_name])
 
             ## DISTROKID
 
@@ -943,7 +963,7 @@ def create_map():
                 for j in range(4):
                     labtext = (None,'1'+chr(65+j))
                     house_name = '1'+chr(65+j) +'-' + str(i) + ' '+nom
-                    NY.add_streets(House(preStreet(house_name),g.TEXTIDS['home']))
+                    NY.add_streets(PrivateHouse(preStreet(house_name),g.TEXTIDS['home']))
                     connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
                     NY.CITY[name].add_house(NY.CITY[house_name])
 
@@ -956,6 +976,7 @@ def create_map():
                 zone_box.x += i*W_BUILD+W_SIDE
                 x2 = list(filter(lambda x:x.name == rue.cont[i],rues))[0].cont.index(nom)*W_BUILD+dx+W_SIDE
                 connexions.append( [nom,zone_box,rue.cont[i],x2] )
+
 
     for st1,zonebox,st2,x2 in connexions:
 
