@@ -657,7 +657,8 @@ class CITY():
 
     def rd_house(self):
 
-        return r.choice( list(filter( lambda x:isinstance(x,PrivateHouse),self.CITY.values())) )
+        house = r.choice( list(filter( lambda x:isinstance(x,PrivateHouse),self.CITY.values())) )
+        return house
 
     #
 
@@ -689,7 +690,7 @@ builds = {
         0:{'name':'empty' , 'box':None },
         1:{'name':'stand' , 'box':box(370,0,500,420) },
         2:{'name':'batiment' , 'box':box(200,100,470,420) },
-        3:{'name':'stairs' , 'box':box(500,100,300,420) },
+        3:{'name':'stairs' , 'box':box(400,100,500,420) },
         'side':{'name':'side', 'box':None}
 }
 
@@ -699,8 +700,11 @@ builds_key = []
 """'''''''''''''''''''''''''''''''''
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
-k = 20
 
+nb_iterations = 3
+
+#plus très utile
+k = 20
 MAP = k,k
 nb_lines = k
 
@@ -851,7 +855,6 @@ def create_map():
     ## JUSQU'A 5 on reste à ~60 fps, au delà la rue principale commence à être bondée
     #  chaque rue peut avoir un maximum que 4 rues voisines sinon ça va être le sbeul
 
-    nb_iterations = 2
     #-> à la fin on se retrouve avec 2**3 = 8 rues
     n = 1
 

@@ -72,7 +72,7 @@ _ceci est le todo à faire hehe_
   -metro
   -shop de son
   -bars (open mic ?)
-
+  -police (prison)
 
 
 
@@ -126,3 +126,7 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
   -> la fonction g.sman.addCol() pas du tout optimisée:
     recrée une texture à chaque fois qu'on l'appelle, il faudrait plutot créer une texture
     par couleur et rescale le sprite pour avoir la bonne taille -> a faire
+
+# ajouter drogue:
+  -> colore de ouf l'écran de milliers de couleurs:
+    rend le jeu très beau du coup ça peut reellement rendre addict le joueur ptdrr

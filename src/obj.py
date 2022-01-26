@@ -400,6 +400,8 @@ class Key():
     def __init__(self,street):
 
         self.target = street
+        if street.name == 'distrokid':
+            print('oh yo')
 
     def __str__(self):
         return 'key for '+self.target.name
@@ -979,12 +981,13 @@ class Map(HUD):
         self.pad = 25
         self.box = box(area.x+self.pad,area.y+self.pad,area.w-2*self.pad,area.h-2*self.pad)
 
-        self.larg_street = 18
-        self.small_larg = 6
-        w = self.larg_street*3*o2.MAP[0]
+        self.larg_cube = 18
+        self.larg_street = 6
+        self.larg_house = 12
+        w = self.larg_cube*3*o2.MAP[0]
         self.box = box(scrw/2-w/2,scrh/2-w/2,w,w)
 
-        #print(area.xywh,self.larg_street)
+        #print(area.xywh,self.larg_cube)
 
         col = (*c['delta_blue'][:3],170)
         #print(col)
@@ -1017,34 +1020,33 @@ class Map(HUD):
             if type(street) == o2.Street:
 
                 vert = street.pre.vert
-                #print(street.name, street.line,street.pre.w)
 
                 if not vert:
-                    x = g.scr.cx + street.pre.x*self.larg_street
-                    y = g.scr.cy + self.larg_street/2 -self.small_larg/2 + street.pre.y*self.larg_street
+                    x = g.scr.cx + street.pre.x*self.larg_cube
+                    y = g.scr.cy + self.larg_cube/2 -self.larg_street/2 + street.pre.y*self.larg_cube
                 else:
-                    x = g.scr.cx + self.larg_street/2 -self.small_larg/2 + street.pre.x*self.larg_street
-                    y = g.scr.cy + street.pre.y*self.larg_street
+                    x = g.scr.cx + self.larg_cube/2 -self.larg_street/2 + street.pre.x*self.larg_cube
+                    y = g.scr.cy + street.pre.y*self.larg_cube
 
                 if vert:
-                    w,h=self.small_larg,street.pre.w*self.larg_street
+                    w,h=self.larg_street,street.pre.w*self.larg_cube
                 else:
-                    h,w=self.small_larg,street.pre.w*self.larg_street
+                    h,w=self.larg_street,street.pre.w*self.larg_cube
 
                 self.addCol(street.name,box(x,y,w,h),color=c['delta_purple'],group='hud2')
 
             elif street.name == 'home':
-                w,h=self.larg_street,self.larg_street
+                w,h=self.larg_house,self.larg_house
 
-                x = g.scr.cx + street.pre.x*self.larg_street
-                y = g.scr.cy + street.pre.y*self.larg_street
+                x = g.scr.cx + street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                y = g.scr.cy + street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
                 self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud21')
 
             elif isinstance(street,o2.Shop) or isinstance(street,o2.SpecialHouse):
-                w,h=self.larg_street,self.larg_street
+                w,h=self.larg_house,self.larg_house
 
-                x = g.scr.cx + street.pre.x*self.larg_street
-                y = g.scr.cy + street.pre.y*self.larg_street
+                x = g.scr.cx + street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                y = g.scr.cy + street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
                 self.addCol(street.name,box(x,y,w,h),color=c['blue'],group='hud21')
 
     def update(self):
@@ -1059,16 +1061,16 @@ class Map(HUD):
 
                 vert = street.pre.vert
                 if vert:
-                    x = g.sman.spr(self.sprids[street.name]).x - self.larg_street/2 +self.small_larg/2 + self.larg_street/2
+                    x = g.sman.spr(self.sprids[street.name]).x - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
                     y = g.sman.spr(self.sprids[street.name]).y + perc*g.sman.spr(self.sprids[street.name]).height
                 else:
-                    y = g.sman.spr(self.sprids[street.name]).y - self.larg_street/2 +self.small_larg/2 + self.larg_street/2
+                    y = g.sman.spr(self.sprids[street.name]).y - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
                     x = g.sman.spr(self.sprids[street.name]).x + perc*g.sman.spr(self.sprids[street.name]).width
 
             elif street.name == 'home': # si le perso se trouve dans une maison
                 x,y = g.sman.spr(self.sprids[street.name]).position
-                x += self.larg_street/2
-                y += self.larg_street/2
+                x += self.larg_cube/2
+                y += self.larg_cube/2
 
             if type(street) == o2.Street or street.name == 'home':
                 # create and or change pos

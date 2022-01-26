@@ -111,7 +111,6 @@ class App():
 
             #print(self.sprids['effects'])
 
-
         # streets
         if True:
             ## STREETS
@@ -121,7 +120,6 @@ class App():
                 o2.generate_short_map()
             elif o2.LOAD == 3:
                 o2.create_map()
-
 
         # humans
         if True:
@@ -157,9 +155,9 @@ class App():
                             hum = p.Fan(text,pos,street=street.name)
 
                         p.BOTS.append(hum)
-                        if isinstance(street,o2.House):
+                        if isinstance(street,o2.PrivateHouse):
                             street.add_owner(hum)
-                        if not isinstance(street,o2.House) and random.random()>0.01:
+                        if not isinstance(street,o2.PrivateHouse) and random.random()>0.01:
                             # si le gars n'a pas de maison on lui en donne une, sauf s'il est sdf mdr
                             o2.NY.rd_house().add_owner(hum)
 
@@ -173,7 +171,6 @@ class App():
             print(len(p.BOTS),'bots in this game !')
 
         # cycle
-
         tabcolor = [(self.sprids['bg-1'],1),
                     (self.sprids['bg.1'],0.9),
                     (self.sprids['bg.2'],0.9),
@@ -228,9 +225,10 @@ class App():
 
             # labels
 
-            self.lab_fps = g.lman.addLab('FPS : 0',(20,1060),group='up',font_name=1,font_size=32,anchor=('left','top'))
-            self.lab_day = g.lman.addLab('DAY : 0',(20,1060-50),group='up',font_name=1,font_size=32,anchor=('left','top'))
-            self.lab_street = g.lman.addLab('home',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
+            self.lab_fps = g.lman.addLab('',(20,1060),group='up',font_name=1,font_size=32,anchor=('left','top'))
+            self.lab_day = g.lman.addLab('',(20,1060-50),group='up',font_name=1,font_size=32,anchor=('left','top'))
+            self.lab_time = g.lman.addLab('',(20,1060-50-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
+            self.lab_street = g.lman.addLab('',(20,100),group='up',font_name=1,font_size=20,anchor=('left','bottom'))
 
             # keys
             g.keys = key.KeyStateHandler()
@@ -850,6 +848,9 @@ class App():
 
             # DAYS LABEL
             g.lman.set_text(self.lab_day,'DAY : '+str(g.Cyc.day))
+
+            # HOUR LABEL
+            g.lman.set_text(self.lab_time,'  '+str(g.Cyc))
 
             ## anchor / moving sprites
 

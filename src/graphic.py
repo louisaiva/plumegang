@@ -899,6 +899,22 @@ class Cycle():
             return 0
         return p
 
+    def __str__(self):
+        # retourne l'heure actuelle
+        p = (self.tick*self.dt - (self.day-1)*self.len )/self.len
+        hm = int(p*24*60)
+        h = hm//60
+        m = (hm%60)
+
+        strh = str(h)
+        if len(strh) < 2:
+            strh = '0' + strh
+        strm = str(m)
+        if len(strm) < 2:
+            strm = '0' + strm
+
+        return strh+' : '+strm
+
 Cyc = Cycle()
 
 #### CLOCK
