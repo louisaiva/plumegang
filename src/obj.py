@@ -404,8 +404,8 @@ class Key():
 
         self.target = street
 
-    """def __str__(self):
-        return 'key for '+self.target.name"""
+    def __str__(self):
+        return 'key for '+self.target.name
 
 
 """'''''''''''''''''''''''''''''''''
@@ -674,7 +674,7 @@ class Porte(Zone_ELEM):
         if self.destination.free_access:
             return True
 
-        if self.destination in perso.keys:
+        if self.destination in list(map(lambda x:x.target,perso.inventory['key'])):
             return True
 
         if perso.cheat:
@@ -688,7 +688,7 @@ class Porte(Zone_ELEM):
                 if house.free_access:
                     return True
 
-                if house in perso.keys:
+                if house in list(map(lambda x:x.target,perso.inventory['key'])):
                     return True
 
         return False
@@ -2082,7 +2082,7 @@ class InventHUD(HUD):
             for cquecé in self.menus_cont[self.menu]:
                 tab = self.uis[cquecé]
                 if tab != []:
-                    cquecé = type(tab[0].item).__name__.lower()
+                    #cquecé = type(tab[0].item).__name__.lower()
                     self.addLab(cquecé+'s_lab',cquecé+'s',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
                     yf -= self.padding2*2
 
@@ -2100,79 +2100,20 @@ class InventHUD(HUD):
                         g.lman.delete(self.labids[cquecé+'s_lab'])
                         del self.labids[cquecé+'s_lab']
 
-            """#sons
-                if self.uis['son'] != []:
-                    self.addLab('sons_lab','sons',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
-                    yf -= self.padding2*2
-
-                    self.uis['son'].sort(reverse=True)
-
-                    for i in range(len(self.uis['son'])):
-
-                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
-                        y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
-
-                        self.uis['son'][i].move(x,y)
-                    yf -= (self.padding + self.lilpadding2)*((len(self.uis['son'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
-                else:
-                    if 'sons_lab' in self.labids:
-                        g.lman.delete(self.labids['sons_lab'])
-                        del self.labids['sons_lab']
-
-                #instrus
-                if self.uis['instru'] != []:
-                    self.addLab('instrus_lab','instrus',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
-                    yf -= self.padding2*2
-
-                    self.uis['instru'].sort(reverse=True)
-
-                    for i in range(len(self.uis['instru'])):
-
-                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
-                        y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
-
-                        self.uis['instru'][i].move(x,y)
-                    yf -= (self.padding + self.lilpadding2)*((len(self.uis['instru'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
-                else:
-                    if 'instrus_lab' in self.labids:
-                        g.lman.delete(self.labids['instrus_lab'])
-                        del self.labids['instrus_lab']
-
-                #phases
-                if self.uis['phase'] != []:
-                    self.addLab('phases_lab','phases',(self.box.cx,yf-self.padding2),font_name=1,color=c['black'],font_size=20,anchor=('center','center'))
-                    yf -= self.padding2*2
-
-                    self.uis['phase'].sort(reverse=True)
-
-                    for i in range(len(self.uis['phase'])):
-
-                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
-                        y = yf + self.padding/2 - (self.padding + self.lilpadding2 )*(i//4 + 1)
-
-                        self.uis['phase'][i].move(x,y)
-                    yf -= (self.padding + self.lilpadding2)*((len(self.uis['phase'])-1)//4 + 1) + self.lilpadding - self.lilpadding2
-                else:
-                    if 'phases_lab' in self.labids:
-                        g.lman.delete(self.labids['phases_lab'])
-                        del self.labids['phases_lab']"""
-
         elif self.menu == 'general':
             yf = self.box2.fy
-            k = 0
-
-            #tab = [y for x in self.menus_cont[self.menu] for y in x]
 
             for cquecé in self.menus_cont[self.menu]:
                 tab = self.uis[cquecé]
-                for i in range(len(tab)):
+                if tab != []:
+                    #self.uis[cquecé].sort(reverse=True)
+                    for i in range(len(self.uis[cquecé])):
 
-                    x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*((i+k)%4)
-                    y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
-                    k+=1
+                        x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
+                        y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
 
-                    tab[i].move(x,y)
-            #yf -= (self.padding + self.lilpadding2)*((len(tab)-1)//4 + 1) + self.lilpadding - self.lilpadding2
+                        self.uis[cquecé][i].move(x,y)
+                    yf -= (self.padding + self.lilpadding2)*((len(self.uis[cquecé])-1)//4 + 1) + self.lilpadding - self.lilpadding2
 
 
     # general
@@ -2283,24 +2224,24 @@ class InventHUD(HUD):
 
             if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
                 self.perso.element_colli.hud.write(item)
-                self.perso.drop(self.item_caught.item)
+                self.perso.drop(self.item_caught.item,create=False)
                 self.item_caught = None
 
             elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
                 self.perso.element_colli.hud.inspect(item)
-                self.perso.drop(self.item_caught.item)
+                self.perso.drop(self.item_caught.item,create=False)
                 self.item_caught = None
 
             elif type(self.perso.element_colli) == Studio:
 
                 if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
                     self.perso.element_colli.hud.catch(item)
-                    self.perso.drop(self.item_caught.item)
+                    self.perso.drop(self.item_caught.item,create=False)
                     self.item_caught = None
 
                 elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
                     self.perso.element_colli.hud.catch(item)
-                    self.perso.drop(self.item_caught.item)
+                    self.perso.drop(self.item_caught.item,create=False)
                     self.item_caught = None
 
                 else:
@@ -2414,6 +2355,17 @@ class InventHUD(HUD):
                     self.addLab('detail_cont','\n'.join(tab), ( self.box3.cx , y - self.padding ),font_name=0, anchor = ('center','center'),font_size = 15,detail=True,color=c['black'])
                     #    self.detaids.append(self.detaids['lab']['detail_aut'])
                     y = g.lman.labels[self.detaids['lab']['detail_cont']].y
+
+            else:
+                if type(ui.item).__name__ == 'Key':
+                    self.addSpr('detail_spr',g.TEXTIDS['items'][type(ui.item).__name__.lower()],detail=True)
+                    g.sman.modify(self.detaids['spr']['detail_spr'],scale=(2,2))
+                    g.sman.modify(self.detaids['spr']['detail_spr'],( self.box3.cx - g.sman.spr(self.detaids['spr']['detail_spr']).width/2 , self.box3.fy - 80 - g.sman.spr(self.detaids['spr']['detail_spr']).height/2 ))
+                    y = g.sman.spr(self.detaids['spr']['detail_spr']).y
+
+                    #qua
+                    self.addLab('detail_street',ui.item.target.name, ( self.box3.cx , y - 2*self.padding2 ),font_name=0, anchor = ('center','center'),font_size = 15,detail=True)
+
 
 
             ## FINISH

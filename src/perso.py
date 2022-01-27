@@ -253,7 +253,7 @@ class Human():
         self.damage = r.randint(10, 15)
 
         #items
-        self.keys = []
+        #self.keys = []
 
         #états
         self.cred = r.randint(-50,50)
@@ -323,8 +323,8 @@ class Human():
         self.speed = 0
         self.yspeed = 0
 
-        for key in self.keys:
-            self.drop(o.Key(key))
+        for key in self.inventory['key']:
+            self.drop(key)
 
         if hasattr(self,'label_life'):
             g.sman.delete(self.label_life)
@@ -1885,7 +1885,7 @@ class Perso(Rappeur):
         self.plume = o.splum(self.name)
         self.plumhud = o.PlumHUD(self.plume)
 
-        self.invhud.catch(o.sson(self.name))
+        self.grab(o.sson(self.name))
 
     def add_dial(self,dial):
         super(Perso,self).add_dial(dial)
@@ -1916,12 +1916,13 @@ class Perso(Rappeur):
     def auto_release(self,label):
 
         choiced_son = None
-        for son in self.invhud.inventory['son']:
-            if not son.item._released:
-                choiced_son = son.item
+        for son in self.inventory['son']:
+            if not son._released:
+                choiced_son = son
                 break
         if choiced_son != None:
             self.release_son(choiced_son,BOTS,g.Cyc.day,label)
+            self.drop(choiced_son,create=False)
 
     ## particles
 
