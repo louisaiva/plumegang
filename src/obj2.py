@@ -698,7 +698,7 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 3
+nb_iterations = 8
 
 #plus très utile
 k = 20
@@ -1009,7 +1009,6 @@ def create_map():
     for st1,zonebox,st2,x2 in connexions:
 
         connect_solo(NY.CITY[st1],zonebox,NY.CITY[st2],x2,anim='stairs')
-
 
 
 """'''''''''''''''''''''''''''''''''

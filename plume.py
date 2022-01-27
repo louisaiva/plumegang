@@ -128,12 +128,12 @@ class App():
             ## PERSOS
             self.perso = p.Perso('rapper',fill=FILL_INV)
             p.BOTS.append(self.perso)
-            o2.NY.CITY['home'].add_owner(self.perso)
+            #o2.NY.CITY['home'].add_owner(self.perso)
 
             #print(blue('OOOOOOOOOOOOOOOOOOOOOOOOOOOO'))
             #poto
             p.BOTS.append(p.Fan('perso3',o2.NY.CITY['home'].rand_pos(),street='home'))
-            o2.NY.CITY['home'].add_owner(p.BOTS[-1])
+            #o2.NY.CITY['home'].add_owner(p.BOTS[-1])
             self.perso.assign_poto(p.BOTS[-1])
 
 
@@ -153,18 +153,22 @@ class App():
                         else:
                             text = random.choice(['perso','perso2','perso3'])
                             hum = p.Fan(text,pos,street=street.name)
-
                         p.BOTS.append(hum)
-                        if isinstance(street,o2.PrivateHouse):
-                            street.add_owner(hum)
-                        if not isinstance(street,o2.PrivateHouse) and random.random()>0.01:
-                            # si le gars n'a pas de maison on lui en donne une, sauf s'il est sdf mdr
-                            o2.NY.rd_house().add_owner(hum)
 
 
             # adding all hum to their street
             for hum in p.BOTS:
-                o2.NY.CITY[hum.street].add_hum(hum)
+                street = o2.NY.CITY[hum.street]
+
+                # on donne les clés de chez eux à chaque bot
+                if isinstance(street,o2.PrivateHouse):
+                    street.add_owner(hum)
+                elif random.random()>0.01:
+                    # si le gars n'a pas de maison on lui en donne une, sauf s'il est sdf mdr
+                    o2.NY.rd_house().add_owner(hum)
+
+                # et on les ajoute à leur street actuelle
+                street.add_hum(hum)
 
             if len(p.BOTS) < 200:
                 print(p.BOTS)
