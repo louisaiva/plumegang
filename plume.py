@@ -289,14 +289,7 @@ class App():
             del g.TEXTIDS['_son']
 
             ## ux
-            g.TEXTIDS['ux'] = {}
-            tab = g.tman.loadImSeq('items.png',(1,40))
-            for i in range(len(tab)):
-                g.TEXTIDS['ux'][i] = tab[i]
-            g.TEXTIDS['ux']['delta_blue'] = g.TEXTIDS['utils'][24]
-            g.TEXTIDS['ux']['delta_lightblue'] = g.TEXTIDS['utils'][25]
-            g.TEXTIDS['ux']['delta_purple'] = g.TEXTIDS['utils'][26]
-
+            g.TEXTIDS['ux'] = g.tman.loadImSeq('items.png',(1,40))
 
             ## items
             g.TEXTIDS['items'] = {}
@@ -385,15 +378,15 @@ class App():
         ##
         if True:
 
-            g.TEXTIDS['steam'] = g.tman.addCol(20,20,'lightgrey')
-            g.TEXTIDS['steam2'] = g.tman.addCol(50,50,'grey')
+            g.TEXTIDS['steam'] = g.tman.addCol('lightgrey')
+            g.TEXTIDS['steam2'] = g.tman.addCol('grey')
 
             ## huds
             g.TEXTIDS['studhud'] = g.tman.loadIm('studhud.png')
             g.TEXTIDS['ordhud'] = g.tman.loadIm('ordhud.png')
 
             ## effects
-            g.TEXTIDS['blur'] = g.tman.addCol(1,1,'black')
+            g.TEXTIDS['blur'] = g.tman.addCol('black',1,1)
 
     def get_current_screen(self):
 

@@ -168,7 +168,7 @@ class TextureManager():
         self.ids.append(id)
         return id
 
-    def addCol(self,w,h,color='white'):
+    def addCol(self,color='white',w=SPR,h=SPR):
 
         if color not in TEXTIDS['col']:
             pattern = pyglet.image.SolidColorImagePattern(c[color])
@@ -233,7 +233,7 @@ class SpriteManager():
             self.modify(id,scale=(scy,scx))
             return id
         else:
-            tman.addCol(SPR,SPR,col)
+            tman.addCol(col)
             return self.addCol(col,box,group,alr_id,vis)
 
     def addCircle(self,pos,ray,col=(255,255,255,255),group=None,alr_id=-1,vis=True):
@@ -283,7 +283,6 @@ class SpriteManager():
     def set_text(self,sprid,textid):
 
         if self.sprites[sprid].image != tman.textures[textid]:
-
             self.sprites[sprid].image = tman.textures[textid]
 
     def modify(self,sprid,pos=None,scale=None,group=None,opacity=None,anchor=None):
@@ -321,6 +320,16 @@ class SpriteManager():
                 y -= self.sprites[sprid].width/2
                 self.sprites[sprid].update(x=x,y=y)
 
+    def set_col(self,sprid,col):
+        if col in TEXTIDS['col']:
+            w,h = self.sprites[sprid].width,self.sprites[sprid].height
+            self.set_text(sprid,TEXTIDS['col'][col])
+            self.modify(sprid,scale=(1,1))
+            sc = w/self.sprites[sprid].width,h/self.sprites[sprid].height
+            self.modify(sprid,scale=sc)
+        else:
+            tman.addCol(col)
+            self.set_col(sprid,col)
 
     #filter
     def filter(self,sprid,color=(255,0,0)):
@@ -637,8 +646,10 @@ class ParticleManager():
         self.addLabPart(contenu,xy_pos,duree,font_size=size,color=color,group='ui',use_str_bien=False)
 
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
-        text = tman.addCol(*box.wh,col)
-        self.addPart(text,box.xy,duree,group,key)
+        pass
+        ## not optimized so plz correct it
+        """text = tman.addCol(col)
+        self.addPart(text,box.xy,duree,group,key)"""
 
     def delay_spr(self,dt,id,key):
 

@@ -498,7 +498,7 @@ class Zone():
         if textid[:4] == 'text':
             self.text_id = textid
         elif makeCol:
-            self.text_id = g.tman.addCol(*box.wh,textid)
+            self.text_id = g.tman.addCol(textid)
 
         if vis: self.load()
 
@@ -1971,15 +1971,16 @@ class InventHUD(HUD):
         self.menus_cont['general'] = ['general']
         self.menus_cont['sound'] = ['phase','instru','son','plume']
 
-        h = 100
+        h = 90
         for i in range(len(self.menus)):
             zone_box = box(self.box2.fx,self.box2.y+i*h,h,h)
             x,y = zone_box.cxy
             x -= 32
             y -= 32
             self.addSpr('menu_'+self.menus[i],g.TEXTIDS['ux'][4+i],(x,y),group='hud3')
-            self.btns[self.menus[i]] = Button_UI(zone_box,self.roll_menu,[self.menus[i]],self.menus[i],vis=self.visible,makeCol=True)
+            self.btns[self.menus[i]] = Toggle(zone_box,self.roll_menu,[self.menus[i]],self.menus[i],vis=self.visible)
 
+        self.btns[self.menu].toggle()
 
         ### PARTIE DETAILS
 
@@ -2190,6 +2191,12 @@ class InventHUD(HUD):
                 ui.unhide(hide)
 
         for menu in self.btns:
+            if not hide:
+                if menu == self.menu:
+                    self.btns[menu].set_act()
+                else:
+                    self.btns[menu].set_nap()
+
             self.btns[menu].unhide(hide)
 
         if (not hide) and (not self.deta_visible):
@@ -2438,6 +2445,12 @@ class InventHUD(HUD):
 
         if self.menu != menu:
 
+            for lab in self.btns:
+                if lab == menu:
+                    self.btns[lab].set_act()
+                else:
+                    self.btns[lab].set_nap()
+
             if self.menu == 'sound':
                 if 'sons_lab' in self.labids:
                     g.lman.delete(self.labids['sons_lab'])
@@ -2540,10 +2553,10 @@ class Zone_UI(Zone):
         if self._hoover:
             self.activate()
 
-class Button_UI(Zone_UI):
+class Button(Zone_UI):
 
     def __init__(self,box2,funct,param,lab_text='button',textid='delta_blue',vis=False,group='hud22',makeCol=True,longpress=False,colorlab=c['coral']):
-        super(Button_UI,self).__init__(box2,lab_text,textid,group,makeCol,longpress,colorlab)
+        super(Button,self).__init__(box2,lab_text,textid,group,makeCol,longpress,colorlab)
 
         self.funct = funct
         self.param = param
@@ -2551,6 +2564,49 @@ class Button_UI(Zone_UI):
     def activate(self):
         print(self.lab_text,'pressed',self.param)
         self.funct(*self.param)
+
+class Toggle(Button):
+
+    def __init__(self,box2,funct,param,lab_text='button',nap_color='delta_purple',act_color='delta_blue',vis=False,group='hud22'):
+        super(Toggle,self).__init__(box2,funct,param,lab_text,nap_color,vis,group)
+        self.nap_color = nap_color
+        self.act_color = act_color
+
+        self.nap = True
+
+    def activate(self):
+        super(Toggle,self).activate()
+        #self.toggle()
+
+    def toggle(self):
+
+        if self.nap:
+            col = self.act_color
+        else:
+            col = self.nap_color
+
+        self.nap = not self.nap
+
+        if hasattr(self,'skin_id'):
+            g.sman.set_col(self.skin_id,col)
+        else:
+            self.text_id = g.tman.addCol(col)
+
+    def set_nap(self):
+        self.nap = True
+        if hasattr(self,'skin_id'):
+            g.sman.set_col(self.skin_id,self.nap_color)
+        else:
+            self.text_id = g.tman.addCol(self.nap_color)
+
+    def set_act(self):
+        self.nap = False
+        if hasattr(self,'skin_id'):
+            g.sman.set_col(self.skin_id,self.act_color)
+        else:
+            self.text_id = g.tman.addCol(self.act_color)
+
+##
 
 class Plume_UI(Zone_UI):
 
