@@ -155,6 +155,7 @@ c = {
 #my colors
 
 "delta_blue" : (150, 150, 200,255),
+"delta_blue_faded" : (150, 150, 200,170),
 "delta_lightblue" : (175, 175, 225,255),
 "delta_purple" : (102, 102, 153,255),
 "F" : (255,255,255,255),

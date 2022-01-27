@@ -498,7 +498,7 @@ class Zone():
         if textid[:4] == 'text':
             self.text_id = textid
         elif makeCol:
-            self.text_id = g.tman.addCol(*box.wh,c[textid])
+            self.text_id = g.tman.addCol(*box.wh,textid)
 
         if vis: self.load()
 
@@ -910,16 +910,15 @@ class HUD():
 
         self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible)
 
-    def addCol(self,key,box,color=c['delta_purple'],group=None):
+    def addCol(self,key,box,color='delta_purple',group=None):
+
+        if key in self.sprids:
+            g.sman.delete(self.sprids[key])
 
         if group == None:
             group = self.group
 
-        if type(color) == type(()):
-            textid = g.tman.addCol(*box.wh,color)
-        else:
-            textid = g.tman.addCol(*box.wh,c[color])
-        self.addSpr(key,textid,box.xy,group=group)
+        self.sprids[key] = g.sman.addCol(color,box,group,vis=self.visible)
 
     def addLab(self,key,contenu,xy_pos=(0,0),group=None,font_name=0,font_size=30,anchor=('left','bottom'),color=(255,255,255,255),replace=True):
 
@@ -997,10 +996,10 @@ class Map(HUD):
 
         #print(area.xywh,self.larg_cube)
 
-        col = (*c['delta_blue'][:3],170)
+        #col = (*'delta_blue'][:3],170)
         #print(col)
-        self.addCol('bg',area,group='hud2-1',color=col)
-        self.addCol('bg2',area,group='hud2-1',color=col)
+        self.addCol('bg',area,group='hud2-1',color='delta_blue_faded')
+        self.addCol('bg2',area,group='hud2-1',color='delta_blue_faded')
 
         ## name
         self.addLab('name','MAP OF NY CITY',(area.cx,area.fy-self.pad),font_name=1,anchor=('center','center'),group='hud2')
@@ -1041,21 +1040,21 @@ class Map(HUD):
                 else:
                     h,w=self.larg_street,street.pre.w*self.larg_cube
 
-                self.addCol(street.name,box(x,y,w,h),color=c['delta_purple'],group='hud2')
+                self.addCol(street.name,box(x,y,w,h),color='delta_purple',group='hud2')
 
             elif street.name == 'home':
                 w,h=self.larg_house,self.larg_house
 
                 x = g.scr.cx + street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
                 y = g.scr.cy + street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
-                self.addCol(street.name,box(x,y,w,h),color=c['red'],group='hud21')
+                self.addCol(street.name,box(x,y,w,h),color='red',group='hud21')
 
             elif isinstance(street,o2.Shop) or isinstance(street,o2.SpecialHouse):
                 w,h=self.larg_house,self.larg_house
 
                 x = g.scr.cx + street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
                 y = g.scr.cy + street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
-                self.addCol(street.name,box(x,y,w,h),color=c['blue'],group='hud21')
+                self.addCol(street.name,box(x,y,w,h),color='blue',group='hud21')
 
     def update(self):
 
@@ -1289,8 +1288,8 @@ class RelHUD(HUD):
         self.pad = 25
         self.padding = 50
 
-        col = (*c['delta_blue'][:3],170)
-        self.addCol('bg',self.box,color=col,group='hud2-1')
+        #col = (*c['delta_blue'][:3],170)
+        self.addCol('bg',self.box,color='delta_blue_faded',group='hud2-1')
         self.addLab('title','relations of '+self.hum.name,(self.box.cx,self.box.fy+self.padding),font_name=1,font_size=20,anchor=('center','center'))
 
     def update(self):
@@ -1418,8 +1417,8 @@ class MiniRelHUD(HUD):
         self.pad = 25
         self.padding = 50
 
-        col = (*c['delta_blue'][:3],170)
-        self.addCol('bg',self.box,color=col,group='hud2-1')
+        #col = (*c['delta_blue'][:3],170)
+        self.addCol('bg',self.box,color='delta_blue_faded',group='hud2-1')
 
     def assign_target(self,hum):
         self.target = hum
@@ -1522,7 +1521,7 @@ class WriteHUD(HUD):
 
         self.box2 = box(self.box.x+self.padding,self.box.y+2*self.padding,self.box.w-2*self.padding,self.box.h-3*self.padding)
 
-        self.addCol('bg2',self.box2,color=c['delta_blue'],group='hud')
+        self.addCol('bg2',self.box2,color='delta_blue',group='hud')
 
         #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
         self.addLab('pressE','E to write --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_name=1,font_size=20,anchor=('center','center'))
@@ -1958,22 +1957,28 @@ class InventHUD(HUD):
 
         self.box2 = box(self.box.x+self.padding2,self.box.y+self.padding2,self.box.w-2*self.padding2,self.box.h-self.padding2-100)
 
-        self.addCol('bg2',self.box2,color=c['delta_blue'],group='hud2')
+        self.addCol('bg2',self.box2,color='delta_blue',group='hud2')
+
+
+
+        ### MENUS
 
         self.menus = ['general','sound']
         self.menu = 'general'
-        self.menu_boxs = []
         self.btns = {}
 
         self.menus_cont = {}
         self.menus_cont['general'] = ['general']
         self.menus_cont['sound'] = ['phase','instru','son','plume']
 
-        w = int(self.box2.w/len(self.menus))
+        h = 100
         for i in range(len(self.menus)):
-            self.menu_boxs.append(box(self.box2.x+i*w,self.box2.y,w,50))
-            #self.addCol(self.menus[i],self.menu_boxs[i],color=(255-i*55,255-i*55,255-i*55,255),group='hud22')
-            self.btns[self.menus[i]] = Button_UI(self.menu_boxs[i],self.roll_menu,[self.menus[i]],self.menus[i],vis=self.visible,makeCol=True)
+            zone_box = box(self.box2.fx,self.box2.y+i*h,h,h)
+            x,y = zone_box.cxy
+            x -= 32
+            y -= 32
+            self.addSpr('menu_'+self.menus[i],g.TEXTIDS['ux'][4+i],(x,y),group='hud3')
+            self.btns[self.menus[i]] = Button_UI(zone_box,self.roll_menu,[self.menus[i]],self.menus[i],vis=self.visible,makeCol=True)
 
 
         ### PARTIE DETAILS
@@ -1985,14 +1990,15 @@ class InventHUD(HUD):
         self.detaids['bg'] = {}
         self.detaids['lab'] = {}
 
-        height_detail = 2*self.box.h/3
+        height_detail = self.box.h-len(self.menus)*h-self.padding2
         width_detail = 180
 
-        self.box3 = box(self.box.fx,self.box.cy-height_detail/2,width_detail,int(height_detail))
+        self.box3 = box(self.box.fx,self.box.fy-int(height_detail),width_detail,int(height_detail))
         #print(not self.deta_visible)
         self.addCol('bgdeta',self.box3,group='hud2-1',detail=True)
         #g.sman.unhide(self.sprids['bgdeta'],not self.deta_visible)
         #self.detaids.append(self.sprids['bgdeta'])
+
 
 
         ### LABEL inv
@@ -2329,7 +2335,7 @@ class InventHUD(HUD):
             self.detaids['spr'][key]=self.sprids[key]
             del self.sprids[key]
 
-    def addCol(self,key,box,color=c['delta_purple'],group=None,detail=False):
+    def addCol(self,key,box,color='delta_purple',group=None,detail=False):
         super(InventHUD,self).addCol(key,box,color,group)
         if detail:
             self.detaids['bg'][key]=self.sprids[key]
@@ -2482,7 +2488,7 @@ class Zone_UI(Zone):
         pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
         self.label = g.lman.addLab(lab_text,pos,vis=False,anchor = ('center','bottom'),font_size=20,color=colorlab,group='ui')
         boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
-        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group='ui-1',vis=False)
+        self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=False)
 
     def hoover(self):
         g.lman.unhide(self.label)
@@ -2536,7 +2542,7 @@ class Zone_UI(Zone):
 
 class Button_UI(Zone_UI):
 
-    def __init__(self,box2,funct,param,lab_text='button',textid='white',vis=False,group='hud22',makeCol=True,longpress=False,colorlab=c['coral']):
+    def __init__(self,box2,funct,param,lab_text='button',textid='delta_blue',vis=False,group='hud22',makeCol=True,longpress=False,colorlab=c['coral']):
         super(Button_UI,self).__init__(box2,lab_text,textid,group,makeCol,longpress,colorlab)
 
         self.funct = funct
@@ -2569,7 +2575,7 @@ class Life_UI(Zone_UI):
         g.lman.set_text(self.label,'vie : '+str(self.perso.life)+'/'+str(self.perso.max_life))
         boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
         g.sman.delete(self.label_bg)
-        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group='ui-1',vis=self._hoover)
+        self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=self._hoover)
 
 class Cred_UI(Zone_UI):
 
@@ -2584,7 +2590,7 @@ class Cred_UI(Zone_UI):
         g.lman.set_text(self.label,'cred : '+str(self.perso.cred))
         boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
         g.sman.delete(self.label_bg)
-        self.label_bg = g.sman.addCol((120,120,120,255),boxbg,group='ui-1',vis=self._hoover)
+        self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=self._hoover)
 
 #---------# item_ui -> item transportable entre les menus
 

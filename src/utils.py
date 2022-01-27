@@ -56,7 +56,7 @@ class box():
         return self.y + self.h/2
 
     def _center(self):
-        return self.centerx,self.centery
+        return self.cx,self.cy
 
     cx = property(_centerx)
     cy = property(_centery)

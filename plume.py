@@ -91,7 +91,7 @@ class App():
             g.sman.modify(self.sprids['bg.2'],scale=(0.75,0.75))
 
             rect = box(0,0,g.scr.w,250)
-            self.sprids['ground'] = g.sman.addCol(c['grey'],rect,'bg_buildings_proche')
+            self.sprids['ground'] = g.sman.addCol('grey',rect,'bg_buildings_proche')
             self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'bg_buildings_proche')
             g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
             self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'bg_buildings_proche')
@@ -288,10 +288,18 @@ class App():
                 g.TEXTIDS['son'][qua[i]] = g.TEXTIDS['_son'][i]
             del g.TEXTIDS['_son']
 
-            ## items
-            g.TEXTIDS['ux'] = g.tman.loadImSeq('items.png',(1,40))
-            g.TEXTIDS['items'] = {}
+            ## ux
+            g.TEXTIDS['ux'] = {}
+            tab = g.tman.loadImSeq('items.png',(1,40))
+            for i in range(len(tab)):
+                g.TEXTIDS['ux'][i] = tab[i]
+            g.TEXTIDS['ux']['delta_blue'] = g.TEXTIDS['utils'][24]
+            g.TEXTIDS['ux']['delta_lightblue'] = g.TEXTIDS['utils'][25]
+            g.TEXTIDS['ux']['delta_purple'] = g.TEXTIDS['utils'][26]
 
+
+            ## items
+            g.TEXTIDS['items'] = {}
             g.TEXTIDS['items']['key'] = g.TEXTIDS['ux'][3]
 
         # BG
@@ -377,15 +385,15 @@ class App():
         ##
         if True:
 
-            g.TEXTIDS['steam'] = g.tman.addCol(20,20,c['lightgrey'])
-            g.TEXTIDS['steam2'] = g.tman.addCol(50,50,c['grey'])
+            g.TEXTIDS['steam'] = g.tman.addCol(20,20,'lightgrey')
+            g.TEXTIDS['steam2'] = g.tman.addCol(50,50,'grey')
 
             ## huds
             g.TEXTIDS['studhud'] = g.tman.loadIm('studhud.png')
             g.TEXTIDS['ordhud'] = g.tman.loadIm('ordhud.png')
 
             ## effects
-            g.TEXTIDS['blur'] = g.tman.addCol(1,1,c['black'])
+            g.TEXTIDS['blur'] = g.tman.addCol(1,1,'black')
 
     def get_current_screen(self):
 

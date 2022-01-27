@@ -9,6 +9,7 @@ import pyglet,random,time
 from math import *
 import src.utils as u
 from src import obj as o
+from src.colors import *
 
 import pyglet.gl as gl
 #gl.glEnable(gl.GL_TEXTURE_2D)
@@ -20,7 +21,7 @@ import pyglet.gl as gl
 '''''''''''''''''''''''''''''''''''''''
 
 
-
+SPR = 32
 FPS = 0
 
 class ScreenManager():
@@ -97,7 +98,7 @@ class GroupManager():
         names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','road','buildings','backstreet','backstreet_anim','mid' # good
                             ,'front','perso-1','hud-1','hud','hud1']
         names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
-        names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','hud22','ui-2','ui-1','ui','up-1','up']
+        names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','hud22','hud3','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 1
 
         for i in range(len(names)):
@@ -167,13 +168,17 @@ class TextureManager():
         self.ids.append(id)
         return id
 
-    def addCol(self,w,h,color=(255,255,255,255)):
+    def addCol(self,w,h,color='white'):
 
-        pattern = pyglet.image.SolidColorImagePattern(color)
-        id = u.get_id('col')
-        self.textures[id] = pattern.create_image(w,h)
-        self.ids.append(id)
-        return id
+        if color not in TEXTIDS['col']:
+            pattern = pyglet.image.SolidColorImagePattern(c[color])
+            id = u.get_id('col')
+            self.textures[id] = pattern.create_image(w,h)
+            self.ids.append(id)
+            TEXTIDS['col'][color] = id
+            return id
+        else:
+            return TEXTIDS['col'][color]
 
     def draw(self):
 
@@ -218,9 +223,18 @@ class SpriteManager():
 
         return id
 
-    def addCol(self,col=(255,255,255,255),box=u.box(),group=None,alr_id=-1,vis=True):
-        text = tman.addCol(*box.wh,col)
-        return self.addSpr(text,box.xy,group,alr_id,vis)
+    def addCol(self,col='white',box=u.box(),group=None,alr_id=-1,vis=True):
+        if col in TEXTIDS['col']:
+            id = self.addSpr(TEXTIDS['col'][col],box.xy,group,alr_id,vis)
+
+            scy = box.w/self.sprites[id].width
+            scx = box.h/self.sprites[id].height
+
+            self.modify(id,scale=(scy,scx))
+            return id
+        else:
+            tman.addCol(SPR,SPR,col)
+            return self.addCol(col,box,group,alr_id,vis)
 
     def addCircle(self,pos,ray,col=(255,255,255,255),group=None,alr_id=-1,vis=True):
 
@@ -728,6 +742,7 @@ class ParticleManager():
 pman = ParticleManager()
 
 TEXTIDS = {}
+TEXTIDS['col'] = {}
 
 
 

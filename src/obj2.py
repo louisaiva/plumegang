@@ -698,7 +698,7 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 3
+nb_iterations = 8
 
 #plus très utile
 k = 20
