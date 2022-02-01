@@ -97,7 +97,9 @@ class GroupManager():
 
         names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','road','buildings','backstreet','backstreet_anim','mid' # good
                             ,'front','perso-1','hud-1','hud','hud1']
+        names += ['persodown']
         names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
+        names += ['persoup']
         names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','hud22','hud3','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 1
 
@@ -536,7 +538,7 @@ class LabelManager():
         print('\tforegroup :',self.labels[lblid].foreground_group)
         print('\tforegroupdeco :',self.labels[lblid].foreground_decoration_group)
 
-    def modify(self,lblid,pos=None,size=None,scale=None,color=None):
+    def modify(self,lblid,pos=None,size=None,scale=None,color=None,group=None):
 
         if scale != None :
             newsize = self.labels[lblid].font_size*scale
@@ -553,6 +555,14 @@ class LabelManager():
 
         if color != None and color != self.labels[lblid].color:
             self.labels[lblid].color = color
+
+        # updating group
+        if group != None:
+            group = gman.getGroup(group)
+            if group != self.labels[lblid].top_group.parent:
+                #print(group,self.labels[lblid].top_group.__dict__)
+                self.labels[lblid]._init_groups(group)
+                self.labels[lblid]._update()
 
     def delete(self,tabids='all'):
 

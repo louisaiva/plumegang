@@ -206,13 +206,76 @@ def instru_price(ins):
 
     return int(price + (-0.1+r.random()/5)*price)
 
+def get_perso_grp(gey):
+
+    k = int(g.gman.nb_perso_group*gey/o2.maxY)
+    if k > g.gman.nb_perso_group:
+        grp = 'persoup'
+    elif k < 0:
+        grp = 'persodown'
+    else:
+        grp = 'perso'+str(k)
+
+    return grp
+
+"""'''''''''''''''''''''''''''''''''
+'''''''ITEMS''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
+# -> items sans texture comportant seulement leur essence
+class Item():
+    def __init__(self):
+        #self.action = None
+        pass
+
+class Key(Item):
+
+    def __init__(self,street):
+        super(Key,self).__init__()
+
+        self.target = street
+        self.cat = 'key'
+
+    def __str__(self):
+        return 'key for '+self.target.name
+
+class Food_item(Item):
+
+    def __init__(self):
+        super(Food_item,self).__init__()
+        self.cat = 'food'
+
+class Bottle(Food_item):
+
+    def __init__(self):
+        super(Bottle,self).__init__()
+
+        self.liquid = 'water'
+
+        self.qt = 1000 #qté en mL
+        # 1 litre d'eau recharge toute une "vie d'eau"
+        self.single_act = False
+
+    def act(self,perso):
+        if self.qt > 0:
+            qté = 1
+            perso.drink(qté)
+            self.qt -= qté
+            print(perso.name,'drank',str(qté),'mL of',self.liquid)
+
+    def __str__(self):
+        return 'bottle of '+str(self.qt)+'mL of water'
+
+
 """'''''''''''''''''''''''''''''''''
 '''''''SOUND ITEMS''''''''''''''''''
 '''''''''''''''''''''''''''''''''"""
 # -> items sans texture comportant seulement leur essence
 
 
-class Sound_item():
+class Sound_item(Item):
+
+    def __init__(self):
+        super(Sound_item,self).__init__()
 
     def __lt__(self, other):
          return self.quality < other.quality
@@ -221,6 +284,7 @@ class Sound_item():
 class Plume(Sound_item):
 
     def __init__(self,owner,qua,cred):
+        super(Plume,self).__init__()
 
         self.cat = 'plume'
         self.quality = qua
@@ -258,6 +322,7 @@ class Plume(Sound_item):
 class Phase(Sound_item):
 
     def __init__(self,quality,cred,):
+        super(Phase,self).__init__()
 
         self.cat = 'phase'
 
@@ -317,6 +382,7 @@ for name in n.btmakers:
 class Instru(Sound_item):
 
     def __init__(self,qua,author):
+        super(Instru,self).__init__()
 
         self.cat = 'instru'
 
@@ -332,11 +398,11 @@ class Instru(Sound_item):
     def __str__(self):
         return 'instru' + '  ' +convert_quality(self.quality) + '  ' + self.author.name
 
-
 #------# sons
 class Son(Sound_item):
 
     def __init__(self,instru,phases,name='cheh'):
+        super(Son,self).__init__()
 
         self.cat = 'son'
 
@@ -397,41 +463,6 @@ class Son(Sound_item):
 
     def __str__(self):
         return 'son   ' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + str(self.cred)
-
-
-
-"""'''''''''''''''''''''''''''''''''
-'''''''ITEMS''''''''''''''''''''''''
-'''''''''''''''''''''''''''''''''"""
-# -> items sans texture comportant seulement leur essence
-
-class Key():
-
-    def __init__(self,street):
-
-        self.target = street
-        self.cat = 'key'
-
-    def __str__(self):
-        return 'key for '+self.target.name
-
-class Food_item():
-
-    def __init__(self):
-        self.cat = 'food'
-
-class Bottle(Food_item):
-
-    def __init__(self):
-        super(Bottle,self).__init__()
-
-        self.liquid = 'water'
-
-        self.qt = 1000 #qté en mL
-        # 1 litre d'eau recharge toute une "vie d'eau"
-
-    def __str__(self):
-        return 'bottle of '+str(self.qt)+'mL of water'
 
 
 
@@ -594,7 +625,7 @@ class Zone_ELEM(Zone):
 
     def move(self,x_r,y_r):
         if hasattr(self,'skin_id'):
-            g.sman.modify(self.skin_id,(x_r,y_r))
+            g.sman.modify(self.skin_id,(x_r,y_r),group=get_perso_grp(self.gey))
         self.x,self.y = x_r,y_r
         self.update()
 
@@ -627,7 +658,7 @@ class Zone_ELEM(Zone):
         if hasattr(self,'label'):
             # label
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
-            g.lman.modify(self.label,pos)
+            g.lman.modify(self.label,pos,group=get_perso_grp(self.gey))
 
     def deload(self):
         if hasattr(self,'skin_id'):
@@ -755,10 +786,9 @@ class Distrib(Zone_ELEM):
         perso.grab(Bottle())
 
 
-
 #------# elements item -> item posable au sol dans une street
 
-class Item(Zone_ELEM):
+class Item_ELEM(Zone_ELEM):
 
     def __init__(self,item,poscentrale,street,size=64):
         nom = str(item)
@@ -771,7 +801,7 @@ class Item(Zone_ELEM):
         else:
             text = g.TEXTIDS['items'][type(item).__name__.lower()]
 
-        super(Item,self).__init__(box(*pos,size,size),nom,text,group='perso0',makeCol=False)
+        super(Item_ELEM,self).__init__(box(*pos,size,size),nom,text,group='perso0',makeCol=False)
         self.labtext = type(item).__name__.lower()
         o2.NY.CITY[street].add_item(self)
         self.item = item
@@ -2275,6 +2305,12 @@ class InventHUD(HUD):
                     self.item_caught = None
                     return -1
 
+                elif self.perso.selhud.visible and (collisionAX(self.perso.selhud.box.realbox,(x,y)) or collisionAX(self.perso.selhud.box2.realbox,(x,y))):
+                    self.perso.drop(self.item_caught.item,False)
+                    self.perso.grab(self.item_caught.item)
+                    self.item_caught = None
+                    return -1
+
                 elif self.perso.element_colli != None and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
 
                     if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
@@ -2613,13 +2649,13 @@ class SelectHUD(HUD):
                 # si c'est l'element selectionné on met bien
                 if k == 0:
                     w = self.biggitem_w
-                    x,y = self.box.fx- self.pad,self.box.cy
+                    x,y = self.box.fx-3*w/4,self.box.cy
 
                 # on crée si jamais
                 if self.uis[i] == None:
-                    self.uis[i] = Invent_UI(box(x,y,w,w),item,spr_vis=self.visible)
+                    self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible)
                 else:
-                    self.uis[i].upbox(box(x,y,w,w))
+                    self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
 
                 # on scale et on place
                 if g.sman.spr(self.uis[i].itemspr).width != w:
@@ -2641,6 +2677,79 @@ class SelectHUD(HUD):
             if self.uis[x] != None:
                 self.uis[x].delete()
                 self.uis[x] = None
+
+    def check_hoover(self,x,y):
+        for cquecé in self.uis:
+            if self.uis[cquecé] != None:
+                self.uis[cquecé].check_mouse(x,y)
+
+    def catch_or_drop(self,x,y):
+
+        if self.item_caught :
+            ## on check kelui pour vwar si on l'drop
+            self.item_caught.check_pressed()
+            if self.item_caught.dropped:
+                if collisionAX(self.box.realbox,(x,y)) or collisionAX(self.box2.realbox,(x,y)):
+                    self.item_caught.reset()
+                    self.update()
+                    self.item_caught = None
+                    return -1
+
+                elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
+                    #print('oh yo')
+                    self.perso.drop(self.item_caught.item,False)
+                    self.perso.grab(self.item_caught.item,True)
+                    self.item_caught = None
+                    return -1
+
+                elif self.perso.element_colli != None and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
+
+                    if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
+                        self.perso.drop(self.item_caught.item,create=False)
+                        self.perso.element_colli.hud.write(self.item_caught.item)
+                        self.item_caught = None
+                        return -1
+
+                    elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
+                        self.perso.element_colli.hud.inspect(self.item_caught.item)
+                        self.perso.drop(self.item_caught.item,create=False)
+                        self.item_caught = None
+                        return -1
+
+                    elif type(self.perso.element_colli) == Studio:
+
+                        if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                            self.perso.element_colli.hud.catch(self.item_caught.item)
+                            self.perso.drop(self.item_caught.item,create=False)
+                            self.item_caught = None
+                            return -1
+                        elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                            self.perso.element_colli.hud.catch(self.item_caught.item)
+                            self.perso.drop(self.item_caught.item,create=False)
+                            self.item_caught = None
+                            return -1
+
+                        else:
+                            self.item_caught.check_pressed()
+
+                    else:
+                        self.item_caught.check_pressed()
+
+                else:
+                    self.perso.drop(self.item_caught.item)
+                    self.item_caught = None
+                    return -1
+
+        else:
+
+            ## on check touu pour vwar si on en catch
+            for k in self.uis:
+                if self.uis[k] != None:
+                    self.uis[k].check_pressed()
+                    if self.uis[k].caught:
+                        self.item_caught = self.uis[k]
+                        return 1
+        return 0
 
 
 

@@ -311,7 +311,7 @@ class Street():
             h.load()
 
         for item in self.items:
-            item.load()
+            item.load(self)
 
         nbh = len(self.humans)
         for street in self.neighbor:

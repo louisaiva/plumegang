@@ -115,6 +115,10 @@ def update_textures(keys):
             textures[x]['stairs']['R'] = [textids[19+10],textids[20+10],textids[21+10],textids[22+10]]
             textures[x]['stairs']['L'] = [textids[19+10],textids[20+10],textids[21+10],textids[22+10]]
 
+            textures[x]['drink'] = {}
+            textures[x]['drink']['L'] = [textids[34],textids[35],textids[36]]
+            textures[x]['drink']['R'] = [textids[37],textids[38],textids[39]]
+
 
 """""""""""""""""""""""""""""""""""
  METIERS
@@ -252,6 +256,7 @@ class Human():
         self.selecter = {}
         for i in range(4):
             self.selecter[i] = None
+        self.actin = None
 
 
         #life
@@ -373,7 +378,7 @@ class Human():
 
             k = int(g.gman.nb_perso_group*self.gey/o2.maxY)
             #print(k)
-            g.sman.modify(self.skin_id,group='perso'+str(k))
+            g.sman.modify(self.skin_id,group=o.get_perso_grp(self.gey))
 
             ## roll the animation
             max_roll = len(self.textids[self.doing[0]][self.dir])
@@ -652,10 +657,17 @@ class Human():
                     self.undo()
                     self.update_skin(repeat=False)
 
+                elif action == 'drink':
+                    self.doing.insert(0, action)
+                    self.undo()
+
                 elif action == 'wait':
                     self.doing.insert(0, action)
                     self.undo()
                     self.update_skin(repeat=False)
+
+        if action in ['drink','hit','move']:
+            self.time_last_move = time.time()
 
     def undo(self,dt=0,action='nothing'):
 
@@ -877,7 +889,7 @@ class Human():
                     self.relup(self.element_colli,self.damage,'peur/rassure')
                     self.element_colli.be_hit(self)
 
-                elif isinstance(self.element_colli,o.Item):
+                elif isinstance(self.element_colli,o.Item_ELEM):
                     # là c'est un item
                     self.element_colli.activate(self)
 
@@ -960,7 +972,25 @@ class Human():
         if hasattr(self,'skin_id'):
             g.sman.del_filter(self.skin_id)
 
+    def drink(self,qté):
+        # qté en mL -> 1L recharge 100 de vie d'eau
+        self.do('drink')
+        self.hydrated += qté/10
+
+
     ## INVENT / SELECTER
+
+    def act(self):
+        if self.actin == None:
+            if self.selecter[self.selected] == None or not hasattr(self.selecter[self.selected],'act'):
+                self.actin = 'hit'
+                self.hit()
+            else:
+                self.actin = self.selecter[self.selected]
+                self.selecter[self.selected].act(self)
+
+        elif self.selecter[self.selected] != None and self.actin == self.selecter[self.selected] and hasattr(self.selecter[self.selected],'act') and not self.selecter[self.selected].single_act :
+            self.selecter[self.selected].act(self)
 
     def drop(self,thg,create=True):
 
@@ -980,15 +1010,24 @@ class Human():
                 dx += 150
             else:
                 dx -= 150
-            o.Item(thg,(x+w/2+dx,y),self.street)
+            o.Item_ELEM(thg,(x+w/2+dx,y),self.street)
 
-    def grab(self,thg):
+    def grab(self,thg,inventory=False):
 
-        if None in self.selecter.values():
-            k = list(self.selecter.keys())[list(self.selecter.values()).index(None)]
-            self.selecter[k] = thg
+        if not inventory and None in self.selecter.values():
+
+            sel = []
+            for i in range(len(self.selecter)):
+                x = self.selected+i
+                if x >= len(self.selecter):
+                    x -= len(self.selecter)
+                if self.selecter[x] == None:
+                    self.selecter[x] = thg
+                    break
+
+            #k = list(self.selecter.keys())[list(self.selecter.values()).index(None)]
+            #self.selecter[k] = thg
             if isinstance(self,Perso) : self.selhud.update()
-
         else:
             self.inventory[thg.cat].append(thg)
             if isinstance(self,Perso) : self.invhud.add_ui(thg)
@@ -1499,22 +1538,23 @@ class Human():
         self.loaded = False
 
     def update_lab(self):
+        k = int(g.gman.nb_perso_group*self.gey/o2.maxY)
         if hasattr(self,'label'):
             # label
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 30
-            g.lman.modify(self.label,pos)
+            g.lman.modify(self.label,pos,group=o.get_perso_grp(self.gey))
 
         if hasattr(self,'label_life'):
             # spr life
             size_lifebar = 150
             size_fill = (self.life*size_lifebar)/self.max_life
             x,y = self.box.cx-size_lifebar/2 , self.box.fy + 2
-            g.sman.modify(self.label_life,(x,y),scale=(size_fill/32,None))
+            g.sman.modify(self.label_life,(x,y),scale=(size_fill/32,None),group=o.get_perso_grp(self.gey))
             # spr confidence
             size_lifebar = 150
             size_fill = (self.confidence*size_lifebar)/100
             x,y = self.box.cx-size_lifebar/2 , self.box.fy + 7
-            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None))
+            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None),group=o.get_perso_grp(self.gey))
 
     def hoover(self):
         if hasattr(self,'label'):
@@ -1910,7 +1950,8 @@ class Perso(Rappeur):
 
         self.cheat = CHEAT
 
-        self.grab_sel(o.rplum(self.name))
+        self.grab(o.Bottle())
+        self.grab(o.rplum(self.name))
         #self.load()
 
     # cheat

@@ -263,7 +263,10 @@ class App():
 
             keys = ['perso','perso2','perso3','guy','rapper']
             for x in keys:
-                g.TEXTIDS[x] = g.tman.loadImSeq(x+'.png',(1,40),8)
+                if x == 'rapper':
+                    g.TEXTIDS[x] = g.tman.loadImSeq(x+'.png',(1,60))
+                else:
+                    g.TEXTIDS[x] = g.tman.loadImSeq(x+'.png',(1,40))
             p.update_textures(keys)
 
         # items
@@ -502,6 +505,21 @@ class App():
         if symbol == key.F1:
             self.screen_capture()
 
+        elif symbol == key.G:
+
+            print('\nYOU ASKED TO PRINT GROUPS AND THEIR ORGANISATION:')
+            print('  will be displayed in descending order like that : order,name\n')
+
+            tab = []
+            orders_sorted = sorted(g.gman.names_wo,reverse=True)
+
+            for order in orders_sorted:
+                say = str(order)
+                say += (6-len(say))*' '
+                say +=g.gman.names_wo[order]
+                print(say)
+            print('')
+
         if self.action == "play":
 
             if symbol == key.ESCAPE:
@@ -509,20 +527,6 @@ class App():
                 if not ESK_QUIT:
                     return pyglet.event.EVENT_HANDLED
             #affiche les différents OrderedGroup d'affichage
-            elif symbol == key.G:
-
-                print('\nYOU ASKED TO PRINT GROUPS AND THEIR ORGANISATION:')
-                print('  will be displayed in descending order like that : order,name\n')
-
-                tab = []
-                orders_sorted = sorted(g.gman.names_wo,reverse=True)
-
-                for order in orders_sorted:
-                    say = str(order)
-                    say += (6-len(say))*' '
-                    say +=g.gman.names_wo[order]
-                    print(say)
-                print('')
 
             elif symbol == key.B:
                 print(self.perso.invhud)
@@ -534,14 +538,12 @@ class App():
                     self.perso.drop_sel()
 
                 elif symbol == key.SPACE:
-                    self.perso.hit()
+                    self.perso.act()
 
                 elif symbol == key.X:
                     self.perso.hud.rollhide()
                     self.perso.lifehud.rollhide()
-                    #self.perso.credhud.rollhide()
-                    """if self.perso.plume != None:
-                        self.perso.plumhud.rollhide()"""
+                    self.perso.selhud.rollhide()
 
                 elif symbol == key.E:
                     self.perso.invhud.rollhide()
@@ -602,6 +604,9 @@ class App():
             elif symbol == key.TAB:
                 self.perso.relhud.unhide(True)
 
+            elif symbol == key.SPACE:
+                self.perso.actin = None
+
     def on_close(self):
 
         print('\n\nNumber of lines :',compt(self.path))
@@ -619,20 +624,11 @@ class App():
                 ## CHECK ALL UI
                 #print(self.this_hud_caught_an_item)
 
-                # plumUI
-                """if self.perso.plume != None and self.perso.plumhud.ui.visible and self.this_hud_caught_an_item == None:
-                    self.perso.plumhud.ui.check_mouse(x,y)"""
-
                 # lifeUI
                 if self.perso.lifehud.ui.visible and self.this_hud_caught_an_item == None:
                     self.perso.lifehud.ui.check_mouse(x,y)
 
-                # credUI
-                """if self.perso.credhud.ui.visible and self.this_hud_caught_an_item == None:
-                    self.perso.credhud.ui.check_mouse(x,y)"""
-
                 #phaseUI
-
                 for zone in o2.NY.CITY[self.perso.street].zones:
 
                     if zone == 'studio' and self.this_hud_caught_an_item == o2.NY.CITY[self.perso.street].zones['studio'].hud and o2.NY.CITY[self.perso.street].zones['studio'].hud.item_caught == None:
@@ -678,7 +674,6 @@ class App():
                                     ui.check_mouse(x,y)
                                     if ui.caught:
                                             ui.move(x,y)
-
                 if self.this_hud_caught_an_item == self.perso.invhud and self.perso.invhud.item_caught == None:
                     self.this_hud_caught_an_item = None
 
@@ -695,6 +690,17 @@ class App():
                                     ui.move(x,y)
                                     ui.check_mouse(x,y)
 
+                # selUI
+                if self.perso.selhud.visible:
+                    if self.this_hud_caught_an_item == None:
+                        self.perso.selhud.check_hoover(x,y)
+                    elif self.this_hud_caught_an_item == self.perso.selhud:
+                        # the inventory
+                        for uitype in self.perso.selhud.uis:
+                            if self.perso.selhud.uis[uitype] != None and self.perso.selhud.uis[uitype].caught:
+                                self.perso.selhud.uis[uitype].move(x,y)
+                                self.perso.selhud.uis[uitype].check_mouse(x,y)
+
                 #print(self.this_hud_caught_an_item)
 
     def on_mouse_press(self,x, y, button, modifiers):
@@ -706,10 +712,6 @@ class App():
                 letsbacktnothingcaught = False
 
                 ## CHECK ALL UI
-
-                # plumUI
-                """if self.perso.plume != None and self.perso.plumhud.ui.visible and self.this_hud_caught_an_item == None:
-                    self.perso.plumhud.ui.check_pressed()"""
 
                 #phaseUI
                 for zone in o2.NY.CITY[self.perso.street].zones:
@@ -796,19 +798,43 @@ class App():
                             if not g.keys[key.LSHIFT]:
                                 # signifie qu'on prend le hud
                                 self.this_hud_caught_an_item = self.perso.invhud
+                                self.on_mouse_motion(x,y,0,0)
                             else:
                                 # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
                                 self.perso.invhud.quick_catch_and_drop(self.perso.invhud.item_caught.item)
                                 letsbacktnothingcaught = True
 
                         elif caught_dropped == -1: # means dropped
-                            self.this_hud_caught_an_item = None
+                            letsbacktnothingcaught = True
+                            #self.this_hud_caught_an_item = None
 
-                        self.on_mouse_motion(x,y,0,0)
+                        #self.on_mouse_motion(x,y,0,0)
 
                     self.perso.invhud.check_press_btns(x,y)
 
+                # selUI
+                if self.perso.selhud.visible:
+
+                    if (self.this_hud_caught_an_item == None or self.this_hud_caught_an_item == self.perso.selhud) : #check si il peut catch
+                        caught_dropped = self.perso.selhud.catch_or_drop(x,y)
+
+                        if caught_dropped == 1: # means caught
+
+                            if not g.keys[key.LSHIFT]:
+                                # signifie qu'on prend le hud
+                                self.this_hud_caught_an_item = self.perso.selhud
+                                self.on_mouse_motion(x,y,0,0)
+                            else:
+                                # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
+                                self.perso.selhud.quick_catch_and_drop(self.perso.selhud.item_caught.item)
+                                letsbacktnothingcaught = True
+
+                        elif caught_dropped == -1: # means dropped
+                            letsbacktnothingcaught = True
+                            #self.this_hud_caught_an_item = None
+
                 if letsbacktnothingcaught:
+                    self.on_mouse_motion(x,y,0,0)
                     self.this_hud_caught_an_item = None
 
     def on_mouse_release(self,x,y,button,modifiers):
@@ -846,6 +872,10 @@ class App():
                     self.perso.move('up')
                 if g.keys[key.S]:
                     self.perso.move('down')
+
+                ## actin
+                if g.keys[key.SPACE]:
+                    self.perso.act()
 
             if g.keys[key.LEFT] or g.keys[key.RIGHT]:
                 if g.keys[key.RIGHT]:
@@ -920,8 +950,6 @@ class App():
                     hum.update_env()
                     hum.update_lab()
                     hum.update()
-
-                for hum in o2.NY.CITY[self.perso.street].humans:
                     hum.being_bot()
                     hum.check_do()
 
@@ -986,7 +1014,7 @@ class App():
                     if chance < self.perso.nb_fans*malus:
                         random.choice(p.BOTS).stream(self.perso.disco[i])
 
-            text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
+            text_lab = (self.perso.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.todo)),self.perso.doing)
             g.lman.set_text(self.lab_doing,text_lab)
             self.perso.hud.update()
             self.perso.bigmap.update()
