@@ -6,6 +6,20 @@ _ceci est le todo à faire hehe_
 
 **EN COURS**
 
+
+## BARRE OUTILS UTILISABLES
+  type minecraft
+  4 slots possibles : on les remplit depuis l'inventaire
+  scroll de souris change l'outil séléctionné
+  -> hud affiche les détails de l'outil en cours
+  -> rien : main (affiche le dmg)
+  -> plume pour écrire
+  barre d'espace active l'outil:
+      arme -> frappe
+      plume -> écrit
+      food -> mange/boit
+
+
 # street
   stations de metro disponibles dans différentes rues : permet de se déplacer plus vite, potentiellement fuir police
   -faire des quartiers

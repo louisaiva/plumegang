@@ -247,6 +247,12 @@ class Human():
         self.inventory['plume'] = []
         self.inventory['food'] = []
 
+        #selecter
+        self.selected = 0
+        self.selecter = {}
+        for i in range(4):
+            self.selecter[i] = None
+
 
         #life
         self.life = 100
@@ -954,20 +960,19 @@ class Human():
         if hasattr(self,'skin_id'):
             g.sman.del_filter(self.skin_id)
 
+    ## INVENT / SELECTER
+
     def drop(self,thg,create=True):
 
-        droppin = False
-
-        if type(thg) == o.Plume and isinstance(self,Rappeur) and self.plume == thg:
-            droppin = True
-            if isinstance(self,Perso) : self.plumhud.delete()
-            self.plume = None
+        if thg in list(self.selecter.values()):
+            k = list(self.selecter.keys())[list(self.selecter.values()).index(thg)]
+            self.selecter[k] = None
+            if isinstance(self,Perso) : self.selhud.update()
         else:
             self.inventory[thg.cat].remove(thg)
             if isinstance(self,Perso) : self.invhud.del_ui(thg)
-            droppin = True
 
-        if droppin and create:
+        if create:
             w,h = self.box.wh
             x,y = self.gex,self.gey
             dx = 0
@@ -979,14 +984,38 @@ class Human():
 
     def grab(self,thg):
 
-        if type(thg) == o.Plume and isinstance(self,Rappeur) and self.plume == None:
-            if isinstance(self,Perso):
-                if self.plume != None : self.plumhud.delete()
-                self.plumhud = o.PlumHUD(thg)
-            self.plume = thg
+        if None in self.selecter.values():
+            k = list(self.selecter.keys())[list(self.selecter.values()).index(None)]
+            self.selecter[k] = thg
+            if isinstance(self,Perso) : self.selhud.update()
+
         else:
             self.inventory[thg.cat].append(thg)
             if isinstance(self,Perso) : self.invhud.add_ui(thg)
+
+    def drop_sel(self):
+        # drop l'outil selectionné
+        if self.selecter[self.selected] != None:
+            self.drop(self.selecter[self.selected])
+            #if isinstance(self,Perso) : self.selhud.update()
+
+    def grab_sel(self,thg):
+        if thg != None:
+            self.drop_sel()
+            self.selecter[self.selected] = thg
+            if isinstance(self,Perso) : self.selhud.update()
+
+    def roll_sel(self,dir='up'):
+        if dir == 'up':
+            self.selected += 1
+            if self.selected >= len(self.selecter):
+                self.selected = 0
+        elif dir == 'down':
+            self.selected -= 1
+            if self.selected < 0:
+                self.selected = len(self.selecter)-1
+
+        if isinstance(self,Perso) : self.selhud.update()
 
 
     ## BOTS
@@ -1722,6 +1751,7 @@ class Rappeur(Fan):
         self.fans = []
 
         self.plume = o.rplum(self.name)
+        if type(self) != Perso : self.grab_sel(o.rplum(self.name))
 
     def rplum(self):
         self.plume = o.rplum(self.name)
@@ -1747,9 +1777,9 @@ class Rappeur(Fan):
 
         self.update_scores()
 
-    def die(self):
+    """def die(self):
         self.drop(self.plume)
-        super(Rappeur,self).die()
+        super(Rappeur,self).die()"""
 
     # env
     def update_env(self):
@@ -1869,8 +1899,9 @@ class Perso(Rappeur):
         self.lifehud = o.LifeHUD(self)
         self.fedhydhud = o.FedHydHUD(self)
         #self.credhud = o.CredHUD(self)
-        self.plumhud = o.PlumHUD(self.plume)
+        #self.plumhud = o.PlumHUD(self.plume)
         self.invhud = o.InventHUD(self,fill)
+        self.selhud = o.SelectHUD(self)
         self.sonhud = o.SonHUD(self)
 
         self.bigmap = o.Map(self)
@@ -1879,6 +1910,7 @@ class Perso(Rappeur):
 
         self.cheat = CHEAT
 
+        self.grab_sel(o.rplum(self.name))
         #self.load()
 
     # cheat
@@ -1889,10 +1921,10 @@ class Perso(Rappeur):
         #self.credhud.update()
 
     def cheat_plumson(self):
-        if self.plume != None:
-            self.plumhud.delete()
+        """if self.plume != None:
+            self.plumhud.delete()"""
         self.plume = o.splum(self.name)
-        self.plumhud = o.PlumHUD(self.plume)
+        #self.plumhud = o.PlumHUD(self.plume)
 
         self.grab(o.sson(self.name))
 
@@ -1903,10 +1935,10 @@ class Perso(Rappeur):
     # huds
 
     def rplum(self):
-        if self.plume != None:
-            self.plumhud.delete()
+        """if self.plume != None:
+            self.plumhud.delete()"""
         super(Perso,self).rplum()
-        self.plumhud = o.PlumHUD(self.plume)
+        #self.plumhud = o.PlumHUD(self.plume)
 
     def be_hit(self,hitter):
         super(Perso,self).be_hit(hitter)
@@ -1970,6 +2002,7 @@ class Perso(Rappeur):
         self.relhud.update()
         self.minirelhud.update()
         self.fedhydhud.update()
+        #self.selhud.update()
 
     def assign_poto(self,hum):
         self.poto = hum

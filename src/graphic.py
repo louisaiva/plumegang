@@ -285,7 +285,7 @@ class SpriteManager():
         if self.sprites[sprid].image != tman.textures[textid]:
             self.sprites[sprid].image = tman.textures[textid]
 
-    def modify(self,sprid,pos=None,scale=None,group=None,opacity=None,anchor=None):
+    def modify(self,sprid,pos=None,scale=None,group=None,opacity=None,anchor=None,size=None):
 
         # position
         x,y = None,None
@@ -296,6 +296,16 @@ class SpriteManager():
         scalex,scaley = None,None
         if scale != None and scale != (self.sprites[sprid].scale_x,self.sprites[sprid].scale_y):
             scalex,scaley = scale
+
+        # size
+        if size != None:
+            w,h = size
+            if w != None and w != self.sprites[sprid].width:
+                ow = self.sprites[sprid].width/self.sprites[sprid].scale_x
+                scalex = w/ow
+            if h != None and h != self.sprites[sprid].height:
+                oh = self.sprites[sprid].height/self.sprites[sprid].scale_y
+                scaley = h/oh
 
         # updating group
         if group != None:

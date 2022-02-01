@@ -222,6 +222,7 @@ class Plume(Sound_item):
 
     def __init__(self,owner,qua,cred):
 
+        self.cat = 'plume'
         self.quality = qua
         self.cred = cred
         self.owner = owner
@@ -257,6 +258,8 @@ class Plume(Sound_item):
 class Phase(Sound_item):
 
     def __init__(self,quality,cred,):
+
+        self.cat = 'phase'
 
         self.quality = quality
         self.cred = cred
@@ -315,6 +318,8 @@ class Instru(Sound_item):
 
     def __init__(self,qua,author):
 
+        self.cat = 'instru'
+
         self.quality = qua
         self.author = author
 
@@ -332,6 +337,8 @@ class Instru(Sound_item):
 class Son(Sound_item):
 
     def __init__(self,instru,phases,name='cheh'):
+
+        self.cat = 'son'
 
         self.name = name
 
@@ -702,6 +709,9 @@ class Porte(Zone_ELEM):
         if self.destination in list(map(lambda x:x.target,perso.inventory['key'])):
             return True
 
+        if self.destination in list(map( lambda x:x.target ,   list(filter(lambda x:type(x).__name__ == 'Key',list(perso.selecter.values()) )))):
+            return True
+
         if perso.cheat:
             return True
 
@@ -714,6 +724,9 @@ class Porte(Zone_ELEM):
                     return True
 
                 if house in list(map(lambda x:x.target,perso.inventory['key'])):
+                    return True
+
+                if house in list(map( lambda x:x.target ,   list(filter(lambda x:type(x).__name__ == 'Key',list(perso.selecter.values()) )))):
                     return True
 
         return False
@@ -1379,44 +1392,6 @@ class FedHydHUD(HUD):
         super(FedHydHUD,self).delete()
         #self.ui.delete()
 
-class PlumHUD(HUD):
-
-    def __init__(self,plum):
-
-        super(PlumHUD, self).__init__(group='hud2',name='plum')
-
-        self.plum = plum
-
-
-        self.box = box(1650,20,250,150)
-        self.padding = 50
-
-        self.addCol('bg',self.box,group='hud2-1')
-
-        self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),font_name=1,anchor=('center','center'))
-
-        self.addSpr('plum_spr',g.TEXTIDS['plume'][convert_quality(self.plum.quality)[0]])
-        g.sman.modify(self.sprids['plum_spr'],scale=(0.4,0.4))
-
-        xplum = self.lab('quality').x - self.padding - self.spr('plum_spr').width/2
-        yplum = self.box.cy - self.spr('plum_spr').height/2
-
-        g.sman.modify(self.sprids['plum_spr'],pos=(xplum,yplum))
-
-
-        x = (xplum +  (self.box.x) )/2
-
-        self.addLab('cred',convert_cred(self.plum.cred),(x ,self.box.cy),font_name=1,font_size=20,anchor=('center','center'))
-
-
-        ### UI
-        self.ui = Plume_UI(box(xplum,yplum,self.spr('plum_spr').width,self.spr('plum_spr').height),plum)
-
-    def delete(self):
-
-        super(PlumHUD,self).delete()
-        self.ui.delete()
-
 class RelHUD(HUD):
 
     def __init__(self,hum):
@@ -2067,6 +2042,8 @@ class MarketHUD(HUD):
             if ui != None:
                 ui.unhide(hide)
 
+#---# hud spéciaux inventaire/selecteur
+
 class InventHUD(HUD):
 
     def __init__(self,perso,fill=True):
@@ -2574,6 +2551,96 @@ class InventHUD(HUD):
                     ui.unhide()
 
             self.update()
+
+class SelectHUD(HUD):
+
+    def __init__(self,perso):
+
+        super(SelectHUD, self).__init__(group='hud2',name='selecter')
+
+        self.perso = perso
+
+        self.item_caught = None
+
+        self.biggitem_w = 3*g.SPR
+        self.smallitem_w = g.SPR
+        self.padding = self.smallitem_w*1.8
+        self.pad = 100
+
+
+        # general : boxin
+        self.box = box(1650,20,250,150)
+        self.box2 = self.box.pop()
+        self.box2.y += self.box.h
+        self.box2.x = self.box.fx-self.padding
+        self.box2.w = self.padding
+        self.box2.h = (len(self.perso.selecter)-1)*self.padding
+
+
+        self.addCol('bg',self.box,group='hud2-1')
+        self.addCol('bg2',self.box2,group='hud2-1',color='delta_blue_faded')
+
+        # inventory
+        self.uis = {}
+        for i in range(len(self.perso.selecter)):
+            self.uis[i] = None
+
+        self.update()
+
+    def update(self):
+
+        # on check les items dans le selecter du perso et on les mets à la bonne place
+
+        # verif lequel est selected
+        sel = []
+        for i in range(len(self.uis)):
+            x = self.perso.selected+i
+            if x >= len(self.uis):
+                x -= len(self.uis)
+            sel.append(x)
+
+        #print(sel)
+
+        for k in range(len(sel)):
+            i = sel[k]
+            item = self.perso.selecter[i]
+
+            if item != None:
+
+                x,y = self.box2.cx,self.box2.y + (k-1)*(self.padding) + self.padding/2
+                w = self.smallitem_w
+
+                # si c'est l'element selectionné on met bien
+                if k == 0:
+                    w = self.biggitem_w
+                    x,y = self.box.fx- self.pad,self.box.cy
+
+                # on crée si jamais
+                if self.uis[i] == None:
+                    self.uis[i] = Invent_UI(box(x,y,w,w),item,spr_vis=self.visible)
+                else:
+                    self.uis[i].upbox(box(x,y,w,w))
+
+                # on scale et on place
+                if g.sman.spr(self.uis[i].itemspr).width != w:
+                    g.sman.modify(self.uis[i].itemspr,size=(w,w))
+
+                g.sman.modify(self.uis[i].itemspr,pos=(x,y),anchor='center')
+
+            else:
+                if self.uis[i] != None:
+                    self.uis[i].delete()
+                    self.uis[i] = None
+
+        # on update les details
+
+    def delete(self):
+
+        super(SelectHUD,self).delete()
+        for x in self.uis:
+            if self.uis[x] != None:
+                self.uis[x].delete()
+                self.uis[x] = None
 
 
 
