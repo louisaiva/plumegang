@@ -674,15 +674,20 @@ class App():
                                     ui.check_mouse(x,y)
                                     if ui.caught:
                                             ui.move(x,y)
+
                 if self.this_hud_caught_an_item == self.perso.invhud and self.perso.invhud.item_caught == None:
                     self.this_hud_caught_an_item = None
+                elif self.this_hud_caught_an_item == self.perso.selhud and self.perso.selhud.item_caught == None:
+                    #print('oh yo')
+                    self.this_hud_caught_an_item = None
+
+                #print(self.this_hud_caught_an_item)
 
                 # inventUI
                 if self.perso.invhud.visible:
                     if self.this_hud_caught_an_item == None:
                         self.perso.invhud.check_hoover(x,y)
                     elif self.this_hud_caught_an_item == self.perso.invhud:
-
                         # the inventory
                         for uitype in self.perso.invhud.uis:
                             for ui in self.perso.invhud.uis[uitype]:
@@ -832,6 +837,8 @@ class App():
 
                         elif caught_dropped == -1: # means dropped
                             letsbacktnothingcaught = True
+                            #self.on_mouse_motion(x,y,0,0)
+                            #self.perso.selhud.update()
                             #self.this_hud_caught_an_item = None
 
                 if letsbacktnothingcaught:

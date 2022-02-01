@@ -2316,8 +2316,8 @@ class InventHUD(HUD):
             if self.item_caught.dropped:
                 if collisionAX(self.box.realbox,(x,y)):
                     self.item_caught.reset()
-                    self.update()
                     self.item_caught = None
+                    self.update()
                     return -1
 
                 elif self.perso.selhud.visible and (collisionAX(self.perso.selhud.box.realbox,(x,y)) or collisionAX(self.perso.selhud.box2.realbox,(x,y))):
@@ -2428,7 +2428,6 @@ class InventHUD(HUD):
             self.perso.grab(self.item_caught.item)
             self.item_caught = None
             return -1
-
 
     def check_hoover(self,x,y):
 
@@ -2680,7 +2679,11 @@ class SelectHUD(HUD):
 
                     # on crée si jamais
                     if self.uis[i] == None:
-                        self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible)
+                        if isinstance(item,Sound_item):
+                            scale = (0.25,0.25)
+                        else:
+                            scale = (1,1)
+                        self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible,scale=scale)
                     else:
                         self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
 
@@ -2694,6 +2697,7 @@ class SelectHUD(HUD):
                     if self.uis[i] != None:
                         self.uis[i].delete()
                         self.uis[i] = None
+
 
             if k == 0:
                 # on update les details
@@ -2715,8 +2719,8 @@ class SelectHUD(HUD):
             if self.item_caught.dropped:
                 if collisionAX(self.box.realbox,(x,y)) or collisionAX(self.box2.realbox,(x,y)):
                     self.item_caught.reset()
-                    self.update()
                     self.item_caught = None
+                    self.update()
                     return -1
 
                 elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):

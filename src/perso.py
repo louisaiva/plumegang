@@ -987,14 +987,16 @@ class Human():
     ## INVENT / SELECTER
 
     def act(self):
+
         if self.actin == None:
-            if self.selecter[self.selected] == None or not hasattr(self.selecter[self.selected],'act'):
+            if (self.element_colli != None and isinstance(self.element_colli,o.Item_ELEM)) \
+                        or self.selecter[self.selected] == None\
+                        or not hasattr(self.selecter[self.selected],'act'):
                 self.actin = 'hit'
                 self.hit()
             else:
                 self.actin = self.selecter[self.selected]
                 self.selecter[self.selected].act(self)
-
         elif self.selecter[self.selected] != None and self.actin == self.selecter[self.selected] and hasattr(self.selecter[self.selected],'act') and not self.selecter[self.selected].single_act :
             self.selecter[self.selected].act(self)
 
