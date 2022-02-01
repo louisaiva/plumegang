@@ -802,6 +802,8 @@ def cooldown_one(key,obj):
 #### CYCLE -> rules day/night cycle
 
 MODE_COLOR = 1 ## 1 pour avoir des couleurs wtf et 0 pour la "réalité"
+DUREE_DAY = 60*20
+# duree d'une journée en secondes
 
 class Cycle():
 
@@ -810,7 +812,7 @@ class Cycle():
         # general
 
         # longueur du cycle en secondes
-        self.len = 20*60
+        self.len = DUREE_DAY
         self.dt = 0.05 # dt avant chaque update
 
         self.tick = 0

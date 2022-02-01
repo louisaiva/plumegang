@@ -22,12 +22,21 @@ if os.name == 'nt':
 
 class box():
 
-    def __init__(self,x=0,y=0,w=30,h=30):
+    def __init__(self,x=0,y=0,w=30,h=30,cx=None,cy=None):
 
         self.w = w
         self.h = h
-        self.x = x
-        self.y = y
+
+        if cx != None:
+            self.x = cx-w/2
+        else:
+            self.x = x
+
+        if cy != None:
+            self.y = cy-h/2
+        else:
+            self.y = y
+
 
     def pop(self):
         return box(*self.xywh)

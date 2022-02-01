@@ -340,6 +340,10 @@ class Human():
         for key in self.inventory['key']:
             self.drop(key)
 
+        for item in self.selecter.values():
+            if item != None:
+                self.drop(item)
+
         if hasattr(self,'label_life'):
             g.sman.delete(self.label_life)
             del self.label_life
@@ -517,8 +521,8 @@ class Human():
         t = time.time()
 
         # feedin/hydration
-        if self.fed > 0: self.fed -= 100/g.Cyc.tpd
-        if self.hydrated > 0: self.hydrated -= 200/g.Cyc.tpd
+        if self.fed > 0: self.fed -= 50/g.Cyc.tpd
+        if self.hydrated > 0: self.hydrated -= 100/g.Cyc.tpd
         if self.hydrated <= 0 or self.fed <= 0:
             self.life -= 1
 
@@ -974,8 +978,10 @@ class Human():
 
     def drink(self,qté):
         # qté en mL -> 1L recharge 100 de vie d'eau
-        self.do('drink')
-        self.hydrated += qté/10
+        if self.hydrated <= 100-qté:
+            self.do('drink')
+            self.hydrated += qté/10
+
 
 
     ## INVENT / SELECTER
@@ -2043,7 +2049,7 @@ class Perso(Rappeur):
         self.relhud.update()
         self.minirelhud.update()
         self.fedhydhud.update()
-        #self.selhud.update()
+        self.selhud.update()
 
     def assign_poto(self,hum):
         self.poto = hum

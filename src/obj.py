@@ -227,6 +227,9 @@ class Item():
         #self.action = None
         pass
 
+    def details(self):
+        return [type(self).__name__.lower()]
+
 class Key(Item):
 
     def __init__(self,street):
@@ -237,6 +240,9 @@ class Key(Item):
 
     def __str__(self):
         return 'key for '+self.target.name
+
+    def details(self):
+        return self.target.name.split('-')
 
 class Food_item(Item):
 
@@ -256,15 +262,19 @@ class Bottle(Food_item):
         self.single_act = False
 
     def act(self,perso):
-        if self.qt > 0:
-            qté = 1
+        qté = 2
+        if self.qt >= qté and perso.hydrated <= 100-qté:
             perso.drink(qté)
             self.qt -= qté
-            print(perso.name,'drank',str(qté),'mL of',self.liquid)
+            #print(perso.name,'drank',str(qté),'mL of',self.liquid)
+        else:
+            perso.actin = 'done'
 
     def __str__(self):
         return 'bottle of '+str(self.qt)+'mL of water'
 
+    def details(self):
+        return [self.liquid,str(self.qt)+' mL']
 
 """'''''''''''''''''''''''''''''''''
 '''''''SOUND ITEMS''''''''''''''''''
@@ -279,6 +289,9 @@ class Sound_item(Item):
 
     def __lt__(self, other):
          return self.quality < other.quality
+
+    def details(self):
+        return [convert_quality(self.quality)]
 
 #------# plum
 class Plume(Sound_item):
@@ -1218,7 +1231,6 @@ class Map(HUD):
             else:
                 g.sman.modify(self.sprids['perso_spr'],pos=(px,py),anchor='center')
 
-
 class PersoHUD(HUD):
 
     def __init__(self,perso):
@@ -1739,6 +1751,9 @@ class WriteHUD(HUD):
             if collisionAX(self.box.realbox,(x,y)):
                 self.write(self.ui.phase)
             elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+                perso.grab(self.ui.phase,True)
+                self.delete_phase()
+            elif perso.selhud.visible and (collisionAX(perso.selhud.box.realbox,(x,y)) or collisionAX(perso.selhud.box2.realbox,(x,y))):
                 perso.grab(self.ui.phase)
                 self.delete_phase()
             else:
@@ -2371,42 +2386,49 @@ class InventHUD(HUD):
 
         return 0
 
-    def quick_catch_and_drop(self,item):
+    def quick_catch_and_drop(self):
+
+        selector = False
 
         if self.perso.element_colli != None and self.perso.element_colli.activated:
 
-            if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
-                self.perso.element_colli.hud.write(item)
+            if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
+                self.perso.element_colli.hud.write(self.item_caught.item)
                 self.perso.drop(self.item_caught.item,create=False)
                 self.item_caught = None
 
-            elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
-                self.perso.element_colli.hud.inspect(item)
+            elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
+                self.perso.element_colli.hud.inspect(self.item_caught.item)
                 self.perso.drop(self.item_caught.item,create=False)
                 self.item_caught = None
 
             elif type(self.perso.element_colli) == Studio:
 
-                if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
-                    self.perso.element_colli.hud.catch(item)
+                if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                    self.perso.element_colli.hud.catch(self.item_caught.item)
                     self.perso.drop(self.item_caught.item,create=False)
                     self.item_caught = None
 
-                elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
-                    self.perso.element_colli.hud.catch(item)
+                elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                    self.perso.element_colli.hud.catch(self.item_caught.item)
                     self.perso.drop(self.item_caught.item,create=False)
                     self.item_caught = None
 
                 else:
-                    self.item_caught.check_pressed()
+                    selector = True
 
             else:
-                self.item_caught.check_pressed()
+                selector = True
 
         else:
-            self.perso.drop(self.item_caught.item)
+            selector = True
+
+        if selector:
+            self.perso.drop(self.item_caught.item,False)
+            self.perso.grab(self.item_caught.item)
             self.item_caught = None
             return -1
+
 
     def check_hoover(self,x,y):
 
@@ -2621,6 +2643,12 @@ class SelectHUD(HUD):
         for i in range(len(self.perso.selecter)):
             self.uis[i] = None
 
+        # details
+        self.details = {}
+        self.details['up'] = None
+        self.details['mid'] = None
+        self.details['bottom'] = None
+
         self.update()
 
     def update(self):
@@ -2635,48 +2663,44 @@ class SelectHUD(HUD):
                 x -= len(self.uis)
             sel.append(x)
 
-        #print(sel)
-
         for k in range(len(sel)):
             i = sel[k]
             item = self.perso.selecter[i]
 
-            if item != None:
+            if not self.item_caught or (self.item_caught and not self.uis[i] == self.item_caught):
+                if item != None:
 
-                x,y = self.box2.cx,self.box2.y + (k-1)*(self.padding) + self.padding/2
-                w = self.smallitem_w
+                    x,y = self.box2.cx,self.box2.y + (k-1)*(self.padding) + self.padding/2
+                    w = self.smallitem_w
 
-                # si c'est l'element selectionné on met bien
-                if k == 0:
-                    w = self.biggitem_w
-                    x,y = self.box.fx-3*w/4,self.box.cy
+                    # si c'est l'element selectionné on met bien
+                    if k == 0:
+                        w = self.biggitem_w
+                        x,y = self.box.fx-3*w/4,self.box.cy
 
-                # on crée si jamais
-                if self.uis[i] == None:
-                    self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible)
+                    # on crée si jamais
+                    if self.uis[i] == None:
+                        self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible)
+                    else:
+                        self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
+
+                    # on scale et on place
+                    if g.sman.spr(self.uis[i].itemspr).width != w:
+                        g.sman.modify(self.uis[i].itemspr,size=(w,w))
+
+                    g.sman.modify(self.uis[i].itemspr,pos=(x,y),anchor='center')
+
                 else:
-                    self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
+                    if self.uis[i] != None:
+                        self.uis[i].delete()
+                        self.uis[i] = None
 
-                # on scale et on place
-                if g.sman.spr(self.uis[i].itemspr).width != w:
-                    g.sman.modify(self.uis[i].itemspr,size=(w,w))
+            if k == 0:
+                # on update les details
+                self.update_details(item)
 
-                g.sman.modify(self.uis[i].itemspr,pos=(x,y),anchor='center')
 
-            else:
-                if self.uis[i] != None:
-                    self.uis[i].delete()
-                    self.uis[i] = None
-
-        # on update les details
-
-    def delete(self):
-
-        super(SelectHUD,self).delete()
-        for x in self.uis:
-            if self.uis[x] != None:
-                self.uis[x].delete()
-                self.uis[x] = None
+    # hoover catch drop ...
 
     def check_hoover(self,x,y):
         for cquecé in self.uis:
@@ -2751,6 +2775,78 @@ class SelectHUD(HUD):
                         return 1
         return 0
 
+    def quick_catch_and_drop(self):
+
+        inventory = False
+
+        if self.perso.element_colli != None and self.perso.element_colli.activated:
+
+            if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
+                self.perso.element_colli.hud.write(self.item_caught.item)
+                self.perso.drop(self.item_caught.item,create=False)
+                self.item_caught = None
+
+            elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
+                self.perso.element_colli.hud.inspect(self.item_caught.item)
+                self.perso.drop(self.item_caught.item,create=False)
+                self.item_caught = None
+
+            elif type(self.perso.element_colli) == Studio:
+
+                if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                    self.perso.element_colli.hud.catch(self.item_caught.item)
+                    self.perso.drop(self.item_caught.item,create=False)
+                    self.item_caught = None
+
+                elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                    self.perso.element_colli.hud.catch(self.item_caught.item)
+                    self.perso.drop(self.item_caught.item,create=False)
+                    self.item_caught = None
+
+                else:
+                    inventory = True
+
+            else:
+                inventory = True
+
+        else:
+            inventory = True
+
+        if inventory:
+            self.perso.drop(self.item_caught.item,False)
+            self.perso.grab(self.item_caught.item,True)
+            self.item_caught = None
+            return -1
+
+
+    ## details
+
+    def update_details(self,item=None):
+
+        if item == None:
+            for x in ['mid','up','bottom']:
+                if self.details[x] != None:
+                    g.lman.delete(self.details[x])
+                    self.details[x] = None
+        else:
+            details = item.details()
+            keys = ['mid','up','bottom']
+            pos = [ (self.box.x+self.box.w/4,self.box.cy),
+                    (self.box.x+self.box.w/4,self.box.cy+self.box.h/4),
+                    (self.box.x+self.box.w/4,self.box.cy-self.box.h/4)]
+            sizes = [20,12,12]
+
+            for i in range(len(keys)):
+
+                #print(i,keys[i],details)
+
+                if self.details[keys[i]] != None and i >= len(details):
+                    g.lman.delete(self.details[keys[i]])
+                    self.details[keys[i]] = None
+                elif self.details[keys[i]] == None and i < len(details):
+                    self.details[keys[i]] = g.lman.addLab(details[i],pos[i],anchor = ('center','center'),group='hud21',font_size=sizes[i])
+                elif i < len(details):
+                    g.lman.set_text(self.details[keys[i]],details[i])
 
 
 """'''''''''''''''''''''''''''''''''
@@ -2773,11 +2869,14 @@ class Zone_UI(Zone):
         self.visible = True
         self._hoover = False
 
+        #print('LAB')
+
         # label
-        pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
-        self.label = g.lman.addLab(lab_text,pos,vis=False,anchor = ('center','bottom'),font_size=20,color=colorlab,group='ui')
-        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
-        self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=False)
+        x,y = self.box.cx , self.box.fy + 25
+        self.label = g.lman.addLab(lab_text,(x,y),vis=False,anchor = ('center','center'),font_size=20,color=colorlab,group='ui')
+        #print(x,y,g.lman.labels[self.label].content_width ,g.lman.labels[self.label].content_height)
+        boxbg = box( cx=x,cy=y,w = g.lman.labels[self.label].content_width+20 , h = g.lman.labels[self.label].content_height+4 )
+        self.label_bg = g.sman.addCol('black_faded',boxbg,group='ui-1',vis=False)
 
     def hoover(self):
         g.lman.unhide(self.label)
@@ -2904,8 +3003,9 @@ class Life_UI(Zone_UI):
         super(Life_UI,self).__init__(box,lab_text,group='ui',makeCol=False,colorlab=c['lightred'])
 
     def update(self):
+
         g.lman.set_text(self.label,'vie : '+str(self.perso.life)+'/'+str(self.perso.max_life))
-        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
+        boxbg = box( cx=self.box.cx,cy=self.box.fy + 25,w = g.lman.labels[self.label].content_width+20 , h = g.lman.labels[self.label].content_height+4 )
         g.sman.delete(self.label_bg)
         self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=self._hoover)
 
@@ -2920,7 +3020,7 @@ class Cred_UI(Zone_UI):
 
     def update(self):
         g.lman.set_text(self.label,'cred : '+str(self.perso.cred))
-        boxbg = box( self.box.x + self.box.w/2 - g.lman.labels[self.label].content_width/2 - 5, self.box.y + self.box.h + 15, g.lman.labels[self.label].content_width+10 , g.lman.labels[self.label].content_height+10 )
+        boxbg = box( cx=self.box.cx,cy=self.box.fy + 25,w = g.lman.labels[self.label].content_width+20 , h = g.lman.labels[self.label].content_height+4 )
         g.sman.delete(self.label_bg)
         self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=self._hoover)
 
@@ -2991,8 +3091,9 @@ class Item_UI(Zone_UI):
         pos = self.box.cx , self.box.fy + 20
         g.lman.modify(self.label,pos)
         # labelbg
-        pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
-        g.sman.modify(self.label_bg,pos)
+        #pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
+        boxbg = box( cx=self.box.cx,cy=self.box.fy + 25,w = g.lman.labels[self.label].content_width+20 , h = g.lman.labels[self.label].content_height+4 )
+        g.sman.modify(self.label_bg,boxbg.xy)
 
     def delete(self):
         super(Item_UI,self).delete()

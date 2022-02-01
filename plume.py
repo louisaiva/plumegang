@@ -713,7 +713,7 @@ class App():
 
                 ## CHECK ALL UI
 
-                #phaseUI
+                #all hud
                 for zone in o2.NY.CITY[self.perso.street].zones:
                     if o2.NY.CITY[self.perso.street].zones[zone].activated:
 
@@ -731,7 +731,7 @@ class App():
                                             self.this_hud_caught_an_item = zone.hud
                                         else:
                                             # attrapage rapide dans l'inventaire
-                                            self.perso.grab(zone.hud.ui.phase)
+                                            self.perso.grab(zone.hud.ui.phase,True)
                                             o2.NY.CITY[self.perso.street].zones['lit'].hud.delete_phase()
                                             letsbacktnothingcaught = True
 
@@ -752,7 +752,7 @@ class App():
                                         self.this_hud_caught_an_item = zone.hud
                                     else:
                                         # attrapage rapide dans l'inventaire
-                                        self.perso.grab(zone.hud.item_caught.item)
+                                        self.perso.grab(zone.hud.item_caught.item,True)
                                         zone.hud.item_caught.delete()
                                         zone.hud.item_caught = None
                                         letsbacktnothingcaught = True
@@ -778,7 +778,7 @@ class App():
                                         self.this_hud_caught_an_item = zone.hud
                                     else:
                                         # attrapage rapide dans l'inventaire
-                                        self.perso.grab(zone.hud.item_caught.item)
+                                        self.perso.grab(zone.hud.item_caught.item,True)
                                         zone.hud.item_caught.delete()
                                         zone.hud.item_caught = None
                                         letsbacktnothingcaught = True
@@ -801,7 +801,7 @@ class App():
                                 self.on_mouse_motion(x,y,0,0)
                             else:
                                 # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
-                                self.perso.invhud.quick_catch_and_drop(self.perso.invhud.item_caught.item)
+                                self.perso.invhud.quick_catch_and_drop()#self.perso.invhud.item_caught.item)
                                 letsbacktnothingcaught = True
 
                         elif caught_dropped == -1: # means dropped
@@ -822,11 +822,12 @@ class App():
 
                             if not g.keys[key.LSHIFT]:
                                 # signifie qu'on prend le hud
+                                #print('oh yo')
                                 self.this_hud_caught_an_item = self.perso.selhud
                                 self.on_mouse_motion(x,y,0,0)
                             else:
                                 # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
-                                self.perso.selhud.quick_catch_and_drop(self.perso.selhud.item_caught.item)
+                                self.perso.selhud.quick_catch_and_drop()#self.perso.selhud.item_caught.item)
                                 letsbacktnothingcaught = True
 
                         elif caught_dropped == -1: # means dropped
