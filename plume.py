@@ -8,6 +8,7 @@ import pyglet,time,random
 from pyglet.window import key
 import pyglet.gl as gl
 import colorama
+from colors import red, green, blue
 colorama.init()
 
 from src.utils import *
@@ -38,10 +39,11 @@ class App():
     def __init__(self):
 
         self.path = CURRENT_PATH
+        self.init_time = time.time()
 
         ### windows
 
-        self.window = pyglet.window.Window(screen=g.scr.screen)
+        self.window = pyglet.window.Window(screen=g.scr.screen)#,vsync=False)
 
         self.window.set_fullscreen()
 
@@ -172,7 +174,7 @@ class App():
 
             if len(p.BOTS) < 200:
                 print(p.BOTS)
-            print(len(p.BOTS),'bots in this game !')
+            print('IN THIS GAME :',len(p.BOTS),'bots ---',len(o2.NY.CITY),'streets')
 
         # cycle
         tabcolor = [(self.sprids['bg-1'],1),
@@ -197,7 +199,7 @@ class App():
 
             # ez cash
             zones = []
-            zones.append(o.Distrib(2900,225))
+            zones.append(o.Cash(2900,225))
             street = o2.NY.rd_street().name
             o2.NY.CITY[street].assign_zones(zones)
             print('let\'s find the',street,'!')
@@ -230,9 +232,9 @@ class App():
             # labels
 
             self.lab_fps = g.lman.addLab('',(10,1080),group='up',font_name=1,font_size=32,anchor=('left','top'))
-            self.lab_day = g.lman.addLab('',(10,1080-32),group='up',font_name=1,font_size=32,anchor=('left','top'))
-            self.lab_time = g.lman.addLab('',(10,1080-32-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
-            self.lab_street = g.lman.addLab('',(10,100),group='up',font_name=1,font_size=20,anchor=('left','bottom'))
+            self.lab_day = g.lman.addLab('',(10,1080-32-32),group='up',font_name=1,font_size=32,anchor=('left','top'))
+            self.lab_time = g.lman.addLab('',(10,1080-32-32-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
+            self.lab_street = g.lman.addLab('',(10,1080-32),group='up',font_name=1,font_size=32,anchor=('left','top'))
 
             # keys
             g.keys = key.KeyStateHandler()
@@ -248,6 +250,7 @@ class App():
             self.action = "play" # play pause
             self.playing = True
 
+            print(red('LOADIN TIME '+trunc(time.time()-self.init_time)+' sec'))
             pyglet.clock.schedule_interval(self.gameloop,0.0000001)
             pyglet.app.run()
 
@@ -298,6 +301,8 @@ class App():
             ## items
             g.TEXTIDS['items'] = {}
             g.TEXTIDS['items']['key'] = g.TEXTIDS['ux'][3]
+            g.TEXTIDS['items']['bottle'] = g.TEXTIDS['ux'][7]
+            g.TEXTIDS['items']['noodle'] = g.TEXTIDS['ux'][6]
 
         # BG
         if True:
@@ -372,6 +377,15 @@ class App():
 
                 o2.builds_key.append(i)
 
+        ## ZONES
+        if True:
+            g.TEXTIDS['zone'] = {}
+
+            zones = ['distrib']
+            ids = g.tman.loadImSeq('zones.png',(1,6))
+
+            for i in range(len(zones)):
+                g.TEXTIDS['zone'][zones[i]] = ids[i]
 
         ## sun moon stars
         if True:
@@ -525,7 +539,7 @@ class App():
                 elif symbol == key.X:
                     self.perso.hud.rollhide()
                     self.perso.lifehud.rollhide()
-                    self.perso.credhud.rollhide()
+                    #self.perso.credhud.rollhide()
                     if self.perso.plume != None:
                         self.perso.plumhud.rollhide()
 
@@ -614,8 +628,8 @@ class App():
                     self.perso.lifehud.ui.check_mouse(x,y)
 
                 # credUI
-                if self.perso.credhud.ui.visible and self.this_hud_caught_an_item == None:
-                    self.perso.credhud.ui.check_mouse(x,y)
+                """if self.perso.credhud.ui.visible and self.this_hud_caught_an_item == None:
+                    self.perso.credhud.ui.check_mouse(x,y)"""
 
                 #phaseUI
 

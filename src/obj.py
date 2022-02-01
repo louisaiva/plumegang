@@ -403,9 +403,29 @@ class Key():
     def __init__(self,street):
 
         self.target = street
+        self.cat = 'key'
 
     def __str__(self):
         return 'key for '+self.target.name
+
+class Food_item():
+
+    def __init__(self):
+        self.cat = 'food'
+
+class Bottle(Food_item):
+
+    def __init__(self):
+        super(Bottle,self).__init__()
+
+        self.liquid = 'water'
+
+        self.qt = 1000 #qté en mL
+        # 1 litre d'eau recharge toute une "vie d'eau"
+
+    def __str__(self):
+        return 'bottle of '+str(self.qt)+'mL of water'
+
 
 
 """'''''''''''''''''''''''''''''''''
@@ -522,6 +542,7 @@ class Zone():
             g.sman.delete(self.skin_id)
             del self.skin_id
 
+
     def _realbox(self):
         return self.x,self.y,self.x+self.w,self.y+self.h
     realbox = property(_realbox)
@@ -602,14 +623,18 @@ class Zone_ELEM(Zone):
             g.lman.modify(self.label,pos)
 
     def deload(self):
+        if hasattr(self,'skin_id'):
+            g.Cyc.del_spr((self.skin_id,0.3))
         super(Zone_ELEM,self).deload()
-
         if hasattr(self,'label'):
             g.lman.delete(self.label)
             del self.label
 
-    def load(self):
+    def load(self,street):
         super(Zone_ELEM,self).load()
+
+        if hasattr(self,'skin_id') and street.outside:
+            g.Cyc.add_spr((self.skin_id,0.3))
 
         if not hasattr(self,'label'):
             # label
@@ -693,9 +718,32 @@ class Porte(Zone_ELEM):
 
         return False
 
+class Cash(Zone_ELEM):
+
+    def __init__(self,x,y,w=100,h=200,make_col=True):
+        super(Cash,self).__init__(box(x,y,w,h),'ez cash','red','mid',makeCol=make_col)
+
+    def activate(self,perso):
+        super(Cash,self).activate(perso)
+        perso.add_money(r.randint(20,230))
+
+class Distrib(Zone_ELEM):
+
+    def __init__(self,x,y):
+
+        text = g.TEXTIDS['zone']['distrib']
+        w,h = g.tman.textures[text].width,g.tman.textures[text].height
+
+        super(Distrib,self).__init__(box(x,y,w,h),get_id('distrib'),text,'mid')
+        self.labtext = 'distrib'
+
+    def activate(self,perso):
+        super(Distrib,self).activate(perso)
+        perso.grab(Bottle())
+
+
 
 #------# elements item -> item posable au sol dans une street
-
 
 class Item(Zone_ELEM):
 
@@ -868,14 +916,6 @@ class Lit(Zone_ACTIV):
             #aff_phase(phase)
             self.hud.write(phase)
 
-class Distrib(Zone_ELEM):
-
-    def __init__(self,x,y,w=100,h=200,make_col=True):
-        super(Distrib,self).__init__(box(x,y,w,h),'ez cash','red','mid',makeCol=make_col)
-
-    def activate(self,perso):
-        super(Distrib,self).activate(perso)
-        perso.add_money(r.randint(20,230))
 
 
 """'''''''''''''''''''''''''''''''''
@@ -1126,7 +1166,7 @@ class Map(HUD):
                 py = self.ay + perso_street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
                 px += self.larg_cube/2
                 py += self.larg_cube/2
-                
+
             # create and or change pos
             if not 'perso_spr' in self.sprids:
                 self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(px,py), group='hud22')
@@ -1283,6 +1323,61 @@ class CredHUD(HUD):
     def delete(self):
         super(CredHUD,self).delete()
         self.ui.delete()
+
+class FedHydHUD(HUD):
+
+    def __init__(self,perso):
+
+        super(FedHydHUD, self).__init__(group='hud2',name='life')
+
+        self.perso = perso
+        self.anc = (20,60)
+        dx = g.SPR + 10
+        sy = g.SPR/3
+        dy = g.SPR/2 - sy/2
+
+        size_lifebar = 300
+        size_fed = (self.perso.fed*size_lifebar)/100
+        size_hyd = (self.perso.hydrated*size_lifebar)/100
+
+        #self.addSpr('l',g.TEXTIDS['utils'][4],self.anc,group='hud2')
+        #self.addSpr('r',g.TEXTIDS['utils'][4],(self.anc[0]+size_lifebar,self.anc[1]),group='hud2')
+        #self.addSpr('mid',g.TEXTIDS['utils'][3],self.anc,group='hud2')
+        #g.sman.modify(self.sprids['mid'],scale=(size_lifebar/32,1))
+
+        x,y = self.anc
+
+        self.addSpr('water',g.TEXTIDS['items']['bottle'],(x,y),group='hud2-1')
+        g.sman.modify(self.sprids['water'],scale=(0.5,0.5))
+        self.addSpr('hyd',g.tman.addCol(color='clearwater'),(x+dx,y+dy),group='hud2-1')
+        g.sman.modify(self.sprids['hyd'],scale=(size_hyd/g.SPR,sy/g.SPR))
+
+        y += g.SPR + 5
+
+        self.addSpr('food',g.TEXTIDS['items']['noodle'],(x,y),group='hud2-1')
+        g.sman.modify(self.sprids['food'],scale=(0.5,0.5))
+        self.addSpr('fed',g.tman.addCol(color='noodle'),(x+dx,y+dy),group='hud2-1')
+        g.sman.modify(self.sprids['fed'],scale=(size_fed/g.SPR,sy/g.SPR))
+
+
+        ### UI
+        #self.ui = Life_UI(box(*self.anc,self.spr('fill').width,self.spr('fill').height),self.perso)
+
+    def update(self):
+        sy = g.SPR/3
+
+        size_lifebar = 300
+        size_fed = (self.perso.fed*size_lifebar)/100
+        g.sman.modify(self.sprids['fed'],scale=(size_fed/g.SPR,sy/g.SPR))
+
+        size_hyd = (self.perso.hydrated*size_lifebar)/100
+        g.sman.modify(self.sprids['hyd'],scale=(size_hyd/g.SPR,sy/g.SPR))
+
+        #self.ui.update()
+
+    def delete(self):
+        super(FedHydHUD,self).delete()
+        #self.ui.delete()
 
 class PlumHUD(HUD):
 
@@ -2017,7 +2112,7 @@ class InventHUD(HUD):
 
         self.menus_cont = {}
         self.menus_cont['general'] = ['general']
-        self.menus_cont['sound'] = ['phase','instru','son','plume']
+        self.menus_cont['sound'] = ['plume','son','instru','phase']
 
         h = 90
         for i in range(len(self.menus)):
@@ -2402,14 +2497,22 @@ class InventHUD(HUD):
                     y = g.lman.labels[self.detaids['lab']['detail_cont']].y
 
             else:
-                if type(ui.item).__name__ == 'Key':
-                    self.addSpr('detail_spr',g.TEXTIDS['items'][type(ui.item).__name__.lower()],detail=True)
-                    g.sman.modify(self.detaids['spr']['detail_spr'],scale=(2,2))
-                    g.sman.modify(self.detaids['spr']['detail_spr'],( self.box3.cx - g.sman.spr(self.detaids['spr']['detail_spr']).width/2 , self.box3.fy - 80 - g.sman.spr(self.detaids['spr']['detail_spr']).height/2 ))
-                    y = g.sman.spr(self.detaids['spr']['detail_spr']).y
+                self.addSpr('detail_spr',g.TEXTIDS['items'][type(ui.item).__name__.lower()],detail=True)
+                g.sman.modify(self.detaids['spr']['detail_spr'],scale=(2,2))
+                g.sman.modify(self.detaids['spr']['detail_spr'],( self.box3.cx - g.sman.spr(self.detaids['spr']['detail_spr']).width/2 , self.box3.fy - 80 - g.sman.spr(self.detaids['spr']['detail_spr']).height/2 ))
 
-                    #qua
-                    self.addLab('detail_street',ui.item.target.name, ( self.box3.cx , y - 2*self.padding2 ),font_name=0, anchor = ('center','center'),font_size = 15,detail=True)
+                if type(ui.item).__name__ == 'Key':
+                    y = g.sman.spr(self.detaids['spr']['detail_spr']).y
+                    self.addLab('detail_street',ui.item.target.name, ( self.box3.cx , y - 2*self.padding2 )\
+                                    ,font_name=0, anchor = ('center','center'),font_size = 15,detail=True)
+
+                elif type(ui.item).__name__ == 'Bottle':
+                    y = g.sman.spr(self.detaids['spr']['detail_spr']).y
+                    self.addLab('detail_liquid',ui.item.liquid, ( self.box3.cx , y - 2*self.padding2 )\
+                                    ,font_name=0, anchor = ('center','center'),font_size = 15,detail=True)
+                    y -= 2*self.padding2
+                    self.addLab('detail_qté',str(ui.item.qt) +' mL', ( self.box3.cx , y - 2*self.padding2 )\
+                                    ,font_name=0, anchor = ('center','center'),font_size = 15,detail=True)
 
 
 
@@ -2750,6 +2853,7 @@ class Invent_UI(Item_UI):
         #print(spr_vis)
 
         cquecé = type(item).__name__
+        col = c['F']
 
         if isinstance(item,Sound_item):
             lab_text = cquecé +' '+ convert_quality(item.quality)
@@ -2760,7 +2864,6 @@ class Invent_UI(Item_UI):
                 lab_text+='\n'+item.them
         else:
             lab_text = cquecé.lower()
-            col = c['F']
             text = g.TEXTIDS['items'][cquecé.lower()]
 
 

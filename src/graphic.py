@@ -789,7 +789,8 @@ class Cycle():
 
         # general
 
-        self.len = 20 # longueur du cycle en secondes
+        # longueur du cycle en secondes
+        self.len = 20*60
         self.dt = 0.05 # dt avant chaque update
 
         self.tick = 0
@@ -942,6 +943,11 @@ class Cycle():
             strm = '0' + strm
 
         return strh+' : '+strm
+
+    def _tpd(self):
+        #tick per day
+        return self.len/self.dt
+    tpd = property(_tpd)
 
 Cyc = Cycle()
 

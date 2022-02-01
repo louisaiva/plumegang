@@ -167,11 +167,11 @@ class Street():
             for ite in item:
                 self.items.append(ite)
                 if self.visible:
-                    ite.load()
+                    ite.load(self)
         else:
             self.items.append(item)
             if self.visible:
-                item.load()
+                item.load(self)
 
     def del_item(self,item):
         if item in self.items:
@@ -305,7 +305,7 @@ class Street():
 
         ## loading elements
         for zone in self.zones:
-            self.zones[zone].load()
+            self.zones[zone].load(self)
 
         for h in self.humans:
             h.load()
@@ -684,11 +684,11 @@ MAP_NAME = 'ny'
 '''''''''''''''''''''''''''''''''"""
 
 builds = {
-        0:{'name':'empty' , 'box':None },
-        1:{'name':'stand' , 'box':box(370,0,500,420) },
-        2:{'name':'batiment' , 'box':box(200,100,470,420) },
-        3:{'name':'stairs' , 'box':box(400,100,500,420) },
-        'side':{'name':'side', 'box':None}
+        0:{'name':'empty' , 'box':None ,'distrib':None},
+        1:{'name':'stand' , 'box':box(370,0,500,420) ,'distrib':(0,0)},
+        2:{'name':'batiment' , 'box':box(200,100,470,420) ,'distrib':None},
+        3:{'name':'stairs' , 'box':box(400,100,500,420) ,'distrib':(0,0)},
+        'side':{'name':'side', 'box':None,'distrib':None}
 }
 
 builds_key = []
@@ -698,7 +698,7 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 8
+nb_iterations = 5
 
 #plus très utile
 k = 20
@@ -972,6 +972,14 @@ def create_map():
             connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
 
         for i in range(rue.long):
+
+            if builds[build_list[i]]['distrib'] and r.random() > 0.5:
+                # on crée un distrib
+                x,y = i*W_BUILD+W_SIDE,250
+                y += builds[build_list[i]]['distrib'][1]
+                x += builds[build_list[i]]['distrib'][0]
+                distrib = o.Distrib(x,y)
+                NY.CITY[nom].assign_zones([distrib])
 
             ## On créé un BUILDING
             if rue.cont[i] == 0 and builds[build_list[i]]['box']:

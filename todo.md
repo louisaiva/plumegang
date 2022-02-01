@@ -17,14 +17,12 @@ _ceci est le todo à faire hehe_
     -> possibilité de pas taper quand on sfait taper, mais demander pardon/pitié
     -> compliments pop kan t qqun genti
     -> une simple conv (bjr,au revoir,cv ?) augmente la relat°
+    -> amis dès qu'ils te voient ils te disent "oh yo"
 
 #  \!\ *nb bots ?* \!\_
   j'ai eu 694 fans alors que y'avait apparement que 690 bots (+ alphonse)
   et en plus j'en ai tué en chemin et ça m'a pas baissé des fans
   --> à régler
-
-# tableau d'appreciation d'une personne
-  -> amis dès qu'ils te voient ils te disent "oh yo"
 
 # nodes de commuincation
   en gros pour l'instant c'est pas ouf les communications, très basique
@@ -48,7 +46,6 @@ _ceci est le todo à faire hehe_
   bug : quand on recoit un act le temps continue de filer si est en pause
   -> utiliser la clock bertran pour compter le temps qui passe pour les acts/dials ?
 
-
 # ajouter de la plouiiii
 
 # LABELS
@@ -64,7 +61,6 @@ _ceci est le todo à faire hehe_
 	c'est auprès de ces 2 bails que tu vas pouvoir récup ta thune après en fonction de tes streams:
 		-labels tu récup 50% voir moins (ça dépend de ton contrat, encore une fois plus tu paye cher plus tu gagnes)
 		-distrokid tu gagnes 100%
-
 
 # BATIMENTS SPECIAUX A AJOUTER:
   -centre commercial
@@ -103,6 +99,11 @@ _ceci est le todo à faire hehe_
 
 # \!\ *régler mauvais endroits streets map*  \!\_
 
+# \\!\\ amélioration de perf :
+  -> la fonction g.sman.addCol() pas du tout optimisée:
+    recrée une texture à chaque fois qu'on l'appelle, il faudrait plutot créer une texture
+    par couleur et rescale le sprite pour avoir la bonne taille -> a faire
+
 
 
 **LINKS**
@@ -121,11 +122,6 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
   deux "A" -> une "A+"
   -> pour faire une S il faut 16 384 F
   -> X = 131 072 F
-
-# \\!\\ amélioration de perf :
-  -> la fonction g.sman.addCol() pas du tout optimisée:
-    recrée une texture à chaque fois qu'on l'appelle, il faudrait plutot créer une texture
-    par couleur et rescale le sprite pour avoir la bonne taille -> a faire
 
 # ajouter drogue:
   -> colore de ouf l'écran de milliers de couleurs:

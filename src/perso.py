@@ -245,12 +245,15 @@ class Human():
         self.inventory['instru'] = []
         self.inventory['key'] = []
         self.inventory['plume'] = []
+        self.inventory['food'] = []
 
 
         #life
         self.life = 100
         self.max_life = 100
         self.damage = r.randint(10, 15)
+        self.fed = 100
+        self.hydrated = 100
 
         #items
         #self.keys = []
@@ -501,6 +504,12 @@ class Human():
     def update(self):
 
         t = time.time()
+
+        # feedin/hydration
+        if self.fed > 0: self.fed -= 100/g.Cyc.tpd
+        if self.hydrated > 0: self.hydrated -= 200/g.Cyc.tpd
+        if self.hydrated <= 0 or self.fed <= 0:
+            self.life -= 1
 
         #life
         if self.life < self.max_life and not 'heal' in list(map(lambda x:x['lab'],self.todo)):
@@ -825,8 +834,8 @@ class Human():
                     o2.NY.CITY[self.street].deload()
 
                 o2.NY.CITY[self.street].del_hum(self)
-                o2.NY.CITY[street.name].add_hum(self)
                 self.street = street.name
+                o2.NY.CITY[street.name].add_hum(self)
 
                 if type(self) == Perso:
                     o2.NY.CITY[self.street].load()
@@ -954,7 +963,7 @@ class Human():
             if isinstance(self,Perso) : self.plumhud.delete()
             self.plume = None
         else:
-            self.inventory[type(thg).__name__.lower()].remove(thg)
+            self.inventory[thg.cat].remove(thg)
             if isinstance(self,Perso) : self.invhud.del_ui(thg)
             droppin = True
 
@@ -976,7 +985,7 @@ class Human():
                 self.plumhud = o.PlumHUD(thg)
             self.plume = thg
         else:
-            self.inventory[type(thg).__name__.lower()].append(thg)
+            self.inventory[thg.cat].append(thg)
             if isinstance(self,Perso) : self.invhud.add_ui(thg)
 
 
@@ -1401,7 +1410,6 @@ class Human():
             if not hasattr(self,'skin_id'):
                 self.roll_skin = 0
                 self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
-
                 self.update_skin()
                 if self.outside:
                     g.Cyc.add_spr((self.skin_id,0.3))
@@ -1859,7 +1867,8 @@ class Perso(Rappeur):
         # hud
         self.hud = o.PersoHUD(self)
         self.lifehud = o.LifeHUD(self)
-        self.credhud = o.CredHUD(self)
+        self.fedhydhud = o.FedHydHUD(self)
+        #self.credhud = o.CredHUD(self)
         self.plumhud = o.PlumHUD(self.plume)
         self.invhud = o.InventHUD(self,fill)
         self.sonhud = o.SonHUD(self)
@@ -1877,7 +1886,7 @@ class Perso(Rappeur):
         self.life = self.max_life
         self.cred = 0
         self.lifehud.update()
-        self.credhud.update()
+        #self.credhud.update()
 
     def cheat_plumson(self):
         if self.plume != None:
@@ -1901,17 +1910,13 @@ class Perso(Rappeur):
 
     def be_hit(self,hitter):
         super(Perso,self).be_hit(hitter)
-        self.credhud.update()
+        #self.credhud.update()
         self.lifehud.update()
 
     def heal(self,dt=0):
         super(Perso,self).heal(dt)
-        self.credhud.update()
+        #self.credhud.update()
         self.lifehud.update()
-
-    def release_son(self,son,fans,day,label):
-        super(Perso,self).release_son(son,fans,day,label)
-        self.credhud.update()
 
     def auto_release(self,label):
 
@@ -1964,6 +1969,7 @@ class Perso(Rappeur):
         super(Perso,self).update()
         self.relhud.update()
         self.minirelhud.update()
+        self.fedhydhud.update()
 
     def assign_poto(self,hum):
         self.poto = hum
