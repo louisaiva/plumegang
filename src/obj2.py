@@ -384,13 +384,14 @@ class Street():
                 self.backside = g.sman.addSpr(g.TEXTIDS['backbuild']['side'],(x+W_SIDE,y),group='road')
                 g.Cyc.add_spr((self.side,0.3))
                 g.Cyc.add_spr((self.backside,0.3))
+                print('oh ya')
 
             elif i == 'R':
                 pass
 
             elif i >= 0 and i < len(self.build_list):
 
-                x += W_SIDE
+                x += W_SIDE+i*W_BUILD
                 w = W_BUILD
 
                 build = self.build_list[i]
@@ -410,11 +411,12 @@ class Street():
         if hasattr(self,'builds'):
 
             if i == 'L':
+                #print('oh yo')
                 if self.side != None:
                     g.Cyc.del_spr((self.side,0.3))
-                    g.Cyc.del_spr((self.backside,0.3))
                     g.sman.delete(self.side)
                     self.side = None
+                    g.Cyc.del_spr((self.backside,0.3))
                     g.sman.delete(self.backside)
                     self.backside = None
             elif i == 'R':
@@ -1159,7 +1161,7 @@ def create_map():
                 newrues.append(newrue)
         rues += newrues
 
-    #x_distro = rues[0].place_door_rd('distro')
+    x_distro = rues[0].place_door_rd('distro')
     x_shop = rues[0].place_door_rd('shop')
     rues[0].place_door(0,'home')
 
@@ -1186,7 +1188,7 @@ def create_map():
 
         if nom == rue_princ:
             build_list[0] = 2
-            #build_list[x_distro] = 2
+            build_list[x_distro] = 2
             build_list[x_shop] = 1
 
         ## on créé la street
@@ -1226,13 +1228,13 @@ def create_map():
 
             ## DISTROKID
 
-            """#distrokid + porte
+            #distrokid + porte
             zone_box = builds[2]['box'].pop()
             zone_box.y += 250
             zone_box.x += x_distro*W_BUILD+W_SIDE
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
             NY.add_streets(Distrokid(x,y))
-            connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))"""
+            connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
 
             ## SHOP
             zone_box = builds[1]['box'].pop()

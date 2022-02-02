@@ -6,19 +6,8 @@ _ceci est le todo à faire hehe_
 
 **EN COURS**
 
-
-## BARRE OUTILS UTILISABLES
-  type minecraft
-  4 slots possibles : on les remplit depuis l'inventaire
-  scroll de souris change l'outil séléctionné
-  -> hud affiche les détails de l'outil en cours
-  -> rien : main (affiche le dmg)
-  -> plume pour écrire
-  barre d'espace active l'outil:
-      arme -> frappe
-      plume -> écrit
-      food -> mange/boit
-
+# adapt colors
+  créer une vraie teinte par jour afin que les batiments gris au loin soient frais
 
 # street
   stations de metro disponibles dans différentes rues : permet de se déplacer plus vite, potentiellement fuir police
@@ -112,6 +101,18 @@ _ceci est le todo à faire hehe_
 # que les bots passent des portes
 
 # \!\ *régler mauvais endroits streets map*  \!\_
+
+## BARRE OUTILS UTILISABLES
+  type minecraft
+  4 slots possibles : on les remplit depuis l'inventaire
+  scroll de souris change l'outil séléctionné
+  -> hud affiche les détails de l'outil en cours
+  -> rien : main (affiche le dmg)
+  -> plume pour écrire
+  barre d'espace active l'outil:
+      arme -> frappe
+      plume -> écrit
+      food -> mange/boit
 
 # \\!\\ amélioration de perf :
   -> la fonction g.sman.addCol() pas du tout optimisée:
