@@ -31,6 +31,8 @@ ESK_QUIT = 0
 ## pour éviter d'avoir à passer par le menu
 FILL_INV = 1
 ## pour remplir ou non l'inventaire au debut
+VSYNC = 0
+## utilise la vsync (fps fixé à 60) ou paa
 
 class App():
 
@@ -43,7 +45,7 @@ class App():
 
         ### windows
 
-        self.window = pyglet.window.Window(screen=g.scr.screen)#,vsync=False)
+        self.window = pyglet.window.Window(screen=g.scr.screen,vsync=VSYNC)
 
         self.window.set_fullscreen()
 
@@ -123,7 +125,8 @@ class App():
             elif o2.LOAD == 3:
                 o2.create_map()
 
-            #o2.NY.shortest_path(o2.NY.rd_street(),o2.NY.rd_street())
+            #for i in range(1000):
+            #    o2.NY.shortest_path(o2.NY.rd_street(),o2.NY.rd_street())
 
         # humans
         if True:
@@ -1068,7 +1071,10 @@ class App():
                     if chance < self.perso.nb_fans*malus:
                         random.choice(p.BOTS+p.GUYS).stream(self.perso.disco[i])
 
-            text_lab = (p.GUYS[0].bigdoing['lab'],list(map(lambda x:x['lab'],p.GUYS[0].todo)),p.GUYS[0].doing)
+            if len(p.GUYS) > 0:
+                text_lab = (p.GUYS[0].bigdoing['lab'],list(map(lambda x:x['lab'],p.GUYS[0].todo)),p.GUYS[0].doing)
+            else:
+                text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
             g.lman.set_text(self.lab_doing,text_lab)
             self.perso.hud.update()
             self.perso.bigmap.update()

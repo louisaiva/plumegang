@@ -890,9 +890,9 @@ class CITY():
         st = dep.name
         for i in range(len(nodes)):
             if i < len(nodes)-1:
-                if st in nodes[i] and st not in nodes[i+1]:
+                rues = nodes[i].split(' -<->- ')
+                if st in rues and st not in nodes[i+1].split(' -<->- '):
                     mid.append(st)
-                    rues = nodes[i].split(' -<->- ')
                     rues.remove(st)
                     st = rues[0]
             else:
