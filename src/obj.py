@@ -571,6 +571,7 @@ class Zone():
             self.text_id = textid
         elif makeCol:
             self.text_id = g.tman.addCol(textid)
+        self.loaded = False
 
         if vis: self.load()
 
@@ -588,11 +589,16 @@ class Zone():
             w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
             g.sman.modify(self.skin_id,scale=(self.box.w/w,self.box.h/h))
 
+        self.loaded = True
+        #print(self.name,'loaded')
+
     def deload(self):
 
         if hasattr(self,'skin_id'):
             g.sman.delete(self.skin_id)
             del self.skin_id
+
+        self.loaded = False
 
 
     def _realbox(self):
@@ -1082,6 +1088,8 @@ class Map(HUD):
 
     def __init__(self,perso):
 
+        #w_map = 100000
+
         super(Map, self).__init__(group='hud2',name='map',vis=False)
 
         self.perso = perso
@@ -1095,8 +1103,8 @@ class Map(HUD):
         self.larg_cube = 18
         self.larg_street = 6
         self.larg_house = 12
-        w = self.larg_cube*3*o2.MAP[0]
-        self.box = box(scrw/2-w/2,scrh/2-w/2,w,w)
+        #w = self.larg_cube*3*w_map
+        #self.box = box(scrw/2-w/2,scrh/2-w/2,w,w)
 
         self.ax,self.ay = self.box.cxy
 

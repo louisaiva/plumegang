@@ -249,7 +249,7 @@ class Shopguy(Metier):
         #self.acts['distroguy_act_sign'] = { 't':0 , 'delay':10 , 'giver':self.perso , 'exp':'signer chez distro (1$/jour)'
         #                        , 'fct':o.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
 
-        self.hm_begin,self.hm_end = g.Hour(2),g.Hour(23,59)
+        self.hm_begin,self.hm_end = g.Hour(0,10),g.Hour(23,59)
 
 
 """""""""""""""""""""""""""""""""""
@@ -384,7 +384,10 @@ class Human():
     def delete(self,dt=0):
 
         o2.NY.CITY[self.street].del_hum(self)
-        BOTS.remove(self)
+        if type(self) != Guy:
+            BOTS.remove(self)
+        else:
+            GUYS.remove(self)
 
     # relations
     def relup(self,hum,qté,cat='hate/like'):
@@ -1180,7 +1183,6 @@ class Human():
                             self.del_dial(chosen_dial['id'])
                         self.say(exp)
 
-
             ##todo
             if len(self.todo) > 0 and self.bigdoing != self.todo[0]:
 
@@ -1394,7 +1396,7 @@ class Human():
     def say(self,exp):
         if self.alive:
 
-            ## on affiche le label que si on se situe dans la bonne street évidemment
+            ## on affiche le label que si on est loaded évidemment
             #if o2.NY.CITY[self.street].visible:
 
             duree = 20
@@ -1411,7 +1413,7 @@ class Human():
             # gaffe faut modifier aussi dans l'update
             x,y = self.box.cx,self.box.fy + 150
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
-                                    ,group='frontstreet',vis=o2.NY.CITY[self.street].visible,duree=duree,w=w)
+                                    ,group='frontstreet',vis=self.loaded,duree=duree,w=w)
 
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
@@ -1605,6 +1607,7 @@ class Human():
             g.pman.unhide_single(self.keyids_voc)
 
         self.loaded = True
+        #print(self.name,'loaded')
 
     def deload(self):
         g.bertran.unschedule(self.update_skin)
@@ -1800,7 +1803,7 @@ class Guy(Fan):
 
         if street == None:
             street = o2.NY.rd_street()
-            street = o2.NY.CITY['kamour str.']
+            #street = o2.NY.CITY['kamour str.']
             pos = street.rand_pos()
             street = street.name
             #print(street)

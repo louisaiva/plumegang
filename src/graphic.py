@@ -23,6 +23,7 @@ import pyglet.gl as gl
 
 SPR = 32
 FPS = 0
+SAFE_W = 500
 
 class ScreenManager():
     def __init__(self):
@@ -49,7 +50,6 @@ class ScreenManager():
     def _w(self):
         return self.screen.width
     w = property(_w)
-
     def _h(self):
         return self.screen.height
     h = property(_h)
@@ -57,7 +57,6 @@ class ScreenManager():
     def _x(self):
         return self.screen.x
     x = property(_x)
-
     def _y(self):
         return self.screen.y
     y = property(_y)
@@ -66,14 +65,23 @@ class ScreenManager():
     def _cx(self):
         return self.screen.width/2
     cx = property(_cx)
-
     def _cy(self):
         return self.screen.height/2
     cy = property(_cy)
-
     def _cxy(self):
         return self.cx,self.cy
     cxy = property(_cxy)
+
+
+    def _fx(self):
+        return self.x+self.w
+    fx = property(_fx)
+    def _fy(self):
+        return self.y+self.h
+    fy = property(_fy)
+    def _fxy(self):
+        return self.fx,self.fy
+    fxy = property(_fxy)
 
 
     def _c(self):
@@ -802,7 +810,7 @@ def cooldown_one(key,obj):
 #### CYCLE -> rules day/night cycle
 
 MODE_COLOR = 1 ## 1 pour avoir des couleurs wtf et 0 pour la "réalité"
-DUREE_DAY = 20*2
+DUREE_DAY = 20*60
 # duree d'une journée en secondes
 
 class Hour():

@@ -938,34 +938,57 @@ class App():
 
             #print(len(self.sprids),self.sprids)
 
+            perso_street = o2.NY.CITY[self.perso.street]
+
             # ZONE/ITEMS
             if True:
 
                 #--# zones elem
-                for zone in o2.NY.CITY[self.perso.street].zones:
-                    zone=o2.NY.CITY[self.perso.street].zones[zone]
+                for zone in perso_street.zones:
+                    zone=perso_street.zones[zone]
                     x_r = zone.gex + g.Cam.X + g.GodCam.X
                     y_r = zone.gey + g.Cam.Y
                     #g.sman.modify(zone.skin_id,(x_r,y_r))
                     zone.move(x_r,y_r)
 
+                    # load/deload
+                    if (x_r+zone.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and zone.loaded:
+                        zone.deload()
+                    elif (x_r+zone.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not zone.loaded:
+                        zone.load(perso_street)
+
                 #--# zones elem item
-                for item in o2.NY.CITY[self.perso.street].items:
-                    #item=o2.NY.CITY[self.perso.street].items[item]
+                for item in perso_street.items:
+                    #item=perso_street.items[item]
                     x_r = item.gex + g.Cam.X + g.GodCam.X
                     y_r = item.gey + g.Cam.Y
                     #g.sman.modify(item.skin_id,(x_r,y_r))
                     item.move(x_r,y_r)
 
+                    # load/deload
+                    if (x_r+item.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and item.loaded:
+                        item.deload()
+                    elif (x_r+item.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not item.loaded:
+                        item.load(perso_street)
+
             # PERSOS
             if True:
                 #--# persos
                 ## update catalog:
-                o2.NY.CITY[self.perso.street].update_catalog()
-                for hum in o2.NY.CITY[self.perso.street].humans:
+                perso_street.update_catalog()
+                for hum in perso_street.humans:
                     x_r = hum.gex + g.Cam.X + g.GodCam.X
                     y_r = hum.gey + g.Cam.Y
-                    g.sman.modify(hum.skin_id,(x_r,y_r))
+                    if hasattr(hum,'skin_id'):
+                        g.sman.modify(hum.skin_id,(x_r,y_r))
+
+                    # load/deload
+                    if (x_r+p.SIZE_SPR <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and hum.loaded:
+                        hum.deload()
+                    elif (x_r+p.SIZE_SPR > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not hum.loaded:
+                        hum.load()
+
+                    # update
                     hum.update_env()
                     hum.update_lab()
                     hum.update()
@@ -979,16 +1002,15 @@ class App():
                             guy.work()
                         elif (g.Cyc < hm_begin or g.Cyc >= hm_end) and guy.workin:
                             guy.stop_work()
-                    if guy.street != self.perso.street and o2.NY.CITY[guy.street] not in o2.NY.CITY[self.perso.street].neighbor:
+                    if guy.street != self.perso.street and o2.NY.CITY[guy.street] not in perso_street.neighbor:
                         guy.lil_check_colli()
                         guy.being_bot()
                         guy.check_do()
 
-
             # NEIGHBOR STREETS
             if True:
 
-                for street in o2.NY.CITY[self.perso.street].neighbor:
+                for street in perso_street.neighbor:
                     street.update_catalog()
                     for hum in street.humans:
                         hum.update_env()
@@ -1028,9 +1050,9 @@ class App():
 
             # CAM
             if True:
-                o2.NY.CITY[self.perso.street].modify(g.Cam.X+ g.GodCam.X,g.Cam.Y)
+                perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
 
-                g.Cam.update(self.perso.realbox,o2.NY.CITY[self.perso.street],g.keys[key.LSHIFT])
+                g.Cam.update(self.perso.realbox,perso_street,g.keys[key.LSHIFT])
 
             # if not pause, go streamin and particles
             if g.bertran.speed > 0:

@@ -145,14 +145,54 @@ class Street():
 
         self.Y = Y
 
-    def modify(self,x=None,y=None):
+    def update(self,x,y):
 
-        if y != None:
-            self.y = y+self.box.xy[1]
-        if x != None:
-            self.x = x+self.box.xy[0]
+        self.y = y+self.box.y
+        self.x = x+self.box.x
 
-        ## si la route est terminée ->
+        # bg
+        if True:
+            if hasattr(self,'streetbg'):
+                g.sman.spr(self.streetbg).x = self.x
+            if hasattr(self,'streetfg'):
+                g.sman.spr(self.streetfg).x = self.x
+            if hasattr(self,'streetanimfg'):
+                g.sman.spr(self.streetanimfg).x = self.x
+            if hasattr(self,'streetanimbg'):
+                g.sman.spr(self.streetanimbg).x = self.x
+
+        # builds + sides
+        if True:
+            if hasattr(self,'builds'):
+
+                # check chaque batiment pour voir s'il est dans l'écran safe afin de le load/deload en fonction
+                for i in range(len(self.builds)):
+
+                    x_r = self.x+W_SIDE+i*W_BUILD
+                    w_r = W_BUILD+W_BACK
+
+                    # load/deload
+                    if (x_r+w_r <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and (self.builds[i] != None):
+                        self.deload_build(i)
+                    elif (x_r+w_r > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and (self.builds[i] == None):
+                        self.load_build(i)
+                    elif self.builds[i] != None:
+                        g.sman.spr(self.builds[i]).x = self.x+W_SIDE+i*W_BUILD
+                        g.sman.spr(self.backbuilds[i]).x = self.x+W_SIDE+(i+1)*W_BUILD
+
+            if hasattr(self,'side'):
+                x_r = self.x
+                w_r = W_SIDE+W_BACK
+
+                if (x_r+w_r <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and (self.side != None):
+                    self.deload_build('L')
+                elif (x_r+w_r > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and (self.side == None):
+                    self.load_build('L')
+                elif self.side != None:
+                    g.sman.spr(self.side).x = self.x
+                    g.sman.spr(self.backside).x = self.x+W_SIDE
+
+        # road
         if hasattr(self,'road1') and hasattr(self,'road2'):
             self.verify_endless_road()
 
@@ -200,6 +240,9 @@ class Street():
             if self.visible:
                 hum.deload()
 
+
+    # loadin/update
+
     def deload(self):
 
         g.bertran.unschedule(self.anim)
@@ -213,16 +256,12 @@ class Street():
             del self.road2
         ## build
         if hasattr(self,'builds'):
-            g.sman.delete(self.builds)
-            del self.builds
-            g.sman.delete(self.backbuilds)
-            del self.backbuilds
+            for i in range(len(self.builds)):
+                self.deload_build(i)
         ## side
         if hasattr(self,'side'):
-            g.sman.delete(self.side)
-            del self.side
-            g.sman.delete(self.backside)
-            del self.backside
+            self.deload_build('L')
+            self.deload_build('R')
 
 
         ## back front /back front anim
@@ -267,10 +306,13 @@ class Street():
         if self.build_list:
 
             #avant/back
-            self.builds = []
-            self.backbuilds = []
+            self.builds = [None for _ in self.build_list]
+            self.backbuilds = [None for _ in self.build_list]
 
-            x,y = self.x,250
+            self.side = None
+            self.backside = None
+
+            """x,y = self.x,250
 
             #sides
             if True:
@@ -290,7 +332,7 @@ class Street():
                 self.backbuilds.append(backid)
                 g.Cyc.add_spr((id,0.3))
                 g.Cyc.add_spr((backid,0.3))
-                x+=w
+                x+=w"""
 
         ## back front /back front anim
         if 'back' in self.textures:
@@ -306,7 +348,7 @@ class Street():
             g.bertran.schedule_interval_soft(self.anim,0.1)
 
 
-        ## loading elements
+        """## loading elements
         for zone in self.zones:
             self.zones[zone].load(self)
 
@@ -314,7 +356,7 @@ class Street():
             h.load()
 
         for item in self.items:
-            item.load(self)
+            item.load(self)"""
 
         nbh = len(self.humans)
         for street in self.neighbor:
@@ -326,6 +368,65 @@ class Street():
         self.visible = True
         self.update_catalog()
 
+    def load_build(self,i):
+
+        # 'L' load la side gauche
+        # i load le bat i
+        # 'R' load la side droite
+
+        ## buildings
+        if self.build_list:
+
+            x,y = self.x,250
+
+            if i == 'L':
+                self.side = g.sman.addSpr(g.TEXTIDS['build']['side'],(x,y),group='buildings')
+                self.backside = g.sman.addSpr(g.TEXTIDS['backbuild']['side'],(x+W_SIDE,y),group='road')
+                g.Cyc.add_spr((self.side,0.3))
+                g.Cyc.add_spr((self.backside,0.3))
+
+            elif i == 'R':
+                pass
+
+            elif i >= 0 and i < len(self.build_list):
+
+                x += W_SIDE
+                w = W_BUILD
+
+                build = self.build_list[i]
+                id = g.sman.addSpr(g.TEXTIDS['build'][build],(x,y),group='buildings')
+                backid = g.sman.addSpr(g.TEXTIDS['backbuild'][build],(x+w,y),group='road')
+                self.builds[i] = id
+                self.backbuilds[i] = backid
+                g.Cyc.add_spr((id,0.3))
+                g.Cyc.add_spr((backid,0.3))
+
+    def deload_build(self,i):
+
+        # 'L' deload la side gauche
+        # i deload le bat i
+        # 'R' deload la side droite
+
+        if hasattr(self,'builds'):
+
+            if i == 'L':
+                if self.side != None:
+                    g.Cyc.del_spr((self.side,0.3))
+                    g.Cyc.del_spr((self.backside,0.3))
+                    g.sman.delete(self.side)
+                    self.side = None
+                    g.sman.delete(self.backside)
+                    self.backside = None
+            elif i == 'R':
+                pass
+            elif i >= 0 and i < len(self.build_list) and self.builds[i] != None:
+                g.Cyc.del_spr((self.builds[i],0.3))
+                g.Cyc.del_spr((self.backbuilds[i],0.3))
+                g.sman.delete(self.builds[i])
+                self.builds[i] = None
+                g.sman.delete(self.backbuilds[i])
+                self.backbuilds[i] = None
+
     def update_catalog(self):
         self.catalog = []
         for zone in self.zones:
@@ -336,6 +437,7 @@ class Street():
             self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name,'elem':item} )
 
         self.catalog.sort(key=lambda x:x.get('x'))
+
 
     # bots
     def rand_pos(self):
@@ -450,25 +552,7 @@ class Street():
     def _x(self):
         return self._x
     def _setx(self,x):
-        if hasattr(self,'streetbg'):
-            g.sman.spr(self.streetbg).x = x
-        if hasattr(self,'streetfg'):
-            g.sman.spr(self.streetfg).x = x
-        if hasattr(self,'streetanimfg'):
-            g.sman.spr(self.streetanimfg).x = x
-        if hasattr(self,'streetanimbg'):
-            g.sman.spr(self.streetanimbg).x = x
-        if hasattr(self,'builds'):
-            dx = W_SIDE
-            for i in range(len(self.builds)):
 
-                g.sman.spr(self.builds[i]).x = x+dx
-                dx+=W_BUILD
-                g.sman.spr(self.backbuilds[i]).x = x+dx
-
-        if hasattr(self,'side'):
-            g.sman.spr(self.side).x = x
-            g.sman.spr(self.backside).x = x+W_SIDE
 
         ## x des roads gérée dans self.verify_endless_road()
 
@@ -727,7 +811,7 @@ class CITY():
 
     def shortest_path(self,dep,dest):
 
-        print('lookin for shortest path :',dep.name,'->',dest.name)
+        #print('lookin for shortest path :',dep.name,'->',dest.name)
 
         ## 1e étape : on crée le graph des rues
         self.create_node_graph()
@@ -791,8 +875,8 @@ class CITY():
             print('voisine rue')
             return begin +[dest.name]+ end
 
-        print(begin,'->',end)
-        print(dep.name,dest.name)
+        #print(begin,'->',end)
+        #print(dep.name,dest.name)
 
         ## 3e étape : on trouve les nodes de départ et d'arrivée les plus proches
         dep_node = list(map(lambda x:x['door'],list(dep.neighbors_street.values())))[0].node
@@ -802,7 +886,6 @@ class CITY():
         nodes = dij(self.node_graph,dep_node,dest_node)
 
         ## 5e étape : on récupère les rues depuis les nodes
-        #print(begin , mid , end)
         mid = []
         st = dep.name
         for i in range(len(nodes)):
@@ -819,8 +902,10 @@ class CITY():
                     rues.remove(st)
                     mid.append(rues[0])
 
-        mid.remove(dep.name)
-        #print(nodes)
+
+        try: mid.remove(dep.name)
+        except: print('error -',mid)
+        print('shortest path :',dep.name,'->',dest.name,begin + mid + end)
 
         ## e étape : on concatene et on retourne
         return begin + mid + end
@@ -874,15 +959,14 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 2
+nb_iterations = 7
 
-#plus très utile
-k = 20
-MAP = k,k
-nb_lines = k
+#MAP = 20,20
 
 def generate_map():
     global LINES
+    k = 20
+    nb_lines = k
 
     lines = []
     connexions = []
@@ -1036,15 +1120,13 @@ def create_map():
     ## RUES
     rue_princ = 'kamour str.'
     lon = r.randint(5*(nb_iterations+1), 10*(nb_iterations+1))
-    if nb_iterations > 4:
-        lon = r.randint(5*4, 10*4)
 
     rues = [ preRue(rue_princ,0,0,lon) ]
 
     for i in range(nb_iterations):
         newrues = []
         for rue in rues:
-            if rue.nb_voisins < 4:
+            if True:
 
                 #general
                 nom = 'rue '+str(n)
