@@ -31,7 +31,7 @@ ESK_QUIT = 0
 ## pour éviter d'avoir à passer par le menu
 FILL_INV = 1
 ## pour remplir ou non l'inventaire au debut
-VSYNC = 0
+VSYNC = 1
 ## utilise la vsync (fps fixé à 60) ou paa
 
 class App():
@@ -998,10 +998,14 @@ class App():
                     hum.being_bot()
                     hum.check_do()
 
+            # GUYS
+            if True:
+
+                # refresh the guys all over the city
                 for guy in p.GUYS:
                     if guy.work_hours != None:
                         hm_begin,hm_end = guy.work_hours
-                        if g.Cyc >= hm_begin and g.Cyc < hm_end and not guy.workin:
+                        if g.Cyc >= hm_begin-g.Hour(1) and g.Cyc < hm_end and not guy.workin:
                             guy.work()
                         elif (g.Cyc < hm_begin or g.Cyc >= hm_end) and guy.workin:
                             guy.stop_work()

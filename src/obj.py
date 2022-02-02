@@ -262,11 +262,10 @@ class Bottle(Food_item):
         self.single_act = False
 
     def act(self,perso):
-        qté = 2
-        if self.qt >= qté and perso.hydrated <= 100-qté:
+        qté = 4
+        if self.qt >= qté and perso.hyd <= 100-qté/10:
             perso.drink(qté)
             self.qt -= qté
-            #print(perso.name,'drank',str(qté),'mL of',self.liquid)
         else:
             perso.actin = 'done'
             g.bertran.schedule_once(perso.undo,0.2,'drink')
@@ -1438,7 +1437,7 @@ class FedHydHUD(HUD):
 
         size_lifebar = 300
         size_fed = (self.perso.fed*size_lifebar)/100
-        size_hyd = (self.perso.hydrated*size_lifebar)/100
+        size_hyd = (self.perso.hyd*size_lifebar)/100
 
         #self.addSpr('l',g.TEXTIDS['utils'][4],self.anc,group='hud2')
         #self.addSpr('r',g.TEXTIDS['utils'][4],(self.anc[0]+size_lifebar,self.anc[1]),group='hud2')
@@ -1470,7 +1469,7 @@ class FedHydHUD(HUD):
         size_fed = (self.perso.fed*size_lifebar)/100
         g.sman.modify(self.sprids['fed'],scale=(size_fed/g.SPR,sy/g.SPR))
 
-        size_hyd = (self.perso.hydrated*size_lifebar)/100
+        size_hyd = (self.perso.hyd*size_lifebar)/100
         g.sman.modify(self.sprids['hyd'],scale=(size_hyd/g.SPR,sy/g.SPR))
 
         #self.ui.update()

@@ -249,7 +249,7 @@ class Shopguy(Metier):
         #self.acts['distroguy_act_sign'] = { 't':0 , 'delay':10 , 'giver':self.perso , 'exp':'signer chez distro (1$/jour)'
         #                        , 'fct':o.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
 
-        self.hm_begin,self.hm_end = g.Hour(0,10),g.Hour(23,59)
+        self.hm_begin,self.hm_end = g.Hour(1,10),g.Hour(23,59)
 
 
 """""""""""""""""""""""""""""""""""
@@ -291,7 +291,7 @@ class Human():
         self.max_life = 100
         self.damage = r.randint(10, 15)
         self.fed = 100
-        self.hydrated = 100
+        self.hyd = 100
 
         #items
         #self.keys = []
@@ -388,6 +388,28 @@ class Human():
             BOTS.remove(self)
         else:
             GUYS.remove(self)
+
+    def addsub_fed(self,qté=-5/g.Cyc.tpd):
+
+        if self.fed > 0:
+            self.fed += qté
+
+        if self.fed < 0:
+            self.fed = 0
+        elif self.fed > 100:
+            self.fed = 100
+
+    def addsub_hyd(self,qté=-10/g.Cyc.tpd):
+
+        #print('oh yo',qté)
+
+        if self.hyd > 0:
+            self.hyd += qté
+
+        if self.hyd < 0:
+            self.hyd = 0
+        elif self.hyd > 100:
+            self.hyd = 100
 
     # relations
     def relup(self,hum,qté,cat='hate/like'):
@@ -583,15 +605,10 @@ class Human():
 
         # feedin/hydration
         if True:
-            if self.fed > 0: self.fed -= 50/g.Cyc.tpd
-            if self.hydrated > 0: self.hydrated -= 100/g.Cyc.tpd
+            self.addsub_hyd()
+            self.addsub_fed()
 
-            if self.fed < 0:
-                self.fed = 0
-            if self.hydrated < 0:
-                self.hydrated = 0
-
-            if WATER and (self.hydrated <= 0 or self.fed <= 0):
+            if WATER and (self.hyd <= 0 or self.fed <= 0):
                 self.life -= 1
 
         #life
@@ -883,6 +900,14 @@ class Human():
 
             ## checking thg
             if moved :
+
+                if speed > self.speed:
+                    self.addsub_hyd(-0.2)
+                    self.addsub_fed()
+                else:
+                    self.addsub_hyd()
+                    self.addsub_fed()
+
                 if 'heal' in self.doing:
                     self.done_todo()
 
@@ -1045,9 +1070,8 @@ class Human():
 
     def drink(self,qté):
         # qté en mL -> 1L recharge 100 de vie d'eau
-        if self.hydrated <= 100-qté:
-            self.do('drink')
-            self.hydrated += qté/10
+        self.do('drink')
+        self.addsub_hyd(qté/10)
 
 
 
@@ -1810,7 +1834,7 @@ class Guy(Fan):
 
         super(Guy,self).__init__(key_skin,pos,name,street=street)
         self.normal_skin = key_skin
-        self.speed = 40
+        #self.speed = 40
 
         ## check if in GUYS (souvent les guys sont ajoutés directement depuis leur shop)
         if self not in GUYS:
@@ -1856,11 +1880,25 @@ class Guy(Fan):
     # work
 
     def work(self):
-        g.pman.alert(self.name,'workin')
-        self.set_text('guy')
-        path = o2.NY.shortest_path(o2.NY.CITY[self.street],o2.NY.CITY[self.workplace])
-        self.add_todo('go_street_'+self.workplace,self.go_to_street,imp=50,param=[path])
-        self.workin = True
+
+        hm_begin,hm_end = self.work_hours
+
+        if g.Cyc >= hm_begin and g.Cyc < hm_end and not self.workin and self.street == self.workplace:
+
+            g.pman.alert(self.name,'workin')
+            self.set_text('guy')
+
+            self.workin = True
+
+        if g.Cyc >= hm_begin-g.Hour(1) and g.Cyc < hm_end and self.street != self.workplace and \
+                    not 'go_street_'+self.workplace in list(map(lambda x:x['lab'],self.todo)):
+
+            self.del_todo(self.go_to_street)
+            self.del_todo(self.go_to_neistreet)
+
+            path = o2.NY.shortest_path(o2.NY.CITY[self.street],o2.NY.CITY[self.workplace])
+            self.add_todo('go_street_'+self.workplace,self.go_to_street,imp=50,param=[path])
+
 
     def stop_work(self):
         g.pman.alert('oh yo',self.name,'stop workin')

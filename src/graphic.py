@@ -822,6 +822,43 @@ class Hour():
         return self.h,self.m
     hm = property(_hm)
 
+    def __sub__(self, other):
+
+        dh = 0
+        m = self.m-other.m
+        if m < 0:
+            dh -= abs(m)//60 +1
+            m = 60 - (abs(m)%60)
+        elif m >= 60:
+            dh += abs(m)//60
+            m = (abs(m)%60)
+
+        h = self.h-other.h + dh
+        if h < 0:
+            h = 24 - (abs(h)%24)
+        elif h >= 24:
+            h = (abs(h)%60)
+
+        return Hour(h,m)
+    def __add__(self, other):
+
+        dh = 0
+        m = self.m+other.m
+        if m < 0:
+            dh -= abs(m)//60 +1
+            m = 60 - (abs(m)%60)
+        elif m >= 60:
+            dh += abs(m)//60
+            m = (abs(m)%60)
+
+        h = self.h+other.h + dh
+        if h < 0:
+            h = 24 - (abs(h)%24)
+        elif h >= 24:
+            h = (abs(h)%60)
+
+        return Hour(h,m)
+
     def __lt__(self,other):	#describes less than operator(<)
         h,m = other.hm
         if self.h < h:

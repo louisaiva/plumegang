@@ -1120,13 +1120,16 @@ def create_map():
     ## RUES
     rue_princ = 'kamour str.'
     lon = r.randint(5*(nb_iterations+1), 10*(nb_iterations+1))
+    if nb_iterations > 5:
+            lon = r.randint(5*4, 10*4)
+
 
     rues = [ preRue(rue_princ,0,0,lon) ]
 
     for i in range(nb_iterations):
         newrues = []
         for rue in rues:
-            if True:
+            if rue.nb_voisins < 5:
 
                 #general
                 nom = 'rue '+str(n)
