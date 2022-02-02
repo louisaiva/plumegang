@@ -602,8 +602,6 @@ class Shop(House):
 
     def del_hum(self,hum):
         super(Shop,self).del_hum(hum)
-        """if not hum.alive:
-            self.guys.remove(hum)"""
 
     def update_catalog(self):
         for guy in self.guys:
@@ -685,7 +683,7 @@ MAP_NAME = 'ny'
 
 builds = {
         0:{'name':'empty' , 'box':None ,'distrib':None},
-        1:{'name':'stand' , 'box':box(370,0,500,420) ,'distrib':(0,0)},
+        1:{'name':'stand' , 'box':box(370,0,500,420), 'box2':box(890,0,500,420) ,'distrib':(0,0)},
         2:{'name':'batiment' , 'box':box(200,100,470,420) ,'distrib':None},
         3:{'name':'stairs' , 'box':box(400,100,500,420) ,'distrib':(0,0)},
         'side':{'name':'side', 'box':None,'distrib':None}
@@ -698,7 +696,7 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 3
+nb_iterations = 1
 
 #plus très utile
 k = 20
@@ -899,6 +897,7 @@ def create_map():
         rues += newrues
 
     x_distro = rues[0].place_door_rd('distro')
+    x_shop = rues[0].place_door_rd('shop')
     rues[0].place_door(0,'home')
 
     #print(rues)
@@ -925,6 +924,7 @@ def create_map():
         if nom == rue_princ:
             build_list[0] = 2
             build_list[x_distro] = 2
+            build_list[x_shop] = 1
 
         ## on créé la street
         w = rue.long*W_BUILD+2*W_SIDE
@@ -971,6 +971,18 @@ def create_map():
             NY.add_streets(Shop(preRue('distrokid',x,y),g.TEXTIDS['distrokid']))
             connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
 
+            ## SHOP
+            zone_box = builds[1]['box'].pop()
+            zone_box.y += 250
+            zone_box.x += x_shop*W_BUILD+W_SIDE
+            zone_box2 = builds[1]['box2'].pop()
+            zone_box2.y += 250
+            zone_box2.x += x_shop*W_BUILD+W_SIDE
+            x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
+            NY.add_streets(Shop(preRue('shop',x,y),g.TEXTIDS['shop'],box=box(0,-50,6400)))
+            connect(NY.CITY['shop'],1160,NY.CITY[nom],zone_box,(False,False))
+            connect(NY.CITY['shop'],4960,NY.CITY[nom],zone_box2,(False,False))
+
         for i in range(rue.long):
 
             if builds[build_list[i]]['distrib'] and r.random() > 0.5:
@@ -1004,7 +1016,7 @@ def create_map():
                     connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
                     NY.CITY[name].add_house(NY.CITY[house_name])
 
-            elif rue.cont[i] != 0 and rue.cont[i] not in ['distro','home']:
+            elif rue.cont[i] != 0 and rue.cont[i] not in ['distro','home','shop']:
                 ## On connecte les rues
                 #print(build_list[i])
                 zone_box = builds[build_list[i]]['box'].pop()

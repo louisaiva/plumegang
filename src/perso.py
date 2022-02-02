@@ -1946,8 +1946,6 @@ class Perso(Rappeur):
         self.hud = o.PersoHUD(self)
         self.lifehud = o.LifeHUD(self)
         self.fedhydhud = o.FedHydHUD(self)
-        #self.credhud = o.CredHUD(self)
-        #self.plumhud = o.PlumHUD(self.plume)
         self.invhud = o.InventHUD(self,fill)
         self.selhud = o.SelectHUD(self)
         self.sonhud = o.SonHUD(self)

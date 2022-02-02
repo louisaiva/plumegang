@@ -269,6 +269,7 @@ class Bottle(Food_item):
             #print(perso.name,'drank',str(qté),'mL of',self.liquid)
         else:
             perso.actin = 'done'
+            g.bertran.schedule_once(perso.undo,0.2,'drink')
 
     def __str__(self):
         return 'bottle of '+str(self.qt)+'mL of water'

@@ -327,6 +327,12 @@ class App():
             g.TEXTIDS['distrokid']['back'] = g.tman.loadIm('bg/distro/distrokid_shop.png')
             g.TEXTIDS['distrokid']['backanim'] = [g.tman.loadIm('bg/distro/distrokid_anim'+str(i)+'.png') for i in range(1,5)]
 
+        # SHOP
+        if True:
+            g.TEXTIDS['shop'] = {}
+            g.TEXTIDS['shop']['back'] = g.tman.loadIm('bg/shop.png')
+            #g.TEXTIDS['shop']['backanim'] = [g.tman.loadIm('bg/distro/shop_anim'+str(i)+'.png') for i in range(1,5)]
+
         # STREET
         if True:
             g.TEXTIDS['street'] = {}
@@ -544,6 +550,7 @@ class App():
                     self.perso.hud.rollhide()
                     self.perso.lifehud.rollhide()
                     self.perso.selhud.rollhide()
+                    self.perso.fedhydhud.rollhide()
 
                 elif symbol == key.E:
                     self.perso.invhud.rollhide()
