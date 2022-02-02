@@ -17,8 +17,9 @@ import pyglet.gl as gl
 
 SIZE_SPR = 256
 BOTS = []
-CHEAT = False
-
+GUYS = []
+CHEAT = True
+WATER = False
 
 """'''''''''''''''''''''''''''''''''
 '''''''TEXTURES TAB'''''''''''''''''
@@ -133,6 +134,7 @@ class Metier():
 
         self.dials = {}
         self.acts = {}
+        self.hm_begin,self.hm_end = None,None
 
     def answer(self,voice):
         meaning = voice['meaning']
@@ -145,11 +147,15 @@ class Metier():
     def del_arrival_dials(self,hum):
         pass
 
+    def _hours(self):
+        if self.name == 'chomeur' : return None
+        return self.hm_begin,self.hm_end
+    hours = property(_hours)
+
 class Distroguy(Metier):
+
     def __init__(self,perso):
         super(Distroguy,self).__init__(perso,'distroguy')
-
-        self.meanings.append('veut thune')
         self.meanings.append('tu bosses?')
 
         self.dials['distroguy_dial_thune'] = { 't':0 , 'delay':None , 'meaning':'veut thune' , 'imp':81 , 'id':'distroguy_dial_thune' }
@@ -160,6 +166,8 @@ class Distroguy(Metier):
 
         self.acts['distroguy_act_sign'] = { 't':0 , 'delay':10 , 'giver':self.perso , 'exp':'signer chez distro (1$/jour)'
                                 , 'fct':o.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
+
+        self.hm_begin,self.hm_end = g.Hour(7),g.Hour(16)
 
     def answer(self,voice):
         meaning = voice['meaning']
@@ -223,6 +231,25 @@ class Distroguy(Metier):
         act['param'] = [rapper]
         act['t'] = time.time()
         rapper.add_act(act)
+
+class Shopguy(Metier):
+
+    def __init__(self,perso):
+        super(Shopguy,self).__init__(perso,'shopguy')
+
+        #self.meanings.append('veut thune')
+        #self.meanings.append('tu bosses?')
+
+        #self.dials['distroguy_dial_thune'] = { 't':0 , 'delay':None , 'meaning':'veut thune' , 'imp':81 , 'id':'distroguy_dial_thune' }
+        #self.dials['distroguy_dial_sign'] = { 't':0 , 'delay':None , 'meaning':'tu bosses?' , 'imp':80 , 'id':'distroguy_dial_sign' }
+
+        #self.acts['distroguy_act_thune'] = { 't':0 , 'delay':10 , 'giver':self.perso  , 'exp':'prendre'
+        #                        , 'fct':o.distro.cashback , 'param':[] , 'answer':'merci' , 'id':'distroguy_act_thune'}
+
+        #self.acts['distroguy_act_sign'] = { 't':0 , 'delay':10 , 'giver':self.perso , 'exp':'signer chez distro (1$/jour)'
+        #                        , 'fct':o.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
+
+        self.hm_begin,self.hm_end = g.Hour(2),g.Hour(23,59)
 
 
 """""""""""""""""""""""""""""""""""
@@ -312,6 +339,8 @@ class Human():
         self.dir = r.choice(('R','L'))
         self.todo = [] ## 'fuir' 'attack' 'move' 'talkin' 'followin'
         self.bigdoing = {'lab':None,'funct':None,'param':None,'imp':-10000}
+        self.bigbigdoin = {'lab':None,'funct':None,'param':None,'imp':-10000} ## move along svrl streets
+
 
         # skins
         self.textids = textures[key_skin]
@@ -516,15 +545,51 @@ class Human():
         else:
             self.element_colli = colli_elem
 
+    def lil_check_colli(self):
+
+        street = o2.NY.CITY[self.street]
+
+        ## CHANGER DANS PERSO
+        self.collis = street.get_lil_colli(self)
+
+        if len(self.collis) > 0:
+            self.collis.sort(key=lambda x:x.gey)
+            #print(list(map(lambda x:x.name,self.collis)))
+
+            y,yf = street.yyf
+            d = yf-y
+            yranges = [y]
+            for i in range(len(self.collis)):
+                yranges.append(y+(i+1)*(d/len(self.collis)))
+            #print(yranges)
+
+            k=0
+            for i in range(len(self.collis)):
+                if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
+                    k=i
+            colli_elem = self.collis[k]
+        else:
+            colli_elem = None
+
+        self.element_colli = colli_elem
+        #print(self.element_colli)
+
     def update(self):
 
         t = time.time()
 
         # feedin/hydration
-        if self.fed > 0: self.fed -= 50/g.Cyc.tpd
-        if self.hydrated > 0: self.hydrated -= 100/g.Cyc.tpd
-        if self.hydrated <= 0 or self.fed <= 0:
-            self.life -= 1
+        if True:
+            if self.fed > 0: self.fed -= 50/g.Cyc.tpd
+            if self.hydrated > 0: self.hydrated -= 100/g.Cyc.tpd
+
+            if self.fed < 0:
+                self.fed = 0
+            if self.hydrated < 0:
+                self.hydrated = 0
+
+            if WATER and (self.hydrated <= 0 or self.fed <= 0):
+                self.life -= 1
 
         #life
         if self.life < self.max_life and not 'heal' in list(map(lambda x:x['lab'],self.todo)):
@@ -538,68 +603,71 @@ class Human():
             #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
 
         #listening
-        todel = []
-        for voice in self.ear:
-            if t-voice['t'] > self.delay_earin:
-                todel.append(voice)
-        for voice in todel:
-            self.ear.remove(voice)
-        todel = []
-        for voice in self.selfear:
-            if t-voice['t'] > 5*self.delay_earin:
-                todel.append(voice)
-        for voice in todel:
-            self.selfear.remove(voice)
+        if True:
+            todel = []
+            for voice in self.ear:
+                if t-voice['t'] > self.delay_earin:
+                    todel.append(voice)
+            for voice in todel:
+                self.ear.remove(voice)
+            todel = []
+            for voice in self.selfear:
+                if t-voice['t'] > 5*self.delay_earin:
+                    todel.append(voice)
+            for voice in todel:
+                self.selfear.remove(voice)
 
         #act/dial
-        deleted_acts_dials = False
-        todel = []
-        for act in self.acts:
-            if t-act['t'] > act['delay']:
-                todel.append(act)
-                deleted_acts_dials = True
-        for act in todel:
-            self.acts.remove(act)
-        todel = []
-        for dial in self.dials:
-            if dial['delay'] != None and t-dial['t'] > dial['delay']:
-                todel.append(dial)
-                deleted_acts_dials = True
-        for dial in todel:
-            self.dials.remove(dial)
-        if deleted_acts_dials and self.roll != None:
-            self.roll.recreate()
+        if True:
+            deleted_acts_dials = False
+            todel = []
+            for act in self.acts:
+                if t-act['t'] > act['delay']:
+                    todel.append(act)
+                    deleted_acts_dials = True
+            for act in todel:
+                self.acts.remove(act)
+            todel = []
+            for dial in self.dials:
+                if dial['delay'] != None and t-dial['t'] > dial['delay']:
+                    todel.append(dial)
+                    deleted_acts_dials = True
+            for dial in todel:
+                self.dials.remove(dial)
+            if deleted_acts_dials and self.roll != None:
+                self.roll.recreate()
 
         #combatting
-        if (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) :
-            if t-self.last_hit > 5:
-                self.hits_in_row = 0
-                self.last_hit = 0
-        else:
+        if True:
+            if (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) :
+                if t-self.last_hit > 5:
+                    self.hits_in_row = 0
+                    self.last_hit = 0
+            else:
 
-            ## confidence
+                ## confidence
 
-            gens_effrayants = 0
-            amis_rassurants = 0
+                gens_effrayants = 0
+                amis_rassurants = 0
 
-            for hum in self.hum_env:
-                if self.relations[hum]['peur/rassure'] < 0:
-                    gens_effrayants += self.relations[hum]['peur/rassure']
-                elif self.relations[hum]['peur/rassure'] > 0:
-                    amis_rassurants += self.relations[hum]['peur/rassure']
+                for hum in self.hum_env:
+                    if self.relations[hum]['peur/rassure'] < 0:
+                        gens_effrayants += self.relations[hum]['peur/rassure']
+                    elif self.relations[hum]['peur/rassure'] > 0:
+                        amis_rassurants += self.relations[hum]['peur/rassure']
 
-            confidence = 100*self.life/self.max_life + gens_effrayants + amis_rassurants
+                confidence = 100*self.life/self.max_life + gens_effrayants + amis_rassurants
 
-            if confidence > 100:
-                confidence = 100
-            elif confidence < 0:
-                confidence = 0
+                if confidence > 100:
+                    confidence = 100
+                elif confidence < 0:
+                    confidence = 0
 
-            if int(confidence) != int(self.confidence):
-                if self.confidence > confidence:
-                    self.confidence -= 1
-                else:
-                    self.confidence += 1
+                if int(confidence) != int(self.confidence):
+                    if self.confidence > confidence:
+                        self.confidence -= 1
+                    else:
+                        self.confidence += 1
 
         #relations
         for hum in self.relations:
@@ -607,10 +675,6 @@ class Human():
                 self.relations[hum]['t'] += 1
             else:
                 self.relations[hum]['t'] -= 0.1
-
-        if self.name == 'Delta':
-            pass
-            #print()
 
     def force_anim(self,perc,action='act',dir='L'):
 
@@ -1078,10 +1142,15 @@ class Human():
                     x,y = o2.NY.CITY[self.street].rand_pos()
 
                     #self.move_until(0,(x,y))
+                    self.del_todo(self.move_until)
                     self.add_todo('move_'+str(x)+'_'+str(y),self.move_until,param=[(x,y)])
-                elif choice < 0.001: # change street
-                    dest = o2.NY.CITY[self.street].get_rd_neighbor()
-                    self.add_todo('go_street_'+dest.name,self.go_to_street,imp=10,param=[dest])
+
+                # change street
+                if not (type(self) == Guy and self.workin):
+                    if choice < 0.001:
+                        dest = o2.NY.CITY[self.street].get_rd_neighbor()
+                        self.del_todo(self.go_to_neistreet)
+                        self.add_todo('go_neistreet_'+dest.name,self.go_to_neistreet,imp=10,param=[dest])
 
                 #say the dial
                 if True :
@@ -1111,6 +1180,7 @@ class Human():
                             self.del_dial(chosen_dial['id'])
                         self.say(exp)
 
+
             ##todo
             if len(self.todo) > 0 and self.bigdoing != self.todo[0]:
 
@@ -1134,7 +1204,7 @@ class Human():
 
         # nouveau todo
         newtodo = {'lab':lab,'funct':funct,'imp':imp,'param':param}
-
+        #print(newtodo)
 
         # on vérifie qu'il y est pas déjà et on supprim si jamai
         if funct == self.fuir:
@@ -1191,7 +1261,7 @@ class Human():
         else:
             self.done_todo()
 
-    def go_to_street(self,dt,street):
+    def go_to_neistreet(self,dt,street):
 
         reached = False
         door = o2.NY.CITY[self.street].get_neighbor_door(street)
@@ -1222,12 +1292,30 @@ class Human():
             if self.street == street.name:
                 #print('finii')
                 self.del_todo(self.move_until)
-                self.del_todo(self.go_to_street)
+                self.del_todo(self.go_to_neistreet)
                 self.done_todo()
             elif self.alive:
-                g.bertran.schedule_once(self.go_to_street,0.01,street)
+                g.bertran.schedule_once(self.go_to_neistreet,0.01,street)
         else:
             self.done_todo()
+
+    def go_to_street(self,dt,path,imp=50):
+
+        while self.street != path[0]:
+            del path[0]
+        #print(self.name,path)
+
+        if len(path) == 1 and path[0] == self.street:
+            self.del_todo('go_street_'+path[-1])
+            self.done_todo()
+        else:
+
+            dest = path[1]
+            if not 'go_neistreet_'+dest in list(map(lambda x:x['lab'],self.todo)):
+                self.add_todo('go_neistreet_'+dest,self.go_to_neistreet,imp=imp+10,param=[o2.NY.CITY[dest]])
+
+            if self.alive:
+                g.bertran.schedule_once(self.go_to_street,0.01,path)
 
     def attack_hum(self,dt,target):
 
@@ -1235,7 +1323,7 @@ class Human():
 
             if target.street != self.street:
                 dest = o2.NY.CITY[target.street]
-                self.add_todo('go_street_'+dest.name,self.go_to_street,imp=self.bigdoing['imp']+1,param=[dest])
+                self.add_todo('go_neistreet_'+dest.name,self.go_to_neistreet,imp=self.bigdoing['imp']+1,param=[dest])
             else:
 
                 x,y = target.gex,target.gey
@@ -1564,6 +1652,11 @@ class Human():
             x,y = self.box.cx-size_lifebar/2 , self.box.fy + 7
             g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None),group=o.get_perso_grp(self.gey))
 
+    def set_text(self,key_skin):
+        if self.textids != textures[key_skin]:
+            self.textids = textures[key_skin]
+            #self.update_skin()
+
     def hoover(self):
         if hasattr(self,'label'):
             g.lman.unhide(self.label)
@@ -1703,16 +1796,29 @@ class Fan(Human):
 # travaille dans un shop ou autre
 class Guy(Fan):
 
-    def __init__(self,key_skin,pos,name='Alphonse',metier=Metier,street='street1'):
+    def __init__(self,key_skin,workplace,name=None,metier=Metier,street=None,pos=None):
+
+        if street == None:
+            street = o2.NY.rd_street()
+            street = o2.NY.CITY['kamour str.']
+            pos = street.rand_pos()
+            street = street.name
+            #print(street)
 
         super(Guy,self).__init__(key_skin,pos,name,street=street)
+        self.normal_skin = key_skin
+        self.speed = 40
 
-        ## check if in BOTS (souvent les guys sont ajoutés directement depuis leur shop)
-        if self not in BOTS:
-            BOTS.append(self)
+        ## check if in GUYS (souvent les guys sont ajoutés directement depuis leur shop)
+        if self not in GUYS:
+            GUYS.append(self)
 
         ## crée son metier:
         self.metier = metier(self)
+        self.work_hours = self.metier.hours
+        self.workin = False
+
+        self.workplace = workplace
 
     def update_env(self):
         super(Guy,self).update_env()
@@ -1744,6 +1850,21 @@ class Guy(Fan):
             # sinon on fait un comportement d'humain
             super(Guy,self).answer(voice)
 
+    # work
+
+    def work(self):
+        g.pman.alert(self.name,'workin')
+        self.set_text('guy')
+        path = o2.NY.shortest_path(o2.NY.CITY[self.street],o2.NY.CITY[self.workplace])
+        self.add_todo('go_street_'+self.workplace,self.go_to_street,imp=50,param=[path])
+        self.workin = True
+
+    def stop_work(self):
+        g.pman.alert('oh yo',self.name,'stop workin')
+        self.set_text(self.normal_skin)
+        self.workin = False
+
+
     ### label
     def load(self):
         super(Guy,self).load()
@@ -1772,6 +1893,10 @@ class Guy(Fan):
         super(Guy,self).unhoover()
         if hasattr(self,'label_work'):
             g.lman.unhide(self.label_work,True)
+
+    def __repr__(self):
+        s = self.name +' ('+red(self.type) + '-'+green(self.metier.name)+')'+' ['+ blue(self.street)+']'
+        return s
 
     def _type(self):
         return 'GUY'
@@ -1937,7 +2062,7 @@ class Perso(Rappeur):
         super(Perso,self).__init__(key_skin,pos,name,street=street)
 
         self.max_life = 500
-        self.damage = 40
+        self.damage = 10
         self.life = self.max_life
         self.speed = g.SPEED
         self.runspeed = g.RSPEED

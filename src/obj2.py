@@ -136,6 +136,7 @@ class Street():
 
 
         self.neighbor = {}
+        self.neighbors_street = {}
 
         self.visible = False
 
@@ -161,6 +162,8 @@ class Street():
 
             if isinstance(zone,o.Porte) and zone.destination not in self.neighbor:
                 self.neighbor[zone.destination] = {'door':zone}
+                if type(zone.destination) == Street:
+                    self.neighbors_street[zone.destination] = {'door':zone}
 
     def add_item(self,item):
         if type(item) == type([]):
@@ -375,6 +378,19 @@ class Street():
             if self.catalog[i].get('nom') != elem.name:
                 elems.append(self.catalog[i])
         return elems
+
+    def get_lil_colli(self,hum):
+
+        ## donne juste les collisions des doors
+
+        if hum in self.humans:
+            collis = []
+            for door in list(filter(lambda x:isinstance(x,o.Porte),list(self.zones.values()))):
+                #print(door.name)
+                if collisionAB(hum.gebox,door.gebox):
+                    collis.append(door)
+            return collis
+        return []
 
     def get_random_nb_bots(self):
         return r.randint(self.long//8,self.long//4)
@@ -594,14 +610,26 @@ class Shop(House):
         super(Shop,self).__init__(name,textures,box=box)
 
         self.guys = []
-        self.guys.append( p.Guy('guy',self.rand_pos(),metier=p.Distroguy,street=self.name) )
         self.Y = (50,150)
 
         self.outside = False
         self.free_access = True
 
-    def del_hum(self,hum):
-        super(Shop,self).del_hum(hum)
+    def create_guys(self):
+        text = random.choice(['perso','perso2','perso3'])
+        self.add_guy(p.Guy(text,workplace=self.name))
+
+    def add_guy(self,guy):
+        if guy not in self.guys:
+            self.guys.append(guy)
+            if self.visible:
+                guy.load()
+
+    def del_guy(self,guy):
+        if guy in self.guys:
+            self.guys.remove(guy)
+            if self.visible:
+                guy.deload()
 
     def update_catalog(self):
         for guy in self.guys:
@@ -610,11 +638,33 @@ class Shop(House):
                 exp = guy.name + ' est mort wtf'
                 g.pman.alert(exp)
                 self.guys.remove(guy)
-                #self.guys.append(p.Human_to_Guy(self))
         super(Shop,self).update_catalog()
 
     def get_random_nb_bots(self):
         return r.randint(1,3)
+
+class Distrokid(Shop):
+
+    def __init__(self,x,y):
+
+        super(Distrokid,self).__init__(preRue('distrokid',x,y),g.TEXTIDS['distrokid'],box=box(0,-50,5120))
+
+    def create_guys(self):
+        text = random.choice(['perso','perso2','perso3'])
+        self.add_guy(p.Guy(text,workplace=self.name,metier=p.Distroguy))
+
+class MiniMarket(Shop):
+
+    def __init__(self,x,y):
+        super(MiniMarket,self).__init__(preRue('shop',x,y),g.TEXTIDS['shop'],box=box(0,-50,6400))
+
+    def get_random_nb_bots(self):
+        return r.randint(2,5)
+
+    def create_guys(self):
+        text = random.choice(['perso','perso2','perso3'])
+        self.add_guy(p.Guy(text,workplace=self.name,metier=p.Shopguy))
+
 
 """'''''''''''''''''''''''''''''''''
 '''''''PART TWO : CITY '''''''''''''
@@ -640,22 +690,150 @@ class CITY():
         return street.w / self.w
 
     def rd_street(self):
-
-        k = r.random()
-        d = 0
-
-        for street in list(self.CITY.values()):
-            if type(street) != House and k > d and k <= d+self.percentage(street):
-                return street
-            d+=self.percentage(street)
-        return list(self.CITY.values())[0]
+        #print(list(self.CITY.values()))
+        street = r.choice( list(self.CITY.values()))
+        return street
 
     def rd_house(self):
 
         house = r.choice( list(filter( lambda x:isinstance(x,PrivateHouse),self.CITY.values())) )
         return house
 
+    ## dij
+
+    def create_node_graph(self):
+
+        self.node_graph = {}
+
+        for st in self.avnues:
+            doors = list(map(lambda x:x['door'],list(st.neighbors_street.values())))
+            doors = sorted(doors,key=lambda x:x.gex)
+            for i in range(len(doors)):
+
+                #print(doors[i].node)
+                if doors[i].node not in self.node_graph:
+                    self.node_graph[doors[i].node] = {}
+
+                if i > 0:
+                    self.node_graph[doors[i].node][doors[i-1].node] = doors[i].gex - doors[i-1].gex
+                if i < len(doors)-1:
+                    self.node_graph[doors[i].node][doors[i+1].node] = doors[i+1].gex - doors[i].gex
+
+        if False:
+            for node in self.node_graph:
+                print(node)
+                for noode in self.node_graph[node]:
+                    print('   ',noode, '      ',self.node_graph[node][noode])
+
+    def shortest_path(self,dep,dest):
+
+        print('lookin for shortest path :',dep.name,'->',dest.name)
+
+        ## 1e étape : on crée le graph des rues
+        self.create_node_graph()
+        graph = self.node_graph
+
+        ## 2e étape : on prend la rue de départ et la rue d'arrivée (si dep et dest != Street)
+        begin = [dep.name]
+        if type(dep) != Street:
+            if isinstance(dep,PrivateHouse):
+                if dep.building != None:
+                    begin.append(dep.building.name)
+                    dep = dep.building
+                else:
+                    print('DIJ error : la privatehouse de dep n a pas de building')
+                    return []
+            if isinstance(dep,Shop):
+                if dep.building != None:
+                    begin.append(dep.building.name)
+                    dep = dep.building
+                else:
+                    if len(dep.neighbors_street.keys()) != 0:
+                        begin.append(list(dep.neighbors_street.keys())[0].name)
+                        dep = list(dep.neighbors_street.keys())[0]
+            if isinstance(dep,Building):
+                if len(dep.neighbors_street.keys()) != 0:
+                    begin.append(list(dep.neighbors_street.keys())[0].name)
+                    dep = list(dep.neighbors_street.keys())[0]
+                else:
+                    print('DIJ error : le building de dep n est pas connectée à une rue')
+                    return []
+        end = []
+        if type(dest) != Street:
+            if isinstance(dest,PrivateHouse):
+                if dest.building != None:
+                    end.append(dest.name)
+                    dest = dest.building
+                else:
+                    print('DIJ error : la privatehouse de dest n a pas de building')
+                    return []
+            if isinstance(dest,Shop):
+                if dest.building != None:
+                    end.append(dest.name)
+                    dest = dest.building
+                else:
+                    if len(dest.neighbors_street.keys()) != 0:
+                        end.append(dest.name)
+                        dest = list(dest.neighbors_street.keys())[0]
+            if isinstance(dest,Building):
+                if len(dest.neighbors_street.keys()) != 0:
+                    end.append(dest.name)
+                    dest = list(dest.neighbors_street.keys())[0]
+                else:
+                    print('DIJ error : le building de dest n est pas connectée à une rue')
+                    return []
+            end.reverse()
+
+        if dep == dest:
+            print('mm rue')
+            return begin + end
+        elif dest in dep.neighbors_street:
+            print('voisine rue')
+            return begin +[dest.name]+ end
+
+        print(begin,'->',end)
+        print(dep.name,dest.name)
+
+        ## 3e étape : on trouve les nodes de départ et d'arrivée les plus proches
+        dep_node = list(map(lambda x:x['door'],list(dep.neighbors_street.values())))[0].node
+        dest_node = list(map(lambda x:x['door'],list(dest.neighbors_street.values())))[0].node
+
+        ## 4e étape : applique dij
+        nodes = dij(self.node_graph,dep_node,dest_node)
+
+        ## 5e étape : on récupère les rues depuis les nodes
+        #print(begin , mid , end)
+        mid = []
+        st = dep.name
+        for i in range(len(nodes)):
+            if i < len(nodes)-1:
+                if st in nodes[i] and st not in nodes[i+1]:
+                    mid.append(st)
+                    rues = nodes[i].split(' -<->- ')
+                    rues.remove(st)
+                    st = rues[0]
+            else:
+                mid.append(st)
+                if st != dest.name:
+                    rues = nodes[i].split(' -<->- ')
+                    rues.remove(st)
+                    mid.append(rues[0])
+
+        mid.remove(dep.name)
+        #print(nodes)
+
+        ## e étape : on concatene et on retourne
+        return begin + mid + end
+
     #
+
+    def _shops(self):
+        return list(filter(lambda x:isinstance(x,Shop), self.CITY.values()))
+    shops = property(_shops)
+
+    def _avnues(self):
+        return list(filter(lambda x:type(x) == Street, self.CITY.values()))
+    avnues = property(_avnues)
 
     def __len__(self):
         x=0
@@ -696,7 +874,7 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 1
+nb_iterations = 2
 
 #plus très utile
 k = 20
@@ -896,7 +1074,7 @@ def create_map():
                 newrues.append(newrue)
         rues += newrues
 
-    x_distro = rues[0].place_door_rd('distro')
+    #x_distro = rues[0].place_door_rd('distro')
     x_shop = rues[0].place_door_rd('shop')
     rues[0].place_door(0,'home')
 
@@ -923,7 +1101,7 @@ def create_map():
 
         if nom == rue_princ:
             build_list[0] = 2
-            build_list[x_distro] = 2
+            #build_list[x_distro] = 2
             build_list[x_shop] = 1
 
         ## on créé la street
@@ -963,13 +1141,13 @@ def create_map():
 
             ## DISTROKID
 
-            #distrokid + porte
+            """#distrokid + porte
             zone_box = builds[2]['box'].pop()
             zone_box.y += 250
             zone_box.x += x_distro*W_BUILD+W_SIDE
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
-            NY.add_streets(Shop(preRue('distrokid',x,y),g.TEXTIDS['distrokid']))
-            connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
+            NY.add_streets(Distrokid(x,y))
+            connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))"""
 
             ## SHOP
             zone_box = builds[1]['box'].pop()
@@ -979,7 +1157,7 @@ def create_map():
             zone_box2.y += 250
             zone_box2.x += x_shop*W_BUILD+W_SIDE
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
-            NY.add_streets(Shop(preRue('shop',x,y),g.TEXTIDS['shop'],box=box(0,-50,6400)))
+            NY.add_streets(MiniMarket(x,y))
             connect(NY.CITY['shop'],1160,NY.CITY[nom],zone_box,(False,False))
             connect(NY.CITY['shop'],4960,NY.CITY[nom],zone_box2,(False,False))
 

@@ -658,12 +658,12 @@ class ParticleManager():
         bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
         return key,id
 
-    def alert(self,contenu):
+    def alert(self,*cont):
         xy_pos = scr.cx,3*scr.cy/2
         color = (255,20,20,255)
         duree = 10
         size = 40
-        self.addLabPart(contenu,xy_pos,duree,font_size=size,color=color,group='ui',use_str_bien=False)
+        self.addLabPart(' '.join(cont),xy_pos,duree,font_size=size,color=color,group='ui',use_str_bien=False)
 
     def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
         pass
@@ -802,8 +802,66 @@ def cooldown_one(key,obj):
 #### CYCLE -> rules day/night cycle
 
 MODE_COLOR = 1 ## 1 pour avoir des couleurs wtf et 0 pour la "réalité"
-DUREE_DAY = 20*60
+DUREE_DAY = 20*2
 # duree d'une journée en secondes
+
+class Hour():
+    def __init__(self,h,m=0):
+        self.h = h
+        self.m = m
+
+    def _hm(self):
+        return self.h,self.m
+    hm = property(_hm)
+
+    def __lt__(self,other):	#describes less than operator(<)
+        h,m = other.hm
+        if self.h < h:
+            return True
+        if self.h > h:
+            return False
+        if self.m < m:
+            return True
+        if self.m > m:
+            return False
+        return False
+    def __le__(self,other):	#descries less than or equal to (<=)
+        h,m = other.hm
+        if self.h < h:
+            return True
+        if self.h > h:
+            return False
+        if self.m < m:
+            return True
+        if self.m > m:
+            return False
+        return True
+    def __gt__(self,other):	#describes greater than (>)
+        h,m = other.hm
+        if self.h < h:
+            return False
+        if self.h > h:
+            return True
+        if self.m < m:
+            return False
+        if self.m > m:
+            return True
+        return False
+    def __ge__(self,other):	#describes greater than or equal to (>=)
+        h,m = other.hm
+        if self.h < h:
+            return False
+        if self.h > h:
+            return True
+        if self.m < m:
+            return False
+        if self.m > m:
+            return True
+        return True
+    def __eq__(self,other):	#describes equality operator(==)
+        return self.hm == other.hm
+    def __ne__(self,other): #describes not equal to operator(!=)
+        return not self.hm == other.hm
 
 class Cycle():
 
@@ -949,6 +1007,28 @@ class Cycle():
         if p <0:
             return 0
         return p
+
+    #min/hour
+    def _hm(self):
+        p = (self.tick*self.dt - (self.day-1)*self.len )/self.len
+        hm = int(p*24*60)
+        h = hm//60
+        m = (hm%60)
+        return h,m
+    hm = property(_hm)
+
+    def __lt__(self,hour):
+        return Hour(*self.hm) < hour
+    def __le__(self,hour):
+        return Hour(*self.hm) <= hour
+    def __gt__(self,hour):
+        return Hour(*self.hm) > hour
+    def __ge__(self,hour):
+        return Hour(*self.hm) >= hour
+    def __eq__(self,hour):
+        return Hour(*self.hm) == hour
+    def __ne__(self,hour):
+        return Hour(*self.hm) != hour
 
     def __str__(self):
         # retourne l'heure actuelle

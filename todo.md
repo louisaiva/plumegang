@@ -140,3 +140,15 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
 # ajouter drogue:
   -> colore de ouf l'écran de milliers de couleurs:
     rend le jeu très beau du coup ça peut reellement rendre addict le joueur ptdrr
+
+# s bahn:
+
+  différent du métro de base souterrain:
+  -> sbahn est situé derrière les builds des streets :
+    on le voit passer de temps en temps derrière
+    permet de bouger d'un quartier à l'autre
+
+  -> lorsqu'on le prend on reste sur la même street (même vision)
+  mais le sprite passe derrière les builds et avance très vite puis ça bascule sur une nouvelle street d'un nouveau quartier
+
+  -> cool pour les bots : pas obligé de se déplacer tout le temps à pied, on peut les voir arriver en sbahn oklm pour aller au taf

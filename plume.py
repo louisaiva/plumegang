@@ -123,6 +123,8 @@ class App():
             elif o2.LOAD == 3:
                 o2.create_map()
 
+            #o2.NY.shortest_path(o2.NY.rd_street(),o2.NY.rd_street())
+
         # humans
         if True:
 
@@ -141,7 +143,7 @@ class App():
 
             self.lab_doing = g.lman.addLab(self.perso.poto.doing,(1880,1050),font_size=20,anchor=('right','top'))
 
-            ## FANS/RAPPEURS
+            ## FANS/RAPPEURS/GUYS
 
             # add hum to p.BOTS for each street
             for str in o2.NY.CITY:
@@ -157,9 +159,11 @@ class App():
                             hum = p.Fan(text,pos,street=street.name)
                         p.BOTS.append(hum)
 
+            for shop in o2.NY.shops:
+                shop.create_guys()
 
             # adding all hum to their street
-            for hum in p.BOTS:
+            for hum in p.BOTS+p.GUYS:
                 street = o2.NY.CITY[hum.street]
 
                 # on donne les clés de chez eux à chaque bot
@@ -172,9 +176,9 @@ class App():
                 # et on les ajoute à leur street actuelle
                 street.add_hum(hum)
 
-            if len(p.BOTS) < 200:
-                print(p.BOTS)
-            print('IN THIS GAME :',len(p.BOTS),'bots ---',len(o2.NY.CITY),'streets')
+            if len(p.BOTS+p.GUYS) < 200:
+                print(p.BOTS+p.GUYS)
+            print('IN THIS GAME :',len(p.BOTS+p.GUYS),'bots ---',len(o2.NY.CITY),'streets')
 
         # cycle
         tabcolor = [(self.sprids['bg-1'],1),
@@ -207,7 +211,7 @@ class App():
             # distrokid
             zones = []
             zones.append(o.SimpleReleaser(1670,210,o.distro))
-            o2.NY.CITY['distrokid'].assign_zones(zones)
+            #o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
 
@@ -968,6 +972,19 @@ class App():
                     hum.being_bot()
                     hum.check_do()
 
+                for guy in p.GUYS:
+                    if guy.work_hours != None:
+                        hm_begin,hm_end = guy.work_hours
+                        if g.Cyc >= hm_begin and g.Cyc < hm_end and not guy.workin:
+                            guy.work()
+                        elif (g.Cyc < hm_begin or g.Cyc >= hm_end) and guy.workin:
+                            guy.stop_work()
+                    if guy.street != self.perso.street and o2.NY.CITY[guy.street] not in o2.NY.CITY[self.perso.street].neighbor:
+                        guy.lil_check_colli()
+                        guy.being_bot()
+                        guy.check_do()
+
+
             # NEIGHBOR STREETS
             if True:
 
@@ -975,7 +992,7 @@ class App():
                     street.update_catalog()
                     for hum in street.humans:
                         hum.update_env()
-                        hum.update_lab()
+                        #hum.update_lab()
                         hum.update()
                         hum.being_bot()
                         hum.check_do()
@@ -1027,9 +1044,9 @@ class App():
                     chance = random.randint(0,int(60*moyfps))
                     malus = 1-i*0.2
                     if chance < self.perso.nb_fans*malus:
-                        random.choice(p.BOTS).stream(self.perso.disco[i])
+                        random.choice(p.BOTS+p.GUYS).stream(self.perso.disco[i])
 
-            text_lab = (self.perso.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.todo)),self.perso.doing)
+            text_lab = (p.GUYS[0].bigdoing['lab'],list(map(lambda x:x['lab'],p.GUYS[0].todo)),p.GUYS[0].doing)
             g.lman.set_text(self.lab_doing,text_lab)
             self.perso.hud.update()
             self.perso.bigmap.update()

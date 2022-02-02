@@ -723,6 +723,13 @@ class Porte(Zone_ELEM):
         self.xdest = xdest
         self.perso_anim = anim
 
+        if self.street.pre.vert:
+            #self.node = {'vert':self.street.name,'hor':self.destination.name}
+            self.node = self.street.name + ' -<->- ' + self.destination.name
+        else:
+            #self.node = {'vert':self.destination.name,'hor':self.street.name}
+            self.node = self.destination.name + ' -<->- ' + self.street.name
+
         if anim == 'stairs':
             self.cooldown = 1
 
@@ -1231,6 +1238,35 @@ class Map(HUD):
                 g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
             else:
                 g.sman.modify(self.sprids['perso_spr'],pos=(px,py),anchor='center')
+
+            for guy in p.GUYS:
+
+                guy_street = o2.NY.CITY[guy.street]
+
+                # get pos
+                if type(guy_street) == o2.Street: # si le perso se trouve dans une rue
+
+                    perc = guy_street.get_pos(guy)
+
+                    vert = guy_street.pre.vert
+                    if vert:
+                        px = g.sman.spr(self.sprids[guy_street.name]).x - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
+                        py = g.sman.spr(self.sprids[guy_street.name]).y + perc*g.sman.spr(self.sprids[guy_street.name]).height
+                    else:
+                        py = g.sman.spr(self.sprids[guy_street.name]).y - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
+                        px = g.sman.spr(self.sprids[guy_street.name]).x + perc*g.sman.spr(self.sprids[guy_street.name]).width
+                else: #guy_street.name == 'home': # si le perso se trouve dans une maison
+                    px = self.ax + guy_street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                    py = self.ay + guy_street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                    px += self.larg_cube/2
+                    py += self.larg_cube/2
+
+                if not 'perso_'+guy.name in self.sprids:
+                    self.addSpr('perso_'+guy.name,guy.textids['nothing']['R'][0],(px,py), group='hud22')
+                    scale = self.pad/g.sman.spr(self.sprids['perso_'+guy.name]).width
+                    g.sman.modify(self.sprids['perso_'+guy.name],scale=(scale,scale),anchor='center')
+                else:
+                    g.sman.modify(self.sprids['perso_'+guy.name],pos=(px,py),anchor='center')
 
 class PersoHUD(HUD):
 

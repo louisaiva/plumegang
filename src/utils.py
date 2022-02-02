@@ -487,3 +487,73 @@ def point_in_segment(C,line):
 timer=threading.Event()
 def waait(n=100):
     timer.wait(n/1000)
+
+
+
+### DIJKSTRA
+
+graph_test = {
+            '1_A': {'1_2':1,'1_4':3},
+            '1_2': {'1_A':1,'2_3':4},
+            '1_4': {'1_A':3,'4_7':3},
+            '2_3': {'1_2':4,'3_5':2},
+            '3_5': {'5_6':2,'2_3':2},
+            '4_6': {'4_7':3,'5_6':2,'4_11':1},
+            '4_7': {'4_6':3,'1_4':3,'7_8':2},
+            '4_11': {'10_11':1,'4_6':1},
+            '5_6': {'3_5':2,'4_6':2},
+            '7_8': {'8_9':5,'4_7':2},
+            '8_9': {'7_8':5,'9_A':1},
+            '9_A': {'9_10':3,'8_9':1},
+            '9_10': {'9_A':3,'10_11':1},
+            '10_11': {'4_11':1,'9_10':1},
+                }
+
+def dij(graph=graph_test,dep='1_A',dest='9_A'):
+
+    final = []
+    path = {}
+    adj_node = {}
+    queue = []
+
+    for node in graph:
+        path[node] = float("inf")
+        adj_node[node] = None
+        queue.append(node)
+
+    path[dep] = 0
+
+    while queue:
+        key_min = queue[0]
+        min_val = path[key_min]
+        for n in range(1, len(queue)):
+            if path[queue[n]] < min_val:
+                key_min = queue[n]
+                min_val = path[key_min]
+        cur = key_min
+        queue.remove(cur)
+        #print(cur)
+
+        for i in graph[cur]:
+            alternate = graph[cur][i] + path[cur]
+            if path[i] > alternate:
+                path[i] = alternate
+                adj_node[i] = cur
+
+    #print('shortest_path',dep,'to',dest)
+    #print(x, end = '<-')
+    x = dest
+    while True:
+        x = adj_node[x]
+        if x is None:
+            print("")
+            break
+        final.append(x)
+    #del final[-1]
+    final.reverse()
+    final.append(dest)
+    #print(final)
+    #print(adj_node)
+    return final
+
+#print(shortest_path())
