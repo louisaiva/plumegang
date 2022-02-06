@@ -1220,32 +1220,7 @@ class Map(HUD):
                     y = self.ay + street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
                     g.sman.modify(self.sprids[street.name],(x,y))
 
-            # get pos
-            if type(perso_street) == o2.Street: # si le perso se trouve dans une rue
-
-                perc = perso_street.get_pos(self.perso)
-
-                vert = perso_street.pre.vert
-                if vert:
-                    px = g.sman.spr(self.sprids[perso_street.name]).x - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
-                    py = g.sman.spr(self.sprids[perso_street.name]).y + perc*g.sman.spr(self.sprids[perso_street.name]).height
-                else:
-                    py = g.sman.spr(self.sprids[perso_street.name]).y - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
-                    px = g.sman.spr(self.sprids[perso_street.name]).x + perc*g.sman.spr(self.sprids[perso_street.name]).width
-            else: #perso_street.name == 'home': # si le perso se trouve dans une maison
-                px = self.ax + perso_street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
-                py = self.ay + perso_street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
-                px += self.larg_cube/2
-                py += self.larg_cube/2
-
-            # create and or change pos
-            if not 'perso_spr' in self.sprids:
-                self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(px,py), group='hud22')
-                scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
-                g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
-            else:
-                g.sman.modify(self.sprids['perso_spr'],pos=(px,py),anchor='center')
-
+            # update all guys
             for guy in p.GUYS:
 
                 guy_street = o2.NY.CITY[guy.street]
@@ -1274,6 +1249,33 @@ class Map(HUD):
                     g.sman.modify(self.sprids['perso_'+guy.name],scale=(scale,scale),anchor='center')
                 else:
                     g.sman.modify(self.sprids['perso_'+guy.name],pos=(px,py),anchor='center')
+
+            # get pos
+            if type(perso_street) == o2.Street: # si le perso se trouve dans une rue
+
+                perc = perso_street.get_pos(self.perso)
+
+                vert = perso_street.pre.vert
+                if vert:
+                    px = g.sman.spr(self.sprids[perso_street.name]).x - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
+                    py = g.sman.spr(self.sprids[perso_street.name]).y + perc*g.sman.spr(self.sprids[perso_street.name]).height
+                else:
+                    py = g.sman.spr(self.sprids[perso_street.name]).y - self.larg_cube/2 +self.larg_street/2 + self.larg_cube/2
+                    px = g.sman.spr(self.sprids[perso_street.name]).x + perc*g.sman.spr(self.sprids[perso_street.name]).width
+            else: #perso_street.name == 'home': # si le perso se trouve dans une maison
+                px = self.ax + perso_street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                py = self.ay + perso_street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                px += self.larg_cube/2
+                py += self.larg_cube/2
+
+            # create and or change pos
+            if not 'perso_spr' in self.sprids:
+                self.addSpr('perso_spr',self.perso.textids['nothing']['R'][0],(px,py), group='hud22')
+                scale = self.pad/g.sman.spr(self.sprids['perso_spr']).width
+                g.sman.modify(self.sprids['perso_spr'],scale=(scale,scale),anchor='center')
+            else:
+                g.sman.modify(self.sprids['perso_spr'],pos=(px,py),anchor='center')
+
 
 class PersoHUD(HUD):
 
