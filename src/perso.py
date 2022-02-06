@@ -391,7 +391,7 @@ class Human():
 
     def addsub_fed(self,qté=-5/g.Cyc.tpd):
 
-        if self.fed > 0:
+        if self.fed >= 0:
             self.fed += qté
 
         if self.fed < 0:
@@ -401,9 +401,7 @@ class Human():
 
     def addsub_hyd(self,qté=-10/g.Cyc.tpd):
 
-        #print('oh yo',qté)
-
-        if self.hyd > 0:
+        if self.hyd >= 0:
             self.hyd += qté
 
         if self.hyd < 0:
