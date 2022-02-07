@@ -121,6 +121,17 @@ def update_textures(keys):
             textures[x]['drink']['R'] = [textids[37],textids[38],textids[39]]
 
 
+
+"""'''''''''''''''''''''''''''''''''
+'''''''ACTIONS''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''"""
+
+ACTIONS = [
+            'drink',
+]
+
+
+
 """""""""""""""""""""""""""""""""""
  METIERS
 """""""""""""""""""""""""""""""""""
@@ -1088,6 +1099,12 @@ class Human():
                 self.selecter[self.selected].act(self)
         elif self.selecter[self.selected] != None and self.actin == self.selecter[self.selected] and hasattr(self.selecter[self.selected],'act') and not self.selecter[self.selected].single_act :
             self.selecter[self.selected].act(self)
+
+    def unact(self):
+
+        for action in ACTIONS:
+            self.undo(0,action)
+        self.actin = None
 
     def drop(self,thg,create=True):
 

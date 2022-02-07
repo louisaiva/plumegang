@@ -60,6 +60,7 @@ with open('src/mots.json','r', encoding="utf-8") as f:
 
 THEMES = ['amour','argent','liberté','révolte','egotrip','ovni','famille','tristesse','notoriété','chill','rap']
 
+MAX_STACK = 100
 
 """'''''''''''''''''''''''''''''''''
 '''''''USEFUL FUNCTIONS'''''''''''''
@@ -224,11 +225,16 @@ def get_perso_grp(gey):
 # -> items sans texture comportant seulement leur essence
 class Item():
     def __init__(self):
-        #self.action = None
-        pass
+        self.stacked = 1
 
     def details(self):
         return [type(self).__name__.lower()]
+
+    def stackable(self,other):
+
+        ## return 0 if unstackable
+        ## return 1 if stackable
+        return 0
 
 class Key(Item):
 
@@ -275,6 +281,20 @@ class Bottle(Food_item):
 
     def details(self):
         return [self.liquid,str(self.qt)+' mL']
+
+    def stackable(self,other):
+
+        ## return 0 if unstackable
+        ## return 1 if stackable
+
+        if other.qt == self.qt and self.liquid == other.liquid and self.stacked + other.stacked  < MAX_STACK:
+            return 1
+        return 0
+
+    def stack(self,nb=1):
+        ## aucune vérif, on ajoute juste un au nb de stack
+        self.stacked += nb
+
 
 """'''''''''''''''''''''''''''''''''
 '''''''SOUND ITEMS''''''''''''''''''
@@ -2233,6 +2253,17 @@ class InventHUD(HUD):
     # add/del/update
 
     def add_ui(self,item):
+
+        if not isinstance(item,Sound_item):
+            # on verifie si on le stacke avec qqch
+            for ui in self.uis['general']:
+                if ui.item.stackable(item):
+                    ui.item.stack(item.stacked)
+                    ui.update()
+                    self.update()
+                    return
+        print('oh yo')
+
         vis = True
         if not self.visible:
             vis = False
@@ -2246,13 +2277,11 @@ class InventHUD(HUD):
         else:
             scale = (1,1)
 
-        ui = Invent_UI(box(w=self.padding,h=self.padding),item,vis,scale=scale)
-
         # on stocke l'ui
         if isinstance(item,Sound_item):
-            self.uis[type(item).__name__.lower()].append(ui)
+            self.uis[type(item).__name__.lower()].append(Invent_UI(box(w=self.padding,h=self.padding),item,vis,scale=scale))
         else:
-            self.uis['general'].append(ui)
+            self.uis['general'].append(Invent_UI(box(w=self.padding,h=self.padding),item,vis,scale=scale))
 
         self.update()
 
@@ -3089,17 +3118,23 @@ class Item_UI(Zone_UI):
 
         pos = box.cx - g.sman.spr(self.itemspr).width/2 , box.cy - g.sman.spr(self.itemspr).height/2
         g.sman.modify(self.itemspr,pos)
+        #self.itembox = box
 
         self.caught = False
         self.dropped = False
 
         self.scale = scale
 
+        self.stacked = 1
+
     def catch(self):
         self.caught = True
         self.dropped = False
         g.sman.unhide(self.itemspr)
         g.sman.modify(self.itemspr,scale=(self.scale[0]*2,self.scale[1]*2),group='ui')
+        if hasattr(self,'stackspr') :
+            g.sman.unhide(self.stackspr)
+            g.sman.modify(self.stackspr,scale=(self.scale[0]*2,self.scale[1]*2),group='ui')
         self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
 
         pos = self.box.cx , self.box.fy + 20
@@ -3112,6 +3147,11 @@ class Item_UI(Zone_UI):
         self.caught = False
         g.sman.modify(self.itemspr,scale=self.scale,group='ui-2')
         g.sman.unhide(self.itemspr,True)
+
+        if hasattr(self,'stackspr') :
+            g.sman.modify(self.stackspr,scale=self.scale,group='ui-2')
+            g.sman.unhide(self.stackspr,True)
+
         self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
 
     def reset(self,hide=False):
@@ -3119,6 +3159,9 @@ class Item_UI(Zone_UI):
         self.caught = False
         g.sman.unhide(self.itemspr,hide)
         g.sman.modify(self.itemspr,scale=self.scale,group='ui-2')
+        if hasattr(self,'stackspr') :
+            g.sman.unhide(self.stackspr,hide)
+            g.sman.modify(self.stackspr,scale=self.scale,group='ui-2')
 
     def move(self,x,y):
         self.box.xy = x-g.sman.spr(self.itemspr).width/2,y-g.sman.spr(self.itemspr).height/2
@@ -3130,12 +3173,24 @@ class Item_UI(Zone_UI):
 
     def update(self):
 
-        if self.caught:
+        if self.stacked != self.item.stacked:
+            if self.item.stacked == 1 and hasattr(self,'stackspr'):
+                g.sman.delete(self.stackspr)
+                del self.stackspr
+            elif self.item.stacked != 1 and not hasattr(self,'stackspr'):
+                self.stackspr = g.sman.addSpr(g.TEXTIDS['nbs'][self.item.stacked],group='hud22',vis=g.sman.spr(self.itemspr).visible)
 
+            elif self.item.stacked != 1:
+                g.sman.set_text(self.stackspr,g.TEXTIDS['nbs'][self.item.stacked])
+            self.stacked = self.item.stacked
+
+        if self.caught:
             # itemspr
             g.sman.unhide(self.itemspr)
+            if hasattr(self,'stackspr'): g.sman.unhide(self.stackspr)
         pos = self.box.cx - g.sman.spr(self.itemspr).width/2 , self.box.cy - g.sman.spr(self.itemspr).height/2
         g.sman.modify(self.itemspr,pos)
+        if hasattr(self,'stackspr'): g.sman.modify(self.stackspr,pos)
 
         # label
         pos = self.box.cx , self.box.fy + 20
@@ -3148,6 +3203,9 @@ class Item_UI(Zone_UI):
     def delete(self):
         super(Item_UI,self).delete()
         g.sman.delete(self.itemspr)
+        if hasattr(self,'stackspr'):
+            g.sman.delete(self.stackspr)
+            del self.stackspr
 
     def activate(self):
         super(Item_UI,self).activate()
@@ -3157,6 +3215,9 @@ class Item_UI(Zone_UI):
             self.catch()
 
     def unhide(self,hide=False):
+
+        if hasattr(self,'stackspr'):
+            g.sman.unhide(self.stackspr,hide)
 
         g.sman.unhide(self.itemspr,hide)
         if hide:

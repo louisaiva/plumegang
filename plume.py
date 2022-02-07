@@ -308,6 +308,9 @@ class App():
             ## ux
             g.TEXTIDS['ux'] = g.tman.loadImSeq('items.png',(1,40))
 
+            ## nbs
+            g.TEXTIDS['nbs'] = g.tman.loadImSeq('nbs.png',(1,100))
+
             ## items
             g.TEXTIDS['items'] = {}
             g.TEXTIDS['items']['key'] = g.TEXTIDS['ux'][3]
@@ -619,7 +622,7 @@ class App():
                 self.perso.relhud.unhide(True)
 
             elif symbol == key.SPACE:
-                self.perso.actin = None
+                self.perso.unact()
 
     def on_close(self):
 
