@@ -249,6 +249,14 @@ class App():
             #g.longpress = {}
             #g.cooldown = 0.5
 
+            #joysticks
+            joysticks = pyglet.input.get_joysticks()
+            if joysticks:
+                g.joystick = joysticks[0]
+            g.joystick.open()
+            g.joystick.push_handlers(self)
+
+
             # clicks
             self.clicks = {'L':False,'R':False,'M':[0,0]}
             self.mouse_speed = 0
@@ -871,6 +879,46 @@ class App():
             elif scroll_y < 0:
                 self.perso.roll_sel()
 
+    ## JOYSTICK
+
+    def on_joybutton_press(self,joystick, button):
+        print('button',button)
+
+        if joystick == g.joystick:
+            if self.action == "play" and self.perso.alive:
+                if button == 0:
+                    self.perso.act()
+
+    def on_joybutton_release(self,joystick, button):
+
+        if joystick == g.joystick:
+            if self.action == "play" and self.perso.alive:
+                if button == 0:
+                    self.perso.unact()
+
+    def on_joyaxis_motion(self,joystick, axis, value):
+
+        if joystick == g.joystick:
+            if self.action == "play" and self.perso.alive:
+
+                if axis == 'ry':
+                    if value > 0:
+                        self.perso.roll_sel('down')
+                    elif value < 0:
+                        self.perso.roll_sel()
+            #print('axis',axis,value)
+            pass
+
+    def on_joyhat_motion(self,joystick, hat_x, hat_y):
+
+        if joystick == g.joystick:
+            if self.action == "play" and self.perso.alive:
+                if hat_y > 0:
+                    self.perso.roll_sel('down')
+                elif hat_y < 0:
+                    self.perso.roll_sel()
+
+
     ### LOOP
 
     def events(self):
@@ -878,6 +926,7 @@ class App():
         if self.action == "play":
 
             if not self.gameover:
+
 
                 speed = self.perso.speed
                 if g.keys[key.LSHIFT]:
@@ -896,6 +945,36 @@ class App():
                 ## actin
                 if g.keys[key.SPACE]:
                     self.perso.act()
+
+
+                if g.joystick:
+
+                    # do thg with joystik
+                    """g.joy_dry = g.joystick.ry - g.joy_ry
+                    g.joy_ry = g.joystick.ry
+                    print(g.joy_dry)"""
+
+
+                    ## same with joystick
+                    speed = self.perso.speed
+                    if g.joystick.z > 0.4:
+                        speed = self.perso.runspeed
+
+                    ## moving perso
+                    if g.joystick.x < -0.4:
+                        self.perso.move('L',speed)
+                    elif g.joystick.x > 0.4:
+                        self.perso.move('R',speed)
+                    if g.joystick.y < -0.4:
+                        self.perso.move('up')
+                    elif g.joystick.y > 0.4:
+                        self.perso.move('down')
+
+                    ## actin
+                    #print(g.joystick.buttons)
+                    #print(g.joystick.__dict__)
+                    if g.joystick.z < -0.4:
+                        self.perso.act()
 
             if g.keys[key.LEFT] or g.keys[key.RIGHT]:
                 if g.keys[key.RIGHT]:
@@ -1057,7 +1136,13 @@ class App():
             if True:
                 perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
 
-                g.Cam.update(self.perso.realbox,perso_street,g.keys[key.LSHIFT])
+                run = False
+                if g.joystick and g.joystick.z > 0.4:
+                    run = True
+                elif g.keys[key.LSHIFT]:
+                    run = True
+
+                g.Cam.update(self.perso.realbox,perso_street,run)
 
             # if not pause, go streamin and particles
             if g.bertran.speed > 0:

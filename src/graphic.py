@@ -793,6 +793,23 @@ TEXTIDS['col'] = {}
 
 keys = []
 longpress = {}
+joystick = None
+butt = {'A':0,
+        'B':1,
+        'X':2,
+        'Y':3,
+        'LB':4,
+        'RB':5,
+
+
+        'LJ':8, # left joystick
+        'RJ':9, # right joystick
+        }
+
+"""joy_ry = 0
+joy_dry = 0"""
+
+
 
 #cooldown = 0.5
 

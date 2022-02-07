@@ -2771,7 +2771,6 @@ class SelectHUD(HUD):
 
                     # on crée si jamais
                     if self.uis[i] == None:
-                        print(self.visible)
                         self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible)
                     else:
                         self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
@@ -2783,7 +2782,6 @@ class SelectHUD(HUD):
                     g.sman.modify(self.uis[i].itemspr,pos=(x,y),anchor='center')
                 else:
                     if self.uis[i] != None:
-                        print('aaah')
                         self.uis[i].delete()
                         self.uis[i] = None
 
@@ -2806,14 +2804,12 @@ class SelectHUD(HUD):
             self.item_caught.check_pressed()
             if self.item_caught.dropped:
                 if collisionAX(self.box.realbox,(x,y)) or collisionAX(self.box2.realbox,(x,y)):
-
                     ui,self.item_caught = self.item_caught,None
                     self.perso.drop(ui.item,False)
                     self.perso.grab(ui.item)
                     return -1
 
                 elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
-                    #print('oh yo')
                     self.perso.drop(self.item_caught.item,False)
                     self.perso.grab(self.item_caught.item,True)
                     self.item_caught = None
