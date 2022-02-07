@@ -258,14 +258,15 @@ class Food_item(Item):
 
 class Bottle(Food_item):
 
-    def __init__(self):
+    def __init__(self,stacked=1,liq='water',qt=1000):
         super(Bottle,self).__init__()
 
-        self.liquid = 'water'
+        self.liquid = liq
 
-        self.qt = 1000 #qté en mL
+        self.qt = qt #qté en mL
         # 1 litre d'eau recharge toute une "vie d'eau"
         self.single_act = False
+        self.stacked = stacked
 
     def act(self,perso):
         qté = 4
@@ -295,11 +296,13 @@ class Bottle(Food_item):
         ## aucune vérif, on ajoute juste un au nb de stack
         self.stacked += nb
 
+    def unstack(self,nb=1):
+        ## aucune vérif, on enleve juste un au nb de stack
+        self.stacked -= nb
+        return Bottle(nb,self.liquid,self.qt)
 
-"""'''''''''''''''''''''''''''''''''
-'''''''SOUND ITEMS''''''''''''''''''
-'''''''''''''''''''''''''''''''''"""
-# -> items sans texture comportant seulement leur essence
+
+'''''''''SOUND'''''''''
 
 
 class Sound_item(Item):
@@ -1805,7 +1808,7 @@ class WriteHUD(HUD):
             self.ui.delete()
         self.ui = Writingphase_UI(box(x,y,w,h),phase)
 
-    def catch_or_drop(self,x,y,perso):
+    def catch_or_drop(self,x,y,perso,butt='L'):
 
         self.ui.check_pressed()
         if self.ui.caught:
@@ -1814,12 +1817,12 @@ class WriteHUD(HUD):
             return 1
         elif self.ui.dropped:
             if collisionAX(self.box.realbox,(x,y)):
-                self.write(self.ui.phase)
+                self.write(self.ui.item)
             elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
-                perso.grab(self.ui.phase,True)
+                perso.grab(self.ui.item,True)
                 self.delete_phase()
             elif perso.selhud.visible and (collisionAX(perso.selhud.box.realbox,(x,y)) or collisionAX(perso.selhud.box2.realbox,(x,y))):
-                perso.grab(self.ui.phase)
+                perso.grab(self.ui.item)
                 self.delete_phase()
             else:
                 self.delete_phase()
@@ -1898,7 +1901,7 @@ class StudHUD(HUD):
         elif lab[:3] == 'son':
             self.son = 0
 
-    def catch_or_drop(self,x,y,perso):
+    def catch_or_drop(self,x,y,perso,butt='L'):
 
         if self.item_caught != None:
             ## on check kelui pour vwar si on l'drop
@@ -2017,7 +2020,7 @@ class MarketHUD(HUD):
             g.sman.delete(self.sprids[lab+'_price'])
             del self.sprids[lab+'_price']
 
-    def catch_or_drop(self,x,y):
+    def catch_or_drop(self,x,y,butt='L'):
 
         #print("wesh")
 
@@ -2261,7 +2264,6 @@ class InventHUD(HUD):
                     ui.update()
                     self.update()
                     return
-        print('oh yo')
 
         vis = True
         if not self.visible:
@@ -2271,16 +2273,11 @@ class InventHUD(HUD):
         if not isinstance(item,Sound_item) and self.menu == 'sound':
             vis = False
 
-        if isinstance(item,Sound_item):
-            scale = (0.25,0.25)
-        else:
-            scale = (1,1)
-
         # on stocke l'ui
         if isinstance(item,Sound_item):
-            self.uis[type(item).__name__.lower()].append(Invent_UI(box(w=self.padding,h=self.padding),item,vis,scale=scale))
+            self.uis[type(item).__name__.lower()].append(Invent_UI(box(w=self.padding,h=self.padding),item,vis))
         else:
-            self.uis['general'].append(Invent_UI(box(w=self.padding,h=self.padding),item,vis,scale=scale))
+            self.uis['general'].append(Invent_UI(box(w=self.padding,h=self.padding),item,vis))
 
         self.update()
 
@@ -2381,7 +2378,7 @@ class InventHUD(HUD):
         elif hide and self.deta_visible:
             self.eff_detail()
 
-    def catch_or_drop(self,x,y):
+    def catch_or_drop(self,x,y,butt='L'):
 
         if self.item_caught :
             ## on check kelui pour vwar si on l'drop
@@ -2389,7 +2386,8 @@ class InventHUD(HUD):
             self.item_caught.check_pressed()
             if self.item_caught.dropped:
                 if collisionAX(self.box.realbox,(x,y)):
-                    self.item_caught.reset()
+                    self.perso.drop(self.item_caught.item,False)
+                    self.perso.grab(self.item_caught.item,True)
                     self.item_caught = None
                     self.update()
                     return -1
@@ -2445,6 +2443,10 @@ class InventHUD(HUD):
                 for x in self.menus_cont[self.menu]:
                     tab = self.uis[x]
                     for ui in tab:
+
+                        # ici pas besoin de tester les stack vu qu'on ne peut stacker les sound_item
+                        # /WARNING\ ça peut changer !
+
                         ui.check_pressed()
                         if ui.caught:
                             self.item_caught = ui
@@ -2453,10 +2455,26 @@ class InventHUD(HUD):
             elif self.menu == 'general':
                 for ui in self.uis['general']:
 
-                    ui.check_pressed()
-                    if ui.caught:
-                        self.item_caught = ui
-                        return 1
+                    if butt == 'L':
+                        ui.check_pressed()
+                        if ui.caught:
+                            self.item_caught = ui
+                            return 1
+                    elif butt == 'R':
+                        # ici on prend un seul item si on clik sur un truc
+                        if ui._hoover:
+                            # ça veut dire qu'on catch cet ui
+
+                            # on vérifie cb de stack il a
+                            if ui.item.stacked == 1:
+                                ui.catch()
+                                self.item_caught = ui
+                                return 1
+                            elif ui.item.stacked > 1:
+                                item = ui.item.unstack()
+                                ui = Invent_UI(box(),item,self.visible)
+                                self.item_caught = ui
+                                return 1
 
         return 0
 
@@ -2753,11 +2771,8 @@ class SelectHUD(HUD):
 
                     # on crée si jamais
                     if self.uis[i] == None:
-                        if isinstance(item,Sound_item):
-                            scale = (0.25,0.25)
-                        else:
-                            scale = (1,1)
-                        self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible,scale=scale)
+                        print(self.visible)
+                        self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible)
                     else:
                         self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
 
@@ -2766,12 +2781,11 @@ class SelectHUD(HUD):
                         g.sman.modify(self.uis[i].itemspr,size=(w,w))
 
                     g.sman.modify(self.uis[i].itemspr,pos=(x,y),anchor='center')
-
                 else:
                     if self.uis[i] != None:
+                        print('aaah')
                         self.uis[i].delete()
                         self.uis[i] = None
-
 
             if k == 0:
                 # on update les details
@@ -2785,16 +2799,17 @@ class SelectHUD(HUD):
             if self.uis[cquecé] != None:
                 self.uis[cquecé].check_mouse(x,y)
 
-    def catch_or_drop(self,x,y):
+    def catch_or_drop(self,x,y,butt='L'):
 
         if self.item_caught :
             ## on check kelui pour vwar si on l'drop
             self.item_caught.check_pressed()
             if self.item_caught.dropped:
                 if collisionAX(self.box.realbox,(x,y)) or collisionAX(self.box2.realbox,(x,y)):
-                    self.item_caught.reset()
-                    self.item_caught = None
-                    self.update()
+
+                    ui,self.item_caught = self.item_caught,None
+                    self.perso.drop(ui.item,False)
+                    self.perso.grab(ui.item)
                     return -1
 
                 elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
@@ -2830,7 +2845,6 @@ class SelectHUD(HUD):
                             self.perso.drop(self.item_caught.item,create=False)
                             self.item_caught = None
                             return -1
-
                         else:
                             self.item_caught.check_pressed()
 
@@ -2843,14 +2857,29 @@ class SelectHUD(HUD):
                     return -1
 
         else:
-
             ## on check touu pour vwar si on en catch
             for k in self.uis:
                 if self.uis[k] != None:
-                    self.uis[k].check_pressed()
-                    if self.uis[k].caught:
-                        self.item_caught = self.uis[k]
-                        return 1
+                    if butt == 'L':
+                        self.uis[k].check_pressed()
+                        if self.uis[k].caught:
+                            self.item_caught = self.uis[k]
+                            return 1
+                    elif butt == 'R':
+                        # ici on prend un seul item si on clik sur un truc
+                        if self.uis[k]._hoover:
+                            # ça veut dire qu'on catch cet self.uis[k]
+                            # on vérifie cb de stack il a
+                            if self.uis[k].item.stacked == 1:
+                                self.uis[k].catch()
+                                self.item_caught = self.uis[k]
+                                return 1
+                            elif self.uis[k].item.stacked > 1:
+                                item = self.uis[k].item.unstack()
+                                ui = Invent_UI(box(),item,self.visible)
+                                self.item_caught = ui
+                                return 1
+
         return 0
 
     def quick_catch_and_drop(self):
@@ -2937,13 +2966,11 @@ class Zone_UI(Zone):
 
     ## HOOVER WITH MOVEMENT OF MOUSE
 
-    def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,longpress=False,colorlab=c['coral']):
+    def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,colorlab=c['coral']):
         super(Zone_UI,self).__init__(box2,textid,group,makeCol)
         self.box = box2
 
         self.lab_text=lab_text
-
-        self.longpress = longpress
         self.visible = True
         self._hoover = False
 
@@ -2965,10 +2992,6 @@ class Zone_UI(Zone):
         g.lman.unhide(self.label,True)
         g.sman.unhide(self.label_bg,True)
         self._hoover = False
-
-    def activate(self):
-        #print(self.lab_text,'activated')
-        pass
 
     def delete(self):
 
@@ -3000,66 +3023,6 @@ class Zone_UI(Zone):
         else:
             self.unhoover()
             return False
-
-    def check_pressed(self):
-
-        if self._hoover:
-            self.activate()
-
-class Button(Zone_UI):
-
-    def __init__(self,box2,funct,param,lab_text='button',textid='delta_blue',vis=False,group='hud22',makeCol=True,longpress=False,colorlab=c['coral']):
-        super(Button,self).__init__(box2,lab_text,textid,group,makeCol,longpress,colorlab)
-
-        self.funct = funct
-        self.param = param
-
-    def activate(self):
-        #print(self.lab_text,'pressed',self.param)
-        self.funct(*self.param)
-
-class Toggle(Button):
-
-    def __init__(self,box2,funct,param,lab_text='button',nap_color='delta_purple',act_color='delta_blue',vis=False,group='hud22'):
-        super(Toggle,self).__init__(box2,funct,param,lab_text,nap_color,vis,group)
-        self.nap_color = nap_color
-        self.act_color = act_color
-
-        self.nap = True
-
-    def activate(self):
-        super(Toggle,self).activate()
-        #self.toggle()
-
-    def toggle(self):
-
-        if self.nap:
-            col = self.act_color
-        else:
-            col = self.nap_color
-
-        self.nap = not self.nap
-
-        if hasattr(self,'skin_id'):
-            g.sman.set_col(self.skin_id,col)
-        else:
-            self.text_id = g.tman.addCol(col)
-
-    def set_nap(self):
-        self.nap = True
-        if hasattr(self,'skin_id'):
-            g.sman.set_col(self.skin_id,self.nap_color)
-        else:
-            self.text_id = g.tman.addCol(self.nap_color)
-
-    def set_act(self):
-        self.nap = False
-        if hasattr(self,'skin_id'):
-            g.sman.set_col(self.skin_id,self.act_color)
-        else:
-            self.text_id = g.tman.addCol(self.act_color)
-
-##
 
 class Plume_UI(Zone_UI):
 
@@ -3102,13 +3065,85 @@ class Cred_UI(Zone_UI):
         g.sman.delete(self.label_bg)
         self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=self._hoover)
 
+##
+
+class Press_UI(Zone_UI):
+
+    def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,longpress=False,colorlab=c['coral']):
+        super(Press_UI,self).__init__(box2,lab_text,textid,group,makeCol,colorlab)
+        self.longpress = longpress
+
+    def check_pressed(self):
+
+        if self._hoover:
+            self.press()
+
+    def press(self):
+        pass
+
+class Button(Press_UI):
+
+    def __init__(self,box2,funct,param,lab_text='button',textid='delta_blue',vis=False,group='hud22',makeCol=True,longpress=False,colorlab=c['coral']):
+        super(Button,self).__init__(box2,lab_text,textid,group,makeCol,longpress,colorlab)
+
+        self.funct = funct
+        self.param = param
+
+    def press(self):
+        #print(self.lab_text,'pressed',self.param)
+        self.funct(*self.param)
+
+class Toggle(Button):
+
+    def __init__(self,box2,funct,param,lab_text='button',nap_color='delta_purple',act_color='delta_blue',vis=False,group='hud22'):
+        super(Toggle,self).__init__(box2,funct,param,lab_text,nap_color,vis,group)
+        self.nap_color = nap_color
+        self.act_color = act_color
+
+        self.nap = True
+
+    def press(self):
+        super(Toggle,self).press()
+        #self.toggle()
+
+    def toggle(self):
+
+        if self.nap:
+            col = self.act_color
+        else:
+            col = self.nap_color
+
+        self.nap = not self.nap
+
+        if hasattr(self,'skin_id'):
+            g.sman.set_col(self.skin_id,col)
+        else:
+            self.text_id = g.tman.addCol(col)
+
+    def set_nap(self):
+        self.nap = True
+        if hasattr(self,'skin_id'):
+            g.sman.set_col(self.skin_id,self.nap_color)
+        else:
+            self.text_id = g.tman.addCol(self.nap_color)
+
+    def set_act(self):
+        self.nap = False
+        if hasattr(self,'skin_id'):
+            g.sman.set_col(self.skin_id,self.act_color)
+        else:
+            self.text_id = g.tman.addCol(self.act_color)
+
+
 #---------# item_ui -> item transportable entre les menus
 
-class Item_UI(Zone_UI):
+class Item_UI(Press_UI):
 
-    def __init__(self,box,lab_text,texture,spr_vis=False,colorlab=c['F'],scale=(0.25,0.25)):
+    def __init__(self,item,box,lab_text,texture,spr_vis=False,colorlab=c['F'],scale=(0.25,0.25)):
 
         super(Item_UI,self).__init__(box,lab_text,group='ui',colorlab=colorlab)
+
+        self.item = item
 
         #self.text_id = texture
         self.itemspr = g.sman.addSpr(texture,group='hud21',vis=spr_vis)
@@ -3206,8 +3241,7 @@ class Item_UI(Zone_UI):
             g.sman.delete(self.stackspr)
             del self.stackspr
 
-    def activate(self):
-        super(Item_UI,self).activate()
+    def press(self):
         if self.caught:
             self.drop()
         else:
@@ -3230,13 +3264,11 @@ class Writingphase_UI(Item_UI):
 
         lab_text = 'Phase '+convert_quality(phase.quality)+'\n' +phase.them
 
-        super(Writingphase_UI,self).__init__(box,lab_text,g.TEXTIDS['phase'][convert_quality(phase.quality)[0]],colorlab=c[convert_quality(phase.quality)[0]])
-
-        self.phase = phase
+        super(Writingphase_UI,self).__init__(phase,box,lab_text,g.TEXTIDS['phase'][convert_quality(phase.quality)[0]],colorlab=c[convert_quality(phase.quality)[0]])
 
 class Invent_UI(Item_UI):
 
-    def __init__(self,box,item,spr_vis=False,scale=(0.25,0.25)):
+    def __init__(self,box,item,spr_vis=False,scale=None):
         #print(spr_vis)
 
         cquecé = type(item).__name__
@@ -3246,17 +3278,17 @@ class Invent_UI(Item_UI):
             lab_text = cquecé +' '+ convert_quality(item.quality)
             col = c[convert_quality(item.quality)[0]]
             text = g.TEXTIDS[cquecé.lower()][convert_quality(item.quality)[0]]
+            if not scale : scale = (0.25,0.25)
 
             if cquecé == 'Phase':
                 lab_text+='\n'+item.them
         else:
             lab_text = cquecé.lower()
             text = g.TEXTIDS['items'][cquecé.lower()]
+            if not scale : scale = (1,1)
 
+        super(Invent_UI,self).__init__(item,box,lab_text,text,spr_vis=spr_vis,colorlab=col,scale=scale)
 
-        super(Invent_UI,self).__init__(box,lab_text,text,spr_vis=spr_vis,colorlab=col,scale=scale)
-
-        self.item = item
 
         #self.boxdeta = box_details
 
