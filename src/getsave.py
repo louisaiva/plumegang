@@ -44,22 +44,35 @@ def save_files(bigpath,path = ['/.','/src'],save_path = '/autosav/'):
 
     ### POSITIONNE LE CHEMIN POUR SAV
 
-    mylaptop = False
+    #saved_path = None
 
-    try:
+    pc_name = os.environ['COMPUTERNAME']
+
+    #print(pc_name)
+
+    if pc_name == 'DELTAPC':
+
         name = os.path.basename(bigpath)
         if name not in os.listdir('Z:\\DESKTOP\\CODING\\SAV'):
             os.makedirs('Z:\\DESKTOP\\CODING\\SAV\\'+name)
         save_path = 'SAV\\'+name+'\\'
         bigpath = 'Z:\\DESKTOP\\CODING\\'
-        mylaptop = True
-    except: pass
 
-    with open(bigpath+save_path+'saved_'+version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:]+'.savd','w') as f:
+    elif pc_name == 'DELTADELL':
+
+        name = os.path.basename(bigpath)
+        if name not in os.listdir('C:\\CODING\\SAV'):
+            os.makedirs('C:\\CODING\\SAV\\'+name)
+        save_path = 'SAV\\'+name+'\\'
+        bigpath = 'C:\\CODING\\'
+
+    saved_path = bigpath + save_path
+
+    with open(saved_path+'saved_'+version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:]+'.savd','w') as f:
         f.write(autosav)
 
-    if mylaptop:
-        print('files saved on Z:\\DESKTOP\\CODING\\SAV, version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
+    if pc_name in ['DELTADELL','DELTAPC']:
+        print('files saved on',saved_path+', version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
     else:
         print('files saved locally, version',version[0]+'_'+str(version[1])[0]+'_'+str(version[1])[-4:])
 

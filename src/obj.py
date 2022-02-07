@@ -1296,7 +1296,6 @@ class Map(HUD):
             else:
                 g.sman.modify(self.sprids['perso_spr'],pos=(px,py),anchor='center')
 
-
 class PersoHUD(HUD):
 
     def __init__(self,perso):
@@ -2257,7 +2256,7 @@ class InventHUD(HUD):
         if not isinstance(item,Sound_item):
             # on verifie si on le stacke avec qqch
             for ui in self.uis['general']:
-                if ui.item.stackable(item):
+                if type(ui.item) == type(item) and ui.item.stackable(item):
                     ui.item.stack(item.stacked)
                     ui.update()
                     self.update()
@@ -2401,7 +2400,7 @@ class InventHUD(HUD):
                     self.item_caught = None
                     return -1
 
-                elif self.perso.element_colli != None and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
+                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
 
                     if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
                         self.perso.drop(self.item_caught.item,create=False)
@@ -2465,7 +2464,7 @@ class InventHUD(HUD):
 
         selector = False
 
-        if self.perso.element_colli != None and self.perso.element_colli.activated:
+        if self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated:
 
             if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
                 self.perso.element_colli.hud.write(self.item_caught.item)
@@ -2805,7 +2804,7 @@ class SelectHUD(HUD):
                     self.item_caught = None
                     return -1
 
-                elif self.perso.element_colli != None and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
+                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
 
                     if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
                         self.perso.drop(self.item_caught.item,create=False)
@@ -2858,7 +2857,7 @@ class SelectHUD(HUD):
 
         inventory = False
 
-        if self.perso.element_colli != None and self.perso.element_colli.activated:
+        if self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated:
 
             if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
                 self.perso.element_colli.hud.write(self.item_caught.item)
