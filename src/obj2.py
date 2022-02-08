@@ -961,7 +961,7 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 7
+nb_iterations = 5
 
 #MAP = 20,20
 

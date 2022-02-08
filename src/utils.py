@@ -264,14 +264,14 @@ def rangef(a,b,d=1):
 
     return res
 
-def convert_huge_nb(n,letters = True):
+def convert_huge_nb(n,tab=['',' K',' M',' T'],letters = True):
 
     if letters:
 
         if n <= 0:
             return str(n)
 
-        tab = ['',' K',' M',' T']
+        tab = tab
 
         for i in range(4,0,-1):
             f = n/(1000**(i-1))

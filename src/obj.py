@@ -263,43 +263,61 @@ class Bottle(Food_item):
 
         self.liquid = liq
 
+        self.max_qt = 1000
         self.qt = qt #qté en mL
         # 1 litre d'eau recharge toute une "vie d'eau"
         self.single_act = False
         self.stacked = stacked
 
     def act(self,perso):
+
         qté = 4
         if self.qt >= qté and perso.hyd <= 100-qté/10:
             perso.drink(qté)
             self.qt -= qté
+
+            if (self.qt//self.max_qt)+1 != self.stacked:
+                self.stacked = (self.qt//self.max_qt)+1
+
         else:
             perso.actin = 'done'
             g.bertran.schedule_once(perso.undo,0.2,'drink')
 
     def __str__(self):
-        return 'bottle of '+str(self.qt)+'mL of water'
+        return 'bottle of '+convert_huge_nb(self.qt,[' mL',' L',' kL'])+' of water'
 
     def details(self):
-        return [self.liquid,str(self.qt)+' mL']
+        return [self.liquid,convert_huge_nb(self.qt,[' mL',' L',' kL'])]
 
     def stackable(self,other):
 
         ## return 0 if unstackable
         ## return 1 if stackable
 
-        if other.qt == self.qt and self.liquid == other.liquid and self.stacked + other.stacked  < MAX_STACK:
+        if self.liquid == other.liquid and self.stacked + other.stacked  < MAX_STACK:
             return 1
         return 0
 
-    def stack(self,nb=1):
-        ## aucune vérif, on ajoute juste un au nb de stack
-        self.stacked += nb
+    def stack(self,other=None):
 
-    def unstack(self,nb=1):
-        ## aucune vérif, on enleve juste un au nb de stack
-        self.stacked -= nb
-        return Bottle(nb,self.liquid,self.qt)
+        if other == None:
+            other=Bottle()
+
+        self.stacked += other.stacked
+        self.qt += other.qt
+
+    def unstack(self,other=None):
+
+        if other == None:
+            other=Bottle()
+
+        self.stacked -= other.stacked
+
+        if other.qt > self.qt:
+            other.qt = self.qt
+
+        self.qt -= other.qt
+        return other
 
 
 '''''''''SOUND'''''''''

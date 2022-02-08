@@ -1140,7 +1140,7 @@ class Human():
                 if x >= len(self.selecter):
                     x -= len(self.selecter)
                 if type(self.selecter[x]) == type(thg) and self.selecter[x].stackable(thg):
-                    self.selecter[x].stack(thg.stacked)
+                    self.selecter[x].stack(thg)
                     if isinstance(self,Perso) : self.selhud.update()
                     return
 
@@ -1160,7 +1160,7 @@ class Human():
         # on vérifie si on le stacke
         for i in range(len(self.inventory[thg.cat])):
             if type(self.inventory[thg.cat][i]) == type(thg) and self.inventory[thg.cat][i].stackable(thg):
-                self.inventory[thg.cat][i].stack(thg.stacked)
+                self.inventory[thg.cat][i].stack(thg)
                 if isinstance(self,Perso) : self.invhud.update()
                 return
 
