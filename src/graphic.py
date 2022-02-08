@@ -412,9 +412,13 @@ class SpriteManager():
             return self.sprites[id]
         return None
 
-    def box(self,id):
+    def realbox(self,id):
         spr = self.sprites[id]
         return [spr.x,spr.y,spr.x+spr.width,spr.y+spr.height]
+
+    def box(self,id):
+        spr = self.sprites[id]
+        return u.box(spr.x,spr.y,spr.width,spr.height)
 
     def delete(self,tabids='all'):
 

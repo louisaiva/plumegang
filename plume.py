@@ -823,7 +823,8 @@ class App():
                         if not g.keys[key.LSHIFT]:
                             # signifie qu'on prend le hud
                             self.this_hud_caught_an_item = self.perso.invhud
-                            self.on_mouse_motion(x,y,0,0)
+                            self.perso.invhud.item_caught.move(x,y)
+                            self.perso.invhud.item_caught.check_mouse(x,y)
                         else:
                             # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
                             self.perso.invhud.quick_catch_and_drop()
@@ -832,8 +833,14 @@ class App():
                     elif caught_dropped == -1: # means dropped
                         letsbacktnothingcaught = True
 
-                    self.on_mouse_motion(x,y,0,0)
+                    elif caught_dropped == 2: # means continuely caughtin
+                        self.perso.invhud.item_caught.move(x,y)
+                        self.perso.invhud.item_caught.check_mouse(x,y)
 
+                    ## si on active ça, ça fait que quand on dépose dans le selhud sur un item deja, ça fait de la merde
+                    #self.on_mouse_motion(x,y,0,0)
+
+                #self.perso.invhud.check_hoover(x,y)
                 self.perso.invhud.check_press_btns(x,y)
 
             # selUI
@@ -848,7 +855,10 @@ class App():
                             # signifie qu'on prend le hud
                             #print('oh yo')
                             self.this_hud_caught_an_item = self.perso.selhud
-                            self.on_mouse_motion(x,y,0,0)
+                            self.perso.selhud.item_caught.move(x,y)
+                            self.perso.selhud.item_caught.check_mouse(x,y)
+
+                            #self.on_mouse_motion(x,y,0,0)
                         else:
                             # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
                             self.perso.selhud.quick_catch_and_drop()
@@ -857,7 +867,9 @@ class App():
                     elif caught_dropped == -1: # means dropped
                         letsbacktnothingcaught = True
 
-                    self.on_mouse_motion(x,y,0,0)
+                    elif caught_dropped == 2: # 2 means continuely caughtin
+                        self.perso.selhud.item_caught.move(x,y)
+                        self.perso.selhud.item_caught.check_mouse(x,y)
 
             if letsbacktnothingcaught:
                 self.on_mouse_motion(x,y,0,0)

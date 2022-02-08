@@ -1756,7 +1756,7 @@ class Human():
     box = property(_box)
     def _realbox(self):
         if hasattr(self,'skin_id'):
-            return g.sman.box(self.skin_id)
+            return g.sman.realbox(self.skin_id)
         else:
             return 0,0,SIZE_SPR,SIZE_SPR
     realbox = property(_realbox)

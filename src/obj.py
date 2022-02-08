@@ -1846,6 +1846,19 @@ class WriteHUD(HUD):
             return -1
         return 0
 
+    ## catch drop self
+    def catchable(self,item):
+        if type(item).__name__ == 'Phase':
+            return True
+        return False
+    def catch_item(self,item):
+        if type(item).__name__ == 'Phase':
+            self.write(item)
+            return 1
+        return 0
+    def drop_item(self,item,perso):
+        perso.drop(item,False)
+
 class StudHUD(HUD):
 
     def __init__(self):
@@ -1988,6 +2001,24 @@ class StudHUD(HUD):
             if ui != None:
                 ui.unhide(hide)
 
+    ## catch drop self
+    def catchable(self,item):
+        if type(item).__name__ == 'Phase' and self.phases < 4:
+            return True
+        elif type(item).__name__ == 'Instru' and self.instru == 0:
+            return True
+        return False
+    def catch_item(self,item):
+        if type(item).__name__ == 'Phase' and self.phases < 4:
+            self.catch(item)
+            return 1
+        elif type(item).__name__ == 'Instru' and self.instru == 0:
+            self.catch(item)
+            return 1
+        return 0
+    def drop_item(self,item,perso):
+        perso.drop(item,False)
+
 class MarketHUD(HUD):
 
     def __init__(self,perso):
@@ -2073,7 +2104,6 @@ class MarketHUD(HUD):
                     if ui.caught:
                         self.inspect(ui.item,int(lab[-1]))
                         self.delete_ui(lab)
-                        #ui.reset()
 
                 elif ui != None: # on est dans le main
                     if self.perso in ui.item.owners:
@@ -2182,6 +2212,19 @@ class MarketHUD(HUD):
             ui = self.uis[lab]
             if ui != None:
                 ui.unhide(hide)
+
+    ## catch drop self
+    def catchable(self,item):
+        if type(item).__name__ == 'Instru':
+            return True
+        return False
+    def catch_item(self,item):
+        if type(item).__name__ == 'Instru':
+            self.inspect(item)
+            return 1
+        return 0
+    def drop_item(self,item,perso):
+        perso.drop(item,False)
 
 #---# hud spéciaux inventaire/selecteur
 
@@ -2390,9 +2433,10 @@ class InventHUD(HUD):
         super(InventHUD,self).unhide(hide)
 
         if hide and self.item_caught != None:
-            self.item_caught.drop()
-            self.item_caught.reset()
-            self.item_caught = None
+            item = self.item_caught.item
+            self.del_caught_ui()
+            self.drop_item(item,self.perso)
+            self.catch_item(item)
             self.update()
 
         for cquecé in self.menus_cont[self.menu]:
@@ -2419,58 +2463,52 @@ class InventHUD(HUD):
             ## on check kelui pour vwar si on l'drop
 
             self.item_caught.check_pressed()
+
             if self.item_caught.dropped:
                 item = self.item_caught.item
 
+                hud = None
+
+                # choix du hud
                 if collisionAX(self.box.realbox,(x,y)):
-                    self.del_caught_ui()
-                    self.perso.drop(item,False)
-                    self.perso.grab(item,True)
-                    return -1
-
+                    hud = self
                 elif self.perso.selhud.visible and (collisionAX(self.perso.selhud.box.realbox,(x,y)) or collisionAX(self.perso.selhud.box2.realbox,(x,y))):
-                    self.del_caught_ui()
-                    self.perso.drop(item,False)
-                    self.perso.grab(item)
-                    return -1
+                    hud = self.perso.selhud
+                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)):
+                    hud = self.perso.element_colli.hud
 
-                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
+                # on vérifie si c'est R on drop un seul item
+                unstacked = False
+                if butt == 'R' and item.stacked > 1:
+                    item = item.unstack()
+                    if hud == None or hud.catchable(item):
+                        unstacked = True
+                    else:
+                        # ici le hud existe mais ne l'a pas accepté
+                        self.item_caught.item.stack(item)
+                        item = self.item_caught.item
 
-                    if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
-                        self.del_caught_ui()
-                        self.perso.drop(item,create=False)
-                        self.perso.element_colli.hud.write(item)
-                        return -1
+                    self.item_caught.update()
 
-                    elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
-                        self.del_caught_ui()
-                        self.perso.drop(item,create=False)
-                        self.perso.element_colli.hud.inspect(item)
-                        return -1
-
-                    elif type(self.perso.element_colli) == Studio:
-
-                        if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
-                            self.del_caught_ui()
-                            self.perso.drop(item,create=False)
-                            self.perso.element_colli.hud.catch(item)
-                            return -1
-                        elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
-                            self.del_caught_ui()
-                            self.perso.drop(item,create=False)
-                            self.perso.element_colli.hud.catch(item)
-                            return -1
-
-                        else:
-                            self.item_caught.check_pressed()
-
+                if hud:
+                    # si on a un hud on essaie de le catch
+                    if hud.catchable(item):
+                        if not unstacked: self.del_caught_ui()
+                        self.drop_item(item,self.perso)
+                        hud.catch_item(item)
+                        if not unstacked: return -1
                     else:
                         self.item_caught.check_pressed()
-
                 else:
-                    self.del_caught_ui()
+                    # si on a pas de hud on tej juste l'item
+                    if not unstacked: self.del_caught_ui()
                     self.perso.drop(item)
-                    return -1
+                    if not unstacked: return -1
+
+                if unstacked:
+                    # on rattrape l'item caught sans
+                    self.item_caught.catch()
+                    return 2
 
         else:
             ## on check touu pour vwar si on en catch
@@ -2579,6 +2617,15 @@ class InventHUD(HUD):
         for menu in self.btns:
             self.btns[menu].check_mouse(x,y)
 
+
+    ## catch drop self
+    def catchable(self,item):
+        return True
+    def catch_item(self,item):
+        self.perso.grab(item,True)
+        return 1
+    def drop_item(self,item,perso):
+        perso.drop(item,False)
 
     ## de base
 
@@ -2811,14 +2858,13 @@ class SelectHUD(HUD):
                     # on crée si jamais
                     if self.uis[i] == None:
                         self.uis[i] = Invent_UI(box(x-w/2,y-w/2,w,w),item,spr_vis=self.visible)
-                    else:
-                        self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
 
                     # on scale et on place
                     if g.sman.spr(self.uis[i].itemspr).width != w:
-                        g.sman.modify(self.uis[i].itemspr,size=(w,w))
+                        self.uis[i].modify(size=(w,w))
 
-                    g.sman.modify(self.uis[i].itemspr,pos=(x,y),anchor='center')
+                    self.uis[i].upbox(box(x-w/2,y-w/2,w,w))
+
                 else:
                     if self.uis[i] != None:
                         self.uis[i].delete()
@@ -2829,6 +2875,7 @@ class SelectHUD(HUD):
                 self.update_details(item)
 
     def del_caught_ui(self):
+        #print('ohahahh')
         if self.item_caught != None :
             if self.item_caught not in list(self.uis.values()):
                 self.item_caught.delete()
@@ -2847,59 +2894,54 @@ class SelectHUD(HUD):
         if self.item_caught :
             ## on check kelui pour vwar si on l'drop
             self.item_caught.check_pressed()
-            #print(self.item_caught.dropped)
+
             if self.item_caught.dropped:
                 item = self.item_caught.item
 
+                hud = None
+
+                # choix du hud
                 if collisionAX(self.box.realbox,(x,y)) or collisionAX(self.box2.realbox,(x,y)):
-                    self.del_caught_ui()
-                    self.perso.drop(item,False)
-                    self.perso.grab(item)
-                    return -1
-
+                    hud = self
                 elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
-                    self.del_caught_ui()
-                    self.perso.drop(item,False)
-                    self.perso.grab(item,True)
-                    return -1
+                    hud = self.perso.invhud
+                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)):
+                    hud = self.perso.element_colli.hud
 
-                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
+                # on vérifie si c'est R on drop un seul item
 
-                    if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
-                        self.del_caught_ui()
-                        self.perso.drop(item,False)
-                        self.perso.element_colli.hud.write(item)
-                        return -1
+                unstacked = False
 
-                    elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
-                        self.del_caught_ui()
-                        self.perso.element_colli.hud.inspect(item)
-                        self.perso.drop(item,False)
-                        return -1
+                if butt == 'R' and item.stacked > 1:
+                    item = item.unstack()
+                    if hud == None or hud.catchable(item):
+                        unstacked = True
+                    else:
+                        # ici le hud existe mais ne l'a pas accepté
+                        self.item_caught.item.stack(item)
+                        item = self.item_caught.item
 
-                    elif type(self.perso.element_colli) == Studio:
+                    self.item_caught.update()
 
-                        if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
-                            self.del_caught_ui()
-                            self.perso.drop(item,False)
-                            self.perso.element_colli.hud.catch(item)
-                            return -1
-                        elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
-                            self.del_caught_ui()
-                            self.perso.drop(item,False)
-                            self.perso.element_colli.hud.catch(item)
-                            return -1
-                        else:
-                            self.item_caught.check_pressed()
-
+                if hud:
+                    # si on a un hud on essaie de le catch
+                    if hud.catchable(item):
+                        if not unstacked: self.del_caught_ui()
+                        self.drop_item(item,self.perso)
+                        hud.catch_item(item)
+                        if not unstacked: return -1
                     else:
                         self.item_caught.check_pressed()
-
                 else:
-                    self.del_caught_ui()
+                    # si on a pas de hud on tej juste l'item
+                    if not unstacked: self.del_caught_ui()
                     self.perso.drop(item)
-                    return -1
+                    if not unstacked: return -1
 
+                if unstacked:
+                    # on rattrape l'item caught sans
+                    self.item_caught.catch()
+                    return 2
         else:
             ## on check touu pour vwar si on en catch
             for k in self.uis:
@@ -2971,6 +3013,15 @@ class SelectHUD(HUD):
             self.perso.grab(item,True)
             return -1
 
+
+    ## catch drop self
+    def catchable(self,item):
+        return True
+    def catch_item(self,item):
+        self.perso.grab(item)
+        return 1
+    def drop_item(self,item,perso):
+        perso.drop(item,False)
 
     ## details
 
@@ -3191,14 +3242,12 @@ class Item_UI(Press_UI):
 
         self.item = item
 
-        #self.text_id = texture
         self.itemspr = g.sman.addSpr(texture,group='hud21',vis=spr_vis)
         self.scale = scale
-        g.sman.modify(self.itemspr,scale=scale)#,opacity=128)
+        g.sman.modify(self.itemspr,scale=scale)
 
         pos = box.cx - g.sman.spr(self.itemspr).width/2 , box.cy - g.sman.spr(self.itemspr).height/2
         g.sman.modify(self.itemspr,pos)
-        #self.itembox = box
 
         self.caught = False
         self.dropped = False
@@ -3207,41 +3256,37 @@ class Item_UI(Press_UI):
 
         self.stacked = 1
 
+    def modify(self,sc=None,group=None,size=None):
+
+        if sc == None:
+            sc = self.scale
+
+        if size == None or g.sman.spr(self.itemspr).width == size[0]:
+            size=None
+
+        g.sman.modify(self.itemspr,scale=sc,group=group,size=size)
+
+        if hasattr(self,'stackspr') :
+            g.sman.modify(self.stackspr,scale=sc,group=group,size=size)
+
+        self.box = g.sman.box(self.itemspr)
+
     def catch(self):
         self.caught = True
         self.dropped = False
-        g.sman.unhide(self.itemspr)
-        g.sman.modify(self.itemspr,scale=(self.scale[0]*2,self.scale[1]*2),group='ui')
-        if hasattr(self,'stackspr') :
-            g.sman.unhide(self.stackspr)
-            g.sman.modify(self.stackspr,scale=(self.scale[0]*2,self.scale[1]*2),group='ui')
-        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
+        self.modify((self.scale[0]*2,self.scale[1]*2),'ui')
 
         pos = self.box.cx , self.box.fy + 20
         g.lman.modify(self.label,pos)
         pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
         g.sman.modify(self.label_bg,pos)
 
+        self.update()
+
     def drop(self):
         self.dropped = True
         self.caught = False
-        g.sman.modify(self.itemspr,scale=self.scale,group='ui-2')
-        g.sman.unhide(self.itemspr,True)
-
-        if hasattr(self,'stackspr') :
-            g.sman.modify(self.stackspr,scale=self.scale,group='ui-2')
-            g.sman.unhide(self.stackspr,True)
-
-        self.box = box(self.box.cx - g.sman.spr(self.itemspr).width/2,self.box.cy - g.sman.spr(self.itemspr).height/2,g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).height)
-
-    def reset(self,hide=False):
-        self.dropped = False
-        self.caught = False
-        g.sman.unhide(self.itemspr,hide)
-        g.sman.modify(self.itemspr,scale=self.scale,group='ui-2')
-        if hasattr(self,'stackspr') :
-            g.sman.unhide(self.stackspr,hide)
-            g.sman.modify(self.stackspr,scale=self.scale,group='ui-2')
+        self.modify(group='ui-2')
 
     def move(self,x,y):
         self.box.xy = x-g.sman.spr(self.itemspr).width/2,y-g.sman.spr(self.itemspr).height/2
@@ -3264,19 +3309,21 @@ class Item_UI(Press_UI):
                 g.sman.set_text(self.stackspr,g.TEXTIDS['nbs'][self.item.stacked])
             self.stacked = self.item.stacked
 
+        if hasattr(self,'stackspr'):
+            g.sman.modify(self.stackspr,size=(g.sman.spr(self.itemspr).width,g.sman.spr(self.itemspr).width))
+
         if self.caught:
             # itemspr
             g.sman.unhide(self.itemspr)
             if hasattr(self,'stackspr'): g.sman.unhide(self.stackspr)
-        pos = self.box.cx - g.sman.spr(self.itemspr).width/2 , self.box.cy - g.sman.spr(self.itemspr).height/2
-        g.sman.modify(self.itemspr,pos)
-        if hasattr(self,'stackspr'): g.sman.modify(self.stackspr,pos)
+
+        g.sman.modify(self.itemspr,self.box.cxy,anchor='center')
+        if hasattr(self,'stackspr'): g.sman.modify(self.stackspr,self.box.cxy,anchor='center')
 
         # label
         pos = self.box.cx , self.box.fy + 20
         g.lman.modify(self.label,pos)
         # labelbg
-        #pos = self.box.cx - g.lman.labels[self.label].content_width/2 - 5, self.box.fy + 15
         boxbg = box( cx=self.box.cx,cy=self.box.fy + 25,w = g.lman.labels[self.label].content_width+20 , h = g.lman.labels[self.label].content_height+4 )
         g.sman.modify(self.label_bg,boxbg.xy)
 
