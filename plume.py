@@ -756,7 +756,7 @@ class App():
                                         self.this_hud_caught_an_item = zone.hud
                                     else:
                                         # attrapage rapide dans l'inventaire
-                                        self.perso.grab(zone.hud.ui.phase,True)
+                                        self.perso.grab(zone.hud.ui.item,True)
                                         o2.NY.CITY[self.perso.street].zones['lit'].hud.delete_phase()
                                         letsbacktnothingcaught = True
 

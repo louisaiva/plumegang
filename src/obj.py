@@ -2502,30 +2502,31 @@ class InventHUD(HUD):
     def quick_catch_and_drop(self):
 
         selector = False
+        item = self.item_caught.item
 
         if self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated:
 
-            if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
-                self.perso.element_colli.hud.write(self.item_caught.item)
-                self.perso.drop(self.item_caught.item,create=False)
-                self.item_caught = None
+            if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
+                self.del_caught_ui()
+                self.perso.drop(item,create=False)
+                self.perso.element_colli.hud.write(item)
 
-            elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
-                self.perso.element_colli.hud.inspect(self.item_caught.item)
-                self.perso.drop(self.item_caught.item,create=False)
-                self.item_caught = None
+            elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
+                self.del_caught_ui()
+                self.perso.drop(item,create=False)
+                self.perso.element_colli.hud.inspect(item)
 
             elif type(self.perso.element_colli) == Studio:
 
-                if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
-                    self.perso.element_colli.hud.catch(self.item_caught.item)
-                    self.perso.drop(self.item_caught.item,create=False)
-                    self.item_caught = None
+                if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                    self.del_caught_ui()
+                    self.perso.drop(item,create=False)
+                    self.perso.element_colli.hud.catch(item)
 
-                elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
-                    self.perso.element_colli.hud.catch(self.item_caught.item)
-                    self.perso.drop(self.item_caught.item,create=False)
-                    self.item_caught = None
+                elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                    self.del_caught_ui()
+                    self.perso.drop(item,create=False)
+                    self.perso.element_colli.hud.catch(item)
 
                 else:
                     selector = True
@@ -2537,9 +2538,9 @@ class InventHUD(HUD):
             selector = True
 
         if selector:
-            self.perso.drop(self.item_caught.item,False)
-            self.perso.grab(self.item_caught.item)
-            self.item_caught = None
+            self.del_caught_ui()
+            self.perso.drop(item,False)
+            self.perso.grab(item)
             return -1
 
     def check_hoover(self,x,y):
@@ -2912,30 +2913,31 @@ class SelectHUD(HUD):
     def quick_catch_and_drop(self):
 
         inventory = False
+        item = self.item_caught.item
 
         if self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated:
 
-            if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
-                self.perso.element_colli.hud.write(self.item_caught.item)
-                self.perso.drop(self.item_caught.item,create=False)
-                self.item_caught = None
+            if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
+                self.del_caught_ui()
+                self.perso.drop(item,create=False)
+                self.perso.element_colli.hud.write(item)
 
-            elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
-                self.perso.element_colli.hud.inspect(self.item_caught.item)
-                self.perso.drop(self.item_caught.item,create=False)
-                self.item_caught = None
+            elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
+                self.del_caught_ui()
+                self.perso.drop(item,create=False)
+                self.perso.element_colli.hud.inspect(item)
 
             elif type(self.perso.element_colli) == Studio:
 
-                if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
-                    self.perso.element_colli.hud.catch(self.item_caught.item)
-                    self.perso.drop(self.item_caught.item,create=False)
-                    self.item_caught = None
+                if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                    self.del_caught_ui()
+                    self.perso.drop(item,create=False)
+                    self.perso.element_colli.hud.catch(item)
 
-                elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
-                    self.perso.element_colli.hud.catch(self.item_caught.item)
-                    self.perso.drop(self.item_caught.item,create=False)
-                    self.item_caught = None
+                elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                    self.del_caught_ui()
+                    self.perso.drop(item,create=False)
+                    self.perso.element_colli.hud.catch(item)
 
                 else:
                     inventory = True
@@ -2947,9 +2949,9 @@ class SelectHUD(HUD):
             inventory = True
 
         if inventory:
-            self.perso.drop(self.item_caught.item,False)
-            self.perso.grab(self.item_caught.item,True)
-            self.item_caught = None
+            self.del_caught_ui()
+            self.perso.drop(item,False)
+            self.perso.grab(item,True)
             return -1
 
 
