@@ -1915,9 +1915,15 @@ class StudHUD(HUD):
                     return 0
 
             elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+                perso.grab(self.item_caught.item,True)
+                self.item_caught.delete()
+                self.item_caught = None
+
+            elif perso.selhud.visible and (collisionAX(perso.selhud.box.realbox,(x,y)) or collisionAX(perso.selhud.box2.realbox,(x,y))):
                 perso.grab(self.item_caught.item)
                 self.item_caught.delete()
                 self.item_caught = None
+
             else:
                 self.item_caught.delete()
                 self.item_caught = None
@@ -1931,7 +1937,7 @@ class StudHUD(HUD):
                     ui.check_pressed()
                     if ui.caught:
                         self.item_caught = Invent_UI(self.boxs[lab],ui.item,self.visible)
-                        self.item_caught.activate()
+                        self.item_caught.press()
                         self.delete_ui(lab)
 
                         return 1
@@ -2029,8 +2035,13 @@ class MarketHUD(HUD):
 
             if collisionAX(self.box.realbox,(x,y)):
                 self.inspect(self.item_caught.item)
+
             elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
+                self.perso.grab(self.item_caught.item,True)
+
+            elif self.perso.selhud.visible and (collisionAX(self.perso.selhud.box.realbox,(x,y)) or collisionAX(self.perso.selhud.box2.realbox,(x,y))):
                 self.perso.grab(self.item_caught.item)
+
             self.item_caught.delete()
             self.item_caught = None
             return -1
@@ -2052,7 +2063,7 @@ class MarketHUD(HUD):
                         ui.check_pressed()
                         if ui.caught:
                             self.item_caught = Invent_UI(self.boxs[lab],ui.item,self.visible)
-                            self.item_caught.activate()
+                            self.item_caught.press()
                             self.delete_ui(lab)
 
                             return 1
@@ -2239,6 +2250,10 @@ class InventHUD(HUD):
         self.addLab('inv_lab','inventory',(self.box.cx,self.box.fy-50),font_name=1,anchor=('center','center'))
 
         if fill and False:
+
+            ## /WARNING\ Ne peut fonctionner car grab / drop doit se situer APRES
+            ## initialistion de selhud et invhud
+
             #self.update()
             for i in range(r.randint(2,10)):
                 ins = Instru(r.random(),r.choice(btmakers))
@@ -2255,15 +2270,6 @@ class InventHUD(HUD):
     # add/del/update
 
     def add_ui(self,item):
-
-        if not isinstance(item,Sound_item):
-            # on verifie si on le stacke avec qqch
-            for ui in self.uis['general']:
-                if type(ui.item) == type(item) and ui.item.stackable(item):
-                    ui.item.stack(item.stacked)
-                    ui.update()
-                    self.update()
-                    return
 
         vis = True
         if not self.visible:
@@ -2303,6 +2309,17 @@ class InventHUD(HUD):
                 self.uis['general'].remove(ui)
 
         if up:
+            self.update()
+
+    def del_caught_ui(self):
+        if self.item_caught != None:
+            tab = []
+            for cquecé in self.uis:
+                for x in self.uis[cquecé]:
+                    tab.append(x)
+            if self.item_caught not in tab:
+                self.item_caught.delete()
+            self.item_caught = None
             self.update()
 
     def update(self):
@@ -2345,6 +2362,7 @@ class InventHUD(HUD):
                         x = self.box2.x + self.padding/2 + self.lilpadding + (self.padding + self.lilpadding2)*(i%4)
                         y = yf + self.padding/2 - (self.padding + self.lilpadding2)*(i//4 + 1)
 
+                        self.uis[cquecé][i].update()
                         self.uis[cquecé][i].move(x,y)
                     yf -= (self.padding + self.lilpadding2)*((len(self.uis[cquecé])-1)//4 + 1) + self.lilpadding - self.lilpadding2
 
@@ -2385,44 +2403,45 @@ class InventHUD(HUD):
 
             self.item_caught.check_pressed()
             if self.item_caught.dropped:
+                item = self.item_caught.item
+
                 if collisionAX(self.box.realbox,(x,y)):
-                    self.perso.drop(self.item_caught.item,False)
-                    self.perso.grab(self.item_caught.item,True)
-                    self.item_caught = None
-                    self.update()
+                    self.del_caught_ui()
+                    self.perso.drop(item,False)
+                    self.perso.grab(item,True)
                     return -1
 
                 elif self.perso.selhud.visible and (collisionAX(self.perso.selhud.box.realbox,(x,y)) or collisionAX(self.perso.selhud.box2.realbox,(x,y))):
-                    self.perso.drop(self.item_caught.item,False)
-                    self.perso.grab(self.item_caught.item)
-                    self.item_caught = None
+                    self.del_caught_ui()
+                    self.perso.drop(item,False)
+                    self.perso.grab(item)
                     return -1
 
                 elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
 
-                    if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
-                        self.perso.drop(self.item_caught.item,create=False)
-                        self.perso.element_colli.hud.write(self.item_caught.item)
-                        self.item_caught = None
+                    if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
+                        self.del_caught_ui()
+                        self.perso.drop(item,create=False)
+                        self.perso.element_colli.hud.write(item)
                         return -1
 
-                    elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
-                        self.perso.element_colli.hud.inspect(self.item_caught.item)
-                        self.perso.drop(self.item_caught.item,create=False)
-                        self.item_caught = None
+                    elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
+                        self.del_caught_ui()
+                        self.perso.drop(item,create=False)
+                        self.perso.element_colli.hud.inspect(item)
                         return -1
 
                     elif type(self.perso.element_colli) == Studio:
 
-                        if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
-                            self.perso.element_colli.hud.catch(self.item_caught.item)
-                            self.perso.drop(self.item_caught.item,create=False)
-                            self.item_caught = None
+                        if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                            self.del_caught_ui()
+                            self.perso.drop(item,create=False)
+                            self.perso.element_colli.hud.catch(item)
                             return -1
-                        elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
-                            self.perso.element_colli.hud.catch(self.item_caught.item)
-                            self.perso.drop(self.item_caught.item,create=False)
-                            self.item_caught = None
+                        elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                            self.del_caught_ui()
+                            self.perso.drop(item,create=False)
+                            self.perso.element_colli.hud.catch(item)
                             return -1
 
                         else:
@@ -2432,8 +2451,8 @@ class InventHUD(HUD):
                         self.item_caught.check_pressed()
 
                 else:
-                    self.perso.drop(self.item_caught.item)
-                    self.item_caught = None
+                    self.del_caught_ui()
+                    self.perso.drop(item)
                     return -1
 
         else:
@@ -2474,6 +2493,8 @@ class InventHUD(HUD):
                                 item = ui.item.unstack()
                                 ui = Invent_UI(box(),item,self.visible)
                                 self.item_caught = ui
+                                ui.catch()
+                                self.update()
                                 return 1
 
         return 0
@@ -2789,6 +2810,12 @@ class SelectHUD(HUD):
                 # on update les details
                 self.update_details(item)
 
+    def del_caught_ui(self):
+        if self.item_caught != None :
+            if self.item_caught not in list(self.uis.values()):
+                self.item_caught.delete()
+            self.item_caught = None
+            self.update()
 
     # hoover catch drop ...
 
@@ -2802,44 +2829,47 @@ class SelectHUD(HUD):
         if self.item_caught :
             ## on check kelui pour vwar si on l'drop
             self.item_caught.check_pressed()
+            #print(self.item_caught.dropped)
             if self.item_caught.dropped:
+                item = self.item_caught.item
+
                 if collisionAX(self.box.realbox,(x,y)) or collisionAX(self.box2.realbox,(x,y)):
-                    ui,self.item_caught = self.item_caught,None
-                    self.perso.drop(ui.item,False)
-                    self.perso.grab(ui.item)
+                    self.del_caught_ui()
+                    self.perso.drop(item,False)
+                    self.perso.grab(item)
                     return -1
 
                 elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
-                    self.perso.drop(self.item_caught.item,False)
-                    self.perso.grab(self.item_caught.item,True)
-                    self.item_caught = None
+                    self.del_caught_ui()
+                    self.perso.drop(item,False)
+                    self.perso.grab(item,True)
                     return -1
 
                 elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)): # and hasattr(self.perso.element_colli,'hud'):
 
-                    if type(self.perso.element_colli) == Lit and type(self.item_caught.item).__name__ == 'Phase':
-                        self.perso.drop(self.item_caught.item,create=False)
-                        self.perso.element_colli.hud.write(self.item_caught.item)
-                        self.item_caught = None
+                    if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
+                        self.del_caught_ui()
+                        self.perso.drop(item,False)
+                        self.perso.element_colli.hud.write(item)
                         return -1
 
-                    elif type(self.perso.element_colli) == Ordi and type(self.item_caught.item).__name__ == 'Instru':
-                        self.perso.element_colli.hud.inspect(self.item_caught.item)
-                        self.perso.drop(self.item_caught.item,create=False)
-                        self.item_caught = None
+                    elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
+                        self.del_caught_ui()
+                        self.perso.element_colli.hud.inspect(item)
+                        self.perso.drop(item,False)
                         return -1
 
                     elif type(self.perso.element_colli) == Studio:
 
-                        if type(self.item_caught.item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
-                            self.perso.element_colli.hud.catch(self.item_caught.item)
-                            self.perso.drop(self.item_caught.item,create=False)
-                            self.item_caught = None
+                        if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                            self.del_caught_ui()
+                            self.perso.drop(item,False)
+                            self.perso.element_colli.hud.catch(item)
                             return -1
-                        elif type(self.item_caught.item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
-                            self.perso.element_colli.hud.catch(self.item_caught.item)
-                            self.perso.drop(self.item_caught.item,create=False)
-                            self.item_caught = None
+                        elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                            self.del_caught_ui()
+                            self.perso.drop(item,False)
+                            self.perso.element_colli.hud.catch(item)
                             return -1
                         else:
                             self.item_caught.check_pressed()
@@ -2848,8 +2878,8 @@ class SelectHUD(HUD):
                         self.item_caught.check_pressed()
 
                 else:
-                    self.perso.drop(self.item_caught.item)
-                    self.item_caught = None
+                    self.del_caught_ui()
+                    self.perso.drop(item)
                     return -1
 
         else:
@@ -2873,6 +2903,7 @@ class SelectHUD(HUD):
                             elif self.uis[k].item.stacked > 1:
                                 item = self.uis[k].item.unstack()
                                 ui = Invent_UI(box(),item,self.visible)
+                                ui.catch()
                                 self.item_caught = ui
                                 return 1
 

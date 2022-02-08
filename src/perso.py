@@ -1112,9 +1112,13 @@ class Human():
             k = list(self.selecter.keys())[list(self.selecter.values()).index(thg)]
             self.selecter[k] = None
             if isinstance(self,Perso) : self.selhud.update()
-        else:
+        elif thg in self.inventory[thg.cat]:
             self.inventory[thg.cat].remove(thg)
             if isinstance(self,Perso) : self.invhud.del_ui(thg)
+        else:
+            pass
+            # si on se trouve ici c'est que l'item droppé n'est pas dans l'inventaire :
+            # peut arriver lorsqu'on a un item caught qui est extrait d'un stack
 
         if create:
             w,h = self.box.wh
@@ -1128,8 +1132,19 @@ class Human():
 
     def grab(self,thg,inventory=False):
 
-        if not inventory and None in self.selecter.values():
+        if not inventory:
 
+            # on vérifie si on le stacke
+            for i in range(len(self.selecter)):
+                x = self.selected+i
+                if x >= len(self.selecter):
+                    x -= len(self.selecter)
+                if type(self.selecter[x]) == type(thg) and self.selecter[x].stackable(thg):
+                    self.selecter[x].stack(thg.stacked)
+                    if isinstance(self,Perso) : self.selhud.update()
+                    return
+
+            # sinon on check si y'a de la place
             sel = []
             for i in range(len(self.selecter)):
                 x = self.selected+i
@@ -1137,14 +1152,21 @@ class Human():
                     x -= len(self.selecter)
                 if self.selecter[x] == None:
                     self.selecter[x] = thg
-                    break
+                    if isinstance(self,Perso) : self.selhud.update()
+                    return
 
-            #k = list(self.selecter.keys())[list(self.selecter.values()).index(None)]
-            #self.selecter[k] = thg
-            if isinstance(self,Perso) : self.selhud.update()
-        else:
-            self.inventory[thg.cat].append(thg)
-            if isinstance(self,Perso) : self.invhud.add_ui(thg)
+        # si il est instackable dans le selecter et si le selecter est plein : go inventaire
+
+        # on vérifie si on le stacke
+        for i in range(len(self.inventory[thg.cat])):
+            if type(self.inventory[thg.cat][i]) == type(thg) and self.inventory[thg.cat][i].stackable(thg):
+                self.inventory[thg.cat][i].stack(thg.stacked)
+                if isinstance(self,Perso) : self.invhud.update()
+                return
+
+        # sinon on l'ajoute simplement
+        self.inventory[thg.cat].append(thg)
+        if isinstance(self,Perso) : self.invhud.add_ui(thg)
 
     def drop_sel(self):
         # drop l'outil selectionné
@@ -2141,6 +2163,9 @@ class Perso(Rappeur):
         self.grab(o.rplum(self.name))
         #self.load()
 
+        if True:
+            for i in range(10):
+                self.grab(o.Bottle())
     # cheat
     def cheat(self):
         self.life = self.max_life
