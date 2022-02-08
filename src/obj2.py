@@ -80,7 +80,6 @@ class preRue(line):
             else:
                 return self.x+n,self.y
 
-
     def __repr__(self):
 
         s = self.name + red(' -> ')
@@ -177,20 +176,34 @@ class Street():
                     elif (x_r+w_r > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and (self.builds[i] == None):
                         self.load_build(i)
                     elif self.builds[i] != None:
-                        g.sman.spr(self.builds[i]).x = self.x+W_SIDE+i*W_BUILD
-                        g.sman.spr(self.backbuilds[i]).x = self.x+W_SIDE+(i+1)*W_BUILD
+                        g.sman.spr(self.builds[i]).x = x_r
+                        g.sman.spr(self.backbuilds[i]).x = x_r+W_BUILD
 
             if hasattr(self,'side'):
+
+                ## side L
                 x_r = self.x
                 w_r = W_SIDE+W_BACK
 
-                if (x_r+w_r <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and (self.side != None):
+                if (x_r+w_r <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and (self.side['L'] != None):
                     self.deload_build('L')
-                elif (x_r+w_r > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and (self.side == None):
+                elif (x_r+w_r > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and (self.side['L'] == None):
                     self.load_build('L')
-                elif self.side != None:
-                    g.sman.spr(self.side).x = self.x
-                    g.sman.spr(self.backside).x = self.x+W_SIDE
+                elif self.side['L'] != None:
+                    g.sman.spr(self.side['L']).x = x_r
+                    g.sman.spr(self.backside['L']).x = x_r+W_SIDE
+
+                ## side R
+                x_r = self.x+W_SIDE+self.pre.long*W_BUILD
+                w_r = W_SIDE+W_BACK
+
+                if (x_r+w_r <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and (self.side['R'] != None):
+                    self.deload_build('R')
+                elif (x_r+w_r > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and (self.side['R'] == None):
+                    self.load_build('R')
+                elif self.side['R'] != None:
+                    g.sman.spr(self.side['R']).x = x_r
+                    g.sman.spr(self.backside['R']).x = x_r+W_SIDE
 
         # road
         if hasattr(self,'road1') and hasattr(self,'road2'):
@@ -309,30 +322,8 @@ class Street():
             self.builds = [None for _ in self.build_list]
             self.backbuilds = [None for _ in self.build_list]
 
-            self.side = None
-            self.backside = None
-
-            """x,y = self.x,250
-
-            #sides
-            if True:
-                self.side = g.sman.addSpr(g.TEXTIDS['build']['side'],(x,y),group='buildings')
-                self.backside = g.sman.addSpr(g.TEXTIDS['backbuild']['side'],(x+W_SIDE,y),group='road')
-                g.Cyc.add_spr((self.side,0.3))
-                g.Cyc.add_spr((self.backside,0.3))
-
-            x+=W_SIDE
-            w = W_BUILD
-            #builds
-            for i in range(len(self.build_list)):
-                build = self.build_list[i]
-                id = g.sman.addSpr(g.TEXTIDS['build'][build],(x,y),group='buildings')
-                backid = g.sman.addSpr(g.TEXTIDS['backbuild'][build],(x+w,y),group='road')
-                self.builds.append(id)
-                self.backbuilds.append(backid)
-                g.Cyc.add_spr((id,0.3))
-                g.Cyc.add_spr((backid,0.3))
-                x+=w"""
+            self.side = {'L':None,'R':None}
+            self.backside = {'L':None,'R':None}
 
         ## back front /back front anim
         if 'back' in self.textures:
@@ -346,17 +337,6 @@ class Street():
 
         if 'backanim' in self.textures or 'frontanim' in self.textures:
             g.bertran.schedule_interval_soft(self.anim,0.1)
-
-
-        """## loading elements
-        for zone in self.zones:
-            self.zones[zone].load(self)
-
-        for h in self.humans:
-            h.load()
-
-        for item in self.items:
-            item.load(self)"""
 
         nbh = len(self.humans)
         for street in self.neighbor:
@@ -380,14 +360,18 @@ class Street():
             x,y = self.x,250
 
             if i == 'L':
-                self.side = g.sman.addSpr(g.TEXTIDS['build']['side'],(x,y),group='buildings')
-                self.backside = g.sman.addSpr(g.TEXTIDS['backbuild']['side'],(x+W_SIDE,y),group='road')
-                g.Cyc.add_spr((self.side,0.3))
-                g.Cyc.add_spr((self.backside,0.3))
+                self.side['L'] = g.sman.addSpr(g.TEXTIDS['build']['L'],(x,y),group='buildings')
+                self.backside['L'] = g.sman.addSpr(g.TEXTIDS['backbuild']['L'],(x+W_SIDE,y),group='road')
+                g.Cyc.add_spr((self.side['L'],0.3))
+                g.Cyc.add_spr((self.backside['L'],0.3))
                 #print('oh ya')
 
             elif i == 'R':
-                pass
+                x += W_SIDE+self.pre.long*W_BUILD
+                self.side['R'] = g.sman.addSpr(g.TEXTIDS['build']['R'],(x,y),group='buildings')
+                self.backside['R'] = g.sman.addSpr(g.TEXTIDS['backbuild']['R'],(x+W_SIDE,y),group='road')
+                g.Cyc.add_spr((self.side['R'],0.3))
+                g.Cyc.add_spr((self.backside['R'],0.3))
 
             elif i >= 0 and i < len(self.build_list):
 
@@ -412,15 +396,21 @@ class Street():
 
             if i == 'L':
                 #print('oh yo')
-                if self.side != None:
-                    g.Cyc.del_spr((self.side,0.3))
-                    g.sman.delete(self.side)
-                    self.side = None
-                    g.Cyc.del_spr((self.backside,0.3))
-                    g.sman.delete(self.backside)
-                    self.backside = None
+                if self.side['L'] != None:
+                    g.Cyc.del_spr((self.side['L'],0.3))
+                    g.sman.delete(self.side['L'])
+                    self.side['L'] = None
+                    g.Cyc.del_spr((self.backside['L'],0.3))
+                    g.sman.delete(self.backside['L'])
+                    self.backside['L'] = None
             elif i == 'R':
-                pass
+                if self.side['R'] != None:
+                    g.Cyc.del_spr((self.side['R'],0.3))
+                    g.sman.delete(self.side['R'])
+                    self.side['R'] = None
+                    g.Cyc.del_spr((self.backside['R'],0.3))
+                    g.sman.delete(self.backside['R'])
+                    self.backside['R'] = None
             elif i >= 0 and i < len(self.build_list) and self.builds[i] != None:
                 g.Cyc.del_spr((self.builds[i],0.3))
                 g.Cyc.del_spr((self.backbuilds[i],0.3))

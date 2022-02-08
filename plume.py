@@ -362,7 +362,6 @@ class App():
             g.TEXTIDS['inside'] = {}
             g.TEXTIDS['inside']['back'] = g.tman.loadIm('bg/inside_building.png')
 
-
         ## BUILDINGS
         if True:
             g.TEXTIDS['build'] = {}
@@ -379,17 +378,20 @@ class App():
 
             #sides
             if True:
-                #front
-                w = o2.W_SIDE
-                text = img.get_region(0, 0, w,h)
-                g.TEXTIDS['build']['side'] = g.tman.addText(text)
+                for i in range(2):
+                    txt = ['L','R']
+                    x = i*(o2.W_SIDE+o2.W_BACK)
+                    #front
+                    w = o2.W_SIDE
+                    text = img.get_region(x, 0, w,h)
+                    g.TEXTIDS['build'][txt[i]] = g.tman.addText(text)
 
-                #back
-                w = o2.W_BACK
-                text = img.get_region(o2.W_SIDE, 0, w,h)
-                g.TEXTIDS['backbuild']['side'] = g.tman.addText(text)
+                    #back
+                    w = o2.W_BACK
+                    text = img.get_region(x+o2.W_SIDE, 0, w,h)
+                    g.TEXTIDS['backbuild'][txt[i]] = g.tman.addText(text)
 
-            x = o2.W_BACK+o2.W_SIDE
+            x = 2*(o2.W_BACK+o2.W_SIDE)
 
             for i in range(nb_build):
                 #front
