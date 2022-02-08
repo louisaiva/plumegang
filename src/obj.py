@@ -501,7 +501,6 @@ class Son(Sound_item):
         return 'son   ' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + str(self.cred)
 
 
-
 """'''''''''''''''''''''''''''''''''
 '''''''LABELS'''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''"""

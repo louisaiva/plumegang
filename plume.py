@@ -826,14 +826,13 @@ class App():
                             self.on_mouse_motion(x,y,0,0)
                         else:
                             # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
-                            self.perso.invhud.quick_catch_and_drop()#self.perso.invhud.item_caught.item)
+                            self.perso.invhud.quick_catch_and_drop()
                             letsbacktnothingcaught = True
 
                     elif caught_dropped == -1: # means dropped
                         letsbacktnothingcaught = True
-                        #self.this_hud_caught_an_item = None
 
-                    #self.on_mouse_motion(x,y,0,0)
+                    self.on_mouse_motion(x,y,0,0)
 
                 self.perso.invhud.check_press_btns(x,y)
 
@@ -852,14 +851,13 @@ class App():
                             self.on_mouse_motion(x,y,0,0)
                         else:
                             # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
-                            self.perso.selhud.quick_catch_and_drop()#self.perso.selhud.item_caught.item)
+                            self.perso.selhud.quick_catch_and_drop()
                             letsbacktnothingcaught = True
 
                     elif caught_dropped == -1: # means dropped
                         letsbacktnothingcaught = True
-                        #self.on_mouse_motion(x,y,0,0)
-                        #self.perso.selhud.update()
-                        #self.this_hud_caught_an_item = None
+
+                    self.on_mouse_motion(x,y,0,0)
 
             if letsbacktnothingcaught:
                 self.on_mouse_motion(x,y,0,0)
