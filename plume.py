@@ -253,8 +253,8 @@ class App():
             joysticks = pyglet.input.get_joysticks()
             if joysticks:
                 g.joystick = joysticks[0]
-            g.joystick.open()
-            g.joystick.push_handlers(self)
+                g.joystick.open()
+                g.joystick.push_handlers(self)
 
 
             # clicks

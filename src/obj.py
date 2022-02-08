@@ -1759,7 +1759,7 @@ class WriteHUD(HUD):
 
         self.ui = None
 
-        self.box = box(400,300,1000,600)
+        self.box = box(500,300,1000,600)
         self.padding = 50
 
         self.addCol('bg',self.box,group='hud-1')
@@ -1833,12 +1833,12 @@ class WriteHUD(HUD):
             self.delete_phase(False)
             return 1
         elif self.ui.dropped:
-            if collisionAX(self.box.realbox,(x,y)):
+            if self.collision(x,y):
                 self.write(self.ui.item)
-            elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+            elif perso.invhud.visible and perso.invhud.collision(x,y):
                 perso.grab(self.ui.item,True)
                 self.delete_phase()
-            elif perso.selhud.visible and (collisionAX(perso.selhud.box.realbox,(x,y)) or collisionAX(perso.selhud.box2.realbox,(x,y))):
+            elif perso.selhud.visible and perso.selhud.collision(x,y):
                 perso.grab(self.ui.item)
                 self.delete_phase()
             else:
@@ -1858,6 +1858,10 @@ class WriteHUD(HUD):
         return 0
     def drop_item(self,item,perso):
         perso.drop(item,False)
+    def collision(self,x,y):
+        if collisionAX(self.box.realbox,(x,y)):
+            return True
+        return False
 
 class StudHUD(HUD):
 
@@ -1869,7 +1873,7 @@ class StudHUD(HUD):
 
         #self.ui = None
 
-        self.box = box(400,300,1200,650)
+        self.box = box(500,300,1200,650)
         self.padding = 50
 
         self.item_caught = None
@@ -1882,15 +1886,16 @@ class StudHUD(HUD):
         self.uis['phase3'] = None
         self.uis['son'] = None
 
+        sz=128
         self.boxs = {}
-        self.boxs['instru'] = box( 400+75+11,300+275+11,128,128 )
-        self.boxs['phase0'] = box( 400+325+11,300+440+11,128,128 )
-        self.boxs['phase1'] = box( 400+675+11,300+440+11,128,128 )
-        self.boxs['phase2'] = box( 400+325+11,300+110+11,128,128 )
-        self.boxs['phase3'] = box( 400+675+11,300+110+11,128,128 )
-        self.boxs['son'] = box( 400+950+11,300+275+11,128,128 )
+        self.boxs['instru'] = box( self.box.x+75+11,self.box.y+275+11,sz,sz )
+        self.boxs['phase0'] = box( self.box.x+325+11,self.box.y+440+11,sz,sz )
+        self.boxs['phase1'] = box( self.box.x+675+11,self.box.y+440+11,sz,sz )
+        self.boxs['phase2'] = box( self.box.x+325+11,self.box.y+110+11,sz,sz )
+        self.boxs['phase3'] = box( self.box.x+675+11,self.box.y+110+11,sz,sz )
+        self.boxs['son'] = box( self.box.x+950+11,self.box.y+275+11,sz,sz )
 
-        self.addSpr('bg',g.TEXTIDS['studhud'],(400,300),'hud')
+        self.addSpr('bg',g.TEXTIDS['studhud'],self.box.xy,'hud')
 
         #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
         self.addLab('pressE','E to assemble a song --- ESC to leave',(400+462.5,self.box.y+self.padding),font_name=1,font_size=20,anchor=('center','center'))
@@ -1936,7 +1941,7 @@ class StudHUD(HUD):
         if self.item_caught != None:
             ## on check kelui pour vwar si on l'drop
 
-            if collisionAX(self.box.realbox,(x,y)):
+            if self.collision(x,y):
                 if type(self.item_caught.item).__name__ != 'Son':
                     self.catch(self.item_caught.item)
                     self.item_caught.delete()
@@ -1944,12 +1949,12 @@ class StudHUD(HUD):
                 else:
                     return 0
 
-            elif perso.invhud.visible and collisionAX(perso.invhud.box.realbox,(x,y)):
+            elif perso.invhud.visible and perso.invhud.collision(x,y):
                 perso.grab(self.item_caught.item,True)
                 self.item_caught.delete()
                 self.item_caught = None
 
-            elif perso.selhud.visible and (collisionAX(perso.selhud.box.realbox,(x,y)) or collisionAX(perso.selhud.box2.realbox,(x,y))):
+            elif perso.selhud.visible and perso.selhud.collision(x,y):
                 perso.grab(self.item_caught.item)
                 self.item_caught.delete()
                 self.item_caught = None
@@ -2018,6 +2023,10 @@ class StudHUD(HUD):
         return 0
     def drop_item(self,item,perso):
         perso.drop(item,False)
+    def collision(self,x,y):
+        if collisionAX(self.box.realbox,(x,y)):
+            return True
+        return False
 
 class MarketHUD(HUD):
 
@@ -2029,7 +2038,7 @@ class MarketHUD(HUD):
 
         self.ui = None
 
-        self.box = box(400,300,1000,650)
+        self.box = box(500,300,1000,650)
         self.padding = 50
 
         self.item_caught = None
@@ -2043,14 +2052,16 @@ class MarketHUD(HUD):
 
         self.old_main_pos = None
 
-        self.boxs = {}
-        self.boxs['main'] = box( 400+230,300+222,256,256 )
-        self.boxs['instru0'] = box( 400+820+1,300+476+11,128,128 )
-        self.boxs['instru1'] = box( 400+820+1,300+342+11,128,128 )
-        self.boxs['instru2'] = box( 400+820+1,300+208+11,128,128 )
-        self.boxs['instru3'] = box( 400+820+1,300+74+11,128,128 )
+        sz = 128
 
-        self.addSpr('bg',g.TEXTIDS['ordhud'],(400,300),'hud')
+        self.boxs = {}
+        self.boxs['main'] = box( self.box.x+230,self.box.y+222,2*sz,2*sz )
+        self.boxs['instru0'] = box( self.box.x+820+1,self.box.y+476+11,sz,sz )
+        self.boxs['instru1'] = box( self.box.x+820+1,self.box.y+342+11,sz,sz )
+        self.boxs['instru2'] = box( self.box.x+820+1,self.box.y+208+11,sz,sz )
+        self.boxs['instru3'] = box( self.box.x+820+1,self.box.y+74+11,sz,sz )
+
+        self.addSpr('bg',g.TEXTIDS['ordhud'],self.box.xy,'hud')
 
         #self.addLab('quality',convert_quality(self.plum.quality),(self.box.x+self.box.w-self.padding,self.box.cy),anchor=('center','center'))
         self.addLab('longclick','longclick on an instru to buy --- ESC to leave',(self.box.cx,self.box.y+self.padding),font_name=1,font_size=20,anchor=('center','center'))
@@ -2081,13 +2092,13 @@ class MarketHUD(HUD):
         if self.item_caught != None:
             ## on check kelui pour vwar si on l'drop
 
-            if collisionAX(self.box.realbox,(x,y)):
+            if self.collision(x,y):
                 self.inspect(self.item_caught.item)
 
-            elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
+            elif self.perso.invhud.visible and self.perso.invhud.collision(x,y):
                 self.perso.grab(self.item_caught.item,True)
 
-            elif self.perso.selhud.visible and (collisionAX(self.perso.selhud.box.realbox,(x,y)) or collisionAX(self.perso.selhud.box2.realbox,(x,y))):
+            elif self.perso.selhud.visible and self.perso.selhud.collision(x,y):
                 self.perso.grab(self.item_caught.item)
 
             self.item_caught.delete()
@@ -2225,6 +2236,10 @@ class MarketHUD(HUD):
         return 0
     def drop_item(self,item,perso):
         perso.drop(item,False)
+    def collision(self,x,y):
+        if collisionAX(self.box.realbox,(x,y)):
+            return True
+        return False
 
 #---# hud spéciaux inventaire/selecteur
 
@@ -2263,8 +2278,6 @@ class InventHUD(HUD):
 
         self.addCol('bg2',self.box2,color='delta_blue',group='hud2')
 
-
-
         ### MENUS
 
         self.menus = ['general','sound']
@@ -2299,10 +2312,10 @@ class InventHUD(HUD):
         width_detail = 180
 
         self.box3 = box(self.box.fx,self.box.fy-int(height_detail),width_detail,int(height_detail))
-        #print(not self.deta_visible)
         self.addCol('bgdeta',self.box3,group='hud2-1',detail=True)
-        #g.sman.unhide(self.sprids['bgdeta'],not self.deta_visible)
-        #self.detaids.append(self.sprids['bgdeta'])
+
+        self.box4 = box(self.box.fx,self.box.y,h,len(self.menus)*h+2*self.padding2)
+        self.addCol('bg4',self.box4,group='hud2-1')
 
 
 
@@ -2470,11 +2483,11 @@ class InventHUD(HUD):
                 hud = None
 
                 # choix du hud
-                if collisionAX(self.box.realbox,(x,y)):
+                if self.collision(x,y):
                     hud = self
-                elif self.perso.selhud.visible and (collisionAX(self.perso.selhud.box.realbox,(x,y)) or collisionAX(self.perso.selhud.box2.realbox,(x,y))):
+                elif self.perso.selhud.visible and self.perso.selhud.collision(x,y):
                     hud = self.perso.selhud
-                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)):
+                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and self.perso.element_colli.hud.collision(x,y):
                     hud = self.perso.element_colli.hud
 
                 # on vérifie si c'est R on drop un seul item
@@ -2626,6 +2639,12 @@ class InventHUD(HUD):
         return 1
     def drop_item(self,item,perso):
         perso.drop(item,False)
+    def collision(self,x,y):
+        if collisionAX(self.box.realbox,(x,y)):
+            return True
+        if collisionAX(self.box4.realbox,(x,y)):
+            return True
+        return False
 
     ## de base
 
@@ -2901,11 +2920,11 @@ class SelectHUD(HUD):
                 hud = None
 
                 # choix du hud
-                if collisionAX(self.box.realbox,(x,y)) or collisionAX(self.box2.realbox,(x,y)):
+                if self.collision(x,y):
                     hud = self
-                elif self.perso.invhud.visible and collisionAX(self.perso.invhud.box.realbox,(x,y)):
+                elif self.perso.invhud.visible and self.perso.invhud.collision(x,y):
                     hud = self.perso.invhud
-                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and collisionAX(self.perso.element_colli.hud.box.realbox,(x,y)):
+                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and self.perso.element_colli.hud.collision(x,y):
                     hud = self.perso.element_colli.hud
 
                 # on vérifie si c'est R on drop un seul item
@@ -3022,6 +3041,12 @@ class SelectHUD(HUD):
         return 1
     def drop_item(self,item,perso):
         perso.drop(item,False)
+    def collision(self,x,y):
+        if collisionAX(self.box.realbox,(x,y)):
+            return True
+        if collisionAX(self.box2.realbox,(x,y)):
+            return True
+        return False
 
     ## details
 
@@ -3241,8 +3266,9 @@ class Item_UI(Press_UI):
         super(Item_UI,self).__init__(box,lab_text,group='ui',colorlab=colorlab)
 
         self.item = item
+        self.item_group = 'hud21'
 
-        self.itemspr = g.sman.addSpr(texture,group='hud21',vis=spr_vis)
+        self.itemspr = g.sman.addSpr(texture,group=self.item_group,vis=spr_vis)
         self.scale = scale
         g.sman.modify(self.itemspr,scale=scale)
 
@@ -3274,7 +3300,7 @@ class Item_UI(Press_UI):
     def catch(self):
         self.caught = True
         self.dropped = False
-        self.modify((self.scale[0]*2,self.scale[1]*2),'ui')
+        self.modify((self.scale[0]*2,self.scale[1]*2),'ui-1')
 
         pos = self.box.cx , self.box.fy + 20
         g.lman.modify(self.label,pos)
@@ -3286,7 +3312,7 @@ class Item_UI(Press_UI):
     def drop(self):
         self.dropped = True
         self.caught = False
-        self.modify(group='ui-2')
+        self.modify(group=self.item_group)
 
     def move(self,x,y):
         self.box.xy = x-g.sman.spr(self.itemspr).width/2,y-g.sman.spr(self.itemspr).height/2

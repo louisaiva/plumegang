@@ -384,7 +384,7 @@ class Street():
                 self.backside = g.sman.addSpr(g.TEXTIDS['backbuild']['side'],(x+W_SIDE,y),group='road')
                 g.Cyc.add_spr((self.side,0.3))
                 g.Cyc.add_spr((self.backside,0.3))
-                print('oh ya')
+                #print('oh ya')
 
             elif i == 'R':
                 pass
