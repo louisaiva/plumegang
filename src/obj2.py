@@ -23,6 +23,86 @@ W_SIDE = 800
 '''''''PART ONE : STREETS'''''''''''
 '''''''''''''''''''''''''''''''''"""
 
+class Train():
+
+    def __init__(self,circuit,pos,name='sbahn'):
+
+        # general
+        self.name = name
+        self.circuit = circuit # ex : ['kamour str','street 1','street 3']
+        self.station_x = pos # position du build pour chaque rue : [1,2,6]
+        self.speed = 60
+        self.y = 250+230
+        self.x = 0
+        print(name,'created :',circuit)
+
+        #position
+        self.gex = self.station_x[0]*W_BUILD + W_SIDE
+        self.street = self.circuit[0]
+
+        #sprite
+        self.text = g.TEXTIDS['sbahn']
+
+    def update(self,x,y):
+
+        ## bouge le train
+
+        self.move()
+
+        ## verifie si y'a besoin d'afficher le spr ou non:
+
+        self.x = x+self.gex
+        if NY.CITY[self.street].visible and (self.x+self.w > -g.SAFE_W and self.x < g.scr.fx+g.SAFE_W):
+
+            if not hasattr(self,'spr'):
+                # on load le sprite
+                self.spr = g.sman.addSpr(self.text,group='sbahn')
+                g.Cyc.add_spr((self.spr,0.5))
+
+            # on le place bieng
+            g.sman.modify(self.spr,(self.x,self.y))
+        elif hasattr(self,'spr'):
+            # on deload
+            g.Cyc.del_spr((self.spr,0.5))
+            g.sman.delete(self.spr)
+            del self.spr
+
+    # movin
+
+    def move(self,x=None,dx=1):
+
+        if x != None:
+            # on le place
+
+            self.gex = x
+            if self.gfx >= NY.CITY[self.street].gfx:
+                self.move_street()
+        elif dx != None:
+            # on le déplace
+
+            self.gex += dx*self.speed
+            if self.gfx >= NY.CITY[self.street].gfx:
+                self.move_street()
+
+    def move_street(self):
+
+        i = self.circuit.index(self.street)
+
+        if i >= len(self.circuit) - 1: i = 0
+        else: i+= 1
+
+        self.street = self.circuit[i]
+        self.gex = NY.CITY[self.street].box.x
+
+
+    ##
+    def _gfx(self):
+        return self.gex + self.w
+    gfx = property(_gfx)
+    def _w(self):
+        return g.tman.textures[self.text].width
+    w = property(_w)
+
 # lines
 
 class preStreet(line):
@@ -579,11 +659,15 @@ class Street():
         self._y = y
     y = property(_y,_sety)
 
+    def _gfx(self):
+        return self.box.x+self.box.w
+    gfx = property(_gfx)
+
     def _xxf(self):
         if self.box.w == None:
             return (None,None)
         else:
-            return (self.box.xy[0],self.box.xy[0]+self.box.w)
+            return (self.box.x,self.box.x+self.box.w)
     xxf = property(_xxf)
 
     def _yyf(self):
@@ -752,6 +836,7 @@ class CITY():
         self.width = 0
         self.CITY = {}
 
+        self.BAHN = {}
         #self.Ghost = Street(preStreet('ghost',1,1,2,1),box=box(0,-50,50))
 
     def add_streets(self,street):
@@ -774,6 +859,9 @@ class CITY():
 
         house = r.choice( list(filter( lambda x:isinstance(x,PrivateHouse),self.CITY.values())) )
         return house
+
+    def rd_avnue(self):
+        return r.choice(self.avnues)
 
     ## dij
 
@@ -902,6 +990,12 @@ class CITY():
         ## e étape : on concatene et on retourne
         return begin + mid + end
 
+    # trains
+
+    def add_train(self,train):
+
+        self.BAHN[train.name] = train
+
     #
 
     def _shops(self):
@@ -927,8 +1021,8 @@ NY = CITY()
 
 LINES = []
 
-LOAD = 3
-# permet de conserver une map si y'en a une bien (1) ou d'en recreer une à chaque fois (0) ou de faire une map short (2)
+#LOAD = 3
+# permet de conserver une map si y'en a une bien (1) ou d'en recreer une à chaque fois (0) ou de faire une map short (2) (plus d'actualité)
 MAP_NAME = 'ny'
 # key à transmettre à la fonction de chargement pour selectionner une map créée
 
@@ -951,151 +1045,7 @@ builds_key = []
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 5
-
-#MAP = 20,20
-
-def generate_map():
-    global LINES
-    k = 20
-    nb_lines = k
-
-    lines = []
-    connexions = []
-
-    ## street longueur 1 => 10k => de 0 à 10000
-    ## longueur 2 => 20k
-    ## ...
-
-    if LOAD == 1:
-        lines,connexions = load_lines(MAP_NAME)
-    else:
-        a=0
-        while len(lines) == 0:
-            a+=1
-            #print(a,'try')
-            lines,connexions = create_rect_lines()
-
-    ### TRANSFORMATION LINES IN STREETS
-
-    line_home = r.choice(lines)
-    line_distro = r.choice(lines)
-
-    width_between_streets = 5000
-
-    # we create streets + home
-    for line in lines:
-
-        nb_builds = ((line.w+1)*width_between_streets+100)//W_BUILD + 1
-        builds = []
-        for i in range(nb_builds):
-            builds.append(r.choice(builds_key))
-
-        NY.add_streets(Street(line,g.TEXTIDS['street'],builds,box=box(-100,-50,(line.w+1)*width_between_streets+100)))
-
-        if line == line_home:
-            prestr = preStreet('home',line.x,line.y,line.x,line.y)
-            NY.add_streets(House(prestr,g.TEXTIDS['home']))
-            #NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],g.TEXTIDS['home']['front']),(None,None)))
-            connect(NY.CITY['home'],3200,NY.CITY[line.name],500,(False,False))
-            LINES.append(prestr)
-
-            #elif line == line_distro:
-            prestr = preStreet('distrokid',line.x,line.y,line.x,line.y)
-            NY.add_streets(Shop(prestr,g.TEXTIDS['distrokid']))
-            connect(NY.CITY['distrokid'],4215,NY.CITY[line.name],1500,(False,False))
-            LINES.append(prestr)
-
-            prestr = preStreet('maison de drake',line.x,line.y,line.x,line.y)
-            NY.add_streets(House(prestr,(g.TEXTIDS['home']['back'],None)))
-            connect(NY.CITY['maison de drake'],3200,NY.CITY[line.name],2500,(False,False))
-            LINES.append(prestr)
-
-
-    # we make connexions -> creations of doors
-    for conn in connexions:
-        line1,x1,line2,x2 = conn
-        connect(NY.CITY[line1],x1*width_between_streets,NY.CITY[line2],x2*width_between_streets)
-
-    LINES += lines[:]
-
-    # we draw the whole NY.CITY
-    #draw_lines()
-
-def generate_short_map():
-
-    rue = 'kamour str.'
-
-    build_list = []
-    zones = []
-
-    ## on organise build_list
-    for i in range(k):
-        if i >= 3:
-            key = r.choice(builds_key)
-            build_list.append(key)
-        elif i == 1:
-            build_list.append(2)
-        else:
-            build_list.append(i)
-
-    ## on créé la street
-    w = k*W_BUILD
-    NY.add_streets(Street(preStreet(rue),g.TEXTIDS['street'],build_list,box=box(0,-50,w)))
-    NY.CITY[rue].assign_zones(zones)
-
-    ## HOME
-    if True:
-
-        name = '1- '+rue
-        # inside building
-        NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
-        zone_box = builds[2]['box'].pop()
-        zone_box.y += 250
-        zone_box.x += W_BUILD
-        connect(NY.CITY[name],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
-
-        #home + porte
-        NY.add_streets(House(preStreet('home'),g.TEXTIDS['home']))
-        connect(NY.CITY['home'],3200,NY.CITY[name],box(1500,250,300,400),(False,False))
-        NY.CITY[name].add_house(NY.CITY['home'])
-
-        #maison du voisin
-        NY.add_streets(House(preStreet('voisin'),g.TEXTIDS['home']))
-        connect(NY.CITY['voisin'],3200,NY.CITY[name],box(2500,250,300,400),(False,False))
-        NY.CITY[name].add_house(NY.CITY['voisin'])
-
-    ## DISTROKID
-    if True:
-
-        #distrokid + porte
-        NY.add_streets(Shop(preStreet('distrokid'),g.TEXTIDS['distrokid']))
-        zone_box = builds[2]['box'].pop()
-        zone_box.y += 250
-        zone_box.x += 2*W_BUILD
-        connect(NY.CITY['distrokid'],4215,NY.CITY[rue],zone_box,(False,False))
-
-    ## CHAQUE BUILDING
-    for i in range(3,k):
-        if builds[build_list[i]]['box']:
-            zone_box = builds[build_list[i]]['box'].pop()
-
-            zone_box.y += 250
-            zone_box.x += i*W_BUILD
-
-            name = str(i) + '- ' +rue
-
-            # inside building
-            NY.add_streets(Building(preStreet(name),g.TEXTIDS['inside']))
-            connect(NY.CITY[name],box(600,250,400,400),NY.CITY[rue],zone_box,(False,False))
-
-            ## CHAQUE APPART DANS CHAQUE BUILDING
-            for j in range(4):
-                labtext = (None,'1'+chr(65+j))
-                house_name = '1'+chr(65+j) +'-' + str(i) + ' '+rue
-                NY.add_streets(House(preStreet(house_name),g.TEXTIDS['home']))
-                connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
-                NY.CITY[name].add_house(NY.CITY[house_name])
+nb_iterations = 3
 
 def create_map():
 
@@ -1286,143 +1236,24 @@ def create_map():
         connect_solo(NY.CITY[st1],zonebox,NY.CITY[st2],x2,anim='stairs')
 
 
+    ## TRAIN
+    circ = [rue_princ]
+
+    try:
+        nb = r.randint(2,len(NY.CITY)-2)
+        chosen = NY.rd_avnue()
+
+        while chosen.name in circ:
+            chosen = NY.rd_avnue()
+        circ.append(chosen.name)
+    except:print('warn : le sbahn ne circule que dans la rue princ')
+
+    sbahn = Train(circ,[0 for _ in range(len(circ))])
+    NY.add_train(sbahn)
+
 """'''''''''''''''''''''''''''''''''
 '''''''PART 5 : USEFUL FONCTIONS''''
 '''''''''''''''''''''''''''''''''"""
-
-
-def create_rand_lines():
-
-    lines = []
-    connexions = []
-
-    ## CREATION OF LINES
-
-    for i in range(nb_lines):
-
-        line = rand_line(i)
-
-        for j in range(len(lines)):
-            R = line_intersection2(line.line,lines[j].line)
-            #print(R)
-            if R:
-                X,Z = R
-                if line.vert :
-                    x1 = Z-line.line[0][1]
-                    x2 = X-lines[j].line[0][0]
-
-                else:
-                    x1 = X-line.line[0][0]
-                    x2 = Z-lines[j].line[0][1]
-
-                connexions.append((line.name,x1,lines[j].name,x2))
-                line.add_conn(lines[j],x1)
-                lines[j].add_conn(line,x2)
-
-        lines.append(line)
-
-
-    ## WE DELETE ALONE LINES
-
-    todel = []
-    for line in lines:
-        if len(line.connex) == 0:
-            todel.append(line)
-    for line in todel:
-        lines.remove(line)
-
-    save_lines((lines,connexions))
-    return lines,connexions
-
-def create_rect_lines():
-
-    lines = []
-    connexions = []
-
-    ## CREATION OF LINES
-
-    print( [*range(0,k,2)] )
-
-    # verticales
-    for i in range(0,k,2):
-
-        ## x reste le meme
-        xdep = i
-        ydep = 0
-        xfin = i
-        yfin = MAP[1]
-        line = preStreet('street'+str(i),xdep,ydep,xfin,yfin)
-
-        for j in range(len(lines)):
-            R = line_intersection2(line.line,lines[j].line)
-            #print(R)
-            if R:
-                X,Z = R
-                if line.vert :
-                    x1 = Z-line.line[0][1]
-                    x2 = X-lines[j].line[0][0]
-
-                else:
-                    x1 = X-line.line[0][0]
-                    x2 = Z-lines[j].line[0][1]
-
-                connexions.append((line.name,x1,lines[j].name,x2))
-                line.add_conn(lines[j],x1)
-                lines[j].add_conn(line,x2)
-
-        lines.append(line)
-
-    # horiz
-    for i in range(0,k,2):
-
-        ## y reste le meme
-        xdep = 0
-        ydep = i
-        xfin = MAP[1]
-        yfin = i
-        line = preStreet('street'+str(i+1),xdep,ydep,xfin,yfin)
-
-        for j in range(len(lines)):
-            R = line_intersection2(line.line,lines[j].line)
-            #print(R)
-            if R:
-                X,Z = R
-                if line.vert :
-                    x1 = Z-line.line[0][1]
-                    x2 = X-lines[j].line[0][0]
-
-                else:
-                    x1 = X-line.line[0][0]
-                    x2 = Z-lines[j].line[0][1]
-
-                connexions.append((line.name,x1,lines[j].name,x2))
-                line.add_conn(lines[j],x1)
-                lines[j].add_conn(line,x2)
-
-        lines.append(line)
-
-    save_lines((lines,connexions))
-    return lines,connexions
-
-def rand_line(i):
-
-    vert = r.choice([True,False])
-
-    if vert:
-        ## x reste le meme
-        xdep = r.randint(0, MAP[0])
-        ydep = r.randint(0, MAP[1]-1)
-        xfin = xdep
-        yfin = r.randint(ydep+1,MAP[1])
-
-    else:
-        ## y reste le meme
-        xdep = r.randint(0, MAP[0]-1)
-        ydep = r.randint(0, MAP[1])
-        xfin = r.randint(xdep+1,MAP[1])
-        yfin = ydep
-
-    return preStreet('street'+str(i),xdep,ydep,xfin,yfin)
 
 def connect(street1,box1,street2,box2,col=(False,False),labs=(None,None)):
 
@@ -1451,50 +1282,6 @@ def connect_solo(street1,box1,street2,x2,col=False,labs=None,anim='door'):
 
     door = o.Porte(street1,box1,street2,x2,makeCol=col,text=labs,anim=anim)
     street1.assign_zones([door])
-
-def draw_lines():
-
-    map = [[ ' ' for i in range(MAP[0]+1)] for i in range(MAP[1]+1)]
-
-    xhome,yhome = 0,0
-    for street in LINES:
-        if street.name == 'home':
-            xhome,yhome = street.x,street.y
-        else:
-            if street.vert:
-                street=street.line
-                # same x
-                x = street[0][0]
-                for y in range(street[0][1],street[1][1]):
-                    map[y][x] = '|'
-
-            else:
-                street=street.line
-                # same y
-                y = street[0][1]
-                for x in range(street[0][0],street[1][0]):
-                    map[y][x] = '='
-
-    map[yhome][xhome] = 'X'
-
-
-    s=' '
-
-    for x in range(len(map[0])):
-        s+=' '+str(x)
-    s+='\n'
-
-    for y in range(len(map)):
-        s+=str(y)+' '
-        for x in range(len(map[y])):
-            s+=map[y][x]+' '
-        s+='\n'
-
-    print('map'+'\n\n'+s)
-
-def print_lines():
-    for street in NY.CITY:
-        print(NY.CITY[street])
 
 def save_lines(tab):
 

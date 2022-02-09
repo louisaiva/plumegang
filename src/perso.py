@@ -18,7 +18,7 @@ import pyglet.gl as gl
 SIZE_SPR = 256
 BOTS = []
 GUYS = []
-CHEAT = True
+CHEAT = False
 WATER = False
 
 """'''''''''''''''''''''''''''''''''

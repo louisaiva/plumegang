@@ -117,16 +117,8 @@ class App():
 
         # streets
         if True:
-            ## STREETS
-            if o2.LOAD < 2:
-                o2.generate_map()
-            elif o2.LOAD == 2:
-                o2.generate_short_map()
-            elif o2.LOAD == 3:
-                o2.create_map()
 
-            #for i in range(1000):
-            #    o2.NY.shortest_path(o2.NY.rd_street(),o2.NY.rd_street())
+            o2.create_map()
 
         # humans
         if True:
@@ -377,22 +369,21 @@ class App():
             w_tot = o2.W_BUILD + o2.W_BACK
 
             #sides
-            if True:
-                for i in range(2):
-                    txt = ['L','R']
-                    x = i*(o2.W_SIDE+o2.W_BACK)
-                    #front
-                    w = o2.W_SIDE
-                    text = img.get_region(x, 0, w,h)
-                    g.TEXTIDS['build'][txt[i]] = g.tman.addText(text)
+            for i in range(2):
+                txt = ['L','R']
+                x = i*(o2.W_SIDE+o2.W_BACK)
+                #front
+                w = o2.W_SIDE
+                text = img.get_region(x, 0, w,h)
+                g.TEXTIDS['build'][txt[i]] = g.tman.addText(text)
 
-                    #back
-                    w = o2.W_BACK
-                    text = img.get_region(x+o2.W_SIDE, 0, w,h)
-                    g.TEXTIDS['backbuild'][txt[i]] = g.tman.addText(text)
+                #back
+                w = o2.W_BACK
+                text = img.get_region(x+o2.W_SIDE, 0, w,h)
+                g.TEXTIDS['backbuild'][txt[i]] = g.tman.addText(text)
 
             x = 2*(o2.W_BACK+o2.W_SIDE)
-
+            #builds
             for i in range(nb_build):
                 #front
                 w = o2.W_BUILD
@@ -416,11 +407,13 @@ class App():
             for i in range(len(zones)):
                 g.TEXTIDS['zone'][zones[i]] = ids[i]
 
-        ## sun moon stars
+        ## sun moon stars ...
         if True:
             g.TEXTIDS['moon'] = g.tman.loadIm('bg/moon.png')
             g.TEXTIDS['sun'] = g.tman.loadIm('bg/sun.png')
             g.TEXTIDS['stars'] = g.tman.loadIm('bg/stars.png')
+
+            g.TEXTIDS['sbahn'] = g.tman.loadIm('bg/train.png')
 
         ##
         if True:
@@ -1144,9 +1137,16 @@ class App():
                 g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
                 g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
 
+            # STREETS
+            perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
+
+            # BAHN
+            for sbahn in o2.NY.BAHN:
+                o2.NY.BAHN[sbahn].update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
+                print(o2.NY.BAHN[sbahn].street,o2.NY.BAHN[sbahn].gex,o2.NY.BAHN[sbahn].x)
+
             # CAM
             if True:
-                perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
 
                 run = False
                 if g.joystick and g.joystick.z > 0.4:

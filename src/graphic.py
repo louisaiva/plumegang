@@ -103,7 +103,7 @@ class GroupManager():
 
         self.nb_perso_group = 20
 
-        names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','road','buildings','backstreet','backstreet_anim','mid' # good
+        names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','sbahn','road','buildings','backstreet','backstreet_anim','mid' # good
                             ,'front','perso-1','hud-1','hud','hud1']
         names += ['persodown']
         names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
