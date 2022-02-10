@@ -359,7 +359,7 @@ class App():
             g.TEXTIDS['build'] = {}
             g.TEXTIDS['backbuild'] = {}
 
-            nb_build = 4
+            nb_build = 5
 
             #builds : separating front (first 1500x of each build) and back (100x left)
             id = g.tman.loadIm('bg/builds.png')

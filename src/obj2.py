@@ -744,6 +744,10 @@ class Street():
             return self.pre.long
     long = property(_long)
 
+    def _has_station(self):
+        return (self.build_list and 'sbahn' in self.build_list)
+    has_station = property(_has_station)
+
 
     ##
 
@@ -1095,7 +1099,7 @@ builds = {
         'bat':{'text':2 , 'box':box(200,100,470,420) ,'distrib':None},
         'stairs':{'text':3 , 'box':box(400,100,500,420) ,'distrib':(0,0)},
         'side':{'text':'side', 'box':None,'distrib':None},
-        'sbahn':{'text':0 , 'arret':750 ,'distrib':None},
+        'sbahn':{'text':4 , 'arret':750 ,'distrib':None},
 }
 
 builds_key = ['empty','stand','bat'] # va être donné aléatoirement si ce n'est pas un build spécial
