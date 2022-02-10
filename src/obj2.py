@@ -4,7 +4,7 @@ enjoy
 """
 
 import json,os
-from colors import red, green, blue
+from colors import *
 
 from src.utils import *
 from src import graphic as g
@@ -30,11 +30,17 @@ class Train():
         # general
         self.name = name
         self.circuit = circuit # ex : ['kamour str','street 1','street 3']
-        self.station_x = pos # position du build pour chaque rue : [1,2,6]
-        self.speed = 60
+        self.station_x = pos # gex de l'arret pour chaque rue : [10230,28000,6200]
+        self.max_speed = 80
+        self.stopped_here = False
+        self.stopped_time = None
+        self.stop_time = 0.5
+        self.brake_dist = W_BUILD
+
+        #pos
         self.y = 250+230
         self.x = 0
-        print(name,'created :',circuit)
+        print(name,'created :',str(circuit))
 
         #position
         self.gex = self.station_x[0]*W_BUILD + W_SIDE
@@ -69,19 +75,19 @@ class Train():
 
     # movin
 
-    def move(self,x=None,dx=1):
+    def move(self,x=None):
 
         if x != None:
             # on le place
 
             self.gex = x
-            if self.gfx >= NY.CITY[self.street].gfx:
+            if self.gex >= NY.CITY[self.street].gfx:
                 self.move_street()
-        elif dx != None:
+        else:
             # on le déplace
 
-            self.gex += dx*self.speed
-            if self.gfx >= NY.CITY[self.street].gfx:
+            self.gex += self.speed
+            if self.gex >= NY.CITY[self.street].gfx:
                 self.move_street()
 
     def move_street(self):
@@ -92,16 +98,54 @@ class Train():
         else: i+= 1
 
         self.street = self.circuit[i]
-        self.gex = NY.CITY[self.street].box.x
+        self.gex = NY.CITY[self.street].box.x - self.w
+        self.stopped_here = False
+
+        print(color(self.name+' entering '+self.street,'yellow'))
 
 
     ##
     def _gfx(self):
         return self.gex + self.w
     gfx = property(_gfx)
+    def _gcx(self):
+        return self.gex + self.w/2
+    gcx = property(_gcx)
     def _w(self):
         return g.tman.textures[self.text].width
     w = property(_w)
+
+    def _speed(self):
+
+        s = self.max_speed
+
+        x_arret = self.station_x[self.circuit.index(self.street)]
+        if x_arret == None:
+            return s
+
+        #print(abs(self.gcx - x_arret))
+        if abs(self.gcx - x_arret) <= 1:
+            if NY.CITY[self.street].visible: g.pman.alert(self.name,'stopped')
+            if not self.stopped_here:
+                self.stopped_here = True
+                self.stopped_time = time.time()
+                return 0
+            elif time.time()-self.stopped_time > self.stop_time:
+                return 0.1
+            return 0
+
+        elif self.gcx < x_arret and self.gcx > x_arret - self.brake_dist:
+            d = (x_arret - self.gcx) / self.brake_dist
+            #print('avant :',d,self.gcx,x_arret,self.brake_dist)
+            return d*s
+        elif self.gcx > x_arret and self.gcx < x_arret + self.brake_dist:
+            d = (self.gcx - x_arret) / self.brake_dist
+            #print('apr :',d)
+            return d*s
+
+        return s
+    speed = property(_speed)
+
 
 # lines
 
@@ -459,8 +503,8 @@ class Street():
                 w = W_BUILD
 
                 build = self.build_list[i]
-                id = g.sman.addSpr(g.TEXTIDS['build'][build],(x,y),group='buildings')
-                backid = g.sman.addSpr(g.TEXTIDS['backbuild'][build],(x+w,y),group='road')
+                id = g.sman.addSpr(g.TEXTIDS['build'][builds[build]['text']],(x,y),group='buildings')
+                backid = g.sman.addSpr(g.TEXTIDS['backbuild'][builds[build]['text']],(x+w,y),group='road')
                 self.builds[i] = id
                 self.backbuilds[i] = backid
                 g.Cyc.add_spr((id,0.3))
@@ -605,10 +649,6 @@ class Street():
         g.sman.modify(self.road1,(road1x,None))
         g.sman.modify(self.road2,(road2x,None))
 
-    def verify_builds(self):
-        pass
-
-
     ## prerue
     def get_build(self,x):
         if type(self) == Street:
@@ -618,6 +658,7 @@ class Street():
                 return x//W_BUILD
         else:
             return 0
+
 
     ###
 
@@ -1031,14 +1072,15 @@ MAP_NAME = 'ny'
 '''''''''''''''''''''''''''''''''"""
 
 builds = {
-        0:{'name':'empty' , 'box':None ,'distrib':None},
-        1:{'name':'stand' , 'box':box(370,0,500,420), 'box2':box(890,0,500,420) ,'distrib':(0,0)},
-        2:{'name':'batiment' , 'box':box(200,100,470,420) ,'distrib':None},
-        3:{'name':'stairs' , 'box':box(400,100,500,420) ,'distrib':(0,0)},
-        'side':{'name':'side', 'box':None,'distrib':None}
+        'empty':{'text':0 , 'box':None ,'distrib':None},
+        'stand':{'text':1 , 'box':box(370,0,500,420), 'box2':box(890,0,500,420) ,'distrib':(0,0)},
+        'bat':{'text':2 , 'box':box(200,100,470,420) ,'distrib':None},
+        'stairs':{'text':3 , 'box':box(400,100,500,420) ,'distrib':(0,0)},
+        'side':{'text':'side', 'box':None,'distrib':None},
+        'sbahn':{'text':0 , 'arret':750 ,'distrib':None},
 }
 
-builds_key = []
+builds_key = ['empty','stand','bat'] # va être donné aléatoirement si ce n'est pas un build spécial
 
 
 """'''''''''''''''''''''''''''''''''
@@ -1050,8 +1092,6 @@ nb_iterations = 3
 def create_map():
 
     ## la map part d'une rue simple et unique et puis s'étend de celle là
-
-    ## JUSQU'A 5 on reste à ~60 fps, au delà la rue principale commence à être bondée
     #  chaque rue peut avoir un maximum que 4 rues voisines sinon ça va être le sbeul
 
     #-> à la fin on se retrouve avec 2**3 = 8 rues
@@ -1105,6 +1145,27 @@ def create_map():
     x_shop = rues[0].place_door_rd('shop')
     rues[0].place_door(0,'home')
 
+    # TRAIN
+    circ_sbahn = [rue_princ]
+
+    try:
+        nb = 2
+        for i in range(nb):
+            chosen = r.choice(rues)
+            #print(i,chosen.name)
+            while chosen.name in circ_sbahn:
+                chosen = r.choice(rues)
+            circ_sbahn.append(chosen.name)
+    except:print('warn : le sbahn ne circule que dans la rue princ')
+
+    x_arrets = [] # stocke les gex de l'arret
+    x_stations = [] # stocke les builds concernés
+    for rue in circ_sbahn:
+        i = list(map(lambda x:x.name,rues)).index(rue)
+        i = rues[i].place_door_rd('sbahn')
+        x_arrets.append( W_SIDE + i*W_BUILD + builds['sbahn']['arret'] )
+        x_stations.append( i )
+
     #print(rues)
     ## TRANSFORMATION RUES EN STREETS
 
@@ -1124,12 +1185,18 @@ def create_map():
                 key = r.choice(list(filter(lambda x:x not in [3],builds_key)))
                 build_list.append(key)
             else:
-                build_list.append(3)
+                build_list.append('stairs')
 
+        # on place les différents shops
         if nom == rue_princ:
-            build_list[0] = 2
-            build_list[x_distro] = 2
-            build_list[x_shop] = 1
+            build_list[0] = 'bat'
+            build_list[x_distro] = 'bat'
+            build_list[x_shop] = 'stand'
+
+        # on place les stations de sbahn
+        if nom in circ_sbahn:
+            i = circ_sbahn.index(nom)
+            build_list[x_stations[i]] = 'sbahn'
 
         ## on créé la street
         w = rue.long*W_BUILD+2*W_SIDE
@@ -1141,7 +1208,7 @@ def create_map():
             name = 'kedulov gang'
 
             # inside building
-            zone_box = builds[2]['box'].pop()
+            zone_box = builds['bat']['box'].pop()
             zone_box.x += W_SIDE
             zone_box.y += 250
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
@@ -1169,7 +1236,7 @@ def create_map():
             ## DISTROKID
 
             #distrokid + porte
-            zone_box = builds[2]['box'].pop()
+            zone_box = builds['bat']['box'].pop()
             zone_box.y += 250
             zone_box.x += x_distro*W_BUILD+W_SIDE
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
@@ -1177,10 +1244,10 @@ def create_map():
             connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
 
             ## SHOP
-            zone_box = builds[1]['box'].pop()
+            zone_box = builds['stand']['box'].pop()
             zone_box.y += 250
             zone_box.x += x_shop*W_BUILD+W_SIDE
-            zone_box2 = builds[1]['box2'].pop()
+            zone_box2 = builds['stand']['box2'].pop()
             zone_box2.y += 250
             zone_box2.x += x_shop*W_BUILD+W_SIDE
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
@@ -1190,7 +1257,7 @@ def create_map():
 
         for i in range(rue.long):
 
-            if builds[build_list[i]]['distrib'] and r.random() > 0.5:
+            if builds[build_list[i]]['distrib'] and r.random() > 0.75:
                 # on crée un distrib
                 x,y = i*W_BUILD+W_SIDE,250
                 y += builds[build_list[i]]['distrib'][1]
@@ -1221,7 +1288,7 @@ def create_map():
                     connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
                     NY.CITY[name].add_house(NY.CITY[house_name])
 
-            elif rue.cont[i] != 0 and rue.cont[i] not in ['distro','home','shop']:
+            elif rue.cont[i] != 0 and rue.cont[i] not in ['distro','home','shop','sbahn']:
                 ## On connecte les rues
                 #print(build_list[i])
                 zone_box = builds[build_list[i]]['box'].pop()
@@ -1237,18 +1304,8 @@ def create_map():
 
 
     ## TRAIN
-    circ = [rue_princ]
 
-    try:
-        nb = r.randint(2,len(NY.CITY)-2)
-        chosen = NY.rd_avnue()
-
-        while chosen.name in circ:
-            chosen = NY.rd_avnue()
-        circ.append(chosen.name)
-    except:print('warn : le sbahn ne circule que dans la rue princ')
-
-    sbahn = Train(circ,[0 for _ in range(len(circ))])
+    sbahn = Train(circ_sbahn,x_arrets)
     NY.add_train(sbahn)
 
 """'''''''''''''''''''''''''''''''''

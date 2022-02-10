@@ -31,7 +31,7 @@ class ScreenManager():
         self.display = pyglet.canvas.get_display()
         self.screens = self.display.get_screens()
 
-        self.current_screen = self.screens[0]
+        self.current_screen = self.screens[-1]
         #print(dir(self.current_screen))
 
     def update_screen(self,window):
@@ -809,10 +809,6 @@ butt = {'A':0,
         'LJ':8, # left joystick
         'RJ':9, # right joystick
         }
-
-"""joy_ry = 0
-joy_dry = 0"""
-
 
 
 #cooldown = 0.5

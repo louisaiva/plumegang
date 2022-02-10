@@ -395,7 +395,7 @@ class App():
                 text = img.get_region(i*w_tot+x + o2.W_BUILD, 0, w,h)
                 g.TEXTIDS['backbuild'][i] = g.tman.addText(text)
 
-                o2.builds_key.append(i)
+            #o2.builds_key.append(i)
 
         ## ZONES
         if True:
@@ -1143,7 +1143,7 @@ class App():
             # BAHN
             for sbahn in o2.NY.BAHN:
                 o2.NY.BAHN[sbahn].update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
-                print(o2.NY.BAHN[sbahn].street,o2.NY.BAHN[sbahn].gex,o2.NY.BAHN[sbahn].x)
+                #print(o2.NY.BAHN[sbahn].street,o2.NY.BAHN[sbahn].gex,o2.NY.BAHN[sbahn].x)
 
             # CAM
             if True:
