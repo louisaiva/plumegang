@@ -407,13 +407,19 @@ class App():
             for i in range(len(zones)):
                 g.TEXTIDS['zone'][zones[i]] = ids[i]
 
+        ## TRAINS
+        if True:
+
+            ids = g.tman.loadImSeq('bg/train.png',(5,1))
+            ids.reverse()
+            g.TEXTIDS['sbahn'] = ids
+
+
         ## sun moon stars ...
         if True:
             g.TEXTIDS['moon'] = g.tman.loadIm('bg/moon.png')
             g.TEXTIDS['sun'] = g.tman.loadIm('bg/sun.png')
             g.TEXTIDS['stars'] = g.tman.loadIm('bg/stars.png')
-
-            g.TEXTIDS['sbahn'] = g.tman.loadIm('bg/train.png')
 
         ##
         if True:

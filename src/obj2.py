@@ -29,12 +29,12 @@ class Train():
 
         # general
         self.name = name
-        self.circuit = circuit # ex : ['kamour str','street 1','street 3']
+        self.circuit = ['kamour str.'] # ex : ['kamour str','street 1','street 3']
         self.station_x = pos # gex de l'arret pour chaque rue : [10230,28000,6200]
         self.max_speed = 80
         self.stopped_here = False
         self.stopped_time = None
-        self.stop_time = 0.5
+        self.stop_time = 2
         self.brake_dist = W_BUILD
 
         #pos
@@ -47,7 +47,10 @@ class Train():
         self.street = self.circuit[0]
 
         #sprite
-        self.text = g.TEXTIDS['sbahn']
+        self.text = g.TEXTIDS['sbahn'][0]
+        self.anim_text = g.TEXTIDS['sbahn'][1:] + [g.TEXTIDS['sbahn'][-1]] + list(reversed(g.TEXTIDS['sbahn']))
+        self.anim_time = [ 0.1 for _ in g.TEXTIDS['sbahn'][1:]] + [self.stop_time] + [ 0.1 for _ in list(reversed(g.TEXTIDS['sbahn']))]
+        self.anim = None
 
     def update(self,x,y):
 
@@ -64,6 +67,8 @@ class Train():
                 # on load le sprite
                 self.spr = g.sman.addSpr(self.text,group='sbahn')
                 g.Cyc.add_spr((self.spr,0.5))
+                if self.anim:
+                    self.anim.set_id(self.spr)
 
             # on le place bieng
             g.sman.modify(self.spr,(self.x,self.y))
@@ -100,9 +105,9 @@ class Train():
         self.street = self.circuit[i]
         self.gex = NY.CITY[self.street].box.x - self.w
         self.stopped_here = False
+        self.anim = None
 
         print(color(self.name+' entering '+self.street,'yellow'))
-
 
     ##
     def _gfx(self):
@@ -117,6 +122,8 @@ class Train():
 
     def _speed(self):
 
+        #print(self.anim)
+
         s = self.max_speed
 
         x_arret = self.station_x[self.circuit.index(self.street)]
@@ -126,14 +133,25 @@ class Train():
         #print(abs(self.gcx - x_arret))
         if abs(self.gcx - x_arret) <= 1:
             if NY.CITY[self.street].visible: g.pman.alert(self.name,'stopped')
-            if not self.stopped_here:
-                self.stopped_here = True
-                self.stopped_time = time.time()
-                return 0
-            elif time.time()-self.stopped_time > self.stop_time:
-                return 0.1
-            return 0
 
+            if not self.anim and not self.stopped_here:
+
+                self.stopped_here = True
+
+                ## On vient d'arriver les portes doivent s'ouvrir
+                if not hasattr(self,'spr'):
+                    self.anim = g.Anim(None,self.anim_text,self.anim_time)
+                else:
+                    self.anim = g.Anim(self.spr,self.anim_text,self.anim_time)
+
+            elif self.anim and not self.anim.running and self.stopped_here:
+
+                ## les portes sont fermées, on repart
+                #del self.anim
+                #self.anim = None
+                return 0.1
+
+            return 0
         elif self.gcx < x_arret and self.gcx > x_arret - self.brake_dist:
             d = (x_arret - self.gcx) / self.brake_dist
             #print('avant :',d,self.gcx,x_arret,self.brake_dist)

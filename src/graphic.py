@@ -10,6 +10,7 @@ from math import *
 import src.utils as u
 from src import obj as o
 from src.colors import *
+from colors import *
 
 import pyglet.gl as gl
 #gl.glEnable(gl.GL_TEXTURE_2D)
@@ -291,9 +292,14 @@ class SpriteManager():
                 self.sprites[tabids].visible = (not hide)
 
     def set_text(self,sprid,textid):
+        if sprid in self.sprites and textid:
 
-        if self.sprites[sprid].image != tman.textures[textid]:
-            self.sprites[sprid].image = tman.textures[textid]
+            if self.sprites[sprid].image != tman.textures[textid]:
+                self.sprites[sprid].image = tman.textures[textid]
+
+    def get_text(self,sprid):
+        if sprid in self.sprites:
+            return list(tman.textures.keys())[list(tman.textures.values()).index(self.sprites[sprid].image)]
 
     def modify(self,sprid,pos=None,scale=None,group=None,opacity=None,anchor=None,size=None):
 
@@ -788,9 +794,58 @@ TEXTIDS = {}
 TEXTIDS['col'] = {}
 
 
+"""'''''''''''''''''''''''''''''''''
+'''''''PART 2 : ANIM      ''''''''''
+'''''''''''''''''''''''''''''''''"""
+
+
+class Anim():
+
+    def __init__(self,id,texts,times=None,loop=False):
+
+        if not times:
+            times = [0.05 for _ in texts]
+
+        self.id = id
+        if loop:
+            self.text = sman.get_text(self.id)
+
+        self.texts = texts
+        self.times = times
+
+        self.k = -1
+        self.anim()
+        self.running = True
+
+    def set_id(self,id):
+        self.id = id
+        if self.k == len(self.texts) -1 and hasattr(self,'text'):
+            sman.set_text(self.id,self.text)
+        else:
+            sman.set_text(self.id,self.texts[self.k])
+
+    def anim(self,dt=0):
+
+        self.k += 1
+        print(cyan('anim '+str(self.k)))
+
+        sman.set_text(self.id,self.texts[self.k])
+
+        dt = self.times[self.k]
+        if self.k == len(self.texts) -1:
+            bertran.schedule_once(self.finish,dt)
+        else:
+            bertran.schedule_once(self.anim,dt)
+
+    def finish(self,dt):
+        print(cyan('finished'))
+
+        if hasattr(self,'text'):
+            sman.set_text(self.id,self.text)
+        self.running = False
 
 """'''''''''''''''''''''''''''''''''
-'''''''PART TWO : CCCC STUFF''''''''
+'''''''PART 3 : CCCC STUFF''''''''''
 '''''''''''''''''''''''''''''''''"""
 
 #### KEYS ->  Not graphic nor C but t'as capté ya un K ça passe
