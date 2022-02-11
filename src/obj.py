@@ -614,9 +614,8 @@ class Zone():
 
         if vis: self.load()
 
-        self.gex,self.gey = box.xy
+        self.box = box
         self.x,self.y = 0,0
-        self.w,self.h = box.wh
         self.group = group
 
         self._hoover = False
@@ -624,12 +623,14 @@ class Zone():
     def load(self):
 
         if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
-            self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group)
+            x = self.gex + g.Cam.X + g.GodCam.X
+            y = self.gey + g.Cam.Y
+            self.skin_id = g.sman.addSpr(self.text_id,(x,y),self.group)
             w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
             g.sman.modify(self.skin_id,scale=(self.box.w/w,self.box.h/h))
+            #print(self.name,'spr loaded',g.sman.spr(self.skin_id).x)
 
         self.loaded = True
-        #print(self.name,'loaded')
 
     def deload(self):
 
@@ -638,6 +639,27 @@ class Zone():
             del self.skin_id
 
         self.loaded = False
+
+
+    ##
+    def _gex(self):
+        return self.box.x
+    def _setgex(self,x):
+        self.box.x = x
+    gex = property(_gex,_setgex)
+
+    def _gey(self):
+        return self.box.y
+    def _setgey(self,y):
+        self.box.y = y
+    gey = property(_gey,_setgey)
+
+    def _w(self):
+        return self.box.w
+    w = property(_w)
+    def _h(self):
+        return self.box.h
+    h = property(_h)
 
 
     def _realbox(self):
@@ -672,7 +694,6 @@ class Zone_ELEM(Zone):
         self.labtext = name
         self.longpress = long
 
-        self.box = box
 
         # label
         #pos = box.x + box.w/2 , box.y + box.h + 20
@@ -682,11 +703,17 @@ class Zone_ELEM(Zone):
 
         self.activated = False
 
-    def move(self,x_r,y_r):
-        if hasattr(self,'skin_id'):
-            g.sman.modify(self.skin_id,(x_r,y_r),group=get_perso_grp(self.gey))
-        self.x,self.y = x_r,y_r
-        self.update()
+    def move(self,x=None,y=None,anc='left'):
+
+        if anc != 'left' and x:
+            if anc == 'right':
+                x = x-self.w
+            elif anc == 'center':
+                x = x-self.w/2
+        if x:
+            self.gex = x
+        if y:
+            self.gey = y
 
     def hoover(self):
         if hasattr(self,'label'):
@@ -713,7 +740,13 @@ class Zone_ELEM(Zone):
             else:
                 g.lman.modify(self.label,color=(255,255,255,0))
 
-    def update(self):
+    def update(self,x,y):
+
+        self.x,self.y = x,y
+
+        if hasattr(self,'skin_id'):
+            g.sman.modify(self.skin_id,(x,y),group=get_perso_grp(self.gey))
+
         if hasattr(self,'label'):
             # label
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 20
@@ -746,6 +779,20 @@ class Market(Zone_ELEM):
     def activate(self,perso):
         super(Market,self).activate(perso)
         perso.rplum()
+
+class TrainStation(Zone_ELEM):
+
+    def __init__(self,train,box):
+        self.train = train
+        name = train.name
+
+        super(TrainStation,self).__init__(box,get_id(name),'pink','mid',False,False)
+        self.labtext = name
+
+    def activate(self,perso):
+        super(TrainStation,self).activate(perso)
+        #self.train.embarq(perso)
+        perso.embarq(self.train)
 
 class SimpleReleaser(Zone_ELEM):
 

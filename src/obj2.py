@@ -29,28 +29,44 @@ class Train():
 
         # general
         self.name = name
-        self.circuit = ['kamour str.'] # ex : ['kamour str','street 1','street 3']
+        self.circuit = circuit # ex : ['kamour str','street 1','street 3']
         self.station_x = pos # gex de l'arret pour chaque rue : [10230,28000,6200]
-        self.max_speed = 80
+        self.max_speed = 300
+        self.realspeed = self.max_speed
         self.stopped_here = False
-        self.stopped_time = None
+        #self.stopped_time = None
+        self.ready_to_go = False
         self.stop_time = 2
         self.brake_dist = W_BUILD
 
         #pos
         self.y = 250+230
         self.x = 0
-        print(name,'created :',str(circuit))
+        #print(name,'created :',str(circuit))
 
         #position
-        self.gex = self.station_x[0]*W_BUILD + W_SIDE
-        self.street = self.circuit[0]
+        self.gex = self.station_x[-2]
+        self.gey = self.y
+        self.street = self.circuit[-2]
 
         #sprite
         self.text = g.TEXTIDS['sbahn'][0]
         self.anim_text = g.TEXTIDS['sbahn'][1:] + [g.TEXTIDS['sbahn'][-1]] + list(reversed(g.TEXTIDS['sbahn']))
         self.anim_time = [ 0.1 for _ in g.TEXTIDS['sbahn'][1:]] + [self.stop_time] + [ 0.1 for _ in list(reversed(g.TEXTIDS['sbahn']))]
         self.anim = None
+
+        #zones
+
+        self.zone_boxs = [
+                        {'dx':-260},
+                        {'dx':260}
+                            ]
+        y = 250
+        self.zones = []
+        zone_box = box( y=y , w=200 , h=self.y+200 - y )
+        self.zones.append(o.TrainStation(self,zone_box))
+        zone_box = box( y=y , w=200 , h=self.y+200 - y )
+        self.zones.append(o.TrainStation(self,zone_box))
 
     def update(self,x,y):
 
@@ -91,7 +107,9 @@ class Train():
         else:
             # on le déplace
 
-            self.gex += self.speed
+            spd = self.speed
+            self.realspeed = spd
+            self.gex += spd
             if self.gex >= NY.CITY[self.street].gfx:
                 self.move_street()
 
@@ -105,9 +123,25 @@ class Train():
         self.street = self.circuit[i]
         self.gex = NY.CITY[self.street].box.x - self.w
         self.stopped_here = False
-        self.anim = None
+        self.ready_to_go = False
 
         print(color(self.name+' entering '+self.street,'yellow'))
+
+    # zone
+
+    def activ_zone(self):
+        print(cyan('activin zones'))
+        for i in range(len(self.zones)):
+            x = self.station_x[self.circuit.index(self.street)]+self.zone_boxs[i]['dx']
+            self.zones[i].move(x,anc='center')
+            NY.CITY[self.street].add_zone(self.zones[i])
+
+    def unactiv_zone(self):
+        print(cyan('unactivin zones'))
+        for zone in self.zones:
+            NY.CITY[self.street].del_zone(zone)
+
+    # takin people
 
     ##
     def _gfx(self):
@@ -119,6 +153,13 @@ class Train():
     def _w(self):
         return g.tman.textures[self.text].width
     w = property(_w)
+
+    def _realbox(self):
+        if hasattr(self,'spr'):
+            return g.sman.realbox(self.spr)
+        else:
+            return 0,0,self.text.width,self.text.height
+    realbox = property(_realbox)
 
     def _speed(self):
 
@@ -137,6 +178,7 @@ class Train():
             if not self.anim and not self.stopped_here:
 
                 self.stopped_here = True
+                self.activ_zone()
 
                 ## On vient d'arriver les portes doivent s'ouvrir
                 if not hasattr(self,'spr'):
@@ -144,11 +186,17 @@ class Train():
                 else:
                     self.anim = g.Anim(self.spr,self.anim_text,self.anim_time)
 
-            elif self.anim and not self.anim.running and self.stopped_here:
+            elif self.anim and not self.anim.running and not self.ready_to_go:
 
                 ## les portes sont fermées, on repart
                 #del self.anim
                 #self.anim = None
+                self.unactiv_zone()
+                self.ready_to_go = True
+                self.anim = None
+                return 0.1
+
+            elif self.ready_to_go:
                 return 0.1
 
             return 0
@@ -163,7 +211,6 @@ class Train():
 
         return s
     speed = property(_speed)
-
 
 # lines
 
@@ -291,6 +338,33 @@ class Street():
         self.y = y+self.box.y
         self.x = x+self.box.x
 
+        #zones/items
+        if True:
+            #zones
+            for zone in self.zones:
+                zone=self.zones[zone]
+                x_r = zone.gex + x
+                y_r = zone.gey + y
+                zone.update(x_r,y_r)
+
+                # load/deload
+                if (x_r+zone.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and zone.loaded:
+                    zone.deload()
+                elif (x_r+zone.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not zone.loaded:
+                    zone.load(self)
+
+            #items
+            for item in self.items:
+                x_r = item.gex + x
+                y_r = item.gey + y
+                zone.update(x_r,y_r)
+
+                # load/deload
+                if (x_r+item.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and item.loaded:
+                    item.deload()
+                elif (x_r+item.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not item.loaded:
+                    item.load(self)
+
         # bg
         if True:
             if hasattr(self,'streetbg'):
@@ -353,28 +427,38 @@ class Street():
 
     def assign_zones(self,zones):
         for zone in zones:
-            self.zones[zone.name] = zone
+            self.add_zone(zone)
 
-            if isinstance(zone,o.Porte) and zone.destination not in self.neighbor:
-                self.neighbor[zone.destination] = {'door':zone}
-                if type(zone.destination) == Street:
-                    self.neighbors_street[zone.destination] = {'door':zone}
+    def add_zone(self,zone):
+        self.zones[zone.name] = zone
+        #print('added zone',zone.name,zone.gex,zone.gey)
+
+        if isinstance(zone,o.Porte) and zone.destination not in self.neighbor:
+            self.neighbor[zone.destination] = {'door':zone}
+            if type(zone.destination) == Street:
+                self.neighbors_street[zone.destination] = {'door':zone}
+
+    def del_zone(self,zone):
+        if zone.name in self.zones and zone == self.zones[zone.name]:
+            if zone.loaded:
+                zone.deload()
+            del self.zones[zone.name]
 
     def add_item(self,item):
         if type(item) == type([]):
             for ite in item:
                 self.items.append(ite)
-                if self.visible:
-                    ite.load(self)
+                #if self.visible:
+                #    ite.load(self)
         else:
             self.items.append(item)
-            if self.visible:
-                item.load(self)
+            #if self.visible:
+            #    item.load(self)
 
     def del_item(self,item):
         if item in self.items:
             self.items.remove(item)
-            if self.visible:
+            if item.loaded:
                 item.deload()
 
     def add_hum(self,hum):
@@ -382,17 +466,17 @@ class Street():
         if type(hum) == type([]):
             for h in hum:
                 self.humans.append(h)
-                if self.visible:
-                    h.load()
+                #if self.visible:
+                #    h.load()
         else:
             self.humans.append(hum)
-            if self.visible:
-                hum.load()
+            #if self.visible:
+            #    hum.load()
 
     def del_hum(self,hum):
         if hum in self.humans:
             self.humans.remove(hum)
-            if self.visible:
+            if hum.loaded:
                 hum.deload()
 
 
@@ -571,11 +655,12 @@ class Street():
             self.catalog.append( {'x':item.box.cx,'y':item.box.cy,'type':'item','nom':item.name,'elem':item} )
 
         self.catalog.sort(key=lambda x:x.get('x'))
+        #print(self.catalog)
 
 
     # bots
     def rand_pos(self):
-        x,y = random.randint(1,self.rxf-p.SIZE_SPR-1),random.randint(*self.Y)
+        x,y = random.randint(1,int(self.rxf)-p.SIZE_SPR-1),random.randint(*self.Y)
         return (x,y)
 
     def get_pos(self,hum):

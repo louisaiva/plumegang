@@ -827,7 +827,7 @@ class Anim():
     def anim(self,dt=0):
 
         self.k += 1
-        print(cyan('anim '+str(self.k)))
+        #print(cyan('anim '+str(self.k)))
 
         sman.set_text(self.id,self.texts[self.k])
 
@@ -838,7 +838,7 @@ class Anim():
             bertran.schedule_once(self.anim,dt)
 
     def finish(self,dt):
-        print(cyan('finished'))
+        #print(cyan('finished'))
 
         if hasattr(self,'text'):
             sman.set_text(self.id,self.text)
@@ -1267,7 +1267,7 @@ MOVE_Y = False
 
 class Camera():
 
-    def __init__(self):
+    def __init__(self,followin=None):
 
         self._X,self._Y = 0,0
         #self.BGX,self.BGY = 0,0
@@ -1275,61 +1275,56 @@ class Camera():
 
         self.d = 0.2
 
-        self.speed = SPEED
-        self.runspeed = RSPEED
+        self.followin = followin
+        if followin:
+            self.street = followin.street
+        else:
+            self.street = None
 
         self.activate = True
 
-    def update(self,persobox,street,run=False):
+    def update(self,street,run=False):
 
         if self.activate:
-            #scr = (1920,1080)
-            #scr = scr.size
+
+            movin_box = self.followin.realbox
+            speed = self.followin.realspeed
+            #print('speed',speed)
+
             moved = [False,False]
 
             x,xf = street.xxf
-            #print(x,xf)
-
-            if run:
-                speed = self.runspeed
-            else:
-                speed = self.speed
 
             #X
-            if persobox[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +speed):
-                if run:
-                    self.rlessx()
-                else:
-                    self.lessx()
+            if movin_box[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +speed):
+                #self.follow_lessX()
+                self.X -= self.followin.realspeed
                 moved[0] = True
-
-            elif persobox[0] < scr.size[0]/5 and (x == None or street.x < -speed):
-                if run:
-                    self.rmorex()
-                else:
-                    self.morex()
+            elif movin_box[0] < scr.size[0]/5 and (x == None or street.x < -speed):
+                #self.follow_moreX()
+                self.X += self.followin.realspeed
                 moved[0] = True
 
             if xf != None and street.rxf < scr.size[0]:
-                if street.rxf < scr.size[0] - self.runspeed:
-                    self.rmorex()
+                if street.rxf < scr.size[0] - RSPEED:
+                    self.X += RSPEED
                 else:
-                    self.morex()
+                    self.X += SPEED
                 moved[0] = True
             elif x != None and street.x > 0:
-                if street.x > self.runspeed:
-                    self.rlessx()
+                if street.x > RSPEED:
+                    self.X -= RSPEED
                 else:
-                    self.lessx()
+                    self.X -= SPEED
                 moved[0] = True
 
 
             #Y
             if MOVE_Y:
-                if persobox[3] > 19*scr.size[1]/20:
+                if movin_box[3] > 19*scr.size[1]/20:
                     self.lessy()
                     moved[1] = True
-                elif persobox[1] < scr.size[1]/20:
+                elif movin_box[1] < scr.size[1]/20:
                     self.morey()
                     moved[1] = True
 
@@ -1338,7 +1333,7 @@ class Camera():
                 self._dy = 0
             if not moved[0]:
                 if run:
-                    self.update(persobox,street)
+                    self.update(movin_box,street)
                 else:
                     self._dx = 0
 
@@ -1349,36 +1344,8 @@ class Camera():
 
         self._X = - ge_x + real_x
 
-    ##
-
-    # if perso walks
-    def morex(self):
-        self._X += self.speed
-        self._dx = self.speed
-        #self.BGX = self._X*self.d
-    def morey(self):
-        self._Y += self.speed
-        self._dy = self.speed
-        #self.BGY = self._Y*self.d
-    def lessx(self):
-        self._X -= self.speed
-        self._dx = -self.speed
-        #self.BGX = self._X*self.d
-    def lessy(self):
-        self._Y -= self.speed
-        self._dy = -self.speed
-        #self.BGY = self._Y*self.d
-
-    # if perso runs
-    def rmorex(self):
-        self._X += self.runspeed
-        self._dx = self.runspeed
-        #self.BGX = self._X*self.d
-    def rlessx(self):
-        self._X -= self.runspeed
-        self._dx = -self.runspeed
-        #self.BGX = self._X*self.d
-
+    def follow(self,thg):
+        self.followin = thg
 
     ##
 

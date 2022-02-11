@@ -153,3 +153,5 @@ https://www.pinterest.fr/search/pins/?q=pixel%20art%20city&rs=typed&term_meta[]=
   mais le sprite passe derrière les builds et avance très vite puis ça bascule sur une nouvelle street d'un nouveau quartier
 
   -> cool pour les bots : pas obligé de se déplacer tout le temps à pied, on peut les voir arriver en sbahn oklm pour aller au taf
+
+# avoir un metier a part

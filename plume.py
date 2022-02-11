@@ -123,16 +123,13 @@ class App():
         # humans
         if True:
 
-            #print(red('OOOOOOOOOOOOOOOOOOOOOOOOOOOO'))
             ## PERSOS
             self.perso = p.Perso('rapper',fill=FILL_INV)
+            g.Cam.follow(self.perso)
             p.BOTS.append(self.perso)
-            #o2.NY.CITY['home'].add_owner(self.perso)
 
-            #print(blue('OOOOOOOOOOOOOOOOOOOOOOOOOOOO'))
             #poto
             p.BOTS.append(p.Fan('perso3',o2.NY.CITY['home'].rand_pos(),street='home'))
-            #o2.NY.CITY['home'].add_owner(p.BOTS[-1])
             self.perso.assign_poto(p.BOTS[-1])
 
 
@@ -206,7 +203,7 @@ class App():
             # distrokid
             zones = []
             zones.append(o.SimpleReleaser(1670,210,o.distro))
-            #o2.NY.CITY['distrokid'].assign_zones(zones)
+            o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
 
@@ -1031,8 +1028,8 @@ class App():
 
             perso_street = o2.NY.CITY[self.perso.street]
 
-            # ZONE/ITEMS
-            if True:
+            """# ZONE/ITEMS
+            if False:
 
                 #--# zones elem
                 for zone in perso_street.zones:
@@ -1040,7 +1037,7 @@ class App():
                     x_r = zone.gex + g.Cam.X + g.GodCam.X
                     y_r = zone.gey + g.Cam.Y
                     #g.sman.modify(zone.skin_id,(x_r,y_r))
-                    zone.move(x_r,y_r)
+                    zone.update(x_r,y_r)
 
                     # load/deload
                     if (x_r+zone.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and zone.loaded:
@@ -1054,13 +1051,16 @@ class App():
                     x_r = item.gex + g.Cam.X + g.GodCam.X
                     y_r = item.gey + g.Cam.Y
                     #g.sman.modify(item.skin_id,(x_r,y_r))
-                    item.move(x_r,y_r)
+                    zone.update(x_r,y_r)
 
                     # load/deload
                     if (x_r+item.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and item.loaded:
                         item.deload()
                     elif (x_r+item.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not item.loaded:
-                        item.load(perso_street)
+                        item.load(perso_street)"""
+
+            # STREETS
+            perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
 
             # PERSOS
             if True:
@@ -1068,21 +1068,8 @@ class App():
                 ## update catalog:
                 perso_street.update_catalog()
                 for hum in perso_street.humans:
-                    x_r = hum.gex + g.Cam.X + g.GodCam.X
-                    y_r = hum.gey + g.Cam.Y
-                    if hasattr(hum,'skin_id'):
-                        g.sman.modify(hum.skin_id,(x_r,y_r))
-
-                    # load/deload
-                    if (x_r+p.SIZE_SPR <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and hum.loaded:
-                        hum.deload()
-                    elif (x_r+p.SIZE_SPR > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not hum.loaded:
-                        hum.load()
-
                     # update
-                    hum.update_env()
-                    hum.update_lab()
-                    hum.update()
+                    hum.update(perso_street.name,g.Cam.X + g.GodCam.X,g.Cam.Y)
                     hum.being_bot()
                     hum.check_do()
 
@@ -1108,9 +1095,7 @@ class App():
                 for street in perso_street.neighbor:
                     street.update_catalog()
                     for hum in street.humans:
-                        hum.update_env()
-                        #hum.update_lab()
-                        hum.update()
+                        hum.update(perso_street.name,g.Cam.X + g.GodCam.X,g.Cam.Y)
                         hum.being_bot()
                         hum.check_do()
 
@@ -1143,9 +1128,6 @@ class App():
                 g.sman.modify(self.sprids['bg1.1'],(x_bg1,y_bg1))
                 g.sman.modify(self.sprids['bg1.2'],(x_bg2,y_bg2))
 
-            # STREETS
-            perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
-
             # BAHN
             for sbahn in o2.NY.BAHN:
                 o2.NY.BAHN[sbahn].update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
@@ -1154,13 +1136,7 @@ class App():
             # CAM
             if True:
 
-                run = False
-                if g.joystick and g.joystick.z > 0.4:
-                    run = True
-                elif g.keys[key.LSHIFT]:
-                    run = True
-
-                g.Cam.update(self.perso.realbox,perso_street,run)
+                g.Cam.update(perso_street)
 
             # if not pause, go streamin and particles
             if g.bertran.speed > 0:
@@ -1171,7 +1147,7 @@ class App():
 
                 ## fans are streaming
                 for i in range(len(self.perso.disco)):
-                    chance = random.randint(0,int(60*moyfps))
+                    chance = random.randint(0,int(60*g.FPS))
                     malus = 1-i*0.2
                     if chance < self.perso.nb_fans*malus:
                         random.choice(p.BOTS+p.GUYS).stream(self.perso.disco[i])

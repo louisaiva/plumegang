@@ -277,8 +277,11 @@ class Human():
         self.speed = r.randint(10,25)
         self.yspeed = 5
         self.runspeed = 100
+        self._speed = 0
         self.id = get_id('hum')
         self.cheat = False
+
+        self.vehicle = None
 
         #inventory
         self.inventory = {}
@@ -571,11 +574,11 @@ class Human():
                         del g.longpress[key.Z]
                     if key.S in g.longpress:
                         del g.longpress[key.S]
-
             else:
                 if colli_elem != None:
                     self.element_colli = colli_elem
                     self.element_colli.hoover()
+
         else:
             self.element_colli = colli_elem
 
@@ -608,9 +611,40 @@ class Human():
         self.element_colli = colli_elem
         #print(self.element_colli)
 
-    def update(self):
+    def update(self,street,x,y):
 
         t = time.time()
+
+        if street == self.street:
+            # getting pos
+            if self.vehicle:
+
+                self.gex = self.vehicle.gcx
+                self.gey = self.vehicle.gey
+
+                if self.vehicle.street != self.street:
+                    print(self.gex,self.vehicle.street)
+                    self.tp(x=self.gex,street=o2.NY.CITY[self.vehicle.street])
+
+                if hasattr(self,'skin_id') and g.sman.spr(self.skin_id).visible:
+                    g.sman.unhide(self.skin_id,True)
+
+            x_r = self.gex + x
+            y_r = self.gey + y
+
+            # load/deload
+            if (x_r+SIZE_SPR <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and self.loaded:
+                self.deload()
+            elif (x_r+SIZE_SPR > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not self.loaded:
+                self.load()
+
+            # updatin pos
+            if hasattr(self,'skin_id'):
+                g.sman.modify(self.skin_id,(x_r,y_r))
+
+        # updates
+        self.update_env()
+        self.update_lab()
 
         # feedin/hydration
         if True:
@@ -910,6 +944,8 @@ class Human():
             ## checking thg
             if moved :
 
+                self._speed = speed
+
                 if speed > self.speed:
                     self.addsub_hyd(-0.2)
                     self.addsub_fed()
@@ -930,7 +966,6 @@ class Human():
                 else:
                     self.do('move')
                 self.update_lab()
-                self.update()
 
                 self.time_last_move = time.time()
                 self.check_colli()
@@ -1082,7 +1117,9 @@ class Human():
         self.do('drink')
         self.addsub_hyd(qté/10)
 
-
+    def embarq(self,vehicle):
+        self.vehicle = vehicle
+        #if type(self) == Perso : g.Cam.follow(vehicle)
 
     ## INVENT / SELECTER
 
@@ -1758,7 +1795,9 @@ class Human():
         if hasattr(self,'skin_id'):
             return g.sman.realbox(self.skin_id)
         else:
-            return 0,0,SIZE_SPR,SIZE_SPR
+            x = self.gex + g.Cam.X + g.GodCam.X
+            y = self.gey + g.Cam.Y
+            return x,y,SIZE_SPR,SIZE_SPR
     realbox = property(_realbox)
     def _gebox(self):
         return self.gex,self.gey,self.gex+SIZE_SPR,self.gey+SIZE_SPR
@@ -1782,6 +1821,13 @@ class Human():
             return True
         return False
     alive = property(_alive)
+
+
+    def _realspeed(self):
+        if self.vehicle:
+            return self.vehicle.realspeed
+        return self._speed
+    realspeed = property(_realspeed)
 
 # les gens que tu croises dans la rue
 class Fan(Human):
@@ -2249,9 +2295,9 @@ class Perso(Rappeur):
         pos = g.lman.labels[self.hud.labids['coin_lab']].x +r.randint(-2,2),g.lman.labels[self.hud.labids['coin_lab']].y+20
         g.pman.addLabPart(s,pos,color=c['yellow'],key='icons',font_name=1,anchor=('right','center'),group='up-1',vis=self.hud.visible)
 
-    def update(self):
+    def update(self,street,x,y):
 
-        super(Perso,self).update()
+        super(Perso,self).update(street,x,y)
         self.relhud.update()
         self.minirelhud.update()
         self.fedhydhud.update()
