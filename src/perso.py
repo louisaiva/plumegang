@@ -282,6 +282,7 @@ class Human():
         self.cheat = False
 
         self.vehicle = None
+        #self.static = False
 
         #inventory
         self.inventory = {}
@@ -306,9 +307,6 @@ class Human():
         self.damage = r.randint(10, 15)
         self.fed = 100
         self.hyd = 100
-
-        #items
-        #self.keys = []
 
         #états
         self.cred = r.randint(-50,50)
@@ -633,6 +631,8 @@ class Human():
 
                 if hasattr(self,'skin_id') and g.sman.spr(self.skin_id).visible:
                     g.sman.unhide(self.skin_id,True)
+            elif hasattr(self,'skin_id') and not g.sman.spr(self.skin_id).visible:
+                g.sman.unhide(self.skin_id)
 
             x_r = self.gex + x
             y_r = self.gey + y
@@ -842,27 +842,29 @@ class Human():
             moved = False
             activated_smthg = False
 
-            #R/L
-            if 'write' not in self.doing and 'wait' not in self.doing:
+            if not self.static:
 
-                if dir == 'R' :
-                    if (maxx[1] == None or maxx[1] > self.gex+speed+SIZE_SPR ):
-                        self.gex+=speed
+                #R/L
+                if 'write' not in self.doing and 'wait' not in self.doing:
+
+                    if dir == 'R' :
+                        if (maxx[1] == None or maxx[1] > self.gex+speed+SIZE_SPR ):
+                            self.gex+=speed
+                            moved = True
+
+                    elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-speed ):
+                        self.gex-=speed
                         moved = True
 
-                elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-speed ):
-                    self.gex-=speed
-                    moved = True
-
-            # up/down
-            if dir == 'up':
-                if maxy[1] > self.gey+self.yspeed:
-                    self.gey+=self.yspeed
-                    moved = True
-            elif dir == 'down':
-                if maxy[0] < self.gey-self.yspeed :
-                    self.gey-=self.yspeed
-                    moved = True
+                # up/down
+                if dir == 'up':
+                    if maxy[1] > self.gey+self.yspeed:
+                        self.gey+=self.yspeed
+                        moved = True
+                elif dir == 'down':
+                    if maxy[0] < self.gey-self.yspeed :
+                        self.gey-=self.yspeed
+                        moved = True
 
             ## check activations
             if type(self) == Perso:
@@ -890,7 +892,7 @@ class Human():
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
 
                         self.element_colli.close(self)
-                    if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
+                    if (maxy[0] >= self.gey-self.yspeed or type(self.vehicle) in [o2.Train]) and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
                         moved = True
@@ -977,18 +979,18 @@ class Human():
             elif not activated_smthg and speed > self.speed:
                 self.move(dir)
 
-    def tp(self,x=None,y=None,street=None,arrival='back'):
+    def tp(self,x=None,y=None,street=None,arrival=None):
 
         if x != None:
             oldx = self.box.x
             self.gex = x
-            self.update_lab()
+            #self.update_lab()
             if type(self) == Perso:
                 g.Cam.tp(self.gex,oldx)
 
         if y != None:
             self.gey = y
-            self.update_lab()
+            #self.update_lab()
 
         if street != None:
             if self.street != street.name:
@@ -1003,16 +1005,16 @@ class Human():
                 if type(self) == Perso:
                     o2.NY.CITY[self.street].load()
 
-                if arrival == 'back':
-                    self.tp(y=o2.NY.CITY[self.street].yyf[1])
-                    self.gey+=4*self.yspeed
-                    g.bertran.schedule_once(self.movedt,0.1,'down')
-                elif arrival == 'front':
-                    self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
-                    self.gey-=4*self.yspeed
-                    g.bertran.schedule_once(self.movedt,0.1,'up')
+        if arrival == 'back':
+            self.tp(y=o2.NY.CITY[self.street].yyf[1])
+            self.gey+=4*self.yspeed
+            g.bertran.schedule_once(self.movedt,0.1,'down')
+        elif arrival == 'front':
+            self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
+            self.gey-=4*self.yspeed
+            g.bertran.schedule_once(self.movedt,0.1,'up')
 
-                self.check_colli()
+        self.check_colli()
 
     def hit(self,dt=0):
         if self.alive:
@@ -1126,6 +1128,18 @@ class Human():
         self.vehicle = vehicle
         self.vehicle.add_pass(self)
         if type(self) == Perso : g.Cam.static = True
+
+    def debarq(self):
+        if self.vehicle:
+
+            pos = r.choice(self.vehicle.exits)
+            self.gex = x=self.vehicle.gcx+pos['dx']-self.box.w/2
+            self.tp(arrival=pos['arrival'])
+
+            self.vehicle.del_pass(self)
+            self.vehicle = None
+
+            if type(self) == Perso : g.Cam.static = False
 
     ## INVENT / SELECTER
 
@@ -1828,6 +1842,20 @@ class Human():
         return False
     alive = property(_alive)
 
+    def _static(self):
+
+        ## VERIFIE LA STATICITE D'UN HUMAIN:
+        # ne peut bouger si il active qqch
+        # ne peut bouger s'il est dans l'un des vehicules sur lequel il n'a pas de controle (train, avion,...)
+
+        if type(self) == Perso and (key.Z in g.longpress or key.S in g.longpress):
+            return True
+        elif type(self) != Perso and ((self,key.Z) in g.longpress or (self,key.S) in g.longpress):
+            return True
+        elif self.vehicle and type(self.vehicle) in [o2.Train]:
+            return True
+        return False
+    static = property(_static)
 
     def _realspeed(self):
         if self.vehicle:

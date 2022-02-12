@@ -31,12 +31,12 @@ class Train():
         self.name = name
         self.circuit = circuit # ex : ['kamour str','street 1','street 3']
         self.station_x = pos # gex de l'arret pour chaque rue : [10230,28000,6200]
-        self.max_speed = 120
+        self.max_speed = 250
         self.realspeed = self.max_speed
         self.stopped_here = False
         #self.stopped_time = None
         self.ready_to_go = False
-        self.stop_time = 2
+        self.stop_time = 4
         self.brake_dist = W_BUILD
 
         # passengers
@@ -61,11 +61,16 @@ class Train():
 
         #zones
 
-        self.zone_boxs = [
+        self.exits = [
+                    {'dx':-260,'arrival':'back','y':225},
+                    {'dx':260,'arrival':'back','y':225}
+                    ] # par rapport au centre
+        self.zones_box = [
                         {'dx':-260},
                         {'dx':260},
                         {'dx':0}
                             ]
+
         y = 250
         self.zones = []
         zone_box = box( y=y , w=200 , h=self.y+200 - y )
@@ -142,7 +147,7 @@ class Train():
     def activ_zone(self):
         #print(cyan('activin zones'))
         for i in range(len(self.zones)):
-            x = self.station_x[self.circuit.index(self.street)]+self.zone_boxs[i]['dx']
+            x = self.station_x[self.circuit.index(self.street)]+self.zones_box[i]['dx']
             self.zones[i].move(x,anc='center')
             NY.CITY[self.street].add_zone(self.zones[i])
 

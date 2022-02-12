@@ -840,7 +840,7 @@ class Porte(Zone_ELEM):
 
         if self.openable(perso):
             x = self.xdest + r.randint(0,self.box.w)-self.box.w/2
-            perso.tp(x=x,street=self.destination)
+            perso.tp(x=x,street=self.destination,arrival='back')
             return self.destination.name
         elif isinstance(perso,p.Perso):
             g.pman.alert('you can\'t go here !')
@@ -907,6 +907,7 @@ class TrainStation(Zone_ELEM):
 
         super(TrainStation,self).__init__(box,get_id(name),'pink','mid',False,False)
         self.labtext = name
+        self.perso_anim = 'door'
 
     def activate(self,perso):
         super(TrainStation,self).activate(perso)
@@ -922,10 +923,11 @@ class ExitTrain(Zone_ELEM):
         super(ExitTrain,self).__init__(box,get_id(name),'pink','mid',False,False,position='front')
         self.labtext = name
         self.targets = [o2.Train]
+        self.perso_anim = 'door'
 
     def activate(self,perso):
         super(ExitTrain,self).activate(perso)
-        #perso.debarq(self.train)
+        perso.debarq()
 
 #------# elements item -> item posable au sol dans une street
 
@@ -1266,6 +1268,18 @@ class Map(HUD):
 
                 self.addCol(street.name,box(x,y,w,h),color='delta_purple',group='hud2')
 
+                if street.has_station:
+                    i = street.build_list.index('sbahn')
+                    w,h=self.larg_house,self.larg_house
+                    if not vert:
+                        x = self.ax + (street.pre.x+i)*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                        y = self.ay + street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                    else:
+                        x = self.ax + street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                        y = self.ay + (street.pre.y+i)*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+
+                    self.addCol(street.name+' station',box(x,y,w,h),color='green',group='hud21')
+
             elif street.name == 'home':
                 w,h=self.larg_house,self.larg_house
 
@@ -1324,6 +1338,17 @@ class Map(HUD):
                         y = self.ay + street.pre.y*self.larg_cube
 
                     g.sman.modify(self.sprids[street.name],(x,y))
+
+                    if street.has_station:
+                        i = street.build_list.index('sbahn')
+                        if not vert:
+                            x = self.ax + (street.pre.x+i)*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                            y = self.ay + street.pre.y*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                        else:
+                            x = self.ax + street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+                            y = self.ay + (street.pre.y+i)*self.larg_cube + self.larg_cube/2 -self.larg_house/2
+
+                        g.sman.modify(self.sprids[street.name+' station'],(x,y))
 
                 elif street.name == 'home':
                     x = self.ax + street.pre.x*self.larg_cube + self.larg_cube/2 -self.larg_house/2
