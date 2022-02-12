@@ -529,7 +529,10 @@ class Human():
 
         for elem in list(map(lambda x:x.get('elem'),self.environ)):
             if collisionAB(self.gebox,elem.gebox) :
-                self.collis.append(elem)
+                if isinstance(elem,o.Zone_ELEM) and elem.activable(self):
+                    self.collis.append(elem)
+                elif not isinstance(elem,o.Zone_ELEM):
+                    self.collis.append(elem)
 
         if len(self.collis) > 0:
             self.collis.sort(key=lambda x:x.gey)
@@ -549,6 +552,7 @@ class Human():
             colli_elem = self.collis[k]
         else:
             colli_elem = None
+
 
         if type(self) == Perso:
 
@@ -619,12 +623,13 @@ class Human():
             # getting pos
             if self.vehicle:
 
+                if self.vehicle.street != self.street:
+                    #print(self.gex,self.vehicle.street)
+                    self.tp(x=0,street=o2.NY.CITY[self.vehicle.street])
+                    g.Cam.tp2(self.vehicle.gex)
+
                 self.gex = self.vehicle.gcx
                 self.gey = self.vehicle.gey
-
-                if self.vehicle.street != self.street:
-                    print(self.gex,self.vehicle.street)
-                    self.tp(x=self.gex,street=o2.NY.CITY[self.vehicle.street])
 
                 if hasattr(self,'skin_id') and g.sman.spr(self.skin_id).visible:
                     g.sman.unhide(self.skin_id,True)
@@ -1119,7 +1124,8 @@ class Human():
 
     def embarq(self,vehicle):
         self.vehicle = vehicle
-        #if type(self) == Perso : g.Cam.follow(vehicle)
+        self.vehicle.add_pass(self)
+        if type(self) == Perso : g.Cam.static = True
 
     ## INVENT / SELECTER
 

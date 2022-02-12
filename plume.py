@@ -124,7 +124,7 @@ class App():
         if True:
 
             ## PERSOS
-            self.perso = p.Perso('rapper',fill=FILL_INV)
+            self.perso = p.Perso('rapper',fill=FILL_INV,street='kamour str.')
             g.Cam.follow(self.perso)
             p.BOTS.append(self.perso)
 
@@ -1022,42 +1022,9 @@ class App():
             # HOUR LABEL
             g.lman.set_text(self.lab_time,'  '+str(g.Cyc))
 
-            ## anchor / moving sprites
-
-            #print(len(self.sprids),self.sprids)
+            ## MOVIN SPR
 
             perso_street = o2.NY.CITY[self.perso.street]
-
-            """# ZONE/ITEMS
-            if False:
-
-                #--# zones elem
-                for zone in perso_street.zones:
-                    zone=perso_street.zones[zone]
-                    x_r = zone.gex + g.Cam.X + g.GodCam.X
-                    y_r = zone.gey + g.Cam.Y
-                    #g.sman.modify(zone.skin_id,(x_r,y_r))
-                    zone.update(x_r,y_r)
-
-                    # load/deload
-                    if (x_r+zone.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and zone.loaded:
-                        zone.deload()
-                    elif (x_r+zone.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not zone.loaded:
-                        zone.load(perso_street)
-
-                #--# zones elem item
-                for item in perso_street.items:
-                    #item=perso_street.items[item]
-                    x_r = item.gex + g.Cam.X + g.GodCam.X
-                    y_r = item.gey + g.Cam.Y
-                    #g.sman.modify(item.skin_id,(x_r,y_r))
-                    zone.update(x_r,y_r)
-
-                    # load/deload
-                    if (x_r+item.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and item.loaded:
-                        item.deload()
-                    elif (x_r+item.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not item.loaded:
-                        item.load(perso_street)"""
 
             # STREETS
             perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)

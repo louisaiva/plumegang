@@ -222,6 +222,7 @@ def get_perso_grp(gey):
 """'''''''''''''''''''''''''''''''''
 '''''''ITEMS''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''"""
+
 # -> items sans texture comportant seulement leur essence
 class Item():
     def __init__(self):
@@ -695,9 +696,9 @@ class Zone_ELEM(Zone):
         self.longpress = long
 
 
-        # label
-        #pos = box.x + box.w/2 , box.y + box.h + 20
-        #self.label = g.lman.addLab(self.name,pos,vis=False,anchor = ('center','bottom'),font_size=20,group=group)
+        ## TARGETS : un humain en voiture ne peut activer une porte
+        self.targets = [p.Human]
+
 
         self.color = c['coral']
 
@@ -771,6 +772,19 @@ class Zone_ELEM(Zone):
             pos = self.box.x + self.box.w/2 , self.box.y + self.box.h + 20
             self.label = g.lman.addLab(self.labtext,pos,vis=False,anchor = ('center','bottom'),font_size=20,group='mid')
 
+    def activable(self,thg):
+
+        if isinstance(thg,p.Human) and not thg.vehicle:
+            for target in self.targets:
+                if isinstance(thg,target):
+                    return True
+        elif isinstance(thg,p.Human):
+            for target in self.targets:
+                if isinstance(thg.vehicle,target):
+                    return True
+
+        return False
+
 class Market(Zone_ELEM):
 
     def __init__(self,x,y):
@@ -779,20 +793,6 @@ class Market(Zone_ELEM):
     def activate(self,perso):
         super(Market,self).activate(perso)
         perso.rplum()
-
-class TrainStation(Zone_ELEM):
-
-    def __init__(self,train,box):
-        self.train = train
-        name = train.name
-
-        super(TrainStation,self).__init__(box,get_id(name),'pink','mid',False,False)
-        self.labtext = name
-
-    def activate(self,perso):
-        super(TrainStation,self).activate(perso)
-        #self.train.embarq(perso)
-        perso.embarq(self.train)
 
 class SimpleReleaser(Zone_ELEM):
 
@@ -898,6 +898,34 @@ class Distrib(Zone_ELEM):
         super(Distrib,self).activate(perso)
         perso.grab(Bottle())
 
+#trains
+class TrainStation(Zone_ELEM):
+
+    def __init__(self,train,box):
+        self.train = train
+        name = train.name
+
+        super(TrainStation,self).__init__(box,get_id(name),'pink','mid',False,False)
+        self.labtext = name
+
+    def activate(self,perso):
+        super(TrainStation,self).activate(perso)
+        #self.train.embarq(perso)
+        perso.embarq(self.train)
+
+class ExitTrain(Zone_ELEM):
+
+    def __init__(self,train,box):
+        self.train = train
+        name = 'exit '+train.name
+
+        super(ExitTrain,self).__init__(box,get_id(name),'pink','mid',False,False,position='front')
+        self.labtext = name
+        self.targets = [o2.Train]
+
+    def activate(self,perso):
+        super(ExitTrain,self).activate(perso)
+        #perso.debarq(self.train)
 
 #------# elements item -> item posable au sol dans une street
 

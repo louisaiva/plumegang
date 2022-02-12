@@ -1282,67 +1282,64 @@ class Camera():
             self.street = None
 
         self.activate = True
+        self._static = False
 
-    def update(self,street,run=False):
+    def update(self,street):
 
-        if self.activate:
+        ## if self.static == True alors la caméra va tout le temps bouger
+        # si l'element followed bouge
+        # si c'est False alors on laisse une "zone de liberté", où
+        # le perso peut bouger sans bouger la cam
+
+        if self.activate and not self.static:
 
             movin_box = self.followin.realbox
             speed = self.followin.realspeed
-            #print('speed',speed)
-
-            moved = [False,False]
-
             x,xf = street.xxf
 
             #X
             if movin_box[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +speed):
-                #self.follow_lessX()
                 self.X -= self.followin.realspeed
-                moved[0] = True
             elif movin_box[0] < scr.size[0]/5 and (x == None or street.x < -speed):
-                #self.follow_moreX()
                 self.X += self.followin.realspeed
-                moved[0] = True
 
             if xf != None and street.rxf < scr.size[0]:
                 if street.rxf < scr.size[0] - RSPEED:
                     self.X += RSPEED
                 else:
                     self.X += SPEED
-                moved[0] = True
             elif x != None and street.x > 0:
                 if street.x > RSPEED:
                     self.X -= RSPEED
                 else:
                     self.X -= SPEED
-                moved[0] = True
 
 
             #Y
             if MOVE_Y:
                 if movin_box[3] > 19*scr.size[1]/20:
                     self.lessy()
-                    moved[1] = True
                 elif movin_box[1] < scr.size[1]/20:
                     self.morey()
-                    moved[1] = True
 
-            ### applyin movement to sprites
-            if not moved[1]:
-                self._dy = 0
-            if not moved[0]:
-                if run:
-                    self.update(movin_box,street)
-                else:
-                    self._dx = 0
+            self.X = self.X
+            self.Y = self.Y
+
+        elif self.activate and self.static:
+            self.X = -self.followin.gex + scr.cx
+
 
     def tp(self,ge_x,real_x):
 
         ## ge_x -> position générale du perso après passage par la porte
         ## real_x -> position réelle à l'écran du perso AVANT passage par la porte
-
         self._X = - ge_x + real_x
+        #print(ge_x,real_x,self._X)
+
+    def tp2(self,ge_x):
+        ## ge_x -> position générale du perso après passage par la porte
+        ## utile dans certains cas
+        self._X = - ge_x
 
     def follow(self,thg):
         self.followin = thg
@@ -1372,6 +1369,12 @@ class Camera():
         return self._dy
     dx = property(_dx)
     dy = property(_dy)
+
+    def _gstatic(self):
+        return self._static
+    def _sstatic(self,oth):
+        self._static = oth
+    static = property(_gstatic,_sstatic)
 
 Cam = Camera()
 

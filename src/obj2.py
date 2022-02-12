@@ -3,7 +3,7 @@ CODED by deltasfer
 enjoy
 """
 
-import json,os
+import json,os,time
 from colors import *
 
 from src.utils import *
@@ -31,13 +31,17 @@ class Train():
         self.name = name
         self.circuit = circuit # ex : ['kamour str','street 1','street 3']
         self.station_x = pos # gex de l'arret pour chaque rue : [10230,28000,6200]
-        self.max_speed = 300
+        self.max_speed = 120
         self.realspeed = self.max_speed
         self.stopped_here = False
         #self.stopped_time = None
         self.ready_to_go = False
         self.stop_time = 2
         self.brake_dist = W_BUILD
+
+        # passengers
+        self.passengers = []
+        self.perso_on_board = False
 
         #pos
         self.y = 250+230
@@ -59,7 +63,8 @@ class Train():
 
         self.zone_boxs = [
                         {'dx':-260},
-                        {'dx':260}
+                        {'dx':260},
+                        {'dx':0}
                             ]
         y = 250
         self.zones = []
@@ -67,6 +72,8 @@ class Train():
         self.zones.append(o.TrainStation(self,zone_box))
         zone_box = box( y=y , w=200 , h=self.y+200 - y )
         self.zones.append(o.TrainStation(self,zone_box))
+        zone_box = box( y=y , w=600 , h=self.y+200 - y )
+        self.zones.append(o.ExitTrain(self,zone_box))
 
     def update(self,x,y):
 
@@ -82,6 +89,7 @@ class Train():
             if not hasattr(self,'spr'):
                 # on load le sprite
                 self.spr = g.sman.addSpr(self.text,group='sbahn')
+                #time.sleep(2)
                 g.Cyc.add_spr((self.spr,0.5))
                 if self.anim:
                     self.anim.set_id(self.spr)
@@ -96,22 +104,22 @@ class Train():
 
     # movin
 
-    def move(self,x=None):
+    def tp(self,x):
+        self.gex = x
+        if self.perso_on_board and self.gfx >= NY.CITY[self.street].gfx:
+            self.move_street()
+        elif self.gex >= NY.CITY[self.street].gfx:
+            self.move_street()
 
-        if x != None:
-            # on le place
+    def move(self):
 
-            self.gex = x
-            if self.gex >= NY.CITY[self.street].gfx:
-                self.move_street()
-        else:
-            # on le déplace
-
-            spd = self.speed
-            self.realspeed = spd
-            self.gex += spd
-            if self.gex >= NY.CITY[self.street].gfx:
-                self.move_street()
+        spd = self.speed
+        self.realspeed = spd
+        self.gex += spd
+        if self.perso_on_board and self.gfx >= NY.CITY[self.street].gfx:
+            self.move_street()
+        elif self.gex >= NY.CITY[self.street].gfx:
+            self.move_street()
 
     def move_street(self):
 
@@ -121,7 +129,9 @@ class Train():
         else: i+= 1
 
         self.street = self.circuit[i]
-        self.gex = NY.CITY[self.street].box.x - self.w
+        self.gex = NY.CITY[self.street].box.x
+        if not self.perso_on_board:
+            self.gex -= self.w
         self.stopped_here = False
         self.ready_to_go = False
 
@@ -130,18 +140,32 @@ class Train():
     # zone
 
     def activ_zone(self):
-        print(cyan('activin zones'))
+        #print(cyan('activin zones'))
         for i in range(len(self.zones)):
             x = self.station_x[self.circuit.index(self.street)]+self.zone_boxs[i]['dx']
             self.zones[i].move(x,anc='center')
             NY.CITY[self.street].add_zone(self.zones[i])
 
     def unactiv_zone(self):
-        print(cyan('unactivin zones'))
+        #print(cyan('unactivin zones'))
         for zone in self.zones:
             NY.CITY[self.street].del_zone(zone)
 
     # takin people
+    def add_pass(self,hum):
+        if hum not in self.passengers:
+            self.passengers.append(hum)
+            if type(hum) == p.Perso:
+                self.perso_on_board = True
+
+    def del_pass(self,hum):
+        if hum in self.passengers:
+            self.passengers.remove(hum)
+            if type(hum) == p.Perso:
+                for perso in self.passengers:
+                    if type(perso) == p.Perso:
+                        return
+                self.perso_on_board = False
 
     ##
     def _gfx(self):
@@ -1194,7 +1218,7 @@ builds_key = ['empty','stand','bat'] # va être donné aléatoirement si ce n'es
 '''''''PART 4 : GENERATION '''''''''
 '''''''''''''''''''''''''''''''''"""
 
-nb_iterations = 3
+nb_iterations = 5
 
 def create_map():
 
@@ -1256,7 +1280,7 @@ def create_map():
     circ_sbahn = [rue_princ]
 
     try:
-        nb = 2
+        nb = 3
         for i in range(nb):
             chosen = r.choice(rues)
             #print(i,chosen.name)
