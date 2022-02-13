@@ -1161,6 +1161,10 @@ class Cycle():
         MODE_COLOR = not MODE_COLOR
         self.newteinte()
 
+    def tick_set(self,tick):
+        self.tick = tick - 1
+        self.ticked()
+
     #rgb
     def R(self,dayperc):
         p = (dayperc*2-1)**2
@@ -1491,59 +1495,3 @@ class GodCamera():
     dy = property(_dy)
 
 GodCam = GodCamera()
-
-##### CONSOLE
-
-class Console():
-
-    def __init__(self):
-
-        self.historic = []
-        self.ids = []
-        self.x,self.y = 10,300
-        self.dt = 128
-        self.size = 20
-        self.max_length = 25
-        self.visible = True
-
-    def say(self,*args):
-
-        print(*args)
-        args = [str(x) for x in args]
-        cmd = ' '.join(args)
-
-        self.historic.append(cmd)
-        for id in self.ids:
-            pman.modify_single(id,dy=self.size+5)
-        id = pman.addLabPart(cmd,self.pos,self.dt,font_size=self.size,anchor=('left','center'),key='cmd',vis=self.visible,group='ui',use_str_bien=False)
-        self.ids.append(id)
-        if len(self.ids) >= self.max_length:
-            del self.ids[0]
-
-    def colorsay(self,col,*args):
-
-        args = [str(x) for x in args]
-        cmd = ' '.join(args)
-        print(color(cmd,col))
-
-        self.historic.append(cmd)
-        for id in self.ids:
-            pman.modify_single(id,dy=self.size+5)
-        id = pman.addLabPart(cmd,self.pos,self.dt,font_size=self.size,color=c[col],anchor=('left','center'),key='cmd',vis=self.visible,group='ui',use_str_bien=False)
-        self.ids.append(id)
-        if len(self.ids) >= self.max_length:
-            del self.ids[0]
-
-    def rollhide(self):
-        pman.unhide('cmd',self.visible)
-        self.visible = not self.visible
-
-    def pos():
-        def fget(self):
-            return self.x,self.y
-        def fset(self, value):
-            self.x,self.y = value
-        return locals()
-    pos = property(**pos())
-
-cmd = Console()

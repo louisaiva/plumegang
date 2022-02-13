@@ -11,6 +11,7 @@ from src import graphic as g
 from src import obj as o
 from src import perso as p
 import random as r
+from src import cmd
 
 Y = 0,225
 maxY = 300
@@ -144,7 +145,7 @@ class Train():
         self.ready_to_go = False
 
         #print(color(self.name+' entering '+self.street,'yellow'))
-        g.cmd.colorsay('yellow',self.name,'entering',self.street)
+        cmd.colorsay('yellow',self.name,'entering',self.street)
 
     # zone
 
@@ -212,7 +213,7 @@ class Train():
 
                 self.stopped_here = True
                 self.activ_zone()
-                g.cmd.colorsay('cyan',self.name,'stopped')
+                cmd.colorsay('cyan',self.name,'stopped')
 
                 ## On vient d'arriver les portes doivent s'ouvrir
                 if not hasattr(self,'spr'):

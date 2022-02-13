@@ -20,6 +20,7 @@ from src import perso as p
 from src import obj2 as o2
 from src import graphic as g
 from src import menu as m
+from src import cmd
 
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__)) # fopatouché
@@ -242,6 +243,8 @@ class App():
             # keys
             g.keys = key.KeyStateHandler()
             self.window.push_handlers(g.keys)
+
+            self.focus = None
             #g.longpress = {}
             #g.cooldown = 0.5
 
@@ -530,90 +533,100 @@ class App():
 
     def on_key_press(self,symbol,modifiers):
 
-        ## real keys
-        if symbol == key.F1:
-            self.screen_capture()
+        if not self.focus:
 
-        elif symbol == key.G:
-            g.print_groups()
+            ## real keys
+            if symbol == key.F1:
+                self.screen_capture()
 
-        elif symbol == key.T:
-            g.cmd.rollhide()
+            elif symbol == key.G:
+                g.print_groups()
 
-        if self.action == "play":
+            elif symbol == key.T:
+                cmd.roll_activate(self)
 
-            if symbol == key.ESCAPE:
-                self.change_action('pause')
-                if not ESK_QUIT:
+            elif symbol == key.Y:
+                cmd.rollhide()
+
+            if self.action == "play":
+
+                if symbol == key.ESCAPE:
+                    self.change_action('pause')
+                    if not ESK_QUIT:
+                        return pyglet.event.EVENT_HANDLED
+                #affiche les différents OrderedGroup d'affichage
+
+                elif symbol == key.B:
+                    print(self.perso.invhud)
+                    print(self.perso.plume)
+
+                if self.perso.alive:
+
+                    if symbol == key.A:
+                        self.perso.drop_sel()
+
+                    elif symbol == key.SPACE:
+                        self.perso.act()
+
+                    elif symbol == key.X:
+                        self.perso.hud.rollhide()
+                        self.perso.lifehud.rollhide()
+                        self.perso.selhud.rollhide()
+                        self.perso.fedhydhud.rollhide()
+
+                    elif symbol == key.E:
+                        self.perso.invhud.rollhide()
+
+                    elif symbol == key.F:
+                        #self.perso.speak()
+                        self.perso.rollspeak(g.M)
+
+                    elif symbol == key.V:
+                        # on assigne le bot le plus proche à être le poto
+                        if len(self.perso.hum_env) > 0:
+                            bot = self.perso.hum_env[0]
+                            self.perso.assign_poto(bot)
+
+                    elif symbol == key.M:
+                        self.perso.bigmap.rollhide()
+
+                    elif symbol == key.TAB:
+                        self.perso.relhud.unhide()
+
+                    elif symbol == key.K:
+                        self.perso.minirelhud.rollhide()
+                        #self.perso.poto.attack_hum(0,self.perso)
+
+                    elif symbol == key.L:
+                        self.perso.chartshud.rollhide()
+
+            elif self.action == 'pause':
+
+                if symbol == key.ESCAPE:
+                    res = self.menu.unclick()
+                    self.apply_menu(res)
+                    if not ESK_QUIT:
+                        return pyglet.event.EVENT_HANDLED
+
+                elif symbol == key.BACKSPACE:
+                    res = self.menu.unclick()
+                    self.apply_menu(res)
                     return pyglet.event.EVENT_HANDLED
-            #affiche les différents OrderedGroup d'affichage
 
-            elif symbol == key.B:
-                print(self.perso.invhud)
-                print(self.perso.plume)
+                elif symbol == key.ENTER:
+                    res = self.menu.click()
+                    self.apply_menu(res)
 
-            if self.perso.alive:
+                elif symbol == key.UP:
+                    self.menu.up()
 
-                if symbol == key.A:
-                    self.perso.drop_sel()
+                elif symbol == key.DOWN:
+                    self.menu.down()
 
-                elif symbol == key.SPACE:
-                    self.perso.act()
-
-                elif symbol == key.X:
-                    self.perso.hud.rollhide()
-                    self.perso.lifehud.rollhide()
-                    self.perso.selhud.rollhide()
-                    self.perso.fedhydhud.rollhide()
-
-                elif symbol == key.E:
-                    self.perso.invhud.rollhide()
-
-                elif symbol == key.F:
-                    #self.perso.speak()
-                    self.perso.rollspeak(g.M)
-
-                elif symbol == key.V:
-                    # on assigne le bot le plus proche à être le poto
-                    if len(self.perso.hum_env) > 0:
-                        bot = self.perso.hum_env[0]
-                        self.perso.assign_poto(bot)
-
-                elif symbol == key.M:
-                    self.perso.bigmap.rollhide()
-
-                elif symbol == key.TAB:
-                    self.perso.relhud.unhide()
-
-                elif symbol == key.K:
-                    self.perso.minirelhud.rollhide()
-                    #self.perso.poto.attack_hum(0,self.perso)
-
-                elif symbol == key.L:
-                    self.perso.chartshud.rollhide()
-
-        elif self.action == 'pause':
-
+        else:
             if symbol == key.ESCAPE:
-                res = self.menu.unclick()
-                self.apply_menu(res)
-                if not ESK_QUIT:
-                    return pyglet.event.EVENT_HANDLED
-
-            elif symbol == key.BACKSPACE:
-                res = self.menu.unclick()
-                self.apply_menu(res)
+                cmd.roll_activate(self)
                 return pyglet.event.EVENT_HANDLED
-
-            elif symbol == key.ENTER:
-                res = self.menu.click()
-                self.apply_menu(res)
-
-            elif symbol == key.UP:
-                self.menu.up()
-
-            elif symbol == key.DOWN:
-                self.menu.down()
 
     def on_key_release(self,symbol,modifiers):
 
@@ -927,15 +940,34 @@ class App():
                 elif hat_y < 0:
                     self.perso.roll_sel()
 
+    ## WRITING
+
+    def set_focus(self,dt,focus):
+        if self.focus != focus:
+            self.focus = focus
+
+    def on_text(self,text):
+        if self.focus:
+            #print([text])
+            if text == '\r':
+                self.focus.enter(self.perso)
+            else:
+                self.focus.caret.on_text(text)
+
+    def on_text_motion(self, motion):
+        if self.focus:
+            self.focus.caret.on_text_motion(motion)
+
+    def on_text_motion_select(self, motion):
+        if self.focus:
+            self.focus.caret.on_text_motion_select(motion)
 
     ### LOOP
-
     def events(self):
 
-        if self.action == "play":
+        if self.action == "play" and not self.focus:
 
             if not self.gameover:
-
 
                 speed = self.perso.speed
                 if g.keys[key.LSHIFT]:

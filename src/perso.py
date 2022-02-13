@@ -13,6 +13,7 @@ from src import names as n
 from src import obj as o
 from src import obj2 as o2
 from src import voc as v
+from src import cmd
 import pyglet.gl as gl
 
 SIZE_SPR = 256
@@ -1071,7 +1072,7 @@ class Human():
 
         if (self.life <= 0) and 'die' not in self.doing:
             #print(red())
-            g.cmd.colorsay('red',hitter.name,'killed',self.name)
+            cmd.colorsay('red',hitter.name,'killed',self.name)
             self.die()
 
         if self.alive and type(self) != Perso:
@@ -2381,4 +2382,3 @@ def update_charts():
 
     charts['artists'].sort(key=lambda x:x.nb_streams,reverse=True)
     top_20_artists = charts['artists'][:20]
-    #g.cmd.say(top_20_artists)

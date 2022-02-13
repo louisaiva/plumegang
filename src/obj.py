@@ -13,6 +13,7 @@ from src import names as n
 from src import obj2 as o2
 from src import perso as p
 from collections import OrderedDict
+from src import cmd
 
 """'''''''''''''''''''''''''''''''''
 '''''''INIT'''''''''''''''''''''''''
@@ -731,7 +732,7 @@ class Zone_ELEM(Zone):
     def activate(self,perso):
 
         #print(perso.name,'just activated',self.labtext)
-        g.cmd.say(perso.name,'just activated',self.labtext)
+        cmd.say(perso.name,'just activated',self.labtext)
         if hasattr(self,'label') and isinstance(perso,p.Perso):
             g.lman.modify(self.label,color=self.color)
 
