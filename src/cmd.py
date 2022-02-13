@@ -64,6 +64,32 @@ def cmds():
 
         hum.nb_streams = qté
 
+    def set_money(name,qté):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        if qté: qté = int(qté)
+
+        hum.money = qté
+
+    def set_fans(name,qté):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        if qté: qté = int(qté)
+
+        hum.nb_fans = qté
+
     def kill(name):
         hum = None
         for h in p.BOTS+p.GUYS:
@@ -249,15 +275,18 @@ class Console():
         if len(self.input_historic) >= abs(self.point_input - 1):
             self.point_input -= 1
             self.document.text = self.input_historic[self.point_input]
+            self.caret.position = len(self.document.text)
 
     def down(self):
         if self.point_input:
             self.point_input += 1
             if self.point_input < 0:
                 self.document.text = self.input_historic[self.point_input]
+                self.caret.position = len(self.document.text)
             else:
                 self.point_input = None
                 self.document.text = ''
+                self.caret.position = len(self.document.text)
 
     #
     def pos():
