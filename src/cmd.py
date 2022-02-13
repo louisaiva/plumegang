@@ -51,6 +51,19 @@ def cmds():
 
         hum.tp(street=o2.NY.CITY[street])
 
+    def set_streams(name,qté):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        if qté: qté = int(qté)
+
+        hum.nb_streams = qté
+
     def kill(name):
         hum = None
         for h in p.BOTS+p.GUYS:
@@ -107,6 +120,9 @@ class Console():
         self.layout.position = self.x,self.y-3*self.size
         self.caret = pyglet.text.caret.Caret(self.layout,batch=g.tman.batch, color =(255, 255, 255))
         self.caret.set_style({'font_name':self.font,'font_size':self.size,'color':(255,255,255)})
+
+        self.input_historic = []
+        self.point_input = None
 
     def roll_activate(self,window=None):
         if not self.activated:
@@ -175,6 +191,9 @@ class Console():
                         result = commands[par[0]]( *par[1:] )
                         if result == None:
                             self.colorsay('green','command sucessful !')
+                            if self.document.text in self.input_historic:
+                                self.input_historic.remove(self.document.text)
+                            self.input_historic.append(self.document.text)
                             self.roll_activate(self.window)
                             return
                         else:
@@ -185,6 +204,10 @@ class Console():
 
             else:
                 self.say('<'+hum.name+'>',self.document.text)
+
+            if self.document.text in self.input_historic:
+                self.input_historic.remove(self.document.text)
+            self.input_historic.append(self.document.text)
             self.document.text = ''
 
     def say(self,*args):
@@ -219,6 +242,22 @@ class Console():
         g.pman.unhide('cmd',self.visible)
         if hasattr(self,'bg'): g.sman.unhide([self.bg,self.rect],self.visible)
         self.visible = not self.visible
+
+    def up(self):
+        if not self.point_input:
+            self.point_input = 0
+        if len(self.input_historic) >= abs(self.point_input - 1):
+            self.point_input -= 1
+            self.document.text = self.input_historic[self.point_input]
+
+    def down(self):
+        if self.point_input:
+            self.point_input += 1
+            if self.point_input < 0:
+                self.document.text = self.input_historic[self.point_input]
+            else:
+                self.point_input = None
+                self.document.text = ''
 
     #
     def pos():

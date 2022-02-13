@@ -953,10 +953,18 @@ class App():
                 self.focus.enter(self.perso)
             else:
                 self.focus.caret.on_text(text)
+                self.focus.point_input = None
 
     def on_text_motion(self, motion):
+        #print(motion)
+        #print(key.UP)
         if self.focus:
-            self.focus.caret.on_text_motion(motion)
+            if motion == key.UP:
+                self.focus.up()
+            elif motion == key.DOWN:
+                self.focus.down()
+            else:
+                self.focus.caret.on_text_motion(motion)
 
     def on_text_motion_select(self, motion):
         if self.focus:
