@@ -728,7 +728,8 @@ class Zone_ELEM(Zone):
 
     def activate(self,perso):
 
-        print(perso.name,'just activated',self.labtext)
+        #print(perso.name,'just activated',self.labtext)
+        g.cmd.say(perso.name,'just activated',self.labtext)
         if hasattr(self,'label') and isinstance(perso,p.Perso):
             g.lman.modify(self.label,color=self.color)
 

@@ -22,11 +22,6 @@ _ceci est le todo à faire hehe_
     -> une simple conv (bjr,au revoir,cv ?) augmente la relat°
     -> amis dès qu'ils te voient ils te disent "oh yo"
 
-#  \!\ *nb bots ?* \!\_
-  j'ai eu 694 fans alors que y'avait apparement que 690 bots (+ alphonse)
-  et en plus j'en ai tué en chemin et ça m'a pas baissé des fans
-  --> à régler
-
 # nodes de commuincation
   en gros pour l'instant c'est pas ouf les communications, très basique
   il faudrait inventer un système de nodes :
@@ -44,10 +39,6 @@ _ceci est le todo à faire hehe_
         Il dit "drogue", tu lui dis "tu veux venir te cacher chez moi ?"
 
         hop tu lui envoie un act et il te suit chez toi
-
-# \!\ *bertran.get_time()* \!\_
-  bug : quand on recoit un act le temps continue de filer si est en pause
-  -> utiliser la clock bertran pour compter le temps qui passe pour les acts/dials ?
 
 # ajouter de la plouiiii
 
@@ -73,7 +64,23 @@ _ceci est le todo à faire hehe_
   -bars (open mic ?)
   -police (prison)
 
+# pouvoir bouger en y suivant les builds
 
+
+**BUGS**
+
+# \!\ *bertran.get_time()* \!\_
+  bug : quand on recoit un act le temps continue de filer si est en pause
+  -> utiliser la clock bertran pour compter le temps qui passe pour les acts/dials ?
+
+#  \!\ *nb bots ?* \!\_
+  j'ai eu 694 fans alors que y'avait apparement que 690 bots (+ alphonse)
+  et en plus j'en ai tué en chemin et ça m'a pas baissé des fans
+  --> à régler
+
+#  \!\ *spr mauvais groups ?* \!\_
+  ex : train qui arrive au début de kamour str. -> visible une fract de sec au dessus des builds
+  ex : button inventaire des fois en début de partie, affiche pas le clair
 
 
 **DONE**

@@ -3,8 +3,6 @@ CODED by deltasfer
 enjoy
 """
 
-
-
 import pyglet,random,time
 from math import *
 import src.utils as u
@@ -13,8 +11,6 @@ from src.colors import *
 from colors import *
 
 import pyglet.gl as gl
-#gl.glEnable(gl.GL_TEXTURE_2D)
-#glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 
 
 '''''''''''''''''''''''''''''''''''''''
@@ -620,6 +616,7 @@ class ParticleManager():
         self.labels['icons'] = {}
         self.labels['dmg'] = {}
         self.labels['say'] = {}
+        self.labels['cmd'] = {}
 
     def addPart(self,textid,xy_pos=(0,0),duree=5,group=None,key='normal',opac=255,vis=True):
 
@@ -792,6 +789,68 @@ pman = ParticleManager()
 
 TEXTIDS = {}
 TEXTIDS['col'] = {}
+
+def print_groups():
+
+    print('\nYOU ASKED TO PRINT GROUPS AND THEIR ORGANISATION:')
+    print('  will be displayed in descending order like that : order,name\n')
+
+    tab = []
+    orders_sorted = sorted(gman.names_wo,reverse=True)
+
+    for order in orders_sorted:
+        say = str(order)
+        say += (6-len(say))*' '
+        say +=gman.names_wo[order]
+
+        # nb spr
+        if True:
+            nb_spr = 0
+            for id in sman.sprites:
+                spr = sman.sprites[id]
+                if spr.group.order == order:
+                    nb_spr += 1
+
+            if nb_spr > 0:
+                say+= cyan('  -- '+str(nb_spr)+' sprites')
+        # nb lab
+        if True:
+            nb_lab = 0
+            for id in lman.labels:
+                lab = lman.labels[id]
+                if lab.top_group.parent.order == order:
+                    nb_lab += 1
+
+            if nb_lab > 0:
+                say+= magenta('  -- '+str(nb_lab)+' labels')
+        # nb part-spr / part-lab
+        if True:
+            nb_spr = 0
+            for grp in pman.sprites:
+                for id in pman.sprites[grp]:
+                    spr = pman.sprites[grp][id]
+                    if spr.group.order == order:
+                        nb_spr += 1
+            nb_lab = 0
+            for grp in pman.labels:
+                for id in pman.labels[grp]:
+                    lab = pman.labels[grp][id]
+                    if lab.top_group.parent.order == order:
+                        nb_lab += 1
+
+            if nb_lab > 0 or nb_spr > 0:
+                say += green('  -- ')
+                if nb_spr > 0:
+                    say+= cyan(str(nb_spr))
+                if nb_spr > 0 and nb_lab > 0:
+                    say+= green('/')
+                if nb_lab > 0:
+                    say+= magenta(str(nb_lab))
+                say += green(' particles')
+
+
+        print(say)
+    print('')
 
 
 """'''''''''''''''''''''''''''''''''
@@ -1432,3 +1491,59 @@ class GodCamera():
     dy = property(_dy)
 
 GodCam = GodCamera()
+
+##### CONSOLE
+
+class Console():
+
+    def __init__(self):
+
+        self.historic = []
+        self.ids = []
+        self.x,self.y = 10,300
+        self.dt = 128
+        self.size = 20
+        self.max_length = 25
+        self.visible = True
+
+    def say(self,*args):
+
+        print(*args)
+        args = [str(x) for x in args]
+        cmd = ' '.join(args)
+
+        self.historic.append(cmd)
+        for id in self.ids:
+            pman.modify_single(id,dy=self.size+5)
+        id = pman.addLabPart(cmd,self.pos,self.dt,font_size=self.size,anchor=('left','center'),key='cmd',vis=self.visible,group='ui',use_str_bien=False)
+        self.ids.append(id)
+        if len(self.ids) >= self.max_length:
+            del self.ids[0]
+
+    def colorsay(self,col,*args):
+
+        args = [str(x) for x in args]
+        cmd = ' '.join(args)
+        print(color(cmd,col))
+
+        self.historic.append(cmd)
+        for id in self.ids:
+            pman.modify_single(id,dy=self.size+5)
+        id = pman.addLabPart(cmd,self.pos,self.dt,font_size=self.size,color=c[col],anchor=('left','center'),key='cmd',vis=self.visible,group='ui',use_str_bien=False)
+        self.ids.append(id)
+        if len(self.ids) >= self.max_length:
+            del self.ids[0]
+
+    def rollhide(self):
+        pman.unhide('cmd',self.visible)
+        self.visible = not self.visible
+
+    def pos():
+        def fget(self):
+            return self.x,self.y
+        def fset(self, value):
+            self.x,self.y = value
+        return locals()
+    pos = property(**pos())
+
+cmd = Console()

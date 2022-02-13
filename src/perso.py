@@ -1070,7 +1070,8 @@ class Human():
 
 
         if (self.life <= 0) and 'die' not in self.doing:
-            print(red(hitter.name + ' killed ' + self.name))
+            #print(red())
+            g.cmd.colorsay('red',hitter.name,'killed',self.name)
             self.die()
 
         if self.alive and type(self) != Perso:
@@ -2246,6 +2247,7 @@ class Perso(Rappeur):
         if True:
             for i in range(10):
                 self.grab(o.Bottle())
+
     # cheat
     def cheat(self):
         self.life = self.max_life

@@ -8,7 +8,7 @@ import pyglet,time,random
 from pyglet.window import key
 import pyglet.gl as gl
 import colorama
-from colors import red, green, blue
+from colors import *
 colorama.init()
 
 from src.utils import *
@@ -528,19 +528,10 @@ class App():
             self.screen_capture()
 
         elif symbol == key.G:
+            g.print_groups()
 
-            print('\nYOU ASKED TO PRINT GROUPS AND THEIR ORGANISATION:')
-            print('  will be displayed in descending order like that : order,name\n')
-
-            tab = []
-            orders_sorted = sorted(g.gman.names_wo,reverse=True)
-
-            for order in orders_sorted:
-                say = str(order)
-                say += (6-len(say))*' '
-                say +=g.gman.names_wo[order]
-                print(say)
-            print('')
+        elif symbol == key.T:
+            g.cmd.rollhide()
 
         if self.action == "play":
 
@@ -1098,7 +1089,8 @@ class App():
             # BAHN
             for sbahn in o2.NY.BAHN:
                 o2.NY.BAHN[sbahn].update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
-                #print(o2.NY.BAHN[sbahn].street,o2.NY.BAHN[sbahn].gex,o2.NY.BAHN[sbahn].x)
+                for street in o2.NY.BAHN[sbahn].circuit:
+                    o2.NY.CITY[street].station.update()
 
             # CAM
             if True:

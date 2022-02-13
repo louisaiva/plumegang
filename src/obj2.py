@@ -31,10 +31,13 @@ class Train():
         self.name = name
         self.circuit = circuit # ex : ['kamour str','street 1','street 3']
         self.station_x = pos # gex de l'arret pour chaque rue : [10230,28000,6200]
-        self.max_speed = 250
+
+        for street in self.circuit:
+            NY.CITY[street].set_station(Station(street,self))
+
+        self.max_speed = 400
         self.realspeed = self.max_speed
         self.stopped_here = False
-        #self.stopped_time = None
         self.ready_to_go = False
         self.stop_time = 4
         self.brake_dist = W_BUILD
@@ -140,7 +143,8 @@ class Train():
         self.stopped_here = False
         self.ready_to_go = False
 
-        print(color(self.name+' entering '+self.street,'yellow'))
+        #print(color(self.name+' entering '+self.street,'yellow'))
+        g.cmd.colorsay('yellow',self.name,'entering',self.street)
 
     # zone
 
@@ -190,6 +194,10 @@ class Train():
             return 0,0,self.text.width,self.text.height
     realbox = property(_realbox)
 
+    def _at_station(self):
+        return (self.stopped_here and not self.ready_to_go)
+    at_station = property(_at_station)
+
     def _speed(self):
 
         #print(self.anim)
@@ -202,7 +210,7 @@ class Train():
 
         #print(abs(self.gcx - x_arret))
         if abs(self.gcx - x_arret) <= 1:
-            if NY.CITY[self.street].visible: g.pman.alert(self.name,'stopped')
+            #if NY.CITY[self.street].visible: g.pman.alert(self.name,'stopped')
 
             if not self.anim and not self.stopped_here:
 
@@ -240,6 +248,35 @@ class Train():
 
         return s
     speed = property(_speed)
+
+class Station():
+
+    def __init__(self,street,train):
+
+        self.street = street
+        self.train = train
+        self.name = street
+
+        # times
+        self.moy_dt = 0
+        self.rec_times = []
+        #self.lab =
+
+    def update(self):
+
+        if self.train.street == self.street and self.train.at_station:
+            #
+            if self.rec_times == [] or time.time() - 2*self.train.stop_time > self.rec_times[-1]:
+                 self.rec_times.append(time.time())
+
+        self.rec_dt = []
+        for i in range(len(self.rec_times) - 2):
+            self.rec_dt.append(self.rec_times[i+1]-self.rec_times[i])
+        if len(self.rec_dt) > 0 :
+            self.moy_dt = sum(self.rec_dt)/len(self.rec_dt)
+
+            dt = self.rec_times[-1] + self.moy_dt - time.time()
+
 
 # lines
 
@@ -366,6 +403,9 @@ class Street():
 
         self.y = y+self.box.y
         self.x = x+self.box.x
+
+        if hasattr(self,'station'):
+            self.station.update()
 
         #zones/items
         if True:
@@ -508,6 +548,8 @@ class Street():
             if hum.loaded:
                 hum.deload()
 
+    def set_station(self,station):
+        self.station = station
 
     # loadin/update
 
@@ -599,6 +641,7 @@ class Street():
 
         print(green(self.name),blue('('+str(self.long)+' blocks)'),green(':  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'),blue('('+str(nbh)+' humans)'))
         #print([x.name for x in self.neighbor])
+        
 
         self.visible = True
         self.update_catalog()
