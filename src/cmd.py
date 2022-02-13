@@ -13,22 +13,61 @@ from src.utils import *
 
 def cmds():
 
-    def tp(id,x=None,y=None,street=None):
+    def tp(name,x='None',y='None',street='None'):
 
         hum = None
         for h in p.BOTS+p.GUYS:
-            if h.id == id:
+            if h.name == name:
                 hum = h
                 break
         if not hum:
             return 'entity not found'
 
-        if x: x = int(x)
-        if y: y = int(y)
+        if x != 'None':
+            x = int(x)
+        else:
+            x = None
 
-        hum.tp(x,y,o2.NY.CITY[street])
+        if y != 'None':
+            y = int(y)
+        else:
+            y = None
+
+        if street == 'None':
+            street = None
+        else:
+            street = o2.NY.CITY[street]
+
+        hum.tp(x,y,street)
+
+    def tp_street(name,street):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        hum.tp(street=o2.NY.CITY[street])
+
+    def kill(name):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        hum.die()
 
     def tick_set(tick):
+
+        tick = int(tick)
+        g.Cyc.tick_set(tick)
+
+    def time_set(h='None',m='None'):
 
         tick = int(tick)
         g.Cyc.tick_set(tick)
@@ -42,6 +81,8 @@ commands = cmds()
 class Console():
 
     def __init__(self):
+
+        self.window = None
 
         self.historic = []
         self.ids = []
@@ -90,6 +131,7 @@ class Console():
             self.activated = False
             window.focus = None
             self.document.text = ''
+        self.window = window
 
     def enter(self,hum):
         if self.activated:
@@ -124,25 +166,26 @@ class Console():
                         par.remove(todel[i])
                     par.insert(i_add[i],par_add[i])
 
-                print(par)
-
                 ## lezgo cmd
                 if par[0] not in commands:
                     self.colorsay('red','command not found')
                     return
                 else:
-                    print(commands[par[0]])
-                    result = commands[par[0]]( *par[1:] )
-                    if result == None:
-                        self.colorsay('green','command sucessful !')
-                    else:
-                        self.colorsay('orange',result)
+                    try:
+                        result = commands[par[0]]( *par[1:] )
+                        if result == None:
+                            self.colorsay('green','command sucessful !')
+                            self.roll_activate(self.window)
+                            return
+                        else:
+                            self.colorsay('orange',result)
+                    except:
+                        self.colorsay('red','error in the parameters')
+                        return
 
             else:
-                self.say('<'+hum.id+'>',self.document.text)
+                self.say('<'+hum.name+'>',self.document.text)
             self.document.text = ''
-
-    #hum4404
 
     def say(self,*args):
 
@@ -187,7 +230,6 @@ class Console():
     pos = property(**pos())
 
 Cmd = Console()
-
 
 def colorsay(*args): Cmd.colorsay(*args)
 def say(*args): Cmd.say(*args)

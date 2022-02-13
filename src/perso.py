@@ -952,8 +952,6 @@ class Human():
             ## checking thg
             if moved :
 
-                self._speed = speed
-
                 if speed > self.speed:
                     self.addsub_hyd(-0.2)
                     self.addsub_fed()
@@ -965,6 +963,7 @@ class Human():
                     self.done_todo()
 
                 if dir in ['R','L']:
+                    self._speed = speed
                     if self.dir != dir:
                         self.dir = dir
                         self.do('move')
@@ -1860,6 +1859,7 @@ class Human():
     static = property(_static)
 
     def _realspeed(self):
+        #print(self._speed)
         if self.vehicle:
             return self.vehicle.realspeed
         return self._speed
