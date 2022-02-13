@@ -549,6 +549,7 @@ class Label():
         self.streams[rapper] = {}
         self.sons[rapper] = {}
         self.dailystreams[rapper] = 0
+        rapper.LABEL = self
 
         print(rapper.name,'a signé chez',self.name,'!')
         exp = rapper.name+' a signé chez '+self.name+' !'
@@ -575,6 +576,7 @@ class Label():
         # changer dans distrokid aussi
         for rapper in self.rappeurs:
             print(rapper.name,':\n\t','daily streams :',self.dailystreams[rapper],'\n\t','caisse :',self.caisse[rapper])
+            rapper.day_streams = self.dailystreams[rapper]
             self.dailystreams[rapper] = 0
 
 class Distrokid(Label):
@@ -1179,6 +1181,12 @@ class HUD():
 
     def modifyLab(self,key,pos=None,col=None):
         g.lman.modify(self.labids[key],pos,color=col)
+
+    def set_text(self,key,text):
+        if key in self.labids:
+            g.lman.set_text(self.labids[key],text)
+        elif key in self.sprids:
+            g.sman.set_text(self.sprids[key],text)
 
     def unhide(self,hide=False):
 
@@ -2341,6 +2349,81 @@ class MarketHUD(HUD):
         if collisionAX(self.box.realbox,(x,y)):
             return True
         return False
+
+class ChartsHUD(HUD):
+
+    def __init__(self,hum):
+
+        super(ChartsHUD, self).__init__(group='hud2',name='charts',vis=False)
+
+        self.hum = hum
+
+        cx,cy=g.scr.c
+        self.box = box(cx-300,cy-450,600,900)
+
+        self.pad = 40
+        self.padding = 50
+
+        self.addCol('bg',self.box,color='black_faded',group='hud2-1')
+        self.addLab('title','top 20 charts artists',font_name=1,font_size=20,anchor=('center','center'))
+
+    def update(self):
+
+        if self.visible:
+
+            y = self.box.fy-(3/4)*self.padding
+            x_classman = self.box.x + self.padding
+            x_name = self.box.x + 2*self.padding
+            x_streams = self.box.fx - 3*self.padding
+
+            for k in range(len(p.top_20_artists)):
+                ast = p.top_20_artists[k] #ast = artist
+
+                coltop = 'red'
+                col = 'white'
+                if ast == self.hum :
+                    coltop = 'yellow'
+                    col = 'yellow'
+
+                if ast.id not in self.labids :
+                    self.addLab(ast.id+'__top__',str(k+1),(x_classman,y),font_size=20,anchor=('center','center'),color=c[coltop])
+                    self.addLab(ast.id,ast.name,(x_name,y),font_size=20,anchor=('left','center'),color=c[col])
+                    self.addLab(ast.id+'__streams__',convert_huge_nb(ast.nb_streams),(x_streams,y),font_size=20,anchor=('left','center'),color=c['lightblue'])
+                else:
+                    #self.addLab(ast.id+'__top__',str(k+1),(x_classman,y),anchor=('center','center'),color=c[coltop])
+                    self.modifyLab(ast.id,(x_name,y))
+                    self.modifyLab(ast.id+'__top__',(x_classman,y))
+                    self.set_text(ast.id+'__top__',str(k+1))
+                    self.modifyLab(ast.id+'__streams__',(x_streams,y))
+                    self.set_text(ast.id+'__streams__',convert_huge_nb(ast.nb_streams))
+
+                y -= self.pad
+
+            if self.hum not in p.top_20_artists:
+                classman = p.charts['artists'].index(self.hum)
+                if self.hum.id not in self.labids :
+                    self.addLab(self.hum.id+'__top__',str(classman+1),(x_classman,y),anchor=('center','center'),color=c['yellow'])
+                    self.addLab(self.hum.id,self.hum.name,(x_name,y),font_size=20,anchor=('left','center'),color=c['yellow'])
+                    self.addLab(self.hum.id+'__streams__',convert_huge_nb(self.hum.nb_streams),(x_streams,y),anchor=('left','center'),color=c['lightblue'])
+                else:
+                    #self.addLab(self.hum.id+'__top__',str(classman+1),(x_classman,y),anchor=('center','center'),color=c['yellow'])
+                    self.modifyLab(self.hum.id+'__top__',(x_classman,y))
+                    self.set_text(self.hum.id+'__top__',str(classman+1))
+                    self.modifyLab(self.hum.id,(x_name,y))
+                    self.modifyLab(self.hum.id+'__streams__',(x_streams,y))
+                    self.set_text(self.hum.id+'__streams__',convert_huge_nb(self.hum.nb_streams))
+
+            ids = [x.id for x in p.top_20_artists]
+            todel = []
+            for lab in self.labids:
+                if not '__top__' in lab and not '__streams__' in lab and lab != self.hum.id:
+                    if lab not in ids:
+                        todel.append(lab)
+
+            for lab in todel:
+                self.delLab(lab)
+                self.delLab(lab+'__top__')
+                self.delSpr(lab+'__streams__')
 
 #---# hud spéciaux inventaire/selecteur
 

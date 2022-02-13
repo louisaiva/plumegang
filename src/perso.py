@@ -2072,13 +2072,13 @@ class Rappeur(Fan):
 
         super(Rappeur,self).__init__(key_skin,pos,name,street=street)
 
-        #self.textids = text_rap
-
         self.qua_score = 0
 
         self.disco = []
 
+        self.LABEL = None
         self.nb_streams = 0
+        self.day_streams = 0
         self.nb_fans = 0
         self.fans = []
 
@@ -2213,6 +2213,10 @@ class Rappeur(Fan):
         return 'RAPPER'
     type = property(_type)
 
+    def _type(self):
+        return 'RAPPER'
+    type = property(_type)
+
 #toa
 class Perso(Rappeur):
 
@@ -2237,12 +2241,12 @@ class Perso(Rappeur):
         self.bigmap = o.Map(self)
         self.relhud = o.RelHUD(self)
         self.minirelhud = o.MiniRelHUD(self)
+        self.chartshud = o.ChartsHUD(self)
 
         self.cheat = CHEAT
 
         self.grab(o.Bottle())
         self.grab(o.rplum(self.name))
-        #self.load()
 
         if True:
             for i in range(10):
@@ -2335,6 +2339,7 @@ class Perso(Rappeur):
 
         super(Perso,self).update(street,x,y)
         self.relhud.update()
+        self.chartshud.update()
         self.minirelhud.update()
         self.fedhydhud.update()
         self.selhud.update()
@@ -2354,3 +2359,26 @@ class Perso(Rappeur):
     def _type(self):
         return 'PERSO'
     type = property(_type)
+
+
+
+"""'''''''CHARTS'''''''''''''''''''''''''"""
+
+
+charts = {}
+charts['songs'] = []
+charts['artists'] = []
+top_20_songs = []
+top_20_artists = []
+
+def update_charts():
+    global top_20_artists
+
+    rappers = [ x for x in BOTS+GUYS if isinstance(x,Rappeur)]
+
+    if len(rappers) != len(charts['artists']):
+        charts['artists'] = rappers
+
+    charts['artists'].sort(key=lambda x:x.nb_streams,reverse=True)
+    top_20_artists = charts['artists'][:20]
+    #g.cmd.say(top_20_artists)

@@ -200,22 +200,19 @@ class Train():
 
     def _speed(self):
 
-        #print(self.anim)
-
         s = self.max_speed
 
         x_arret = self.station_x[self.circuit.index(self.street)]
         if x_arret == None:
             return s
 
-        #print(abs(self.gcx - x_arret))
         if abs(self.gcx - x_arret) <= 1:
-            #if NY.CITY[self.street].visible: g.pman.alert(self.name,'stopped')
 
             if not self.anim and not self.stopped_here:
 
                 self.stopped_here = True
                 self.activ_zone()
+                g.cmd.colorsay('cyan',self.name,'stopped')
 
                 ## On vient d'arriver les portes doivent s'ouvrir
                 if not hasattr(self,'spr'):
@@ -641,7 +638,7 @@ class Street():
 
         print(green(self.name),blue('('+str(self.long)+' blocks)'),green(':  '+str(len(list(self.zones))) + ' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items)) + ' items loaded'),blue('('+str(nbh)+' humans)'))
         #print([x.name for x in self.neighbor])
-        
+
 
         self.visible = True
         self.update_catalog()

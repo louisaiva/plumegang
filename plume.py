@@ -124,9 +124,10 @@ class App():
         if True:
 
             ## PERSOS
-            self.perso = p.Perso('rapper',fill=FILL_INV,street='kamour str.')
+            self.perso = p.Perso('rapper',fill=FILL_INV,street='home')
             g.Cam.follow(self.perso)
             p.BOTS.append(self.perso)
+            o.distro.sign(self.perso)
 
             #poto
             p.BOTS.append(p.Fan('perso3',o2.NY.CITY['home'].rand_pos(),street='home'))
@@ -231,6 +232,12 @@ class App():
             self.lab_day = g.lman.addLab('',(10,1080-32-32),group='up',font_name=1,font_size=32,anchor=('left','top'))
             self.lab_time = g.lman.addLab('',(10,1080-32-32-32),group='up',font_name=1,font_size=20,anchor=('left','top'))
             self.lab_street = g.lman.addLab('',(10,1080-32),group='up',font_name=1,font_size=32,anchor=('left','top'))
+
+            self.fps_times = {'event':[],'ref':[],'draw':[]}
+            self.fps_labs = {}
+            self.fps_labs['event'] = g.lman.addLab('',(600,0),group='up',font_size=20,anchor=('left','bottom'))
+            self.fps_labs['ref'] = g.lman.addLab('',(800,0),group='up',font_size=20,anchor=('left','bottom'))
+            self.fps_labs['draw'] = g.lman.addLab('',(960,0),group='up',font_size=20,anchor=('left','bottom'))
 
             # keys
             g.keys = key.KeyStateHandler()
@@ -581,6 +588,9 @@ class App():
                 elif symbol == key.K:
                     self.perso.minirelhud.rollhide()
                     #self.perso.poto.attack_hum(0,self.perso)
+
+                elif symbol == key.L:
+                    self.perso.chartshud.rollhide()
 
         elif self.action == 'pause':
 
@@ -992,31 +1002,39 @@ class App():
         ## FPS
         dt = time.time() - self.lab_fps_time
         self.lab_fps_time = time.time()
-        try:
+        if dt > 0:
             self.lab_fps1.append(int(1/dt))
-
+        if len(self.lab_fps1) > 0:
             if len(self.lab_fps1) > 10:
                 del self.lab_fps1[0]
             moyfps = int(sum(self.lab_fps1)/len(self.lab_fps1))
             g.FPS = moyfps
             g.lman.set_text(self.lab_fps,'FPS : '+str(moyfps))
-        except : pass
 
+        ## TIMES
+        for key in self.fps_times:
+            if len(self.fps_times[key]) > 0:
+                if len(self.fps_times[key]) > 30:
+                    del self.fps_times[key][0]
+                moyfps = sum(self.fps_times[key])/len(self.fps_times[key])
+                g.lman.set_text(self.fps_labs[key],key+' : '+trunc(moyfps,3))
+
+        ## PLAYIN
         if self.action == "play":
 
-            # STREETS LABEL
-            g.lman.set_text(self.lab_street,self.perso.street)
+            # LABELS
+            if True:
+                # STREETS LABEL
+                g.lman.set_text(self.lab_street,self.perso.street)
 
-            # DAYS LABEL
-            g.lman.set_text(self.lab_day,'DAY : '+str(g.Cyc.day))
+                # DAYS LABEL
+                g.lman.set_text(self.lab_day,'DAY : '+str(g.Cyc.day))
 
-            # HOUR LABEL
-            g.lman.set_text(self.lab_time,'  '+str(g.Cyc))
+                # HOUR LABEL
+                g.lman.set_text(self.lab_time,'  '+str(g.Cyc))
 
-            ## MOVIN SPR
 
             perso_street = o2.NY.CITY[self.perso.street]
-
             # STREETS
             perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
 
@@ -1111,6 +1129,9 @@ class App():
                     if chance < self.perso.nb_fans*malus:
                         random.choice(p.BOTS+p.GUYS).stream(self.perso.disco[i])
 
+                ## updates charts
+                #p.update_charts()
+
             if len(p.GUYS) > 0:
                 text_lab = (p.GUYS[0].bigdoing['lab'],list(map(lambda x:x['lab'],p.GUYS[0].todo)),p.GUYS[0].doing)
             else:
@@ -1131,37 +1152,29 @@ class App():
                 self.lab_fps_time = time.time()
                 self.lab_fps1 = []
 
-                self.time_events = g.lman.addLab('',(600,0),group='up',font_size=20,anchor=('left','bottom'))
-                self.time_ref = g.lman.addLab('',(800,0),group='up',font_size=20,anchor=('left','bottom'))
-                self.time_draw = g.lman.addLab('',(960,0),group='up',font_size=20,anchor=('left','bottom'))
             self.tick += 1
 
-
-            t = time.time()
             # EVENTS
+            t = time.time()
             self.events()
-            g.lman.set_text(self.time_events,'event : '+trunc(time.time()-t,3))
+            self.fps_times['event'].append(time.time()-t)
 
-            gl.glClearColor(1/4,1/4,1/4,1)
             # CLR
+            gl.glClearColor(1/4,1/4,1/4,1)
             self.window.clear()
 
-            gl.glEnable(gl.GL_TEXTURE_2D)
-            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
-            #
+            #gl.glEnable(gl.GL_TEXTURE_2D)
+            #gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
 
-            t = time.time()
             # RFRSH
-            self.refresh()
-            g.lman.set_text(self.time_ref,'ref : '+trunc(time.time()-t,3))
-
-            #
             t = time.time()
-            # DRW
-            self.draw()
-            g.lman.set_text(self.time_draw,'draw : '+trunc(time.time()-t,3))
+            self.refresh()
+            self.fps_times['ref'].append(time.time()-t)
 
-            #self.window.flip()
+            # DRW
+            t = time.time()
+            self.draw()
+            self.fps_times['draw'].append(time.time()-t)
 
         else:
             print('\n\nNumber of lines :',compt(self.path))
