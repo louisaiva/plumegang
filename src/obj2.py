@@ -424,7 +424,7 @@ class Street():
             for item in self.items:
                 x_r = item.gex + x
                 y_r = item.gey + y
-                zone.update(x_r,y_r)
+                item.update(x_r,y_r)
 
                 # load/deload
                 if (x_r+item.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and item.loaded:

@@ -1360,6 +1360,10 @@ class Camera():
             speed = self.followin.realspeed
             x,xf = street.xxf
 
+            if speed == 0:
+                self._dx = 0
+                return
+                
             #X
             if movin_box[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +speed):
                 self.X -= self.followin.realspeed
@@ -1377,7 +1381,6 @@ class Camera():
                 else:
                     self.X -= SPEED
 
-
             #Y
             if MOVE_Y:
                 if movin_box[3] > 19*scr.size[1]/20:
@@ -1385,12 +1388,9 @@ class Camera():
                 elif movin_box[1] < scr.size[1]/20:
                     self.morey()
 
-            self.X = self.X
-            self.Y = self.Y
 
         elif self.activate and self.static:
             self.X = -self.followin.gex + scr.cx
-
 
     def tp(self,ge_x,real_x):
 
@@ -1413,7 +1413,7 @@ class Camera():
         if X != self._X:
             self._dx = self._X-X
             self._X = X
-            #self.BGX = self.d*X
+            #print(self._X,self._dx)
     def _X(self):
         return self._X
     def _setY(self,Y):

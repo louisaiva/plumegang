@@ -283,7 +283,7 @@ class Human():
         self.cheat = False
 
         self.vehicle = None
-        #self.static = False
+        self.immobilised = False
 
         #inventory
         self.inventory = {}
@@ -379,12 +379,15 @@ class Human():
         self.speed = 0
         self.yspeed = 0
 
+        print(self.inventory,self.selecter)
+
         for key in self.inventory['key']:
             self.drop(key)
 
         for item in self.selecter.values():
             if item != None:
                 self.drop(item)
+        print(self.inventory,self.selecter)
 
         if hasattr(self,'label_life'):
             g.sman.delete(self.label_life)
@@ -857,12 +860,12 @@ class Human():
                         self.gex-=speed
                         moved = True
 
-                # up/down
-                if dir == 'up':
-                    if maxy[1] > self.gey+self.yspeed:
-                        self.gey+=self.yspeed
-                        moved = True
-                elif dir == 'down':
+            # up/down
+            if dir == 'up':
+                if maxy[1] > self.gey+self.yspeed:
+                    self.gey+=self.yspeed
+                    moved = True
+            elif dir == 'down':
                     if maxy[0] < self.gey-self.yspeed :
                         self.gey-=self.yspeed
                         moved = True
@@ -1177,6 +1180,7 @@ class Human():
             pass
             # si on se trouve ici c'est que l'item droppé n'est pas dans l'inventaire :
             # peut arriver lorsqu'on a un item caught qui est extrait d'un stack
+            print('bad')
 
         if create:
             w,h = self.box.wh
@@ -1186,6 +1190,7 @@ class Human():
                 dx += 150
             else:
                 dx -= 150
+            print('creatin item',thg)
             o.Item_ELEM(thg,(x+w/2+dx,y),self.street)
 
     def grab(self,thg,inventory=False):
@@ -1534,6 +1539,10 @@ class Human():
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
                                     ,group='frontstreet',vis=self.loaded,duree=duree,w=w)
 
+            if self.loaded:
+                # on le dit aussi dans la console
+                cmd.enter_say(exp,self)
+
             ## on dit un truc -> l'environnement l'entend
             #print(list(filter( lambda x:x.get('type') == 'hum' , self.environ)))
             for hum in list(filter( lambda x:x.get('type') == 'hum' , self.environ)):
@@ -1794,8 +1803,8 @@ class Human():
             g.sman.unhide(self.label_life,True)
             g.sman.unhide(self.label_conf,True)
             self._hoover = False
-    ##
 
+    ##
 
     def __repr__(self):
         s = self.name +' ('+red(self.type) + ')'+' ['+ blue(self.street)+'] '
@@ -1849,7 +1858,8 @@ class Human():
         # ne peut bouger si il active qqch
         # ne peut bouger s'il est dans l'un des vehicules sur lequel il n'a pas de controle (train, avion,...)
 
-        if type(self) == Perso and (key.Z in g.longpress or key.S in g.longpress):
+        if self.immobilised: return True
+        elif type(self) == Perso and (key.Z in g.longpress or key.S in g.longpress):
             return True
         elif type(self) != Perso and ((self,key.Z) in g.longpress or (self,key.S) in g.longpress):
             return True
@@ -1859,10 +1869,16 @@ class Human():
     static = property(_static)
 
     def _realspeed(self):
-        #print(self._speed)
+
+        spd = 0
+
         if self.vehicle:
-            return self.vehicle.realspeed
-        return self._speed
+            spd = self.vehicle.realspeed
+        elif time.time() - self.time_last_move < 0.1:
+            spd = self._speed
+
+        #print(spd)
+        return spd
     realspeed = property(_realspeed)
 
 # les gens que tu croises dans la rue
@@ -2083,7 +2099,7 @@ class Rappeur(Fan):
         self.nb_fans = 0
         self.fans = []
 
-        self.plume = o.rplum(self.name)
+        #self.plume = o.rplum(self.name)
         if type(self) != Perso : self.grab_sel(o.rplum(self.name))
 
     def rplum(self):
@@ -2109,10 +2125,6 @@ class Rappeur(Fan):
         self.addfans(newfans)
 
         self.update_scores()
-
-    """def die(self):
-        self.drop(self.plume)
-        super(Rappeur,self).die()"""
 
     # env
     def update_env(self):
@@ -2214,9 +2226,17 @@ class Rappeur(Fan):
         return 'RAPPER'
     type = property(_type)
 
-    def _type(self):
-        return 'RAPPER'
-    type = property(_type)
+    def _plume(self):
+        for thg in self.selecter.values():
+            if type(thg) == o.Plume:
+                return thg
+        for cat in self.inventory:
+            for thg in self.inventory[cat]:
+                if type(thg) == o.Plume:
+                    return thg
+        return None
+    plume = property(_plume)
+
 
 #toa
 class Perso(Rappeur):

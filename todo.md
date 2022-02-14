@@ -80,7 +80,6 @@ _ceci est le todo à faire hehe_
 
 #  \!\ *spr mauvais groups ?* \!\_
   ex : train qui arrive au début de kamour str. -> visible une fract de sec au dessus des builds
-  ex : button inventaire des fois en début de partie, affiche pas le clair
 
 
 **DONE**

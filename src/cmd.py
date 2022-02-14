@@ -10,28 +10,35 @@ import pyglet,time
 from colors import *
 from src.colors import *
 from src.utils import *
+import random as r
 
 def cmds():
 
+    # tps
     def tp(name,x='None',y='None',street='None'):
 
         hum = None
         for h in p.BOTS+p.GUYS:
-            if h.name == name:
+            if h.name == name or h.id == name:
                 hum = h
                 break
         if not hum:
             return 'entity not found'
 
-        if x != 'None':
-            x = int(x)
-        else:
-            x = None
+        if type(x) == type('wesh'):
+            if x.isnumeric():
+                x = int(x)
+            elif x=='None':
+                x = None
+            else:
+                # on essaie de créer trouver un humain pour la destination finale
+                return tp_to_perso(name,x)
 
-        if y != 'None':
-            y = int(y)
-        else:
-            y = None
+        if type(y) == type('wesh'):
+            if y.isnumeric():
+                y = int(y)
+            else:
+                y = None
 
         if street == 'None':
             street = None
@@ -40,21 +47,36 @@ def cmds():
 
         hum.tp(x,y,street)
 
-    def tp_street(name,street):
+    def tp_self(x='None',y='None',street='None'):
+
         hum = None
+
+        if hasattr(Cmd,'perso'):
+            hum = Cmd.perso.name
+
+        return tp(hum,x,y,street)
+
+    def tp_street(name,street):
+        return tp(name,'None','None',street)
+
+    def tp_to_perso(name,dest_name):
+
+        dest = None
         for h in p.BOTS+p.GUYS:
-            if h.name == name:
-                hum = h
+            if h.name == dest_name:
+                dest = h
                 break
-        if not hum:
-            return 'entity not found'
+        if not dest:
+            return 'destination entity not found'
 
-        hum.tp(street=o2.NY.CITY[street])
+        gex,gey,street = dest.gex,dest.gey,dest.street
+        return tp(name,gex,gey,street)
 
+    # general perso
     def set_streams(name,qté):
         hum = None
         for h in p.BOTS+p.GUYS:
-            if h.name == name:
+            if h.name == name or h.id == name:
                 hum = h
                 break
         if not hum:
@@ -67,7 +89,7 @@ def cmds():
     def set_money(name,qté):
         hum = None
         for h in p.BOTS+p.GUYS:
-            if h.name == name:
+            if h.name == name or h.id == name:
                 hum = h
                 break
         if not hum:
@@ -77,10 +99,10 @@ def cmds():
 
         hum.money = qté
 
-    def set_fans(name,qté):
+    def add_money(name,qté):
         hum = None
         for h in p.BOTS+p.GUYS:
-            if h.name == name:
+            if h.name == name or h.id == name:
                 hum = h
                 break
         if not hum:
@@ -88,19 +110,104 @@ def cmds():
 
         if qté: qté = int(qté)
 
-        hum.nb_fans = qté
+        hum.add_money(qté)
 
-    def kill(name):
+    def set_fans(name,qté):
         hum = None
         for h in p.BOTS+p.GUYS:
-            if h.name == name:
+            if h.name == name or h.id == name:
                 hum = h
                 break
         if not hum:
             return 'entity not found'
 
+        if qté:
+            qté = int(qté)
+
+        hum.nb_fans = qté
+
+    # perso godmode, kill toussa toussa
+    def wesh():
+        hum = None
+        if hasattr(Cmd,'perso'):
+            hum = Cmd.perso
+        if not hum:
+            return 'self not found'
+        #print('oh yo',hum,hum.name)
+        ret = set_fans(hum.name,r.randint(10000,20000))
+        if ret:
+            return ret
+
+        ret = add_money(hum.name,r.randint(10000000,20000000))
+        if ret:
+            return ret
+
+        hum.damage = 300
+        hum.max_life = 3000
+        hum.life = hum.max_life
+        hum.confidence = 100
+
+    def kill(name):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name or h.id == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        colorsay('red','a command just killed',hum.name)
         hum.die()
 
+    def stop(name):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name or h.id == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        colorsay('orange','a command just immobilized',hum.name)
+        hum.immobilised = True
+
+    def free(name):
+        hum = None
+        for h in p.BOTS+p.GUYS:
+            if h.name == name or h.id == name:
+                hum = h
+                break
+        if not hum:
+            return 'entity not found'
+
+        colorsay('orange','a command just freed',hum.name)
+        hum.immobilised = False
+
+    # id
+    def get_id():
+        hum = None
+        if hasattr(Cmd,'perso'):
+            hum = Cmd.perso
+        if not hum:
+            return 'self not found'
+
+        if len(hum.hum_env) > 0:
+            bot = hum.hum_env[0]
+            #colorsay('green',)
+            return '<cmd> target bot is '+bot.name+', id:'+bot.id
+        else:
+            return '<cmd> '+hum.name+' is alone, id:'+hum.id
+
+    #train
+    def sbahn_speed(spd='None'):
+        if spd == 'None':
+            spd = o2.NY.BAHN['sbahn'].max_speed
+            return '<cmd> sbahn speed is '+str(spd)
+        else:
+            if spd: spd = int(spd)
+            o2.NY.BAHN['sbahn'].max_speed = spd
+
+    # time/tick
     def tick_set(tick):
 
         tick = int(tick)
@@ -150,7 +257,7 @@ class Console():
         self.input_historic = []
         self.point_input = None
 
-    def roll_activate(self,window=None):
+    def roll_activate(self,window=None,cmd=False):
         if not self.activated:
             self.bg = g.sman.addCol('black_faded',box(w=g.scr.w,h=g.scr.h),group='up-1')
 
@@ -163,7 +270,8 @@ class Console():
 
             self.activated = True
             g.bertran.schedule_once(window.set_focus,0.2,self)
-            #window.focus = self
+            if cmd: self.document.text = '/'
+            self.caret.position = len(self.document.text)
         else:
             # on delete le bg
             if hasattr(self,'bg'):
@@ -177,6 +285,7 @@ class Console():
 
     def enter(self,hum):
         if self.activated:
+            self.perso = hum
 
             txt = self.document.text
             if len(txt) > 0 and txt[0] == '/':
@@ -184,6 +293,8 @@ class Console():
                 command = txt[1:]
 
                 par = command.split(' ')
+                while '' in par:
+                    par.remove('')
 
                 ## adjustment
                 todel = []
@@ -235,6 +346,9 @@ class Console():
                 self.input_historic.remove(self.document.text)
             self.input_historic.append(self.document.text)
             self.document.text = ''
+
+    def enter_say(self,thg,hum):
+        self.say('<'+hum.name+'>',thg)
 
     def say(self,*args):
 
@@ -304,3 +418,4 @@ def say(*args): Cmd.say(*args)
 def rollhide(*args): Cmd.rollhide(*args)
 def enter(*args): Cmd.enter(*args)
 def roll_activate(*args): Cmd.roll_activate(*args)
+def enter_say(*args): Cmd.enter_say(*args)

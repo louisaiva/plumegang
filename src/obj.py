@@ -211,7 +211,7 @@ def instru_price(ins):
 def get_perso_grp(gey):
 
     k = int(g.gman.nb_perso_group*gey/o2.maxY)
-    if k > g.gman.nb_perso_group:
+    if k >= g.gman.nb_perso_group:
         grp = 'persoup'
     elif k < 0:
         grp = 'persodown'
@@ -3269,13 +3269,21 @@ class SelectHUD(HUD):
 
 #------# ui
 
-class Zone_UI(Zone):
+class UI():
 
     ## HOOVER WITH MOVEMENT OF MOUSE
 
     def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,colorlab=c['coral']):
-        super(Zone_UI,self).__init__(box2,textid,group,makeCol)
+
+        if textid[:4] == 'text':
+            self.text_id = textid
+        elif makeCol:
+            self.text_id = g.tman.addCol(textid)
+        self.loaded = False
+
         self.box = box2
+        self.group = group
+
 
         self.lab_text=lab_text
         self.visible = True
@@ -3320,6 +3328,23 @@ class Zone_UI(Zone):
             self.load()
         self.visible = not hide
 
+    def load(self):
+
+        if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
+            self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group)
+            w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
+            g.sman.modify(self.skin_id,scale=(self.box.w/w,self.box.h/h))
+
+        self.loaded = True
+
+    def deload(self):
+
+        if hasattr(self,'skin_id'):
+            g.sman.delete(self.skin_id)
+            del self.skin_id
+
+        self.loaded = False
+
     ##
 
     def check_mouse(self,x,y):
@@ -3331,7 +3356,7 @@ class Zone_UI(Zone):
             self.unhoover()
             return False
 
-class Plume_UI(Zone_UI):
+class Plume_UI(UI):
 
     def __init__(self,box,plume):
 
@@ -3341,7 +3366,7 @@ class Plume_UI(Zone_UI):
 
         #self.plume = phase
 
-class Life_UI(Zone_UI):
+class Life_UI(UI):
 
     def __init__(self,box,perso):
         self.perso = perso
@@ -3357,7 +3382,7 @@ class Life_UI(Zone_UI):
         g.sman.delete(self.label_bg)
         self.label_bg = g.sman.addCol('delta_blue',boxbg,group='ui-1',vis=self._hoover)
 
-class Cred_UI(Zone_UI):
+class Cred_UI(UI):
 
     def __init__(self,box,perso):
         self.perso = perso
@@ -3374,7 +3399,7 @@ class Cred_UI(Zone_UI):
 
 ##
 
-class Press_UI(Zone_UI):
+class Press_UI(UI):
 
     def __init__(self,box2,lab_text='UIthg',textid='white',group='ui',makeCol=False,longpress=False,colorlab=c['coral']):
         super(Press_UI,self).__init__(box2,lab_text,textid,group,makeCol,colorlab)

@@ -535,6 +535,9 @@ class App():
 
         if not self.focus:
 
+            #print(symbol,key.SLASH,key.BACKSLASH)
+            #print(key.__dict__)
+
             ## real keys
             if symbol == key.F1:
                 self.screen_capture()
@@ -544,6 +547,8 @@ class App():
 
             elif symbol == key.T:
                 cmd.roll_activate(self)
+            elif symbol == key.COLON:
+                cmd.roll_activate(self,True)
 
             elif symbol == key.Y:
                 cmd.rollhide()
@@ -554,7 +559,6 @@ class App():
                     self.change_action('pause')
                     if not ESK_QUIT:
                         return pyglet.event.EVENT_HANDLED
-                #affiche les différents OrderedGroup d'affichage
 
                 elif symbol == key.B:
                     print(self.perso.invhud)
@@ -1073,7 +1077,6 @@ class App():
                 # HOUR LABEL
                 g.lman.set_text(self.lab_time,'  '+str(g.Cyc))
 
-
             perso_street = o2.NY.CITY[self.perso.street]
             # STREETS
             perso_street.update(g.Cam.X+ g.GodCam.X,g.Cam.Y)
@@ -1152,7 +1155,6 @@ class App():
 
             # CAM
             if True:
-
                 g.Cam.update(perso_street)
 
             # if not pause, go streamin and particles
@@ -1160,7 +1162,8 @@ class App():
 
                 ## particles
                 g.pman.modify('icons',dy=0.1)
-                g.pman.modify('dmg',dy=0.1,dx=g.Cam.dx + g.GodCam.X)
+                #print(g.Cam.dx)
+                g.pman.modify('dmg',dy=0.1,dx=-g.Cam.dx + g.GodCam.X)
 
                 ## fans are streaming
                 for i in range(len(self.perso.disco)):
@@ -1172,10 +1175,7 @@ class App():
                 ## updates charts
                 #p.update_charts()
 
-            if len(p.GUYS) > 0:
-                text_lab = (p.GUYS[0].bigdoing['lab'],list(map(lambda x:x['lab'],p.GUYS[0].todo)),p.GUYS[0].doing)
-            else:
-                text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
+            text_lab = (self.perso.poto.bigdoing['lab'],list(map(lambda x:x['lab'],self.perso.poto.todo)),self.perso.poto.doing)
             g.lman.set_text(self.lab_doing,text_lab)
             self.perso.hud.update()
             self.perso.bigmap.update()
