@@ -11,17 +11,32 @@ from colors import *
 from src.colors import *
 from src.utils import *
 import random as r
+import plume
 
+# useful
+def get_hum(name):
+
+    if name == '@':
+        if hasattr(Cmd,'perso'):
+            return Cmd.perso
+    for h in p.BOTS+p.GUYS:
+        if h.name == name or h.id == name:
+            return h
+
+def get_street(name):
+    if name == '@':
+        if hasattr(Cmd,'perso'):
+            return o2.NY.CITY[Cmd.perso.street]
+    if name in o2.NY.CITY:
+        return o2.NY.CITY[name]
+
+# dic of cmds
 def cmds():
 
     # tps
     def tp(name,x='None',y='None',street='None'):
 
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -40,32 +55,23 @@ def cmds():
             else:
                 y = None
 
-        if street == 'None':
-            street = None
-        else:
-            street = o2.NY.CITY[street]
+        street = get_street(street)
 
         hum.tp(x,y,street)
 
     def tp_self(x='None',y='None',street='None'):
 
-        hum = None
-
-        if hasattr(Cmd,'perso'):
-            hum = Cmd.perso.name
-
-        return tp(hum,x,y,street)
+        hum = get_hum('@')
+        if not hum:
+            return 'entity not found'
+        return tp(hum.id,x,y,street)
 
     def tp_street(name,street):
         return tp(name,'None','None',street)
 
     def tp_to_perso(name,dest_name):
 
-        dest = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == dest_name:
-                dest = h
-                break
+        dest = get_hum(dest_name)
         if not dest:
             return 'destination entity not found'
 
@@ -74,11 +80,7 @@ def cmds():
 
     # general perso
     def set_streams(name,qté):
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -87,11 +89,7 @@ def cmds():
         hum.nb_streams = qté
 
     def set_money(name,qté):
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -100,11 +98,7 @@ def cmds():
         hum.money = qté
 
     def add_money(name,qté):
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -113,11 +107,7 @@ def cmds():
         hum.add_money(qté)
 
     def set_fans(name,qté):
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -128,9 +118,7 @@ def cmds():
 
     # perso godmode, kill toussa toussa
     def wesh():
-        hum = None
-        if hasattr(Cmd,'perso'):
-            hum = Cmd.perso
+        hum = get_hum('@')
         if not hum:
             return 'self not found'
         #print('oh yo',hum,hum.name)
@@ -148,11 +136,7 @@ def cmds():
         hum.confidence = 100
 
     def kill(name):
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -160,11 +144,7 @@ def cmds():
         hum.die()
 
     def stop(name):
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -172,11 +152,7 @@ def cmds():
         hum.immobilised = True
 
     def free(name):
-        hum = None
-        for h in p.BOTS+p.GUYS:
-            if h.name == name or h.id == name:
-                hum = h
-                break
+        hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
@@ -194,15 +170,26 @@ def cmds():
         if len(hum.hum_env) > 0:
             bot = hum.hum_env[0]
             #colorsay('green',)
-            return '<cmd> target bot is '+bot.name+', id:'+bot.id
+            return '<@> target bot is '+bot.name+', id:'+bot.id
         else:
-            return '<cmd> '+hum.name+' is alone, id:'+hum.id
+            return '<@> '+hum.name+' is alone, id:'+hum.id
+
+    def street(street=None):
+
+        if street:
+            street = get_street(street)
+            if street:
+                return '<@> '+street.__repr__()
+            else:
+                return 'street not found'
+        else:
+            return '<@> '+o2.NY.name+' city : '+str(len(o2.NY.CITY))+' streets'
 
     #train
     def sbahn_speed(spd='None'):
         if spd == 'None':
             spd = o2.NY.BAHN['sbahn'].max_speed
-            return '<cmd> sbahn speed is '+str(spd)
+            return '<@> sbahn speed is '+str(spd)
         else:
             if spd: spd = int(spd)
             o2.NY.BAHN['sbahn'].max_speed = spd
@@ -218,8 +205,12 @@ def cmds():
         tick = int(tick)
         g.Cyc.tick_set(tick)
 
-    return locals()
+    # general
+    def quit():
+        plume.app.get_out()
+        return 'error'
 
+    return locals()
 commands = cmds()
 
 ##### CONSOLE
@@ -347,8 +338,11 @@ class Console():
             self.input_historic.append(self.document.text)
             self.document.text = ''
 
-    def enter_say(self,thg,hum):
-        self.say('<'+hum.name+'>',thg)
+    def enter_say(self,thg,hum,color=None):
+        if color:
+            self.colorsay(color,'<'+hum.name+'>',thg)
+        else:
+            self.say('<'+hum.name+'>',thg)
 
     def say(self,*args):
 
@@ -368,7 +362,6 @@ class Console():
 
         args = [str(x) for x in args]
         cmd = ' '.join(args)
-        print(color(cmd,col))
 
         self.historic.append(cmd)
         for id in self.ids:
@@ -377,6 +370,11 @@ class Console():
         self.ids.append(id)
         if len(self.ids) >= self.max_length:
             del self.ids[0]
+
+        # on le dit aussi dans le print
+        if col == 'orange':
+            col = 'yellow'
+        print(color(cmd,col))
 
     def rollhide(self):
         g.pman.unhide('cmd',self.visible)

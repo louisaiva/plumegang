@@ -36,7 +36,7 @@ class Train():
         for street in self.circuit:
             NY.CITY[street].set_station(Station(street,self))
 
-        self.max_speed = 400
+        self.max_speed = 300
         self.realspeed = self.max_speed
         self.stopped_here = False
         self.ready_to_go = False
@@ -935,6 +935,18 @@ class Street():
 
         return s
 
+    def __repr__(self):
+        
+        nbh = len(self.humans)
+        for street in self.neighbor:
+            nbh += len(street.humans)
+
+        s = self.name + ' (' +str(self.long)+' blocks) :  '+str(len(list(self.zones)))
+        s +=' zones --- ' + str(len(self.humans)) + ' humans --- ' + str(len(self.items))
+        s +=' items ('+str(nbh)+' humans)'
+        print(s)
+        return s
+
 class Building(Street):
 
     def __init__(self,name='bat1',textures={},box=box(0,-50,5120)):
@@ -1053,6 +1065,7 @@ class CITY():
     def __init__(self):
         self.width = 0
         self.CITY = {}
+        self.name = 'New York bitch'
 
         self.BAHN = {}
         #self.Ghost = Street(preStreet('ghost',1,1,2,1),box=box(0,-50,50))

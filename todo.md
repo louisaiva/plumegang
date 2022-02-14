@@ -1,10 +1,16 @@
 
 
 
-_ceci est le todo à faire hehe_
+>> ceci est le todo à faire hehe
 
 
 **EN COURS**
+
+# REGLER BOTS STREAMINGS
+  grosse perte de fps quand on commence à avoir des gens qui streament
+  -estce que ça vient de la maj update_charts() ?
+  -estce que ça vient seulement de l'algo de streamin ?
+  >> régler ça
 
 # adapt colors
   créer une vraie teinte par jour afin que les batiments gris au loin soient frais
@@ -125,6 +131,7 @@ _ceci est le todo à faire hehe_
     recrée une texture à chaque fois qu'on l'appelle, il faudrait plutot créer une texture
     par couleur et rescale le sprite pour avoir la bonne taille -> a faire
 
+# /tp ...
 
 
 **LINKS**
