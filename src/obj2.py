@@ -744,19 +744,20 @@ class Street():
             xr,xl=xl,xr
 
         il,ir = len(self.catalog)-1,0
-        while self.catalog[il].get('x') > xl and il > 0:
+        while il > 0 and self.catalog[il-1].get('x') > xl :
             il-=1
-        while self.catalog[ir].get('x') < xr and ir > len(self.catalog)-1:
+        while ir < len(self.catalog)-1 and self.catalog[ir+1].get('x') < xr :
             ir+=1
+
+        #print(il,ir+1)
 
         elem = []
         for i in range(il,ir+1):
             elem.append(self.catalog[i])
         return elem
 
-    def environ(self,elem):
-        #tab = self.environ_lr()
-        xl,xr=elem.gex-1000,elem.gex+1000
+    def environ(self,elem,dx=1000):
+        xl,xr=elem.gex-dx,elem.gex+dx
 
         il,ir = len(self.catalog)-1,0
         while il > 0 and self.catalog[il-1].get('x') > xl :
@@ -936,7 +937,7 @@ class Street():
         return s
 
     def __repr__(self):
-        
+
         nbh = len(self.humans)
         for street in self.neighbor:
             nbh += len(street.humans)

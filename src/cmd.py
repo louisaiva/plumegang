@@ -47,7 +47,15 @@ def cmds():
                 x = None
             else:
                 # on essaie de créer trouver un humain pour la destination finale
-                return tp_to_perso(name,x)
+                ret = tp_to_perso(name,x)
+                if not ret:
+                    return
+                # ça veut dire qu'on a pas réussi à trouver l'humain de destination, estce une street ?
+                ret = tp_street(name,x)
+                if not ret:
+                    return
+                else:
+                    return 'error : 2nd parameter nor x, nor human, nor street :/'
 
         if type(y) == type('wesh'):
             if y.isnumeric():
@@ -56,6 +64,8 @@ def cmds():
                 y = None
 
         street = get_street(street)
+        if not street:
+            return 'street not found'
 
         hum.tp(x,y,street)
 
@@ -195,15 +205,27 @@ def cmds():
             o2.NY.BAHN['sbahn'].max_speed = spd
 
     # time/tick
-    def tick_set(tick):
+    def tick(tick=None):
+
+        if tick:
+            tick = int(tick)
+            g.Cyc.tick_set(tick)
+        else:
+            tick = g.Cyc.tick
+            return '<@> tick is at '+str(tick)
+
+    def time(h=None,m=None):
+
+        if not h and not m:
+            return '<@> time is '+str(g.Cyc)
+
+        return '<@> not coded yet ^^*'
 
         tick = int(tick)
         g.Cyc.tick_set(tick)
 
-    def time_set(h='None',m='None'):
-
-        tick = int(tick)
-        g.Cyc.tick_set(tick)
+    def cheat():
+        return '<@> well tried .. but try harder (cheh)'
 
     # general
     def quit():
@@ -331,7 +353,8 @@ class Console():
                         return
 
             else:
-                self.say('<'+hum.name+'>',self.document.text)
+                #self.say('<'+hum.name+'>',self.document.text)
+                hum.say(self.document.text)
 
             if self.document.text in self.input_historic:
                 self.input_historic.remove(self.document.text)

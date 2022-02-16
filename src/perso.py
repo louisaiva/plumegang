@@ -293,6 +293,7 @@ class Human():
         self.inventory['key'] = []
         self.inventory['plume'] = []
         self.inventory['food'] = []
+        self.inventory['weapon'] = []
 
         #selecter
         self.selected = 0
@@ -1037,13 +1038,13 @@ class Human():
                     # là c'est un humain
                     self.last_hit = time.time()
                     self.relup(self.element_colli,self.damage,'peur/rassure')
-                    self.element_colli.be_hit(self)
+                    self.element_colli.be_hit(self,self.damage + r.randint(-5,5))
 
                 elif isinstance(self.element_colli,o.Item_ELEM):
                     # là c'est un item
                     self.element_colli.activate(self)
 
-    def be_hit(self,hitter):
+    def be_hit(self,hitter,dmg):
 
         if self.bigdoing['lab'] == 'heal':
             self.done_todo()
@@ -1054,7 +1055,7 @@ class Human():
             g.bertran.unschedule(self.un_hit)
             g.bertran.schedule_once(self.un_hit, 0.4)
 
-        dmg = hitter.damage + r.randint(-5,5)
+        #dmg = hitter.damage + r.randint(-5,5)
 
         ## on affiche le label que si on se situe dans la bonne street évidemment
         if self.loaded:
@@ -1881,6 +1882,13 @@ class Human():
         return spd
     realspeed = property(_realspeed)
 
+    def _group(self):
+        #k = g.gman.nb_perso_group*self.gey/o2.maxY
+        return o.get_perso_grp(self.gey)
+    group = property(_group)
+
+
+
 # les gens que tu croises dans la rue
 class Fan(Human):
 
@@ -2126,6 +2134,17 @@ class Rappeur(Fan):
 
         self.update_scores()
 
+    def auto_release(self,label):
+
+        choiced_son = None
+        for son in self.selecter.values() + self.inventory['son']:
+            if not son._released:
+                choiced_son = son
+                break
+        if choiced_son:
+            self.release_son(choiced_son,BOTS,g.Cyc.day,label)
+            self.drop(choiced_son,create=False)
+
     # env
     def update_env(self):
 
@@ -2237,7 +2256,6 @@ class Rappeur(Fan):
         return None
     plume = property(_plume)
 
-
 #toa
 class Perso(Rappeur):
 
@@ -2272,6 +2290,7 @@ class Perso(Rappeur):
         if True:
             for i in range(10):
                 self.grab(o.Bottle())
+            self.grab(o.M16())
 
     # cheat
     def cheat(self):
@@ -2300,8 +2319,8 @@ class Perso(Rappeur):
         super(Perso,self).rplum()
         #self.plumhud = o.PlumHUD(self.plume)
 
-    def be_hit(self,hitter):
-        super(Perso,self).be_hit(hitter)
+    def be_hit(self,hitter,dmg):
+        super(Perso,self).be_hit(hitter,dmg)
         #self.credhud.update()
         self.lifehud.update()
 
@@ -2310,16 +2329,6 @@ class Perso(Rappeur):
         #self.credhud.update()
         self.lifehud.update()
 
-    def auto_release(self,label):
-
-        choiced_son = None
-        for son in self.inventory['son']:
-            if not son._released:
-                choiced_son = son
-                break
-        if choiced_son != None:
-            self.release_son(choiced_son,BOTS,g.Cyc.day,label)
-            self.drop(choiced_son,create=False)
 
     ## particles
 
@@ -2380,7 +2389,6 @@ class Perso(Rappeur):
     def _type(self):
         return 'PERSO'
     type = property(_type)
-
 
 
 """'''''''CHARTS'''''''''''''''''''''''''"""

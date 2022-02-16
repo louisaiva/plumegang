@@ -220,6 +220,46 @@ def get_perso_grp(gey):
 
     return grp
 
+def bullet_run(dt,keyid,weapon):
+    bullet = weapon.bullets[keyid]
+    dir = bullet['dir']
+
+    #print(dir)
+
+    x = g.pman.spr_lab(keyid).x
+
+    if dir == 1:
+        if x + weapon.launch_spd > bullet['x'] + dir*weapon.area:
+            g.pman.delete(keyid)
+        else:
+            g.pman.modify_single(keyid,dx=dir*weapon.launch_spd)
+            env = o2.NY.CITY[bullet['street']].environ_lr(x,x - weapon.launch_spd)
+            touched = list(filter(lambda x:x['type'] == 'hum',env))
+            if touched:
+                for hum in list(map(lambda x:x['elem'],touched)):
+                    if hum != bullet['hitter']:
+                        hum.be_hit(bullet['hitter'],bullet['dmg'])
+                        g.pman.delete(keyid)
+                        return
+            g.bertran.schedule_once(bullet_run,0,keyid,weapon)
+
+    elif dir == -1:
+        if x - weapon.launch_spd < bullet['x'] + dir*weapon.area:
+            g.pman.delete(keyid)
+        else:
+            g.pman.modify_single(keyid,dx=dir*weapon.launch_spd)
+            env = o2.NY.CITY[bullet['street']].environ_lr(x - weapon.launch_spd,x)
+            touched = list(filter(lambda x:x['type'] == 'hum',env))
+            if touched:
+                for hum in list(map(lambda x:x['elem'],touched)):
+                    if hum != bullet['hitter']:
+                        hum.be_hit(bullet['hitter'],bullet['dmg'])
+                        g.pman.delete(keyid)
+                        return
+            g.bertran.schedule_once(bullet_run,0,keyid,weapon)
+
+
+
 """'''''''''''''''''''''''''''''''''
 '''''''ITEMS''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''"""
@@ -320,6 +360,43 @@ class Bottle(Food_item):
 
         self.qt -= other.qt
         return other
+
+class Fire_weapon(Item):
+
+    def __init__(self):
+        super(Fire_weapon,self).__init__()
+        self.cat = 'weapon'
+        self.damage = 10
+        self.area = 10000
+        self.launch_spd = 100
+        # damage per ball
+        self.automatic = False
+        # u need to click to launch a ball
+
+        self.bullets = {}
+
+    def act(self,perso):
+
+        dir = perso.dir
+        if dir == 'R':
+            dir = 1
+        elif dir == 'L':
+            dir = -1
+
+        keyid = g.pman.addCol(col='white',box=box(x=perso.box.cx,y=perso.box.cy,w=10,h=2),duree=None,group=perso.group,key='bullet')
+        self.bullets[keyid] = {'x':perso.gex,'dir':dir,'street':perso.street,'hitter':perso,'dmg':self.damage}
+        g.bertran.schedule_once(bullet_run,0,keyid,self)
+
+    def _single_act(self):
+        return not self.automatic
+    single_act = property(_single_act)
+
+class M16(Fire_weapon):
+
+    def __init__(self):
+        super(M16,self).__init__()
+        self.damage = 5
+        self.automatic = True
 
 
 '''''''''SOUND'''''''''
@@ -520,6 +597,18 @@ class Son(Sound_item):
     def __str__(self):
         return 'son   ' + '  ' + trunc(self.quality,5) +' '+convert_quality(self.quality) + '  ' + str(self.cred)
 
+SPOTIFY = {}
+# contient tous les sons publiés à ce jour
+def target_spot(hum):
+    # renvoie une musique en fonction des goûts de l'humain
+    pass
+    # aléatoire : si on a trop écouté cte zik on peu être saoulé
+def explore_spot(hum):
+    # renvoie une musique pas habituelle pour voir si l'humain kiffe
+    pass
+    # aléatoire pour si l'humain kiffe : change ses goûts un chouilla
+
+
 
 """'''''''''''''''''''''''''''''''''
 '''''''LABELS'''''''''''''''''''''''
@@ -530,6 +619,7 @@ class Label():
     def __init__(self,nom='DefJam'):
 
         self.name = nom  #name of the label
+        SPOTIFY[self.name] = []
 
         self.rappeurs = [] #each rapper workin with this label
 
@@ -539,6 +629,7 @@ class Label():
         self.dailystreams = {}
 
         self.thune = 0
+        self.promo = 100
 
         ## argent gagné par stream :
         ## caisse = nb_streams * prix_stream * pourcentage_pour_artiste
@@ -557,10 +648,15 @@ class Label():
         g.pman.alert(exp)
 
     def release(self,son,perc=0.5):
-        if son not in self.sons:
+        if not son._released:
             rapper = son.author
             self.sons[rapper][son] = perc
             self.streams[rapper][son] = 0
+
+            score = self.promo*perc
+            sd = {'son':son , 'promo':score }
+
+            SPOTIFY.append(sd)
 
     def stream(self,son):
         self.streams[son.author][son] += 1

@@ -28,7 +28,7 @@ class ScreenManager():
         self.display = pyglet.canvas.get_display()
         self.screens = self.display.get_screens()
 
-        self.current_screen = self.screens[-1]
+        self.current_screen = self.screens[0]
         #print(dir(self.current_screen))
 
     def update_screen(self,window):
@@ -610,6 +610,7 @@ class ParticleManager():
         self.sprites['normal'] = {}
         self.sprites['steam'] = {}
         self.sprites['steam2'] = {}
+        self.sprites['bullet'] = {}
 
         self.labels = {}
         self.labels['normal'] = {}
@@ -623,7 +624,8 @@ class ParticleManager():
         id = u.get_id('spr_part')
         #self.ids.append(id)
 
-        self.sprites[key][id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch,visible=vis)
+        self.sprites[key][id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
+        self.sprites[key][id].visible = vis
         self.sprites[key][id].position = xy_pos
         self.sprites[key][id].opacity = opac
 
@@ -631,7 +633,10 @@ class ParticleManager():
             group = gman.getGroup(group)
             self.sprites[key][id].group = group
 
-        bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
+        if duree:
+            bertran.schedule_once(self.delay_spr,duree*0.01,id,key)
+
+        return key,id
 
     def addLabPart(self,contenu,xy_pos=(0,0),duree=5,font_name=None,font_size=20,group=None,anchor = \
                 ('center','center'),color=(255,255,255,255),key='normal',vis=True,use_str_bien=True,w=20):
@@ -680,11 +685,22 @@ class ParticleManager():
         size = 40
         self.addLabPart(' '.join(cont),xy_pos,duree,font_size=size,color=color,group='ui',use_str_bien=False)
 
-    def addCol(self,col=(255,255,255,255),box=u.box(),duree=5,group=None,key='normal'):
-        pass
+    def addCol(self,col='white',box=u.box(),duree=5,group=None,key='normal'):
         ## not optimized so plz correct it
-        """text = tman.addCol(col)
-        self.addPart(text,box.xy,duree,group,key)"""
+        text = tman.addCol(col)
+        key,id = self.addPart(text,box.xy,duree,group,key)
+
+        scalex,scaley = None,None
+        w,h = box.wh
+        if w != self.sprites[key][id].width:
+            ow = self.sprites[key][id].width/self.sprites[key][id].scale_x
+            scalex = w/ow
+        if h != self.sprites[key][id].height:
+            oh = self.sprites[key][id].height/self.sprites[key][id].scale_y
+            scaley = h/oh
+        self.sprites[key][id].update(scale_x = scalex,scale_y=scaley)
+
+        return key,id
 
     def delay_spr(self,dt,id,key):
 
@@ -783,6 +799,15 @@ class ParticleManager():
         elif key in self.sprites and id in self.sprites[key]:
             self.sprites[key][id].delete()
             del self.sprites[key][id]
+
+    def spr_lab(self,keyid):
+        #print(keyid)
+        key,id = keyid
+        if key in self.labels and id in self.labels[key]:
+            return self.labels[key][id]
+
+        elif key in self.sprites and id in self.sprites[key]:
+            return self.sprites[key][id]
 
 
 pman = ParticleManager()
@@ -1084,7 +1109,13 @@ class Cycle():
         self.tick += 1
         #print(self.tick)
         if self.tick*self.dt > self.day*self.len:
+            if self.tick*self.dt > (self.day+1)*self.len:
+                self.day = int((self.tick*self.dt)/self.len)-1
             self.day_update()
+        elif self.tick*self.dt < (self.day-1)*self.len:
+            if self.tick*self.dt < (self.day-2)*self.len:
+                self.day = int((self.tick*self.dt)/self.len)+1
+            self.day -= 1
         day_percentage = (self.tick*self.dt - (self.day-1)*self.len )/self.len
         #print(day_percentage)
         self.update(day_percentage)
@@ -1363,7 +1394,7 @@ class Camera():
             if speed == 0:
                 self._dx = 0
                 return
-                
+
             #X
             if movin_box[2] > 4*scr.size[0]/5 and (xf == None or street.rxf > scr.size[0] +speed):
                 self.X -= self.followin.realspeed

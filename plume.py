@@ -323,6 +323,7 @@ class App():
             g.TEXTIDS['items']['key'] = g.TEXTIDS['ux'][3]
             g.TEXTIDS['items']['bottle'] = g.TEXTIDS['ux'][7]
             g.TEXTIDS['items']['noodle'] = g.TEXTIDS['ux'][6]
+            g.TEXTIDS['items']['m16'] = g.TEXTIDS['ux'][8]
 
         # BG
         if True:
@@ -475,7 +476,6 @@ class App():
                     self.menu_fonct[res](*self.menu_args[res])
                 elif res in self.menu_fonct:
                     self.menu_fonct[res]()
-
 
     ### ONCE FUNCTIONS
 
@@ -1164,6 +1164,7 @@ class App():
                 g.pman.modify('icons',dy=0.1)
                 #print(g.Cam.dx)
                 g.pman.modify('dmg',dy=0.1,dx=-g.Cam.dx + g.GodCam.X)
+                g.pman.modify('bullet',dx=-g.Cam.dx + g.GodCam.X)
 
                 ## fans are streaming
                 for i in range(len(self.perso.disco)):
