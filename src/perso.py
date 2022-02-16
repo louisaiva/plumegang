@@ -285,6 +285,12 @@ class Human():
         self.vehicle = None
         self.immobilised = False
 
+        self.MODE = 'peace' ## peace/fight/sneak
+        self.MODES = ['fight','peace','sneak']
+
+        # PEACE : récup les objets,activer les objets
+        # FIGHT : donner des coups, tirer si arme (récup aussi les objets si jamais)
+
         #inventory
         self.inventory = {}
         self.inventory['son'] = []
@@ -380,15 +386,12 @@ class Human():
         self.speed = 0
         self.yspeed = 0
 
-        print(self.inventory,self.selecter)
-
         for key in self.inventory['key']:
             self.drop(key)
 
         for item in self.selecter.values():
             if item != None:
                 self.drop(item)
-        print(self.inventory,self.selecter)
 
         if hasattr(self,'label_life'):
             g.sman.delete(self.label_life)
@@ -1061,7 +1064,7 @@ class Human():
         if self.loaded:
             ## label +57
             s=convert_huge_nb(dmg)
-            pos = self.box.cx +r.randint(-10,10),self.box.fy
+            pos = self.gcx +r.randint(-10,10),self.box.fy
             g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=o2.NY.CITY[self.street].visible)
 
         ## dmging
@@ -1071,11 +1074,13 @@ class Human():
         self.relup(hitter,-dmg)
         self.relup(hitter,-dmg,'peur/rassure')
 
-
-
         if (self.life <= 0) and 'die' not in self.doing:
             #print(red())
-            cmd.colorsay('red',hitter.name,'killed',self.name)
+            if self == hitter:
+                cmd.colorsay('red',hitter.name,'committed suicide')
+            else:
+                cmd.colorsay('red',hitter.name,'killed',self.name)
+
             self.die()
 
         if self.alive and type(self) != Perso:
@@ -1117,7 +1122,6 @@ class Human():
                 self.add_todo('heal',self.heal,90)
                 self.rsay('aled')
 
-
         self.last_hit = time.time()
 
     def un_hit(self,dt):
@@ -1150,17 +1154,44 @@ class Human():
 
     def act(self):
 
-        if self.actin == None:
-            if (self.element_colli != None and isinstance(self.element_colli,o.Item_ELEM)) \
-                        or self.selecter[self.selected] == None\
-                        or not hasattr(self.selecter[self.selected],'act'):
-                self.actin = 'hit'
-                self.hit()
-            else:
-                self.actin = self.selecter[self.selected]
-                self.selecter[self.selected].act(self)
-        elif self.selecter[self.selected] != None and self.actin == self.selecter[self.selected] and hasattr(self.selecter[self.selected],'act') and not self.selecter[self.selected].single_act :
-            self.selecter[self.selected].act(self)
+        if not self.static:
+
+            if self.MODE == 'peace':
+
+                if self.actin == None:
+                    # si on marche sur un item on le ramasse
+                    if (self.element_colli != None and isinstance(self.element_colli,o.Item_ELEM)):
+                        self.actin = 'grab'
+                        self.do('hit')
+                        self.element_colli.activate(self)
+                    elif self.selecter[self.selected] and hasattr(self.selecter[self.selected],'act'): # sinon on active cqu'il spasse
+                        self.actin = self.selecter[self.selected]
+                        self.selecter[self.selected].act(self)
+                elif self.selecter[self.selected] != None and self.actin == self.selecter[self.selected] and hasattr(self.selecter[self.selected],'act') and not self.selecter[self.selected].single_act :
+                    # là on continue d'activer le truc si on fait un truc en continu (boire)
+                    self.selecter[self.selected].act(self)
+
+            elif self.MODE == 'fight':
+
+                if self.actin == None:
+                    # si on marche sur un item on le ramasse
+                    if (self.element_colli != None and isinstance(self.element_colli,o.Item_ELEM)):
+                        self.actin = 'grab'
+                        self.do('hit')
+                        self.element_colli.activate(self)
+                    elif self.selecter[self.selected] and hasattr(self.selecter[self.selected],'hit'): # sinon on hit avec notre arme
+                        self.actin = self.selecter[self.selected]
+                        self.selecter[self.selected].hit(self)
+                    else:
+                        self.actin = 'hit'
+                        self.hit()
+                elif self.selecter[self.selected] != None and self.actin == self.selecter[self.selected] and hasattr(self.selecter[self.selected],'hit') and not self.selecter[self.selected].single_act :
+                    # là on continue d'activer le truc si on fait un truc en continu (boire)
+                    self.selecter[self.selected].hit(self)
+
+        if self.actin and 'heal' in self.doing:
+            self.done_todo()
+            self.time_last_move = time.time()
 
     def unact(self):
 
@@ -1191,7 +1222,7 @@ class Human():
                 dx += 150
             else:
                 dx -= 150
-            print('creatin item',thg)
+            #print('creatin item',thg)
             o.Item_ELEM(thg,(x+w/2+dx,y),self.street)
 
     def grab(self,thg,inventory=False):
@@ -1256,6 +1287,21 @@ class Human():
 
         if isinstance(self,Perso) : self.selhud.update()
 
+    def roll_mode(self,modes=None):
+
+        if not modes:
+            modes = self.MODES
+
+        k = modes.index(self.MODE)
+        if k+1 >= len(modes):
+            newmode = modes[0]
+        else:
+            newmode = modes[k+1]
+
+        if newmode == 'fight':
+            g.alert('FIGHT MODE ACTIVATED')
+
+        self.MODE = newmode
 
     ## BOTS
 
@@ -1536,7 +1582,7 @@ class Human():
                 g.pman.delete(self.keyids_voc)
 
             # gaffe faut modifier aussi dans l'update
-            x,y = self.box.cx,self.box.fy + 150
+            x,y = self.gcx,self.box.fy + 150
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
                                     ,group='frontstreet',vis=self.loaded,duree=duree,w=w)
 
@@ -1811,6 +1857,11 @@ class Human():
         s = self.name +' ('+red(self.type) + ')'+' ['+ blue(self.street)+'] '
         return s
 
+    def __str__(self):
+        s = self.name +' '+str(self.life)+'/'+str(self.max_life)+' ' +' ('+self.type + ')'+' ['+ self.street+'] '
+        return s
+
+
     def _type(self):
         return 'HUMAN'
     type = property(_type)
@@ -1822,6 +1873,16 @@ class Human():
         w,h=xf-x,yf-y
         return box(x,y,w,h)
     box = property(_box)
+    def _gfx(self):
+        return self.gex + self.w
+    gfx = property(_gfx)
+    def _gcx(self):
+        return self.gex + self.w/2
+    gcx = property(_gcx)
+    def _w(self):
+        return SIZE_SPR
+    w = property(_w)
+
     def _realbox(self):
         if hasattr(self,'skin_id'):
             return g.sman.realbox(self.skin_id)
@@ -1947,17 +2008,6 @@ class Fan(Human):
                     exp = self.voc.omg_c_delta(hum.name)
                     print(self.name,':',exp)
                     self.say(exp)
-
-    def __str__(self):
-        s = '-100 '
-        for i in range(-10,11):
-            if i*10 >= self.cred_range[0] and i*10 <= self.cred_range[1]:
-                s+='#'
-            else:
-                s+='_'
-        s+= ' 100'
-
-        return s + ' ' + self.name
 
     def _type(self):
         return 'FAN'

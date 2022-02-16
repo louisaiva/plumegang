@@ -13,6 +13,9 @@ from src.utils import *
 import random as r
 import plume
 
+CMD_TRY = False
+# useful for resolving bug in the functions
+
 # useful
 def get_hum(name):
 
@@ -98,6 +101,15 @@ def cmds():
 
         hum.nb_streams = qté
 
+    def add_streams(name,qté):
+        hum = get_hum(name)
+        if not hum:
+            return 'entity not found'
+
+        if qté: qté = int(qté)
+
+        hum.nb_streams += qté
+
     def set_money(name,qté):
         hum = get_hum(name)
         if not hum:
@@ -150,8 +162,7 @@ def cmds():
         if not hum:
             return 'entity not found'
 
-        colorsay('red','a command just killed',hum.name)
-        hum.die()
+        dmg(name,hum.max_life)
 
     def stop(name):
         hum = get_hum(name)
@@ -168,6 +179,27 @@ def cmds():
 
         colorsay('orange','a command just freed',hum.name)
         hum.immobilised = False
+
+    def dmg(name,qté='20'):
+        hum = get_hum(name)
+        if not hum:
+            return 'entity not found'
+
+        hitter = get_hum('@')
+        if not hitter:
+            return '@ not found'
+
+        if qté: qté = int(qté)
+
+        hum.be_hit(hitter,qté)
+
+    def perso(name='@'):
+        hum = get_hum(name)
+        if not hum:
+            return 'entity not found'
+
+        return '<@> '+ str(hum)
+
 
     # id
     def get_id():
@@ -282,7 +314,7 @@ class Console():
             self.rect = g.sman.addCol('black_faded',box(x=self.x-2 , y=self.y-3*self.size - 2 , w=3*g.scr.w//4 + 2,h=height + 2),group='up-1')
 
             self.activated = True
-            g.bertran.schedule_once(window.set_focus,0.2,self)
+            pyglet.clock.schedule_once(window.set_focus,0.2,self)
             if cmd: self.document.text = '/'
             self.caret.position = len(self.document.text)
         else:
@@ -337,7 +369,25 @@ class Console():
                     self.colorsay('red','command not found')
                     return
                 else:
-                    try:
+
+                    if CMD_TRY:# là on try:
+                        try:
+                            result = commands[par[0]]( *par[1:] )
+                            if result == None:
+                                self.colorsay('green','command sucessful !')
+                                if self.document.text in self.input_historic:
+                                    self.input_historic.remove(self.document.text)
+                                self.input_historic.append(self.document.text)
+                                self.roll_activate(self.window)
+                                return
+                            else:
+                                self.colorsay('orange',result)
+                        except:
+                            self.colorsay('red','error in the cmd')
+                            return
+
+                    else:# là on try pas
+
                         result = commands[par[0]]( *par[1:] )
                         if result == None:
                             self.colorsay('green','command sucessful !')
@@ -348,10 +398,6 @@ class Console():
                             return
                         else:
                             self.colorsay('orange',result)
-                    except:
-                        self.colorsay('red','error in the parameters')
-                        return
-
             else:
                 #self.say('<'+hum.name+'>',self.document.text)
                 hum.say(self.document.text)
@@ -369,30 +415,32 @@ class Console():
 
     def say(self,*args):
 
-        print(*args)
         args = [str(x) for x in args]
         cmd = ' '.join(args)
-
+        print(*args)
         self.historic.append(cmd)
-        for id in self.ids:
-            g.pman.modify_single(id,dy=self.size+2)
-        id = g.pman.addLabPart(cmd,self.pos,self.dt,font_name=self.font,font_size=self.size,anchor=('left','center'),key='cmd',vis=self.visible,group='up',use_str_bien=False)
-        self.ids.append(id)
-        if len(self.ids) >= self.max_length:
-            del self.ids[0]
+        if self.visible:
+            for id in self.ids:
+                g.pman.modify_single(id,dy=self.size+2)
+            id = g.pman.addLabPart(cmd,self.pos,self.dt,font_name=self.font,font_size=self.size,anchor=('left','center'),key='cmd',vis=self.visible,group='up',use_str_bien=False)
+            self.ids.append(id)
+            if len(self.ids) >= self.max_length:
+                del self.ids[0]
 
     def colorsay(self,col,*args):
 
         args = [str(x) for x in args]
         cmd = ' '.join(args)
 
+
         self.historic.append(cmd)
-        for id in self.ids:
-            g.pman.modify_single(id,dy=self.size+2)
-        id = g.pman.addLabPart(cmd,self.pos,self.dt,font_name=self.font,font_size=self.size,color=c[col],anchor=('left','center'),key='cmd',vis=self.visible,group='up',use_str_bien=False)
-        self.ids.append(id)
-        if len(self.ids) >= self.max_length:
-            del self.ids[0]
+        if self.visible:
+            for id in self.ids:
+                g.pman.modify_single(id,dy=self.size+2)
+            id = g.pman.addLabPart(cmd,self.pos,self.dt,font_name=self.font,font_size=self.size,color=c[col],anchor=('left','center'),key='cmd',vis=self.visible,group='up',use_str_bien=False)
+            self.ids.append(id)
+            if len(self.ids) >= self.max_length:
+                del self.ids[0]
 
         # on le dit aussi dans le print
         if col == 'orange':

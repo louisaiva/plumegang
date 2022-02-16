@@ -224,24 +224,23 @@ def bullet_run(dt,keyid,weapon):
     bullet = weapon.bullets[keyid]
     dir = bullet['dir']
 
-    #print(dir)
-
-    x = g.pman.spr_lab(keyid).x
+    key,id = keyid
+    x = g.pman.part[key][id]['x']
 
     if dir == 1:
         if x + weapon.launch_spd > bullet['x'] + dir*weapon.area:
             g.pman.delete(keyid)
         else:
             g.pman.modify_single(keyid,dx=dir*weapon.launch_spd)
-            env = o2.NY.CITY[bullet['street']].environ_lr(x,x - weapon.launch_spd)
+            env = o2.NY.CITY[bullet['street']].environ_lr(x,x + weapon.launch_spd)
             touched = list(filter(lambda x:x['type'] == 'hum',env))
-            if touched:
-                for hum in list(map(lambda x:x['elem'],touched)):
-                    if hum != bullet['hitter']:
-                        hum.be_hit(bullet['hitter'],bullet['dmg'])
-                        g.pman.delete(keyid)
-                        return
-            g.bertran.schedule_once(bullet_run,0,keyid,weapon)
+            #print(touched)
+            for hum in list(map(lambda x:x['elem'],touched)):
+                if hum != bullet['hitter']:
+                    hum.be_hit(bullet['hitter'],bullet['dmg'])
+                    g.pman.delete(keyid)
+                    return
+            g.bertran.schedule_once(bullet_run,0.0001,keyid,weapon)
 
     elif dir == -1:
         if x - weapon.launch_spd < bullet['x'] + dir*weapon.area:
@@ -250,13 +249,12 @@ def bullet_run(dt,keyid,weapon):
             g.pman.modify_single(keyid,dx=dir*weapon.launch_spd)
             env = o2.NY.CITY[bullet['street']].environ_lr(x - weapon.launch_spd,x)
             touched = list(filter(lambda x:x['type'] == 'hum',env))
-            if touched:
-                for hum in list(map(lambda x:x['elem'],touched)):
-                    if hum != bullet['hitter']:
-                        hum.be_hit(bullet['hitter'],bullet['dmg'])
-                        g.pman.delete(keyid)
-                        return
-            g.bertran.schedule_once(bullet_run,0,keyid,weapon)
+            for hum in list(map(lambda x:x['elem'],touched)):
+                if hum != bullet['hitter']:
+                    hum.be_hit(bullet['hitter'],bullet['dmg'])
+                    g.pman.delete(keyid)
+                    return
+            g.bertran.schedule_once(bullet_run,0.0001,keyid,weapon)
 
 
 
@@ -367,7 +365,7 @@ class Fire_weapon(Item):
         super(Fire_weapon,self).__init__()
         self.cat = 'weapon'
         self.damage = 10
-        self.area = 10000
+        self.area = 1000
         self.launch_spd = 100
         # damage per ball
         self.automatic = False
@@ -375,21 +373,25 @@ class Fire_weapon(Item):
 
         self.bullets = {}
 
-    def act(self,perso):
+    def hit(self,perso):
 
         dir = perso.dir
         if dir == 'R':
             dir = 1
+            gex,gey = perso.gfx + r.randint(0,self.launch_spd),perso.box.cy + r.randint(-2,2)
         elif dir == 'L':
             dir = -1
+            gex,gey = perso.gex - r.randint(0,self.launch_spd),perso.box.cy + r.randint(-2,2)
 
-        keyid = g.pman.addCol(col='white',box=box(x=perso.box.cx,y=perso.box.cy,w=10,h=2),duree=None,group=perso.group,key='bullet')
-        self.bullets[keyid] = {'x':perso.gex,'dir':dir,'street':perso.street,'hitter':perso,'dmg':self.damage}
-        g.bertran.schedule_once(bullet_run,0,keyid,self)
+
+        keyid = g.pman.addCol(col='white',box=box(x=gex,y=gey,w=5,h=2),duree=None,group=perso.group,key='bullet')
+        self.bullets[keyid] = {'x':gex,'dir':dir,'street':perso.street,'hitter':perso,'dmg':self.damage}
+        g.bertran.schedule_once(bullet_run,0.000001,keyid,self)
 
     def _single_act(self):
         return not self.automatic
     single_act = property(_single_act)
+
 
 class M16(Fire_weapon):
 
@@ -1226,7 +1228,7 @@ class HUD():
 
         self.visible = vis
 
-    def addSpr(self,key,textid,xy_pos=(0,0),group=None):
+    def addSpr(self,key,textid,xy_pos=(0,0),group=None,wh=None):
 
         if key in self.sprids:
             g.sman.delete(self.sprids[key])
@@ -1235,6 +1237,9 @@ class HUD():
             group = self.group
 
         self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible)
+
+        if wh and (g.sman.spr(self.sprids[key]).width != wh[0] or g.sman.spr(self.sprids[key]).height != wh[1]):
+            g.sman.modify(self.sprids[key],size=wh)
 
     def addCol(self,key,box,color='delta_purple',group=None):
 
@@ -1279,11 +1284,13 @@ class HUD():
     def modifyLab(self,key,pos=None,col=None):
         g.lman.modify(self.labids[key],pos,color=col)
 
-    def set_text(self,key,text):
+    def set_text(self,key,text,wh=None):
         if key in self.labids:
             g.lman.set_text(self.labids[key],text)
         elif key in self.sprids:
             g.sman.set_text(self.sprids[key],text)
+            if wh and (g.sman.spr(self.sprids[key]).width != wh[0] or g.sman.spr(self.sprids[key]).height != wh[1]):
+                g.sman.modify(self.sprids[key],size=wh)
 
     def unhide(self,hide=False):
 
@@ -1527,14 +1534,17 @@ class PersoHUD(HUD):
     def __init__(self,perso):
 
         super(PersoHUD, self).__init__(group='ui',name='perso')
-        #print(self.group)
 
         self.perso = perso
 
         self.box = box(1700,460+150,200,400)
         self.padding = 64
 
-        self.addCol('bg',self.box,group='ui-1')
+        #self.addCol('bg',self.box,group='ui-1')
+        self.texts = {'fight':g.tman.addCol('red_fight'),'peace':g.tman.addCol('delta_purple'),'sneak':g.tman.addCol('black_faded')}
+        self.addSpr('bg',self.texts[perso.MODE],self.box.xy,group='ui-1',wh=self.box.wh)
+        #g.sman.modify(self.sprids['bg'],size=self.box.wh)
+        self.MODE = perso.MODE
 
         ## name
         self.addLab('name',self.perso.name,(self.box.cx,self.box.y+self.box.h-50),anchor=('center','center'))
@@ -1568,6 +1578,12 @@ class PersoHUD(HUD):
         self.addLab('pressX','X to hide',(self.box.cx,self.box.y+20),font_name=1,font_size=10,color=c['black'],anchor=('center','center'))
 
     def update(self):
+
+        if self.MODE != self.perso.MODE:
+            self.set_text('bg',self.texts[self.perso.MODE],wh=self.box.wh)
+            # resize si jamais la taille est différente de celle de la box
+            #g.sman.modify(self.sprids['bg'],size=self.box.wh)
+            self.MODE = self.perso.MODE
 
         g.lman.set_text(self.labids['coin_lab'],convert_huge_nb(self.perso.money))
         g.lman.set_text(self.labids['fan_lab'],convert_huge_nb(self.perso.nb_fans))
@@ -3051,7 +3067,8 @@ class InventHUD(HUD):
 
         for menu in self.btns:
             ui = self.btns[menu]
-            ui.check_pressed()
+            if ui.check_pressed():
+                return True
 
     def roll_menu(self,menu='general'):
 
@@ -3111,9 +3128,12 @@ class SelectHUD(HUD):
         self.box2.w = self.padding
         self.box2.h = (len(self.perso.selecter)-1)*self.padding
 
+        self.texts = {'fight':g.tman.addCol('red_fight'),'peace':g.tman.addCol('delta_purple'),'sneak':g.tman.addCol('black')}
+        self.faded_texts = {'fight':g.tman.addCol('red_fight_faded'),'peace':g.tman.addCol('delta_blue_faded'),'sneak':g.tman.addCol('black_faded')}
+        self.MODE = self.perso.MODE
 
-        self.addCol('bg',self.box,group='hud2-1')
-        self.addCol('bg2',self.box2,group='hud2-1',color='delta_blue_faded')
+        self.addSpr('bg',self.texts[self.MODE],self.box.xy,group='hud2-1',wh=self.box.wh)
+        self.addSpr('bg2',self.faded_texts[self.MODE],self.box2.xy,group='hud2-1',wh=self.box2.wh)
 
         # inventory
         self.uis = {}
@@ -3129,6 +3149,13 @@ class SelectHUD(HUD):
         self.update()
 
     def update(self):
+
+        # modes
+        if self.MODE != self.perso.MODE:
+            self.set_text('bg',self.texts[self.perso.MODE],wh=self.box.wh)
+            self.set_text('bg2',self.faded_texts[self.perso.MODE],wh=self.box2.wh)
+            self.MODE = self.perso.MODE
+
 
         # on check les items dans le selecter du perso et on les mets à la bonne place
 
@@ -3505,6 +3532,7 @@ class Press_UI(UI):
 
         if self._hoover:
             self.press()
+            return True
 
     def press(self):
         pass

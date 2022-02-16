@@ -619,15 +619,21 @@ class ParticleManager():
         self.labels['say'] = {}
         self.labels['cmd'] = {}
 
-    def addPart(self,textid,xy_pos=(0,0),duree=5,group=None,key='normal',opac=255,vis=True):
+        self.part = {}
+        for cat in list(self.sprites.keys()) + list(self.labels.keys()):
+            self.part[cat] = {}
+
+    def addPart(self,textid,xy_pos=(0,0),duree=5,group='ui',key='normal',opac=255,vis=True):
 
         id = u.get_id('spr_part')
         #self.ids.append(id)
+        x,y = xy_pos
 
         self.sprites[key][id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
         self.sprites[key][id].visible = vis
         self.sprites[key][id].position = xy_pos
         self.sprites[key][id].opacity = opac
+        self.part[key][id] = {'x':x,'y':y}
 
         if group != None:
             group = gman.getGroup(group)
@@ -674,16 +680,12 @@ class ParticleManager():
                         batch=tman.batch,anchor_x= anchor_x,anchor_y= anchor_y,color=color,multiline=multi,align='center',width=width)
 
         self.labels[key][id].x,self.labels[key][id].y = xy_pos
+        x,y = xy_pos
+        self.part[key][id] = {'x':x,'y':y}
 
-        bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
+        if duree:
+            bertran.schedule_once(self.delay_lab,duree*0.01,id,key)
         return key,id
-
-    def alert(self,*cont):
-        xy_pos = scr.cx,3*scr.cy/2
-        color = (255,20,20,255)
-        duree = 10
-        size = 40
-        self.addLabPart(' '.join(cont),xy_pos,duree,font_size=size,color=color,group='ui',use_str_bien=False)
 
     def addCol(self,col='white',box=u.box(),duree=5,group=None,key='normal'):
         ## not optimized so plz correct it
@@ -701,6 +703,13 @@ class ParticleManager():
         self.sprites[key][id].update(scale_x = scalex,scale_y=scaley)
 
         return key,id
+
+    def alert(self,*cont):
+        xy_pos = scr.cx,3*scr.cy/2
+        color = (255,20,20,255)
+        duree = 10
+        size = 40
+        self.addLabPart(' '.join(cont),xy_pos,duree,font_size=size,color=color,group='ui',use_str_bien=False)
 
     def delay_spr(self,dt,id,key):
 
@@ -722,50 +731,87 @@ class ParticleManager():
             else:
                 bertran.schedule_once(self.delay_lab,dt,id,key)
 
-    def modify(self,key,dx=0,dy=0,setx=None,sety=None):
+    def modify(self,key,dx=None,dy=None,setx=None,sety=None,ux=None,uy=None):
         if key in self.sprites:
             for id in self.sprites[key]:
-                if setx == None:
-                    self.sprites[key][id].x += dx
-                else:
+                if setx:
                     self.sprites[key][id].x = setx
-                if sety == None:
-                    self.sprites[key][id].y += dy
-                else:
+                    #self.part[key][id]['x'] = setx #broken
+                elif dx:
+                    self.sprites[key][id].x += dx
+                    self.part[key][id]['x'] += dx
+                elif ux:
+                    self.sprites[key][id].x = self.part[key][id]['x'] + ux
+
+                if sety:
                     self.sprites[key][id].y = sety
+                    #self.part[key][id]['y'] = sety
+                elif dy:
+                    self.sprites[key][id].y += dy
+                    self.part[key][id]['y'] += dy
+                elif uy:
+                    self.sprites[key][id].y += self.part[key][id]['y'] + uy
+
         else:
             for id in self.labels[key]:
-                if setx == None:
-                    self.labels[key][id].x += dx
-                else:
+                if setx:
                     self.labels[key][id].x = setx
-                if sety == None:
-                    self.labels[key][id].y += dy
-                else:
-                    self.labels[key][id].y = sety
+                    #self.part[key][id]['x'] = setx
+                elif dx:
+                    self.labels[key][id].x += dx
+                    self.part[key][id]['x'] += dx
+                elif ux:
+                    self.labels[key][id].x = self.part[key][id]['x'] + ux
 
-    def modify_single(self,keyid,dx=0,dy=0,setx=None,sety=None):
+                if sety:
+                    self.labels[key][id].y = sety
+                    #self.part[key][id]['y'] = sety
+                elif dy:
+                    self.labels[key][id].y += dy
+                    self.part[key][id]['y'] += dy
+                elif uy:
+                    self.labels[key][id].y += self.part[key][id]['y'] + uy
+
+    def modify_single(self,keyid,dx=None,dy=None,setx=None,sety=None,ux=None,uy=None):
         key,id = keyid
         if key in self.labels and id in self.labels[key]:
-            if setx == None:
-                self.labels[key][id].x += dx
-            else:
+            if setx:
                 self.labels[key][id].x = setx
-            if sety == None:
-                self.labels[key][id].y += dy
-            else:
+            elif dx:
+                self.labels[key][id].x += dx
+                self.part[key][id]['x'] += dx
+            elif ux:
+                self.labels[key][id].x = self.part[key][id]['x'] + ux
+
+            if sety:
                 self.labels[key][id].y = sety
+            elif dy:
+                self.labels[key][id].y += dy
+                self.part[key][id]['y'] += dy
+            elif uy:
+                self.labels[key][id].y += self.part[key][id]['y'] + uy
 
         elif key in self.sprites and id in self.sprites[key]:
-            if setx == None:
-                self.sprites[key][id].x += dx
-            else:
+            if setx:
                 self.sprites[key][id].x = setx
-            if sety == None:
-                self.sprites[key][id].y += dy
-            else:
-                self.sprites[key][id].y = sety
+            elif dx:
+                self.sprites[key][id].x += dx
+                self.part[key][id]['x'] += dx
+            elif ux:
+                self.sprites[key][id].x = self.part[key][id]['x'] + ux
 
+            if sety:
+                self.sprites[key][id].y = sety
+            elif dy:
+                self.sprites[key][id].y += dy
+                self.part[key][id]['y'] += dy
+            elif uy:
+                self.sprites[key][id].y += self.part[key][id]['y'] + uy
+
+        if key == 'bullet' and ux == None:
+            return
+            #self.modify_single(keyid,ux=Cam.X+ GodCam.X)
+            print(self.sprites[key][id].x,self.part[key][id])
     def unhide(self,key,hide=False):
         if key in self.sprites:
             for id in self.sprites[key]:
@@ -795,10 +841,12 @@ class ParticleManager():
         if key in self.labels and id in self.labels[key]:
             self.labels[key][id].delete()
             del self.labels[key][id]
+            del self.part[key][id]
 
         elif key in self.sprites and id in self.sprites[key]:
             self.sprites[key][id].delete()
             del self.sprites[key][id]
+            del self.part[key][id]
 
     def spr_lab(self,keyid):
         #print(keyid)
@@ -809,8 +857,9 @@ class ParticleManager():
         elif key in self.sprites and id in self.sprites[key]:
             return self.sprites[key][id]
 
-
 pman = ParticleManager()
+def alert(*args): pman.alert(*args)
+
 
 TEXTIDS = {}
 TEXTIDS['col'] = {}

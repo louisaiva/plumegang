@@ -145,7 +145,7 @@ class Train():
         self.ready_to_go = False
 
         #print(color(self.name+' entering '+self.street,'yellow'))
-        cmd.colorsay('yellow',self.name,'entering',self.street)
+        cmd.colorsay('cyan',self.name,'entering',self.street)
 
     # zone
 
@@ -213,7 +213,7 @@ class Train():
 
                 self.stopped_here = True
                 self.activ_zone()
-                cmd.colorsay('cyan',self.name,'stopped')
+                #cmd.colorsay('cyan',self.name,'stopped')
 
                 ## On vient d'arriver les portes doivent s'ouvrir
                 if not hasattr(self,'spr'):
@@ -740,6 +740,7 @@ class Street():
             return (gex-self.box.x)/(self.box.fx-self.box.x)
 
     def environ_lr(self,xl,xr):
+        #print(xl,xr)
         if xl > xr :
             xr,xl=xl,xr
 

@@ -570,7 +570,10 @@ class App():
                         self.perso.drop_sel()
 
                     elif symbol == key.SPACE:
-                        self.perso.act()
+                        if self.perso.MODE == 'peace':
+                            self.perso.act()
+                        elif self.perso.MODE == 'fight':
+                            self.perso.act()
 
                     elif symbol == key.X:
                         self.perso.hud.rollhide()
@@ -582,8 +585,7 @@ class App():
                         self.perso.invhud.rollhide()
 
                     elif symbol == key.F:
-                        #self.perso.speak()
-                        self.perso.rollspeak(g.M)
+                        self.perso.roll_mode(['fight','peace'])
 
                     elif symbol == key.V:
                         # on assigne le bot le plus proche à être le poto
@@ -639,10 +641,7 @@ class App():
 
         if self.action == "play" and self.perso.alive:
 
-            if symbol == key.F and self.perso.roll != None:
-                self.perso.unroll()
-
-            elif symbol == key.TAB:
+            if symbol == key.TAB:
                 self.perso.relhud.unhide(True)
 
             elif symbol == key.SPACE:
@@ -751,6 +750,7 @@ class App():
             elif button == pyglet.window.mouse.RIGHT: butt = 'R'
 
             letsbacktnothingcaught = False
+            activated_button = False
 
             ## CHECK ALL UI
 
@@ -857,7 +857,8 @@ class App():
                     #self.on_mouse_motion(x,y,0,0)
 
                 #self.perso.invhud.check_hoover(x,y)
-                self.perso.invhud.check_press_btns(x,y)
+                if self.perso.invhud.check_press_btns(x,y):
+                    activated_button = True
 
             # selUI
             if self.perso.selhud.visible:
@@ -887,12 +888,18 @@ class App():
                         self.perso.selhud.item_caught.move(x,y)
                         self.perso.selhud.item_caught.check_mouse(x,y)
 
+            ## ON LANCE LA ROLL de dialogue
+            if not self.this_hud_caught_an_item and self.perso.alive and not activated_button:
+                self.perso.rollspeak(g.M)
+
             if letsbacktnothingcaught:
                 self.on_mouse_motion(x,y,0,0)
                 self.this_hud_caught_an_item = None
 
     def on_mouse_release(self,x,y,button,modifiers):
         g.Cur.reset()
+        if self.perso.roll != None and self.action == "play" and self.perso.alive:
+            self.perso.unroll()
 
     def on_mouse_drag(self,x, y, dx, dy, buttons, modifiers):
         self.on_mouse_motion(x,y,dx,dy)
@@ -1162,9 +1169,9 @@ class App():
 
                 ## particles
                 g.pman.modify('icons',dy=0.1)
-                #print(g.Cam.dx)
-                g.pman.modify('dmg',dy=0.1,dx=-g.Cam.dx + g.GodCam.X)
-                g.pman.modify('bullet',dx=-g.Cam.dx + g.GodCam.X)
+                g.pman.modify('dmg',dy=0.1,ux=g.Cam.X+ g.GodCam.X)
+                g.pman.modify('bullet',ux=g.Cam.X+ g.GodCam.X)
+                #g.pman.modify('bullet',dx=1)
 
                 ## fans are streaming
                 for i in range(len(self.perso.disco)):
