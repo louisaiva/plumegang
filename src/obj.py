@@ -220,41 +220,41 @@ def get_perso_grp(gey):
 
     return grp
 
-def bullet_run(dt,keyid,weapon):
-    bullet = weapon.bullets[keyid]
+def bullet_run(dt,keyid,wp):
+    bullet = wp.bullets[keyid]
     dir = bullet['dir']
 
     key,id = keyid
     x = g.pman.part[key][id]['x']
 
     if dir == 1:
-        if x + weapon.launch_spd > bullet['x'] + dir*weapon.area:
+        if x + wp.launch_spd > bullet['x'] + dir*wp.area:
             g.pman.delete(keyid)
         else:
-            g.pman.modify_single(keyid,dx=dir*weapon.launch_spd)
-            env = o2.NY.CITY[bullet['street']].environ_lr(x,x + weapon.launch_spd)
-            touched = list(filter(lambda x:x['type'] == 'hum',env))
+            g.pman.modify_single(keyid,dx=dir*wp.launch_spd)
+            env = o2.NY.CITY[bullet['street']].environ_lr(x,x + wp.launch_spd)
+            touched = list(filter(lambda x: x['type'] == 'hum' and abs(x['elem'].gey - bullet['y']) < wp.y_area,env))
             #print(touched)
             for hum in list(map(lambda x:x['elem'],touched)):
                 if hum != bullet['hitter']:
-                    hum.be_hit(bullet['hitter'],bullet['dmg'])
+                    hum.be_hit(bullet['hitter'],wp.dmg)
                     g.pman.delete(keyid)
                     return
-            g.bertran.schedule_once(bullet_run,0.0001,keyid,weapon)
+            g.bertran.schedule_once(bullet_run,0.0001,keyid,wp)
 
     elif dir == -1:
-        if x - weapon.launch_spd < bullet['x'] + dir*weapon.area:
+        if x - wp.launch_spd < bullet['x'] + dir*wp.area:
             g.pman.delete(keyid)
         else:
-            g.pman.modify_single(keyid,dx=dir*weapon.launch_spd)
-            env = o2.NY.CITY[bullet['street']].environ_lr(x - weapon.launch_spd,x)
-            touched = list(filter(lambda x:x['type'] == 'hum',env))
+            g.pman.modify_single(keyid,dx=dir*wp.launch_spd)
+            env = o2.NY.CITY[bullet['street']].environ_lr(x - wp.launch_spd,x)
+            touched = list(filter(lambda x:x['type'] == 'hum' and abs(x['elem'].gey - bullet['y']) < wp.y_area,env))
             for hum in list(map(lambda x:x['elem'],touched)):
                 if hum != bullet['hitter']:
-                    hum.be_hit(bullet['hitter'],bullet['dmg'])
+                    hum.be_hit(bullet['hitter'],wp.dmg)
                     g.pman.delete(keyid)
                     return
-            g.bertran.schedule_once(bullet_run,0.0001,keyid,weapon)
+            g.bertran.schedule_once(bullet_run,0.0001,keyid,wp)
 
 
 
@@ -323,6 +323,9 @@ class Bottle(Food_item):
             perso.actin = 'done'
             g.bertran.schedule_once(perso.undo,0.2,'drink')
 
+    def hit(self,perso):
+        pass
+
     def __str__(self):
         return 'bottle of '+convert_huge_nb(self.qt,[' mL',' L',' kL'])+' of water'
 
@@ -364,9 +367,10 @@ class Fire_weapon(Item):
     def __init__(self):
         super(Fire_weapon,self).__init__()
         self.cat = 'weapon'
-        self.damage = 10
+        self.dmg = 10
         self.area = 1000
-        self.launch_spd = 100
+        self.y_area = 30
+        self.launch_spd = 200
         # damage per ball
         self.automatic = False
         # u need to click to launch a ball
@@ -376,16 +380,17 @@ class Fire_weapon(Item):
     def hit(self,perso):
 
         dir = perso.dir
+        gex,gey = perso.pos_bullet
         if dir == 'R':
             dir = 1
-            gex,gey = perso.gfx + r.randint(0,self.launch_spd),perso.box.cy + r.randint(-2,2)
+            gex += r.randint(0,self.launch_spd)
         elif dir == 'L':
             dir = -1
-            gex,gey = perso.gex - r.randint(0,self.launch_spd),perso.box.cy + r.randint(-2,2)
-
+            gex -= r.randint(0,self.launch_spd)
+        gey += r.randint(-2,2)
 
         keyid = g.pman.addCol(col='white',box=box(x=gex,y=gey,w=5,h=2),duree=None,group=perso.group,key='bullet')
-        self.bullets[keyid] = {'x':gex,'dir':dir,'street':perso.street,'hitter':perso,'dmg':self.damage}
+        self.bullets[keyid] = {'x':gex,'y':perso.gey,'dir':dir,'street':perso.street,'hitter':perso}
         g.bertran.schedule_once(bullet_run,0.000001,keyid,self)
 
     def _single_act(self):
@@ -396,8 +401,14 @@ class M16(Fire_weapon):
 
     def __init__(self):
         super(M16,self).__init__()
-        self.damage = 5
+        self.dmg = 1
         self.automatic = True
+        self.y_area = 15
+
+# permet de donner les bons paramètres pour afficher droit l'item sur le perso
+hold_param = {  'm16':{'rota':45,'size':(128,128),'bullet_pos':(64,0)},
+                'bottle':{'rota':45,'size':(128,128)}
+                }
 
 
 '''''''''SOUND'''''''''

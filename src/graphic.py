@@ -102,9 +102,9 @@ class GroupManager():
 
         names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','sbahn','road','buildings','backstreet','backstreet_anim','mid' # good
                             ,'front','perso-1','hud-1','hud','hud1']
-        names += ['persodown']
-        names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
         names += ['persoup']
+        names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
+        names += ['persodown']
         names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','hud22','hud3','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 1
 
@@ -209,8 +209,7 @@ class SpriteManager():
 
         self.filters = {}
 
-    def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True,wh=None,anchor=None):
-
+    def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True,wh=None,anchor=None,rota=None):
 
         if alr_id == -1:
             id = u.get_id('spr')
@@ -223,7 +222,7 @@ class SpriteManager():
         self.sprites[id].visible = vis
 
         #if wh and (self.sprites[id].width != wh[0] or self.sprites[id].height != wh[1]):
-        self.modify(id,size=wh,anchor=anchor)
+        self.modify(id,size=wh,anchor=anchor,rota=rota)
 
         if group != None:
             self.addToGroup(id,group)
@@ -297,7 +296,7 @@ class SpriteManager():
         if sprid in self.sprites:
             return list(tman.textures.keys())[list(tman.textures.values()).index(self.sprites[sprid].image)]
 
-    def modify(self,sprid,pos=None,scale=None,group=None,opacity=None,anchor=None,size=None):
+    def modify(self,sprid,pos=None,scale=None,group=None,rota=None,opacity=None,anchor=None,size=None):
 
         # position
         x,y = None,None
@@ -325,7 +324,6 @@ class SpriteManager():
             if group != self.sprites[sprid].group:
                 self.sprites[sprid].group = group
 
-
         # updating opacity
         if opacity != None:
             if opacity != self.sprites[sprid].opacity:
@@ -333,7 +331,7 @@ class SpriteManager():
 
         # final updating positon and scale
         #
-        self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
+        self.sprites[sprid].update(x=x,y=y,rotation=rota,scale_x = scalex,scale_y=scaley)
 
         if anchor:
             if type(anchor) != type('wesh'):
@@ -356,6 +354,14 @@ class SpriteManager():
                 x -= self.sprites[sprid].width/2
                 y -= self.sprites[sprid].height/2
                 self.sprites[sprid].update(x=x,y=y)
+
+    def flip(self,id,dirx=1,diry=1):
+        if id in self.sprites:
+            scx = self.sprites[id].scale_x
+            if dirx == 1 and scx < 0:
+                self.sprites[id].update(scale_x = -scx,rotation=-self.sprites[id].rotation)
+            elif dirx == -1 and scx > 0:
+                self.sprites[id].update(scale_x = -scx,rotation=-self.sprites[id].rotation)
 
     def set_col(self,sprid,col):
         if col in TEXTIDS['col']:

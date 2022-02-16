@@ -447,14 +447,42 @@ class Human():
 
     ### UPDATES
 
-    def update_skin(self,dt=0.4,repeat=True):
+    def update_skin(self,dt=0.4,repeat=False):
         if hasattr(self,'skin_id'):
 
             ## change the right group compared to y pos
-
-            k = int(g.gman.nb_perso_group*self.gey/o2.maxY)
-            #print(k)
+            #k = int(g.gman.nb_perso_group*self.gey/o2.maxY)
             g.sman.modify(self.skin_id,group=o.get_perso_grp(self.gey))
+
+            ## if fightin, create skin for the weapon
+            item = self.selecter[self.selected]
+            if self.MODE == 'fight' and item and hasattr(item,'hit'):
+
+                # on crée et change la texture
+                param = o.hold_param[type(item).__name__.lower()]
+                text = g.TEXTIDS['items'][type(item).__name__.lower()]
+                if not hasattr(self,'weapon_id'):
+                    self.weapon_id = g.sman.addSpr(text,wh=param['size'],rota=param['rota'])
+                    if self.outside:
+                        g.Cyc.add_spr((self.weapon_id,0.3))
+
+                elif g.sman.spr(self.weapon_id).image != text:
+                    g.sman.set_text(self.weapon_id,text)
+
+                # on modifie le groupe
+                g.sman.modify(self.weapon_id,group=o.get_perso_grp(self.gey-40))
+                #print(o.get_perso_grp(self.gey),o.get_perso_grp(self.gey-40))
+
+                # on flip la texture si besoin
+                if self.dir == 'R':
+                    g.sman.flip(self.weapon_id)
+                elif self.dir == 'L':
+                    g.sman.flip(self.weapon_id,-1)
+            elif (self.MODE != 'fight' or (not item) or (not hasattr(item,'hit'))) and hasattr(self,'weapon_id'):
+                g.sman.delete(self.weapon_id)
+                g.Cyc.del_spr((self.weapon_id,0.3))
+                del self.weapon_id
+
 
             ## roll the animation
             max_roll = len(self.textids[self.doing[0]][self.dir])
@@ -463,17 +491,14 @@ class Human():
 
             g.sman.set_text(self.skin_id,self.textids[self.doing[0]][self.dir][self.roll_skin])
             if g.sman.spr(self.skin_id).width != SIZE_SPR:
-                sc = SIZE_SPR//g.sman.spr(self.skin_id).width
-                gl.glEnable(gl.GL_TEXTURE_2D)
-
-                g.sman.modify(self.skin_id,scale=(sc,sc))
+                g.sman.modify(self.skin_id,size=(SIZE_SPR,SIZE_SPR))
 
             self.roll_skin += 1
             if self.roll_skin >= max_roll:
                 self.roll_skin = 0
 
             if repeat:
-                g.bertran.schedule_once(self.update_skin, 0.2)
+                g.bertran.schedule_once(self.update_skin, 0.2,True)
 
     def update_env(self):
         if self.alive:
@@ -640,6 +665,8 @@ class Human():
                     g.sman.unhide(self.skin_id,True)
             elif hasattr(self,'skin_id') and not g.sman.spr(self.skin_id).visible:
                 g.sman.unhide(self.skin_id)
+            elif hasattr(self,'weapon_id') and not g.sman.spr(self.weapon_id).visible:
+                g.sman.unhide(self.weapon_id)
 
             x_r = self.gex + x
             y_r = self.gey + y
@@ -653,6 +680,10 @@ class Human():
             # updatin pos
             if hasattr(self,'skin_id'):
                 g.sman.modify(self.skin_id,(x_r,y_r))
+
+            if hasattr(self,'weapon_id'):
+                x_r,y_r = self.pos_weapon
+                g.sman.modify(self.weapon_id,(x_r + x,y_r + y))
 
         # updates
         self.update_env()
@@ -775,7 +806,7 @@ class Human():
             if action == 'die':
                 self.doing.insert(0, action)
                 self.undo()
-                self.update_skin(repeat=False)
+                self.update_skin()
             elif self.alive:
                 if action == 'nothing':
                     self.doing = ['nothing']
@@ -784,7 +815,7 @@ class Human():
                 elif action == 'hit':
                     self.doing.insert(0, action)
                     self.undo()
-                    self.update_skin(repeat=False)
+                    self.update_skin()
                     g.bertran.schedule_once(self.undo,0.1,'hit')
 
                 elif action == 'write':
@@ -798,7 +829,7 @@ class Human():
                 elif action == 'heal':
                     self.doing.append(action)
                     self.undo()
-                    self.update_skin(repeat=False)
+                    self.update_skin()
 
                 elif action == 'drink':
                     self.doing.insert(0, action)
@@ -807,7 +838,7 @@ class Human():
                 elif action == 'wait':
                     self.doing.insert(0, action)
                     self.undo()
-                    self.update_skin(repeat=False)
+                    self.update_skin()
 
         if action in ['drink','hit','move']:
             self.time_last_move = time.time()
@@ -973,7 +1004,7 @@ class Human():
                     if self.dir != dir:
                         self.dir = dir
                         self.do('move')
-                        self.update_skin(repeat=False)
+                        self.update_skin()
                     else:
                         self.do('move')
                 else:
@@ -1105,21 +1136,23 @@ class Human():
                     self.add_todo('atak_'+hitter.id,self.attack_hum,80,[hitter])
 
             if self.confidence > 80:
-                self.rsay('tveux mourir?')
+                if not self.keyids_voc:self.rsay('tveux mourir?')
             elif self.confidence > 40:
-                self.rsay('stop taper')
+                if not self.keyids_voc:self.rsay('stop taper')
             elif self.confidence > 20:
                 g.bertran.unschedule(self.hit)
                 g.bertran.unschedule(self.attack_hum)
                 self.add_todo('fuir_'+hitter.id,self.fuir,100,[hitter,1000])
                 self.add_todo('heal',self.heal,90)
-                self.rsay('moi fuir')
+                if not self.keyids_voc:
+                    self.rsay('moi fuir')
             else:
                 g.bertran.unschedule(self.hit)
                 g.bertran.unschedule(self.attack_hum)
                 self.add_todo('fuir_'+hitter.id,self.fuir,100,[hitter])
                 self.add_todo('heal',self.heal,90)
-                self.rsay('aled')
+                if not self.keyids_voc:
+                    self.rsay('aled')
 
         self.last_hit = time.time()
 
@@ -1750,7 +1783,7 @@ class Human():
             if not hasattr(self,'skin_id'):
                 self.roll_skin = 0
                 self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
-                self.update_skin()
+                self.update_skin(repeat=True)
                 if self.outside:
                     g.Cyc.add_spr((self.skin_id,0.3))
 
@@ -1832,7 +1865,6 @@ class Human():
     def set_text(self,key_skin):
         if self.textids != textures[key_skin]:
             self.textids = textures[key_skin]
-            #self.update_skin()
 
     def hoover(self):
         if hasattr(self,'label'):
@@ -1878,9 +1910,39 @@ class Human():
     def _gcx(self):
         return self.gex + self.w/2
     gcx = property(_gcx)
+    def _gcy(self):
+        return self.gey + self.h/2
+    gcy = property(_gcy)
     def _w(self):
         return SIZE_SPR
     w = property(_w)
+    def _h(self):
+        return SIZE_SPR
+    h = property(_h)
+
+    def _pos_weapon(self):
+        y = self.gey + self.h/4
+        """if self.dir == 'R':
+            x = self.gex + 3*self.w/4
+        elif self.dir == 'L':
+            x = self.gex + self.w/4"""
+        x = self.gcx
+        return x,y
+    pos_weapon = property(_pos_weapon)
+    def _pos_bullet(self):
+        x,y = self.pos_weapon
+        item = self.selecter[self.selected]
+        if item and hasattr(item,'hit'):
+            param = o.hold_param[type(item).__name__.lower()]
+            dx,dy = param['bullet_pos']
+            if self.dir == 'R':
+                x += dx
+            elif self.dir == 'L':
+                x -= dx
+            y += dy
+        return x,y
+    pos_bullet = property(_pos_bullet)
+
 
     def _realbox(self):
         if hasattr(self,'skin_id'):
