@@ -392,7 +392,6 @@ class Fire_weapon(Item):
         return not self.automatic
     single_act = property(_single_act)
 
-
 class M16(Fire_weapon):
 
     def __init__(self):
@@ -1115,7 +1114,6 @@ class Ordi(Zone_ACTIV):
         if self.hud.visible:
             perso.do('write')
             perso.undo(0,'wait')
-
         else:
             perso.do('wait')
             self.hud.unhide()
@@ -1228,7 +1226,7 @@ class HUD():
 
         self.visible = vis
 
-    def addSpr(self,key,textid,xy_pos=(0,0),group=None,wh=None):
+    def addSpr(self,key,textid,xy_pos=(0,0),group=None,wh=None,anchor=None):
 
         if key in self.sprids:
             g.sman.delete(self.sprids[key])
@@ -1236,10 +1234,10 @@ class HUD():
         if group == None:
             group = self.group
 
-        self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible)
+        self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible,wh=wh,anchor=anchor)
 
-        if wh and (g.sman.spr(self.sprids[key]).width != wh[0] or g.sman.spr(self.sprids[key]).height != wh[1]):
-            g.sman.modify(self.sprids[key],size=wh)
+        #if wh and (g.sman.spr(self.sprids[key]).width != wh[0] or g.sman.spr(self.sprids[key]).height != wh[1]):
+        #    g.sman.modify(self.sprids[key],size=wh)
 
     def addCol(self,key,box,color='delta_purple',group=None):
 
@@ -1554,7 +1552,7 @@ class PersoHUD(HUD):
         xcoin = self.box.cx
         ycoin = self.lab('name').y  - self.padding
 
-        self.addSpr('coin_spr',g.TEXTIDS['ux'][0],(xcoin,ycoin - g.tman.textures[g.TEXTIDS['ux'][0]].height/2))
+        self.addSpr('coin_spr',g.TEXTIDS['ux'][0],(xcoin,ycoin),wh=(64,64),anchor=('left','center'))
         self.addLab('coin_lab',convert_huge_nb(self.perso.money),(xcoin ,ycoin),font_name=1,font_size=20,color=c['yellow'],anchor=('right','center'))
 
         ## fans
@@ -1562,7 +1560,7 @@ class PersoHUD(HUD):
         xfan = self.box.cx
         yfan = self.lab('coin_lab').y - self.padding
 
-        self.addSpr('fan_spr',g.TEXTIDS['ux'][1],(xfan,yfan - g.tman.textures[g.TEXTIDS['ux'][1]].height/2))
+        self.addSpr('fan_spr',g.TEXTIDS['ux'][1],(xfan,yfan),wh=(64,64),anchor=('left','center'))
         self.addLab('fan_lab',convert_huge_nb(self.perso.nb_fans),(xfan ,yfan),font_name=1,font_size=20,color=c['lightgreen'],anchor=('right','center'))
 
         ## fans
@@ -1570,7 +1568,7 @@ class PersoHUD(HUD):
         xstream = self.box.cx
         ystream = self.lab('fan_lab').y - self.padding
 
-        self.addSpr('stream_spr',g.TEXTIDS['ux'][2],(xstream,ystream - g.tman.textures[g.TEXTIDS['ux'][2]].height/2))
+        self.addSpr('stream_spr',g.TEXTIDS['ux'][2],(xstream,ystream),wh=(64,64),anchor=('left','center'))
         self.addLab('stream_lab',convert_huge_nb(self.perso.nb_streams),(xstream ,ystream),font_name=1,font_size=20,color=c['lightblue'],anchor=('right','center'))
 
 
@@ -1709,15 +1707,15 @@ class FedHydHUD(HUD):
 
         x,y = self.anc
 
-        self.addSpr('water',g.TEXTIDS['items']['bottle'],(x,y),group='hud2-1')
-        g.sman.modify(self.sprids['water'],scale=(0.5,0.5))
+        self.addSpr('water',g.TEXTIDS['items']['bottle'],(x,y),group='hud2-1',wh=(32,32))#,anchor='center')
+        #g.sman.modify(self.sprids['water'],scale=(0.5,0.5))
         self.addSpr('hyd',g.tman.addCol(color='clearwater'),(x+dx,y+dy),group='hud2-1')
         g.sman.modify(self.sprids['hyd'],scale=(size_hyd/g.SPR,sy/g.SPR))
 
         y += g.SPR + 5
 
-        self.addSpr('food',g.TEXTIDS['items']['noodle'],(x,y),group='hud2-1')
-        g.sman.modify(self.sprids['food'],scale=(0.5,0.5))
+        self.addSpr('food',g.TEXTIDS['items']['noodle'],(x,y),group='hud2-1',wh=(32,32))#,anchor='center')
+        #g.sman.modify(self.sprids['food'],scale=(0.5,0.5))
         self.addSpr('fed',g.tman.addCol(color='noodle'),(x+dx,y+dy),group='hud2-1')
         g.sman.modify(self.sprids['fed'],scale=(size_fed/g.SPR,sy/g.SPR))
 
@@ -2337,6 +2335,7 @@ class MarketHUD(HUD):
                     if ui.caught:
                         self.inspect(ui.item,int(lab[-1]))
                         self.delete_ui(lab)
+                        return 2
 
                 elif ui != None: # on est dans le main
                     if self.perso in ui.item.owners:
@@ -2347,6 +2346,8 @@ class MarketHUD(HUD):
                             self.delete_ui(lab)
 
                             return 1
+                    if ui._hoover:
+                        return 2
 
         return 0
 
@@ -2369,7 +2370,7 @@ class MarketHUD(HUD):
         self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),font_name=1,anchor=('center','center'),color=c['white'],font_size=50)
         self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
         self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),font_name=1,anchor=('right','center'),color=c['yellow'],font_size=30)
-        self.addSpr('main_price',g.TEXTIDS['ux'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['ux'][0]].height/2))
+        self.addSpr('main_price',g.TEXTIDS['ux'][0],(self.box.x+129,self.boxs['main'].cy),wh=(64,64),anchor=('left','center'))
 
         if self.perso in ins.owners:
             status,color = "purchased",c['green']
@@ -2415,7 +2416,7 @@ class MarketHUD(HUD):
             self.addLab('main_qua',convert_quality(ins.quality),(self.boxs['main'].cx,self.boxs['main'].cy+padding),anchor=('center','center'),color=c['white'],font_name=1,font_size=50)
             self.addLab('main_bt',ins.author.name,(self.boxs['main'].cx,self.boxs['main'].cy-padding),anchor=('center','center'),color=c['white'],font_size=30)
             self.addLab('main_price',convert_huge_nb(ins.price),(self.box.x+129,self.boxs['main'].cy),anchor=('right','center'),color=c['yellow'],font_name=1,font_size=30)
-            self.addSpr('main_price',g.TEXTIDS['ux'][0],(self.box.x+129,self.boxs['main'].cy - g.tman.textures[g.TEXTIDS['ux'][0]].height/2))
+            self.addSpr('main_price',g.TEXTIDS['ux'][0],(self.box.x+129,self.boxs['main'].cy),wh=(64,64),anchor=('left','center'))
 
             if self.perso in ins.owners:
                 status,color = "purchased",c['green']
@@ -2591,7 +2592,7 @@ class InventHUD(HUD):
             x,y = zone_box.cxy
             x -= 32
             y -= 32
-            self.addSpr('menu_'+self.menus[i],g.TEXTIDS['ux'][4+i],(x,y),group='hud3')
+            self.addSpr('menu_'+self.menus[i],g.TEXTIDS['ux'][4+i],(x,y),group='hud3',wh=(64,64))
             self.btns[self.menus[i]] = Toggle(zone_box,self.roll_menu,[self.menus[i]],self.menus[i],vis=self.visible)
 
         self.btns[self.menu].toggle()
@@ -2945,8 +2946,8 @@ class InventHUD(HUD):
 
     ## de base
 
-    def addSpr(self,key,textid,xy_pos=(0,0),group=None,detail=False):
-        super(InventHUD,self).addSpr(key,textid,xy_pos,group)
+    def addSpr(self,key,textid,xy_pos=(0,0),group=None,detail=False,wh=None,anc=None):
+        super(InventHUD,self).addSpr(key,textid,xy_pos,group,wh,anc)
         if detail:
             self.detaids['spr'][key]=self.sprids[key]
             del self.sprids[key]
@@ -3026,7 +3027,7 @@ class InventHUD(HUD):
 
             else:
                 self.addSpr('detail_spr',g.TEXTIDS['items'][type(ui.item).__name__.lower()],detail=True)
-                g.sman.modify(self.detaids['spr']['detail_spr'],scale=(2,2))
+                g.sman.modify(self.detaids['spr']['detail_spr'],scale=(0.5,0.5))
                 g.sman.modify(self.detaids['spr']['detail_spr'],( self.box3.cx - g.sman.spr(self.detaids['spr']['detail_spr']).width/2 , self.box3.fy - 80 - g.sman.spr(self.detaids['spr']['detail_spr']).height/2 ))
 
                 if type(ui.item).__name__ == 'Key':
@@ -3738,7 +3739,7 @@ class Invent_UI(Item_UI):
         else:
             lab_text = cquecé.lower()
             text = g.TEXTIDS['items'][cquecé.lower()]
-            if not scale : scale = (1,1)
+            if not scale : scale = (0.25,0.25)
 
         super(Invent_UI,self).__init__(item,box,lab_text,text,spr_vis=spr_vis,colorlab=col,scale=scale)
 

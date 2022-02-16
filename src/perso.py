@@ -588,7 +588,6 @@ class Human():
                 if colli_elem != None:
                     self.element_colli = colli_elem
                     self.element_colli.hoover()
-
         else:
             self.element_colli = colli_elem
 
@@ -1948,8 +1947,6 @@ class Human():
         return o.get_perso_grp(self.gey)
     group = property(_group)
 
-
-
 # les gens que tu croises dans la rue
 class Fan(Human):
 
@@ -2161,7 +2158,7 @@ class Rappeur(Fan):
         if type(self) != Perso : self.grab_sel(o.rplum(self.name))
 
     def rplum(self):
-        self.plume = o.rplum(self.name)
+        self.grab(o.rplum(self.name))
 
     def release_son(self,son,fans,day,label):
         self.disco.append(son)

@@ -26,10 +26,14 @@ def get_hum(name):
         if h.name == name or h.id == name:
             return h
 
-def get_street(name):
+def get_street(name,hum=None):
     if name == '@':
         if hasattr(Cmd,'perso'):
             return o2.NY.CITY[Cmd.perso.street]
+
+    if name == '#' and hum:
+        return o2.NY.CITY[hum.street]
+
     if name in o2.NY.CITY:
         return o2.NY.CITY[name]
 
@@ -37,7 +41,7 @@ def get_street(name):
 def cmds():
 
     # tps
-    def tp(name,x='None',y='None',street='None'):
+    def tp(name,x='None',y='None',street='#'):
 
         hum = get_hum(name)
         if not hum:
@@ -66,7 +70,7 @@ def cmds():
             else:
                 y = None
 
-        street = get_street(street)
+        street = get_street(street,hum)
         if not street:
             return 'street not found'
 
@@ -156,6 +160,9 @@ def cmds():
         hum.max_life = 3000
         hum.life = hum.max_life
         hum.confidence = 100
+
+    def esh():
+        return wesh()
 
     def kill(name):
         hum = get_hum(name)

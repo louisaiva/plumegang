@@ -209,7 +209,7 @@ class SpriteManager():
 
         self.filters = {}
 
-    def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True):
+    def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True,wh=None,anchor=None):
 
 
         if alr_id == -1:
@@ -217,13 +217,13 @@ class SpriteManager():
             self.ids.append(id)
         else:
             id =alr_id
-        #print(id)
-
-
 
         self.sprites[id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
         self.sprites[id].position = xy_pos
         self.sprites[id].visible = vis
+
+        #if wh and (self.sprites[id].width != wh[0] or self.sprites[id].height != wh[1]):
+        self.modify(id,size=wh,anchor=anchor)
 
         if group != None:
             self.addToGroup(id,group)
@@ -336,10 +336,25 @@ class SpriteManager():
         self.sprites[sprid].update(x=x,y=y,scale_x = scalex,scale_y=scaley)
 
         if anchor:
-            if anchor == 'center':
+            if type(anchor) != type('wesh'):
+                ancx,ancy = anchor
+                x,y = self.sprites[sprid].position
+                if ancx and ancx == 'center':
+                    x -= self.sprites[sprid].width/2
+                elif ancx and ancx == 'right':
+                    x -= self.sprites[sprid].width
+
+                if ancy and ancy == 'center':
+                    y -= self.sprites[sprid].height/2
+                elif ancy and ancy == 'right':
+                    y -= self.sprites[sprid].height
+
+                self.sprites[sprid].update(x=x,y=y)
+
+            elif anchor == 'center':
                 x,y = self.sprites[sprid].position
                 x -= self.sprites[sprid].width/2
-                y -= self.sprites[sprid].width/2
+                y -= self.sprites[sprid].height/2
                 self.sprites[sprid].update(x=x,y=y)
 
     def set_col(self,sprid,col):

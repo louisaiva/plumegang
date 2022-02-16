@@ -750,7 +750,7 @@ class App():
             elif button == pyglet.window.mouse.RIGHT: butt = 'R'
 
             letsbacktnothingcaught = False
-            activated_button = False
+            activated_smthg = False
 
             ## CHECK ALL UI
 
@@ -775,9 +775,11 @@ class App():
                                         self.perso.grab(zone.hud.ui.item,True)
                                         o2.NY.CITY[self.perso.street].zones['lit'].hud.delete_phase()
                                         letsbacktnothingcaught = True
+                                        activated_smthg = True
 
                                 elif caught_dropped == -1: # means dropped
                                     letsbacktnothingcaught = True
+                                    activated_smthg = True
 
                                 self.on_mouse_motion(x,y,0,0)
 
@@ -797,9 +799,11 @@ class App():
                                     zone.hud.item_caught.delete()
                                     zone.hud.item_caught = None
                                     letsbacktnothingcaught = True
+                                    activated_smthg = True
 
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
+                                activated_smthg = True
 
                             self.on_mouse_motion(x,y,0,0)
 
@@ -823,8 +827,12 @@ class App():
                                     zone.hud.item_caught.delete()
                                     zone.hud.item_caught = None
                                     letsbacktnothingcaught = True
+                                    activated_smthg = True
                             elif caught_dropped == -1: # means dropped
                                 letsbacktnothingcaught = True
+                                activated_smthg = True
+                            elif caught_dropped == 2: # means smthg actived
+                                activated_smthg = True
 
                             self.on_mouse_motion(x,y,0,0)
 
@@ -845,6 +853,7 @@ class App():
                             # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
                             self.perso.invhud.quick_catch_and_drop()
                             letsbacktnothingcaught = True
+                            activated_smthg = True
 
                     elif caught_dropped == -1: # means dropped
                         letsbacktnothingcaught = True
@@ -858,7 +867,7 @@ class App():
 
                 #self.perso.invhud.check_hoover(x,y)
                 if self.perso.invhud.check_press_btns(x,y):
-                    activated_button = True
+                    activated_smthg = True
 
             # selUI
             if self.perso.selhud.visible:
@@ -870,7 +879,6 @@ class App():
 
                         if not g.keys[key.LSHIFT]:
                             # signifie qu'on prend le hud
-                            #print('oh yo')
                             self.this_hud_caught_an_item = self.perso.selhud
                             self.perso.selhud.item_caught.move(x,y)
                             self.perso.selhud.item_caught.check_mouse(x,y)
@@ -880,6 +888,7 @@ class App():
                             # attrapage rapide dans l'inventaire (fin là en dehors de l'inv)
                             self.perso.selhud.quick_catch_and_drop()
                             letsbacktnothingcaught = True
+                            activated_smthg = True
 
                     elif caught_dropped == -1: # means dropped
                         letsbacktnothingcaught = True
@@ -889,7 +898,7 @@ class App():
                         self.perso.selhud.item_caught.check_mouse(x,y)
 
             ## ON LANCE LA ROLL de dialogue
-            if not self.this_hud_caught_an_item and self.perso.alive and not activated_button:
+            if not self.this_hud_caught_an_item and self.perso.alive and not activated_smthg:
                 self.perso.rollspeak(g.M)
 
             if letsbacktnothingcaught:
