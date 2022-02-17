@@ -132,7 +132,7 @@ class App():
 
             #poto
             p.BOTS.append(p.Fan('perso3',o2.NY.CITY['home'].rand_pos(),street='home'))
-            self.perso.assign_poto(p.BOTS[-1])
+            self.perso.assign_poto(self.perso)
 
 
             self.lab_doing = g.lman.addLab(self.perso.poto.doing,(1880,1050),font_size=20,anchor=('right','top'))
@@ -592,6 +592,8 @@ class App():
                         if len(self.perso.hum_env) > 0:
                             bot = self.perso.hum_env[0]
                             self.perso.assign_poto(bot)
+                        else:
+                            self.perso.assign_poto(self.perso)
 
                     elif symbol == key.M:
                         self.perso.bigmap.rollhide()

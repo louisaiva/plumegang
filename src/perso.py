@@ -363,6 +363,7 @@ class Human():
 
         # track of time
         self.time_last_move = 0
+        self.time_last_acted = 0
 
         #do
         self.doing = ['nothing']
@@ -498,7 +499,6 @@ class Human():
                     g.sman.flip(self.weapon_id)
                 elif self.dir == 'L':
                     g.sman.flip(self.weapon_id,-1)
-
             elif (self.MODE != 'fight' or (not item) or (not hasattr(item,'hit'))) and hasattr(self,'weapon_id'):
                 g.sman.delete(self.weapon_id)
                 g.Cyc.del_spr((self.weapon_id,0.3))
@@ -507,13 +507,30 @@ class Human():
                 g.Cyc.del_spr((self.arm_id,0.3))
                 del self.arm_id
 
+            ## hide weapon+arm if doin != 'hold'
+            if hasattr(self,'weapon_id'):
+                holdin = self.doing == ['hold'] or self.doing == ['move_hold']
+                #print(holdin)
+                if holdin and (not g.sman.spr(self.weapon_id).visible):
+                    g.sman.unhide([self.weapon_id,self.arm_id])
+                elif (not holdin) and g.sman.spr(self.weapon_id).visible:
+                    g.sman.unhide([self.weapon_id,self.arm_id],True)
+
+
+            doin = self.doing[0]
+            # on veut pas voir le act
+            if doin == 'act':
+                if self.MODE == 'fight':
+                    doin = 'hold'
+                elif self.MODE == 'peace':
+                    doin = 'nothing'
 
             ## roll the animation
-            max_roll = len(self.textids[self.doing[0]][self.dir])
+            max_roll = len(self.textids[doin][self.dir])
             if self.roll_skin >= max_roll:
                 self.roll_skin = 0
 
-            g.sman.set_text(self.skin_id,self.textids[self.doing[0]][self.dir][self.roll_skin])
+            g.sman.set_text(self.skin_id,self.textids[doin][self.dir][self.roll_skin])
             if g.sman.spr(self.skin_id).width != SIZE_SPR:
                 g.sman.modify(self.skin_id,size=(SIZE_SPR,SIZE_SPR))
 
@@ -689,8 +706,6 @@ class Human():
                     g.sman.unhide(self.skin_id,True)
             elif hasattr(self,'skin_id') and not g.sman.spr(self.skin_id).visible:
                 g.sman.unhide(self.skin_id)
-            elif hasattr(self,'weapon_id') and not g.sman.spr(self.weapon_id).visible:
-                g.sman.unhide(self.weapon_id)
 
             x_r = self.gex + x
             y_r = self.gey + y
@@ -833,6 +848,8 @@ class Human():
             elif self.MODE == 'fight':
                 action = 'hold'
 
+        #if type(self) == Perso : print('doin',action)
+
         if action not in self.doing:
             if action == 'die':
                 self.doing.insert(0, action)
@@ -854,7 +871,8 @@ class Human():
 
                 elif action == 'move':
                     if self.MODE == 'fight':
-                        self.doing.append('move_hold')
+                        if 'move_hold' not in self.doing:
+                            self.doing.append('move_hold')
                     else:
                         self.doing.append(action)
                     self.undo()
@@ -873,6 +891,10 @@ class Human():
                     self.undo()
                     self.update_skin()
 
+                elif action == 'act':
+                    self.doing.insert(0, action)
+                    self.undo()
+
         if action in ['drink','hit','move']:
             self.time_last_move = time.time()
 
@@ -882,6 +904,8 @@ class Human():
             self.undo(0,'hold')
             action = 'nothing'
 
+        #if type(self) == Perso : print('undoin',action)
+
         if action in self.doing:
             self.doing.remove(action)
             if self.doing == []:
@@ -889,12 +913,17 @@ class Human():
 
     def check_do(self):
 
-        if time.time()-self.time_last_move > 0.2:
-            if 'hit' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing and 'heal' not in self.doing:
+        #print(time.time()-self.time_last_move > 0.01,time.time()-self.time_last_acted > 0.01)
+
+        if time.time()-self.time_last_move > 0.01:
+            if 'hit' not in self.doing and 'act' not in self.doing and 'write' not in self.doing and 'wait' not in self.doing and 'die' not in self.doing and 'heal' not in self.doing:
                 self.do()
             else:
                 self.undo(0,'move')
                 self.undo(0,'move_hold')
+
+        if time.time()-self.time_last_acted > 0.01:
+            self.undo(0,'act')
 
     ## ACTION
 
@@ -919,7 +948,6 @@ class Human():
             activated_smthg = False
 
             if not self.static:
-
                 #R/L
                 if 'write' not in self.doing and 'wait' not in self.doing:
 
@@ -938,9 +966,9 @@ class Human():
                     self.gey+=self.yspeed
                     moved = True
             elif dir == 'down':
-                    if maxy[0] < self.gey-self.yspeed :
-                        self.gey-=self.yspeed
-                        moved = True
+                if maxy[0] < self.gey-self.yspeed :
+                    self.gey-=self.yspeed
+                    moved = True
 
             ## check activations
             if type(self) == Perso:
@@ -950,7 +978,8 @@ class Human():
                     if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
-                        moved = True
+                        activated_smthg = True
+                        moved = False
 
                         # launch longpress
                         if key.Z not in g.longpress:
@@ -962,7 +991,10 @@ class Human():
 
                         #activating
                         if perc > 1:
+                            self.update_skin()
+                            activated_smthg = False
                             self.element_colli.activate(self)
+                            return
 
                 elif dir == 'down':
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
@@ -971,7 +1003,8 @@ class Human():
                     if (maxy[0] >= self.gey-self.yspeed or type(self.vehicle) in [o2.Train]) and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
-                        moved = True
+                        activated_smthg = True
+                        moved = False
 
                         # launch longpress
                         if key.S not in g.longpress:
@@ -983,14 +1016,18 @@ class Human():
 
                         #activating
                         if perc > 1:
+                            self.update_skin()
+                            activated_smthg = False
                             self.element_colli.activate(self)
+                            return
             else:
                 if dir == 'up':
                     #print(self.name,'up')
                     if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
-                        moved = True
+                        activated_smthg = True
+                        moved = False
 
                         # launch longpress
                         if (self,'Z') not in g.longpress:
@@ -1002,14 +1039,18 @@ class Human():
 
                         #activating
                         if perc > 1:
+                            self.update_skin()
+                            activated_smthg = False
                             del g.longpress[(self,'Z')]
                             self.element_colli.activate(self)
+                            return
 
                 if dir == 'down':
                     if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
-                        moved = True
+                        activated_smthg = True
+                        moved = False
 
                         # launch longpress
                         if (self,'S') not in g.longpress:
@@ -1021,11 +1062,17 @@ class Human():
 
                         #activating
                         if perc > 1:
+                            self.update_skin()
                             del g.longpress[(self,'S')]
                             self.element_colli.activate(self)
+                            return
 
             ## checking thg
             if moved :
+
+                if 'heal' in self.doing:
+                    self.done_todo()
+                self.do('act')
 
                 if speed > self.speed:
                     self.addsub_hyd(-0.2)
@@ -1033,9 +1080,6 @@ class Human():
                 else:
                     self.addsub_hyd()
                     self.addsub_fed()
-
-                if 'heal' in self.doing:
-                    self.done_todo()
 
                 if dir in ['R','L']:
                     self._speed = speed
@@ -1051,6 +1095,14 @@ class Human():
 
                 self.time_last_move = time.time()
                 self.check_colli()
+            elif activated_smthg:
+
+                #print('actin')
+                if 'heal' in self.doing:
+                    self.done_todo()
+                self.do('act')
+
+                self.time_last_acted = time.time()
             elif not activated_smthg and speed > self.speed:
                 self.move(dir)
 
@@ -1619,7 +1671,7 @@ class Human():
     def heal(self,dt=0):
 
         if self.alive and self.life <= self.max_life:
-            if not (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) and time.time()-self.time_last_move > 1:
+            if not (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) and time.time()-self.time_last_move > 1 and time.time()-self.time_last_acted > 1:
                 self.do('heal')
                 heal = self.max_life//100
                 self.life += heal
@@ -1966,11 +2018,7 @@ class Human():
     h = property(_h)
 
     def _pos_weapon(self):
-        y = self.gey + self.h/4
-        """if self.dir == 'R':
-            x = self.gex + 3*self.w/4
-        elif self.dir == 'L':
-            x = self.gex + self.w/4"""
+        y = self.gey + self.h/4 + 5
         x = self.gcx
         return x,y
     pos_weapon = property(_pos_weapon)

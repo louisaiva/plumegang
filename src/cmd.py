@@ -207,6 +207,17 @@ def cmds():
 
         return '<@> '+ str(hum)
 
+    def poto(name='@'):
+        hum = get_hum(name)
+        if not hum:
+            return 'entity not found'
+
+        perso = get_hum('@')
+        if not perso:
+            return '@ not found'
+
+        perso.assign_poto(hum)
+        return '<@> '+ hum.name + ' assigned to poto'
 
     # id
     def get_id():
