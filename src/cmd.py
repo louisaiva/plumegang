@@ -6,6 +6,7 @@ enjoy
 from src import perso as p
 from src import graphic as g
 from src import obj2 as o2
+from src import obj as o
 import pyglet,time
 from colors import *
 from src.colors import *
@@ -13,7 +14,7 @@ from src.utils import *
 import random as r
 import plume
 
-CMD_TRY = False
+CMD_TRY = True
 # useful for resolving bug in the functions
 
 # useful
@@ -25,6 +26,28 @@ def get_hum(name):
     for h in p.BOTS+p.GUYS:
         if h.name == name or h.id == name:
             return h
+
+def get_item(name,*args):
+
+    item = None
+    if name in o.catalog_items:
+
+        arg = []
+
+        if o.catalog_items[name]['param'] and args != []:
+            arg = args
+        elif o.catalog_items[name]['param']:
+            arg = o.catalog_items[name]['param']
+
+        if CMD_TRY:
+            try:
+                item = o.catalog_items[name]['elem'](*arg)
+            except:
+                return 'error in the parameters'
+        else:
+            item = o.catalog_items[name]['elem'](*arg)
+
+    return item
 
 def get_street(name,hum=None):
     if name == '@':
@@ -141,6 +164,31 @@ def cmds():
             qté = int(qté)
 
         hum.nb_fans = qté
+
+    # items
+    def give(name,item_name,*args):
+        hum = get_hum(name)
+        if not hum:
+            return 'entity not found'
+
+        #if qté:qté=int(qté)
+
+        #print(args)
+        newarg = []
+        if args != ():
+            for arg in args:
+                if type(arg) == type('wesh') and arg.isnumeric():
+                    arg = int(arg)
+                newarg.append(arg)
+
+        #print(newarg)
+        item = get_item(item_name,*newarg)
+        if type(item) == type('wesh'):
+            return item
+        elif not item:
+            return 'item not found'
+
+        hum.grab(item)
 
     # perso godmode, kill toussa toussa
     def wesh():

@@ -470,7 +470,7 @@ class Human():
             if self.MODE == 'fight' and item and hasattr(item,'hit'):
 
                 # on crée et change la texture
-                param = o.hold_param[type(item).__name__.lower()]
+                param = o.catalog_items[type(item).__name__.lower()]
                 text = g.TEXTIDS['items'][type(item).__name__.lower()]
                 if not hasattr(self,'weapon_id'):
                     self.weapon_id = g.sman.addSpr(text,wh=param['size'],rota=param['rota'])
@@ -2026,7 +2026,7 @@ class Human():
         x,y = self.pos_weapon
         item = self.selecter[self.selected]
         if item and hasattr(item,'hit'):
-            param = o.hold_param[type(item).__name__.lower()]
+            param = o.catalog_items[type(item).__name__.lower()]
             dx,dy = param['bullet_pos']
             if self.dir == 'R':
                 x += dx
@@ -2489,7 +2489,7 @@ class Perso(Rappeur):
         self.grab(o.Bottle())
         self.grab(o.rplum(self.name))
 
-        if True:
+        if False:
             for i in range(10):
                 self.grab(o.Bottle())
             self.grab(o.M16())

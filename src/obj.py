@@ -281,6 +281,8 @@ class Key(Item):
     def __init__(self,street):
         super(Key,self).__init__()
 
+        if type(street) == type('wesh'):
+            street = o2.NY.CITY[street]
         self.target = street
         self.cat = 'key'
 
@@ -298,16 +300,20 @@ class Food_item(Item):
 
 class Bottle(Food_item):
 
-    def __init__(self,stacked=1,liq='water',qt=1000):
+    def __init__(self,stacked=1,liq='water',qt=None):
         super(Bottle,self).__init__()
 
         self.liquid = liq
 
-        self.max_qt = 1000
-        self.qt = qt #qté en mL
+        self.stacked = stacked
+
+        self.max_qt = 1000*stacked
+        if not qt:
+            self.qt = self.max_qt #qté en mL
+        else:
+            self.qt = qt #qté en mL
         # 1 litre d'eau recharge toute une "vie d'eau"
         self.single_act = False
-        self.stacked = stacked
 
     def act(self,perso):
 
@@ -386,7 +392,7 @@ class Fire_weapon(Item):
             gex -= r.randint(0,self.launch_spd)
         gey += r.randint(-2,2)
 
-        keyid = g.pman.addCol(col='white',box=box(x=gex,y=gey,w=5,h=2),duree=None,group=perso.group,key='bullet')
+        keyid = g.pman.addCol(col='black',box=box(x=gex,y=gey,w=5,h=2),duree=None,group=perso.group,key='bullet')
         self.bullets[keyid] = {'x':gex,'y':perso.gey,'dir':dir,'street':perso.street,'hitter':perso}
         g.bertran.schedule_once(bullet_run,0.000001,keyid,self)
 
@@ -403,7 +409,10 @@ class M16(Fire_weapon):
         self.y_area = 15
 
 # permet de donner les bons paramètres pour afficher droit l'item sur le perso
-hold_param = {  'm16':{'rota':45,'size':(128,128),'bullet_pos':(64,0)}
+catalog_items = {   'm16':{'elem':M16,'param':None,'rota':45,'size':(128,128),'bullet_pos':(64,0)},
+                    'water_bottle':{'elem':Bottle,'param':[1]},
+                    'bottle':{'elem':Bottle,'param':[1]},
+                    'key':{'elem':Key,'param':['home']}
                 }
 
 
