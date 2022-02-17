@@ -323,9 +323,6 @@ class Bottle(Food_item):
             perso.actin = 'done'
             g.bertran.schedule_once(perso.undo,0.2,'drink')
 
-    def hit(self,perso):
-        pass
-
     def __str__(self):
         return 'bottle of '+convert_huge_nb(self.qt,[' mL',' L',' kL'])+' of water'
 
@@ -406,8 +403,7 @@ class M16(Fire_weapon):
         self.y_area = 15
 
 # permet de donner les bons paramètres pour afficher droit l'item sur le perso
-hold_param = {  'm16':{'rota':45,'size':(128,128),'bullet_pos':(64,0)},
-                'bottle':{'rota':45,'size':(128,128)}
+hold_param = {  'm16':{'rota':45,'size':(128,128),'bullet_pos':(64,0)}
                 }
 
 

@@ -103,7 +103,12 @@ class GroupManager():
         names = ['sky','stars','moon_sun','bg_buildings_loin','bg_buildings_proche','sbahn','road','buildings','backstreet','backstreet_anim','mid' # good
                             ,'front','perso-1','hud-1','hud','hud1']
         names += ['persoup']
-        names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
+        #names += ['perso'+str(i) for i in range(self.nb_perso_group-1,-1,-1)]
+
+        for i in range(self.nb_perso_group-1,-1,-1):
+            s = 'perso'+str(i)
+            names += [s,s+'_weapon',s+'_arm']
+
         names += ['persodown']
         names += ['frontstreet','frontstreet_anim','hud2-1','hud2','hud21','hud22','hud3','ui-2','ui-1','ui','up-1','up']
         self.distance_btw = 1
@@ -113,12 +118,31 @@ class GroupManager():
 
         #print(dir(self.groups['sky']))
 
-    def getGroup(self,name):
-        if name not in self.groups:
-            print('aie le groupe '+name+' n\'existe pas')
-            return None
-        else:
+    def getGroup(self,name=None,order=None):
+
+        if name and name in self.groups:
             return self.groups[name]
+
+        elif order and order in self.names_wo:
+            return getGroup(self.names_wo[order])
+
+        print('aie le groupe',(name,order),'n\'existe pas')
+
+    def order(self,name=None,group=None):
+
+        if name and name in self.groups:
+            return self.groups[name].order
+
+        elif group:
+            return group.order
+
+        print('aie le groupe '+name+' n\'existe pas')
+
+    def name(self,order):
+        if order and order in self.names_wo:
+            return self.names_wo[order]
+
+        print('aie le groupe',order,'n\'existe pas')
 
     def addGroup(self,name,order):
         if not name in self.groups:
@@ -892,6 +916,7 @@ def print_groups():
 
     tab = []
     orders_sorted = sorted(gman.names_wo,reverse=True)
+    print(orders_sorted,gman.names_wo)
 
     for order in orders_sorted:
         say = str(order)
@@ -942,7 +967,6 @@ def print_groups():
                 if nb_lab > 0:
                     say+= magenta(str(nb_lab))
                 say += green(' particles')
-
 
         print(say)
     print('')
@@ -1225,7 +1249,8 @@ class Cycle():
             sman.modify(self.sprids['stars'],opacity=0)
 
     def add_spr(self,spr):
-        self.plus_sprids.append(spr)
+        if spr not in self.plus_sprids:
+            self.plus_sprids.append(spr)
 
     def del_spr(self,spr):
         if spr in self.plus_sprids:

@@ -121,6 +121,16 @@ def update_textures(keys):
             textures[x]['drink']['L'] = [textids[34],textids[35],textids[36]]
             textures[x]['drink']['R'] = [textids[37],textids[38],textids[39]]
 
+            textures[x]['hold'] = {}
+            textures[x]['hold']['R'] = [textids[40],textids[42]]
+            textures[x]['hold']['L'] = [textids[43],textids[45]]
+            textures[x]['hold']['armR'] = textids[41]
+            textures[x]['hold']['armL'] = textids[44]
+
+            textures[x]['move_hold'] = {}
+            textures[x]['move_hold']['R'] = [textids[40],textids[46]]
+            textures[x]['move_hold']['L'] = [textids[43],textids[47]]
+
 
 
 """'''''''''''''''''''''''''''''''''
@@ -465,23 +475,37 @@ class Human():
                     self.weapon_id = g.sman.addSpr(text,wh=param['size'],rota=param['rota'])
                     if self.outside:
                         g.Cyc.add_spr((self.weapon_id,0.3))
+                    # on remplace le bras
+                    self.arm_id = g.sman.addSpr(self.textids['hold']['arm'+self.dir])
+                    if self.outside:
+                        g.Cyc.add_spr((self.arm_id,0.3))
 
                 elif g.sman.spr(self.weapon_id).image != text:
                     g.sman.set_text(self.weapon_id,text)
 
-                # on modifie le groupe
-                g.sman.modify(self.weapon_id,group=o.get_perso_grp(self.gey-40))
-                #print(o.get_perso_grp(self.gey),o.get_perso_grp(self.gey-40))
+                # on change le bras selon la direction
+                if g.sman.spr(self.arm_id).image != self.textids['hold']['arm'+self.dir]:
+                    g.sman.set_text(self.arm_id,self.textids['hold']['arm'+self.dir])
+
+                # on modifie les groupes
+                grp = o.get_perso_grp(self.gey)
+                g.sman.modify(self.weapon_id,group=grp+'_weapon')
+                g.sman.modify(self.arm_id,group=grp+'_arm')
+                #print(o.get_perso_grp(self.gey),grp,g.gman.name(g.gman.order(grp)+1))
 
                 # on flip la texture si besoin
                 if self.dir == 'R':
                     g.sman.flip(self.weapon_id)
                 elif self.dir == 'L':
                     g.sman.flip(self.weapon_id,-1)
+
             elif (self.MODE != 'fight' or (not item) or (not hasattr(item,'hit'))) and hasattr(self,'weapon_id'):
                 g.sman.delete(self.weapon_id)
                 g.Cyc.del_spr((self.weapon_id,0.3))
                 del self.weapon_id
+                g.sman.delete(self.arm_id)
+                g.Cyc.del_spr((self.arm_id,0.3))
+                del self.arm_id
 
 
             ## roll the animation
@@ -682,6 +706,7 @@ class Human():
                 g.sman.modify(self.skin_id,(x_r,y_r))
 
             if hasattr(self,'weapon_id'):
+                g.sman.modify(self.arm_id,(x_r,y_r))
                 x_r,y_r = self.pos_weapon
                 g.sman.modify(self.weapon_id,(x_r + x,y_r + y))
 
@@ -800,7 +825,13 @@ class Human():
 
     ## DOIN
 
-    def do(self,action='nothing'):
+    def do(self,action=None):
+
+        if not action:
+            if self.MODE == 'peace':
+                action = 'nothing'
+            elif self.MODE == 'fight':
+                action = 'hold'
 
         if action not in self.doing:
             if action == 'die':
@@ -808,9 +839,8 @@ class Human():
                 self.undo()
                 self.update_skin()
             elif self.alive:
-                if action == 'nothing':
-                    self.doing = ['nothing']
-                    #print(self.name,'do notjing')
+                if action == 'nothing' or action == 'hold':
+                    self.doing = [action]
 
                 elif action == 'hit':
                     self.doing.insert(0, action)
@@ -823,7 +853,10 @@ class Human():
                     self.undo()
 
                 elif action == 'move':
-                    self.doing.append(action)
+                    if self.MODE == 'fight':
+                        self.doing.append('move_hold')
+                    else:
+                        self.doing.append(action)
                     self.undo()
 
                 elif action == 'heal':
@@ -843,7 +876,11 @@ class Human():
         if action in ['drink','hit','move']:
             self.time_last_move = time.time()
 
-    def undo(self,dt=0,action='nothing'):
+    def undo(self,dt=0,action=None):
+
+        if not action:
+            self.undo(0,'hold')
+            action = 'nothing'
 
         if action in self.doing:
             self.doing.remove(action)
@@ -857,6 +894,7 @@ class Human():
                 self.do()
             else:
                 self.undo(0,'move')
+                self.undo(0,'move_hold')
 
     ## ACTION
 
@@ -1784,8 +1822,8 @@ class Human():
                 self.roll_skin = 0
                 self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
                 self.update_skin(repeat=True)
-                if self.outside:
-                    g.Cyc.add_spr((self.skin_id,0.3))
+            if self.outside:
+                g.Cyc.add_spr((self.skin_id,0.3))
 
             if not hasattr(self,'label'):
                 #label
@@ -1836,6 +1874,13 @@ class Human():
             del self.label_life
             g.sman.delete(self.label_conf)
             del self.label_conf
+        if hasattr(self,'weapon_id'):
+            g.Cyc.del_spr((self.weapon_id,0.3))
+            g.sman.delete(self.weapon_id)
+            del self.weapon_id
+            g.Cyc.del_spr((self.arm_id,0.3))
+            g.sman.delete(self.arm_id)
+            del self.arm_id
 
         #speaking
         if self.keyids_voc:
