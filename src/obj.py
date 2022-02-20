@@ -957,7 +957,7 @@ class Porte(Zone_ELEM):
 
         if self.openable(perso):
             x = self.xdest + r.randint(0,self.box.w)-self.box.w/2
-            perso.tp(x=x,street=self.destination,arrival='back')
+            perso.tp(x=x,y=self.destination.tp_y,street=self.destination,arrival='back')
             return self.destination.name
         elif isinstance(perso,p.Perso):
             g.pman.alert('you can\'t go here !')

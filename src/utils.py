@@ -4,7 +4,6 @@ enjoy
 """
 
 
-
 import random,os,ctypes,time
 from colors import red, green, blue
 #from __future__ import division

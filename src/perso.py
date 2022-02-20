@@ -974,6 +974,8 @@ class Human():
             activated_smthg = False
 
             collision = o2.NY.CITY[self.street].collision(self,dir,speed,not self.loaded)
+            if type(self) == Perso and g.keys[key.LALT]:
+                collision = o2.NY.CITY[self.street].collision(self,dir,speed,True)
 
             ## check collisions and move
             if not self.static:
@@ -1159,8 +1161,8 @@ class Human():
                     o2.NY.CITY[self.street].load()
 
         if arrival == 'back':
-            self.tp(y=o2.NY.CITY[self.street].yyf[1])
-            self.gey+=4*self.yspeed
+            #self.tp(y=o2.NY.CITY[self.street].yyf[1])
+            #self.gey+=4*self.yspeed
             g.bertran.schedule_once(self.movedt,0.1,'down')
         elif arrival == 'front':
             self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)

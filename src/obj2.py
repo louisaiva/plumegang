@@ -76,7 +76,7 @@ class Train():
                         {'dx':0}
                             ]
 
-        y = Y_BUILD
+        y = self.y
         self.zones = []
         zone_box = box( y=y , w=200 , h=self.y+200 - y )
         self.zones.append(o.TrainStation(self,zone_box))
@@ -397,6 +397,7 @@ class Street():
                             # x y type nom
 
         self.Y = Y
+        self.tp_y = Y_BUILD # y où vont arriver les bots qui se tp ici
 
     def update(self,x,y):
 
@@ -534,12 +535,12 @@ class Street():
         ## vérifie les zones des builds où on est
         if self.build_list:
             build = self.get_build(thg_box[0])
-            dx = W_SIDE
+            dx = 0
             if type(build) != type('aa'):
-                dx += build*W_BUILD
+                dx += build*W_BUILD+W_SIDE
                 build = self.build_list[int(build)]
             elif build == 'R':
-                dx += self.pre.w*W_BUILD
+                dx += self.pre.w*W_BUILD+W_SIDE
             #if type(thg) == p.Perso : cmd.say(build)
             for gbox in coll_boxs[build]:
                 rbox = gbox.realbox
@@ -807,7 +808,7 @@ class Street():
 
     # bots
     def rand_pos(self):
-        x,y = random.randint(int(self.gex),int(self.gfx)-p.SIZE_SPR-1),random.randint(*self.Y)
+        x,y = random.randint(int(self.gex),int(self.gfx)-p.SIZE_SPR-1),random.randint(self.Y[0],self.tp_y)
         return (x,y)
 
     def get_pos(self,hum):
@@ -1031,6 +1032,7 @@ class Building(Street):
         super(Building,self).__init__(name,textures,box=box)
 
         self.Y = (50,200)
+        self.tp_y = self.Y[1]
         self.houses = []
 
         self.outside = False
@@ -1050,6 +1052,8 @@ class House(Street):
 
         self.owners = []
         self.Y = (50,200)
+        self.tp_y = self.Y[1]
+
 
         self.outside = False
         self.free_access = False
@@ -1079,6 +1083,7 @@ class Shop(House):
 
         self.guys = []
         self.Y = (50,150)
+        self.tp_y = self.Y[1]
 
         self.outside = False
         self.free_access = True
@@ -1341,9 +1346,9 @@ MAP_NAME = 'ny'
 
 builds = {
         'empty':{'text':0 , 'door':None ,'distrib':None},
-        'stand':{'text':1 , 'door':box(370,0,500,420), 'door2':box(890,0,500,420) ,'distrib':(0,0)},
-        'bat':{'text':2 , 'door':box(200,100,470,420) ,'distrib':None},
-        'stairs':{'text':3 , 'door':box(400,100,500,420) ,'distrib':(0,0)},
+        'stand':{'text':1 , 'door':box(400,50,fx=800,h=370), 'door2':box(890,50,400,370) ,'distrib':(0,0)},
+        'bat':{'text':2 , 'door':box(300,110,fx=570,h=400) ,'distrib':None},
+        'stairs':{'text':3 , 'door':box(310,100,fx=940,h=420) ,'distrib':(0,0)},
         'L':{'text':'side', 'door':None,'distrib':None},
         'R':{'text':'side', 'door':None,'distrib':None},
         'sbahn':{'text':4 , 'arret':750 ,'distrib':None},
@@ -1367,7 +1372,6 @@ coll_boxs = {
                 box(x=1410,fx=1500,y=200+Y_BUILD,fy=800+Y_BUILD),
                 ],
         'stand' : [
-                box(x=150,fx=160,y=50+Y_BUILD,fy=70+Y_BUILD),
                 box(x=220,fx=280,y=80+Y_BUILD,fy=800+Y_BUILD),
                 box(x=280,fx=360,y=60+Y_BUILD,fy=800+Y_BUILD),
                 box(x=360,fx=800,y=40+Y_BUILD,fy=800+Y_BUILD),
