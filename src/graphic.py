@@ -233,13 +233,13 @@ class SpriteManager():
 
         self.filters = {}
 
-    def addSpr(self,textid,xy_pos=(0,0),group=None,alr_id=-1,vis=True,wh=None,anchor=None,rota=None):
+    def addSpr(self,textid,xy_pos=(0,0),group=None,id=None,vis=True,wh=None,anchor=None,rota=None,key='spr'):
 
-        if alr_id == -1:
-            id = u.get_id('spr')
+        if not id:
+            id = u.get_id(key)
+
+        if id not in self.ids:
             self.ids.append(id)
-        else:
-            id =alr_id
 
         self.sprites[id] = pyglet.sprite.Sprite(tman.textures[textid], batch=tman.batch)
         self.sprites[id].position = xy_pos
@@ -253,18 +253,12 @@ class SpriteManager():
 
         return id
 
-    def addCol(self,col='white',box=u.box(),group=None,alr_id=-1,vis=True):
+    def addCol(self,col='white',box=u.box(),group=None,id=None,vis=True,key='col'):
         if col in TEXTIDS['col']:
-            id = self.addSpr(TEXTIDS['col'][col],box.xy,group,alr_id,vis)
-
-            scy = box.w/self.sprites[id].width
-            scx = box.h/self.sprites[id].height
-
-            self.modify(id,scale=(scy,scx))
-            return id
+            return self.addSpr(TEXTIDS['col'][col],box.xy,group,id,vis,wh=box.wh,key=key)
         else:
             tman.addCol(col)
-            return self.addCol(col,box,group,alr_id,vis)
+            return self.addCol(col,box,group,id,vis)
 
     def addCircle(self,pos,ray,col=(255,255,255,255),group=None,alr_id=-1,vis=True):
 
@@ -491,6 +485,13 @@ class SpriteManager():
             for lab in tabids:
                 self.delete(tabids[lab])
 
+    def __str__(self):
+
+        s = ''
+        for id in self.sprites:
+            s += id + ' --- ' + str(self.sprites[id].group) + '\n'
+        return s
+
 #manager who rules normal labels
 class LabelManager():
 
@@ -699,8 +700,11 @@ class ParticleManager():
         elif type(font_name) == int:
             font_name = lman.fonts[font_name]
 
+        if type(color) == type('wesh'):
+            color = c[color]
         if not vis:
             color = [*color[:3],0]
+
 
         if type(contenu) != type('qsd'):
             contenu = str(contenu)
@@ -1186,11 +1190,11 @@ class Cycle():
         #self.plus_sprids = [] # pareil mais en bonus (ce tableau là va être modifié souvent)
 
         self.sprids = {} # en plus on crée un dic qui va contenir les spr controlés directement par le cycle : type soleil, lune, etoile et meme weather ?
-        self.sprids['sun'] = sman.addSpr(TEXTIDS['sun'],(scr.w/2,0),'moon_sun')
+        self.sprids['sun'] = sman.addSpr(TEXTIDS['sun'],(scr.w/2,0),'moon_sun',key='sun')
         sman.modify(self.sprids['sun'],scale=(0.75,0.75))
-        self.sprids['moon'] = sman.addSpr(TEXTIDS['moon'],(scr.w/4,0),'moon_sun')
+        self.sprids['moon'] = sman.addSpr(TEXTIDS['moon'],(scr.w/4,0),'moon_sun',key='moon')
         sman.modify(self.sprids['moon'],scale=(0.75,0.75))
-        self.sprids['stars'] = sman.addSpr(TEXTIDS['stars'],(0,0),'stars')
+        self.sprids['stars'] = sman.addSpr(TEXTIDS['stars'],(0,0),'stars',key='stars')
         sman.modify(self.sprids['stars'],scale=(0.75,0.75),opacity=0)
 
         #COLORS

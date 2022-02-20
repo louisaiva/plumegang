@@ -210,7 +210,7 @@ def instru_price(ins):
 
 def get_perso_grp(gey):
 
-    k = int(g.gman.nb_perso_group*gey/o2.maxY)
+    k = int(g.gman.nb_perso_group*gey/o2.Y[1])
     if k >= g.gman.nb_perso_group:
         grp = 'persoup'
     elif k < 0:
@@ -742,7 +742,7 @@ class Zone():
         if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
             x = self.gex + g.Cam.X + g.GodCam.X
             y = self.gey + g.Cam.Y
-            self.skin_id = g.sman.addSpr(self.text_id,(x,y),self.group)
+            self.skin_id = g.sman.addSpr(self.text_id,(x,y),self.group,key=self.name)
             w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
             g.sman.modify(self.skin_id,scale=(self.box.w/w,self.box.h/h))
             #print(self.name,'spr loaded',g.sman.spr(self.skin_id).x)
@@ -1007,7 +1007,6 @@ class Distrib(Zone_ELEM):
 
         text = g.TEXTIDS['zone']['distrib']
         w,h = g.tman.textures[text].width,g.tman.textures[text].height
-
         super(Distrib,self).__init__(box(x,y,w,h),get_id('distrib'),text,'mid')
         self.labtext = 'distrib'
 
@@ -1120,7 +1119,7 @@ class Zone_ACTIV(Zone_ELEM):
 class Ordi(Zone_ACTIV):
 
     def __init__(self,x,y,perso):
-        super(Ordi,self).__init__(box(x,y,230,260+150),'ordi','red','mid',makeCol=False,long=True,position='front',hud=MarketHUD(perso))
+        super(Ordi,self).__init__(box(x,y,230,150),'ordi','red','mid',makeCol=False,long=True,position='front',hud=MarketHUD(perso))
 
     def activate(self,perso):
         super(Ordi,self).activate(perso)
@@ -1148,7 +1147,7 @@ class Ordi(Zone_ACTIV):
 class Studio(Zone_ACTIV):
 
     def __init__(self,x,y):
-        super(Studio,self).__init__(box(x,y,50,200),'studio','blue','mid',makeCol=False,long=True,hud=StudHUD())
+        super(Studio,self).__init__(box(x,y,50,150),'studio','blue','mid',makeCol=True,long=True,hud=StudHUD())
 
     def activate(self,perso):
         super(Studio,self).activate(perso)
@@ -1250,7 +1249,7 @@ class HUD():
         if group == None:
             group = self.group
 
-        self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible,wh=wh,anchor=anchor)
+        self.sprids[key] = g.sman.addSpr(textid,xy_pos,group,vis=self.visible,wh=wh,anchor=anchor,key='hud_'+self.name)
 
         #if wh and (g.sman.spr(self.sprids[key]).width != wh[0] or g.sman.spr(self.sprids[key]).height != wh[1]):
         #    g.sman.modify(self.sprids[key],size=wh)
@@ -3471,7 +3470,7 @@ class UI():
     def load(self):
 
         if hasattr(self,'text_id') and not hasattr(self,'skin_id') :
-            self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group)
+            self.skin_id = g.sman.addSpr(self.text_id,self.box.xy,self.group,key='ui'+self.lab_text)
             w,h = g.sman.sprites[self.skin_id].width,g.sman.sprites[self.skin_id].height
             g.sman.modify(self.skin_id,scale=(self.box.w/w,self.box.h/h))
 
@@ -3619,7 +3618,7 @@ class Item_UI(Press_UI):
         self.item = item
         self.item_group = 'hud21'
 
-        self.itemspr = g.sman.addSpr(texture,group=self.item_group,vis=spr_vis)
+        self.itemspr = g.sman.addSpr(texture,group=self.item_group,vis=spr_vis,key='uiitem_'+self.lab_text)
         self.scale = scale
         g.sman.modify(self.itemspr,scale=scale)
 
@@ -3680,7 +3679,7 @@ class Item_UI(Press_UI):
                 g.sman.delete(self.stackspr)
                 del self.stackspr
             elif self.item.stacked != 1 and not hasattr(self,'stackspr'):
-                self.stackspr = g.sman.addSpr(g.TEXTIDS['nbs'][self.item.stacked],group='hud22',vis=g.sman.spr(self.itemspr).visible)
+                self.stackspr = g.sman.addSpr(g.TEXTIDS['nbs'][self.item.stacked],group='hud22',vis=g.sman.spr(self.itemspr).visible,key='uiitem_stack_'+self.lab_text)
 
             elif self.item.stacked != 1:
                 g.sman.set_text(self.stackspr,g.TEXTIDS['nbs'][self.item.stacked])

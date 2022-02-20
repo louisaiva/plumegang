@@ -13,8 +13,9 @@ from src import perso as p
 import random as r
 from src import cmd
 
-Y = 0,225
-maxY = 300
+Y = 0,450
+Y_BUILD = 250
+#maxY = 300
 W_BUILD = 1500
 W_BACK = 100
 H_BUILD = 830
@@ -48,7 +49,7 @@ class Train():
         self.perso_on_board = False
 
         #pos
-        self.y = 250+230
+        self.y = Y_BUILD+230
         self.x = 0
         #print(name,'created :',str(circuit))
 
@@ -75,7 +76,7 @@ class Train():
                         {'dx':0}
                             ]
 
-        y = 250
+        y = Y_BUILD
         self.zones = []
         zone_box = box( y=y , w=200 , h=self.y+200 - y )
         self.zones.append(o.TrainStation(self,zone_box))
@@ -492,6 +493,82 @@ class Street():
         if hasattr(self,'road1') and hasattr(self,'road2'):
             self.verify_endless_road()
 
+    def collision(self,thg,dir,spd,light=False):
+
+        ## vérifie si une box entre en collision avec les boxs des éléments de la street
+        #if type(thg) == p.Perso : cmd.say(self.Y)
+
+        ## vérifie les bords de la street
+        if dir == 'L' and thg.gex - spd < self.box.x:
+            return True
+        elif dir == 'R' and thg.gex+p.SIZE_SPR + spd > self.box.fx:
+            return True
+        elif dir == 'up' and thg.gey + spd > self.Y[1]:
+            return True
+        elif dir == 'down' and thg.gey - spd < self.Y[0]:
+            return True
+
+        if light:
+            return False
+
+        thg_box = thg.collbox
+
+        if dir == 'R':
+            thg_box[0] += spd
+            thg_box[2] += spd
+        elif dir == 'L':
+            thg_box[0] -= spd
+            thg_box[2] -= spd
+        if dir == 'up':
+            thg_box[1] += spd
+            thg_box[3] += spd
+        elif dir == 'down':
+            thg_box[1] -= spd
+            thg_box[3] -= spd
+
+        ## vérifie les zones_elems
+        for zone in self.zones.values():
+            if zone.loaded and collisionAB(zone.gebox,thg_box):
+                return True
+
+        ## vérifie les zones des builds où on est
+        if self.build_list:
+            build = self.get_build(thg_box[0])
+            dx = W_SIDE
+            if type(build) != type('aa'):
+                dx += build*W_BUILD
+                build = self.build_list[int(build)]
+            elif build == 'R':
+                dx += self.pre.w*W_BUILD
+            #if type(thg) == p.Perso : cmd.say(build)
+            for gbox in coll_boxs[build]:
+                rbox = gbox.realbox
+                rbox[0]+= dx
+                rbox[2]+= dx
+                if collisionAB(rbox,thg_box):
+                    return True
+
+            if build != self.get_build(thg_box[2]):
+                # on vérifie les box de la fin du spr
+                if build == 'L':
+                    dx += W_SIDE
+                else:
+                    dx += W_BUILD
+
+                build = self.get_build(thg_box[2])
+                if type(build) != type('aa'):
+                    build = self.build_list[int(build)]
+
+                for gbox in coll_boxs[build]:
+                    rbox = gbox.realbox
+                    rbox[0]+= dx
+                    rbox[2]+= dx
+                    if collisionAB(rbox,thg_box):
+                        return True
+
+        return False
+
+
     def assign_zones(self,zones):
         for zone in zones:
             self.add_zone(zone)
@@ -653,7 +730,7 @@ class Street():
         ## buildings
         if self.build_list:
 
-            x,y = self.x,250
+            x,y = self.x,Y_BUILD
 
             if i == 'L':
                 self.side['L'] = g.sman.addSpr(g.TEXTIDS['build']['L'],(x,y),group='buildings')
@@ -730,14 +807,14 @@ class Street():
 
     # bots
     def rand_pos(self):
-        x,y = random.randint(1,int(self.rxf)-p.SIZE_SPR-1),random.randint(*self.Y)
+        x,y = random.randint(int(self.gex),int(self.gfx)-p.SIZE_SPR-1),random.randint(*self.Y)
         return (x,y)
 
     def get_pos(self,hum):
         if hum in self.humans:
             #print(self.box.x)
-            gex = (hum.gex+p.SIZE_SPR/2) # position centrale du perso
-            return (gex-self.box.x)/(self.box.fx-self.box.x)
+            #gex = (hum.gex+p.SIZE_SPR/2) # position centrale du perso
+            return (hum.gcx-self.gex)/(self.box.w)
 
     def environ_lr(self,xl,xr):
         #print(xl,xr)
@@ -827,10 +904,12 @@ class Street():
     ## prerue
     def get_build(self,x):
         if type(self) == Street:
-            if x < self.box.x + W_SIDE or x > self.box.fx - W_SIDE:
-                return None
+            if x < self.box.x + W_SIDE:
+                return 'L'
+            elif x > self.box.fx - W_SIDE:
+                return 'R'
             else:
-                return x//W_BUILD
+                return (x-W_SIDE)//W_BUILD
         else:
             return 0
 
@@ -840,10 +919,6 @@ class Street():
     def _x(self):
         return self._x
     def _setx(self,x):
-
-
-        ## x des roads gérée dans self.verify_endless_road()
-
         self._x = x
     x = property(_x,_setx)
 
@@ -865,15 +940,16 @@ class Street():
             g.sman.spr(self.streetanimfg).y = y
         if hasattr(self,'streetanimbg'):
             g.sman.spr(self.streetanimbg).y = y
-        """if hasattr(self,'builds'):
-            for id in self.builds:
-                g.sman.spr(id).y = y+250"""
         if hasattr(self,'road1'):
             g.sman.spr(self.road1).y = y
         if hasattr(self,'road2'):
             g.sman.spr(self.road2).y = y
         self._y = y
     y = property(_y,_sety)
+
+    def _gex(self):
+        return self.box.x
+    gex = property(_gex)
 
     def _gfx(self):
         return self.box.x+self.box.w
@@ -1264,13 +1340,60 @@ MAP_NAME = 'ny'
 '''''''''''''''''''''''''''''''''"""
 
 builds = {
-        'empty':{'text':0 , 'box':None ,'distrib':None},
-        'stand':{'text':1 , 'box':box(370,0,500,420), 'box2':box(890,0,500,420) ,'distrib':(0,0)},
-        'bat':{'text':2 , 'box':box(200,100,470,420) ,'distrib':None},
-        'stairs':{'text':3 , 'box':box(400,100,500,420) ,'distrib':(0,0)},
-        'side':{'text':'side', 'box':None,'distrib':None},
+        'empty':{'text':0 , 'door':None ,'distrib':None},
+        'stand':{'text':1 , 'door':box(370,0,500,420), 'door2':box(890,0,500,420) ,'distrib':(0,0)},
+        'bat':{'text':2 , 'door':box(200,100,470,420) ,'distrib':None},
+        'stairs':{'text':3 , 'door':box(400,100,500,420) ,'distrib':(0,0)},
+        'L':{'text':'side', 'door':None,'distrib':None},
+        'R':{'text':'side', 'door':None,'distrib':None},
         'sbahn':{'text':4 , 'arret':750 ,'distrib':None},
 }
+
+coll_boxs = {
+
+        'L' : [
+                box(x=0,y=50+Y_BUILD,fx=750,fy=800+Y_BUILD),
+                box(x=750,y=70+Y_BUILD,fx=780,fy=800+Y_BUILD),
+                box(x=780,y=100+Y_BUILD,fx=800,fy=800+Y_BUILD),
+                ],
+        'R' : [
+                box(x=0,y=50+Y_BUILD,fx=750,fy=800+Y_BUILD),
+                box(x=610,y=0+Y_BUILD,fx=800,fy=800+Y_BUILD),
+                ],
+        'empty' : [
+                box(x=0,y=100+Y_BUILD,fx=160,fy=800+Y_BUILD),
+                box(x=40,y=80+Y_BUILD,fx=130,fy=800+Y_BUILD),
+                box(x=160,fx=190,y=120+Y_BUILD,fy=800+Y_BUILD),
+                box(x=1410,fx=1500,y=200+Y_BUILD,fy=800+Y_BUILD),
+                ],
+        'stand' : [
+                box(x=150,fx=160,y=50+Y_BUILD,fy=70+Y_BUILD),
+                box(x=220,fx=280,y=80+Y_BUILD,fy=800+Y_BUILD),
+                box(x=280,fx=360,y=60+Y_BUILD,fy=800+Y_BUILD),
+                box(x=360,fx=800,y=40+Y_BUILD,fy=800+Y_BUILD),
+                box(x=800,fx=880,y=80+Y_BUILD,fy=800+Y_BUILD),
+                box(x=880,fx=1320,y=40+Y_BUILD,fy=800+Y_BUILD),
+                box(x=1320,fx=1440,y=80+Y_BUILD,fy=800+Y_BUILD),
+                box(x=1440,fx=1500,y=100+Y_BUILD,fy=800+Y_BUILD),
+        ],
+        'bat' : [
+                box(x=0,fx=750,y=100+Y_BUILD,fy=800+Y_BUILD),
+                box(x=210,fx=240,y=80+Y_BUILD,fy=800+Y_BUILD),
+                box(x=590,fx=660,y=80+Y_BUILD,fy=800+Y_BUILD),
+                box(x=760,fx=1500,y=110+Y_BUILD,fy=800+Y_BUILD),
+        ],
+        'stairs' : [
+                box(x=0,fx=280,y=50+Y_BUILD,fy=800+Y_BUILD),
+                box(x=280,fx=950,y=80+Y_BUILD,fy=800+Y_BUILD),
+                box(x=950,fx=1220,y=50+Y_BUILD,fy=800+Y_BUILD),
+                box(x=1220,fx=1270,y=70+Y_BUILD,fy=800+Y_BUILD),
+                box(x=1270,fx=1500,y=90+Y_BUILD,fy=800+Y_BUILD),
+                ],
+        'sbahn' : [
+                box(x=1310,fx=1330,y=130+Y_BUILD,fy=160+Y_BUILD),
+        ],
+
+            }
 
 builds_key = ['empty','stand','bat'] # va être donné aléatoirement si ce n'est pas un build spécial
 
@@ -1280,6 +1403,8 @@ builds_key = ['empty','stand','bat'] # va être donné aléatoirement si ce n'es
 '''''''''''''''''''''''''''''''''"""
 
 nb_iterations = 5
+rue_princ = 'kamour str.'
+
 
 def create_map():
 
@@ -1292,7 +1417,6 @@ def create_map():
     #pos_doors = {} # stocke les positions des portes de chaque rue (pour pas avoir deux rues au même endroit tsé)
 
     ## RUES
-    rue_princ = 'kamour str.'
     lon = r.randint(5*(nb_iterations+1), 10*(nb_iterations+1))
     if nb_iterations > 5:
             lon = r.randint(5*4, 10*4)
@@ -1400,21 +1524,21 @@ def create_map():
             name = 'kedulov gang'
 
             # inside building
-            zone_box = builds['bat']['box'].pop()
+            zone_box = builds['bat']['door'].pop()
             zone_box.x += W_SIDE
-            zone_box.y += 250
+            zone_box.y += Y_BUILD
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
             NY.add_streets(Building(preRue(name,x,y),g.TEXTIDS['inside']))
-            connect(NY.CITY[name],box(600,250,400,400),NY.CITY[nom],zone_box,(False,False))
+            connect(NY.CITY[name],box(600,Y_BUILD,400,400),NY.CITY[nom],zone_box,(False,False))
 
             #home + porte
             NY.add_streets(PrivateHouse(preRue('home',x,y),g.TEXTIDS['home']))
-            connect(NY.CITY['home'],3200,NY.CITY[name],box(1500,250,300,400),(False,False))
+            connect(NY.CITY['home'],3200,NY.CITY[name],box(1500,Y_BUILD,300,400),(False,False))
             NY.CITY[name].add_house(NY.CITY['home'])
 
             #maison du voisin
             NY.add_streets(PrivateHouse(preRue('voisin',x,y),g.TEXTIDS['home']))
-            connect(NY.CITY['voisin'],3200,NY.CITY[name],box(2500,250,300,400),(False,False))
+            connect(NY.CITY['voisin'],3200,NY.CITY[name],box(2500,Y_BUILD,300,400),(False,False))
             NY.CITY[name].add_house(NY.CITY['voisin'])
 
             ## 2 autres voisins
@@ -1422,25 +1546,25 @@ def create_map():
                 labtext = (None,'1'+chr(65+j))
                 house_name = '1'+chr(65+j) +'-' + name
                 NY.add_streets(PrivateHouse(preRue(house_name,x,y),g.TEXTIDS['home']))
-                connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
+                connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,Y_BUILD,300,400),(False,False),labtext)
                 NY.CITY[name].add_house(NY.CITY[house_name])
 
             ## DISTROKID
 
             #distrokid + porte
-            zone_box = builds['bat']['box'].pop()
-            zone_box.y += 250
+            zone_box = builds['bat']['door'].pop()
+            zone_box.y += Y_BUILD
             zone_box.x += x_distro*W_BUILD+W_SIDE
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
             NY.add_streets(Distrokid(x,y))
             connect(NY.CITY['distrokid'],4215,NY.CITY[nom],zone_box,(False,False))
 
             ## SHOP
-            zone_box = builds['stand']['box'].pop()
-            zone_box.y += 250
+            zone_box = builds['stand']['door'].pop()
+            zone_box.y += Y_BUILD
             zone_box.x += x_shop*W_BUILD+W_SIDE
-            zone_box2 = builds['stand']['box2'].pop()
-            zone_box2.y += 250
+            zone_box2 = builds['stand']['door2'].pop()
+            zone_box2.y += Y_BUILD
             zone_box2.x += x_shop*W_BUILD+W_SIDE
             x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
             NY.add_streets(MiniMarket(x,y))
@@ -1451,17 +1575,17 @@ def create_map():
 
             if builds[build_list[i]]['distrib'] and r.random() > 0.75:
                 # on crée un distrib
-                x,y = i*W_BUILD+W_SIDE,250
+                x,y = i*W_BUILD+W_SIDE,Y_BUILD
                 y += builds[build_list[i]]['distrib'][1]
                 x += builds[build_list[i]]['distrib'][0]
                 distrib = o.Distrib(x,y)
                 NY.CITY[nom].assign_zones([distrib])
 
             ## On créé un BUILDING
-            if rue.cont[i] == 0 and builds[build_list[i]]['box']:
+            if rue.cont[i] == 0 and builds[build_list[i]]['door']:
 
-                zone_box = builds[build_list[i]]['box'].pop()
-                zone_box.y += 250
+                zone_box = builds[build_list[i]]['door'].pop()
+                zone_box.y += Y_BUILD
                 zone_box.x += i*W_BUILD+W_SIDE
 
                 x,y = rue.get_pos( NY.CITY[nom].get_build(zone_box.x) )
@@ -1470,22 +1594,22 @@ def create_map():
 
                 # inside building
                 NY.add_streets(Building(preRue(name,x,y),g.TEXTIDS['inside']))
-                connect(NY.CITY[name],box(600,250,400,400),NY.CITY[nom],zone_box,(False,False))
+                connect(NY.CITY[name],box(600,Y_BUILD,400,400),NY.CITY[nom],zone_box,(False,False))
 
                 ## CHAQUE APPART DANS CHAQUE BUILDING
                 for j in range(4):
                     labtext = (None,'1'+chr(65+j))
                     house_name = '1'+chr(65+j) +'-' + str(i) + ' '+nom
                     NY.add_streets(PrivateHouse(preRue(house_name,x,y),g.TEXTIDS['home']))
-                    connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,250,300,400),(False,False),labtext)
+                    connect(NY.CITY[house_name],3200,NY.CITY[name],box(1500+1000*j,Y_BUILD,300,400),(False,False),labtext)
                     NY.CITY[name].add_house(NY.CITY[house_name])
 
             elif rue.cont[i] != 0 and rue.cont[i] not in ['distro','home','shop','sbahn']:
                 ## On connecte les rues
                 #print(build_list[i])
-                zone_box = builds[build_list[i]]['box'].pop()
+                zone_box = builds[build_list[i]]['door'].pop()
                 dx = zone_box.x
-                zone_box.y += 250
+                zone_box.y += Y_BUILD
                 zone_box.x += i*W_BUILD+W_SIDE
                 x2 = list(filter(lambda x:x.name == rue.cont[i],rues))[0].cont.index(nom)*W_BUILD+dx+W_SIDE
                 connexions.append( [nom,zone_box,rue.cont[i],x2] )
@@ -1511,9 +1635,9 @@ def connect(street1,box1,street2,box2,col=(False,False),labs=(None,None)):
     ##      -une à x2 dans la street2 pour passer dans la street1
 
     if type(box1) != box:
-        box1 = box(box1,250,270,400)
+        box1 = box(box1,Y_BUILD,270,400)
     if type(box2) != box:
-        box2 = box(box2,250,270,400)
+        box2 = box(box2,Y_BUILD,270,400)
 
     door1 = o.Porte(street1,box1,street2,box2.x,makeCol=col[0],text=labs[0])
     street1.assign_zones([door1])
@@ -1527,7 +1651,7 @@ def connect_solo(street1,box1,street2,x2,col=False,labs=None,anim='door'):
     ##      -à x1 dans la street1 pour passer dans la street2
 
     if type(box1) != box:
-        box1 = box(box1,250,270,400)
+        box1 = box(box1,Y_BUILD,270,400)
 
     door = o.Porte(street1,box1,street2,x2,makeCol=col,text=labs,anim=anim)
     street1.assign_zones([door])

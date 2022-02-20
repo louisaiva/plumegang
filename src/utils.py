@@ -22,10 +22,8 @@ if os.name == 'nt':
 
 class box():
 
-    def __init__(self,x=0,y=0,w=30,h=30,cx=None,cy=None):
+    def __init__(self,x=0,y=0,w=30,h=30,cx=None,cy=None,fx=None,fy=None):
 
-        self.w = w
-        self.h = h
 
         if cx != None:
             self.x = cx-w/2
@@ -37,6 +35,15 @@ class box():
         else:
             self.y = y
 
+        if fx != None:
+            self.w = fx-self.x
+        else:
+            self.w = w
+
+        if fy != None:
+            self.h = fy-self.y
+        else:
+            self.h = h
 
     def pop(self):
         return box(*self.xywh)
@@ -78,7 +85,7 @@ class box():
         return self.y+self.h
 
     def _realbox(self):
-        return self.x,self.y,self.fx,self.fy
+        return [self.x,self.y,self.fx,self.fy]
 
     fx = property(_fx)
     fy = property(_fy)
@@ -87,6 +94,11 @@ class box():
     def __str__(self):
 
         s = blue('box: ') + ' x:'+str(self.x) + ' y:'+str(self.y)+ ' w:'+str(self.w)+ ' h:'+str(self.h)
+        return s
+
+    def __repr__(self):
+
+        s = 'box: ' + ' x:'+str(self.x) + ' y:'+str(self.y)+ ' w:'+str(self.w)+ ' h:'+str(self.h)
         return s
 
 class line():
@@ -319,15 +331,20 @@ def ang_from_pos(pos,center):
 
 # partie ids
 
-ids = 1112
+ids = {}
 
 def get_id(key):
 
     global ids
 
+
     id = ''+key
-    id+=str(ids)
-    ids+=1
+    if key in ids:
+        ids[key] += 1
+    else:
+        ids[key] = 1
+
+    id += str(ids[key])
     return id
 
 def mycopy(thg):

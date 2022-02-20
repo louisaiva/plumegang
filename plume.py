@@ -88,18 +88,18 @@ class App():
             self.bgdx = 0
 
             self.sprids = {}
-            self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'sky')
+            self.sprids['bg-1'] = g.sman.addSpr(g.TEXTIDS['bg-1'],(self.bgx,self.bgy),'sky',key='sky')
             g.sman.modify(self.sprids['bg-1'],scale=(0.75,0.75))
-            self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'bg_buildings_loin')
+            self.sprids['bg.1'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx,self.bgy),'bg_buildings_loin',key='landscape_far_')
             g.sman.modify(self.sprids['bg.1'],scale=(0.75,0.75))
-            self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'bg_buildings_loin')
+            self.sprids['bg.2'] = g.sman.addSpr(g.TEXTIDS['bg'],(self.bgx+g.sman.spr(self.sprids['bg.1']).width,self.bgy),'bg_buildings_loin',key='landscape_far_')
             g.sman.modify(self.sprids['bg.2'],scale=(0.75,0.75))
 
             rect = box(0,0,g.scr.w,250)
-            self.sprids['ground'] = g.sman.addCol('gray',rect,'bg_buildings_proche')
-            self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'bg_buildings_proche')
+            self.sprids['ground'] = g.sman.addCol('gray',rect,'bg_buildings_proche',key='sol')
+            self.sprids['bg1.1'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx,self.bgy),'bg_buildings_proche',key='landscape_proche_')
             g.sman.modify(self.sprids['bg1.1'],scale=(1.2,1.2))
-            self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'bg_buildings_proche')
+            self.sprids['bg1.2'] = g.sman.addSpr(g.TEXTIDS['bg1'],(self.bgx+g.sman.spr(self.sprids['bg1.1']).width,self.bgy),'bg_buildings_proche',key='landscape_proche_')
             g.sman.modify(self.sprids['bg1.2'],scale=(1.2,1.2))
 
             ## sprites effects
@@ -111,7 +111,7 @@ class App():
                     sizes.append((scr.width,scr.height))
 
             for size in sizes:
-                self.sprids['effects'][size] = g.sman.addSpr(g.TEXTIDS['blur'],group='up-1',vis=False)
+                self.sprids['effects'][size] = g.sman.addSpr(g.TEXTIDS['blur'],group='up-1',vis=False,key='blur')
                 g.sman.modify(self.sprids['effects'][size],scale=size,opacity=150)
 
             #print(self.sprids['effects'])
@@ -189,8 +189,8 @@ class App():
             ## ZONES
             # à la maison
             zones = []
-            zones.append(o.Ordi(1990,0,self.perso))
-            zones.append(o.Studio(2640,225))
+            zones.append(o.Ordi(1990,260,self.perso))
+            zones.append(o.Studio(2640,225+50))
             zones.append(o.Market(450,210))
             zones.append(o.Lit(-600,225))
             o2.NY.CITY['home'].assign_zones(zones)
@@ -410,7 +410,7 @@ class App():
             g.TEXTIDS['zone'] = {}
 
             zones = ['distrib']
-            ids = g.tman.loadImSeq('zones.png',(1,6))
+            ids = g.tman.loadImSeq('zones.png',(1,1))
 
             for i in range(len(zones)):
                 g.TEXTIDS['zone'][zones[i]] = ids[i]
@@ -588,10 +588,10 @@ class App():
                         self.perso.roll_mode(['fight','peace'])
 
                     elif symbol == key.V:
+
                         # on assigne le bot le plus proche à être le poto
-                        if len(self.perso.hum_env) > 0:
-                            bot = self.perso.hum_env[0]
-                            self.perso.assign_poto(bot)
+                        if self.perso.nearest_bot():
+                            self.perso.assign_poto(self.perso.nearest_bot())
                         else:
                             self.perso.assign_poto(self.perso)
 
@@ -607,6 +607,10 @@ class App():
 
                     elif symbol == key.L:
                         self.perso.chartshud.rollhide()
+
+                    elif symbol in [key._1,key._2,key._3,key._4]:
+                        self.perso.selected = symbol - key._1
+                        #cmd.colorsay('orange','<@>',symbol)
 
             elif self.action == 'pause':
 

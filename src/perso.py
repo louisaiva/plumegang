@@ -28,8 +28,9 @@ WATER = False
 
 persos_skins = []
 textures = {}
+coll_d = {}
 def update_textures(keys):
-    global textures,persos_skins
+    global textures,persos_skins,coll_d
 
     for x in keys:
         textids = g.TEXTIDS[x]
@@ -37,6 +38,9 @@ def update_textures(keys):
         textures[x] = {}
 
         if x != 'rapper': # NORMAL
+
+            coll_d[x] = {'dx':48,'dfx':48,'dy':0,'dfy':10}
+
             textures[x]['nothing'] = {}
             textures[x]['nothing']['R'] = [textids[0],textids[1]]
             textures[x]['nothing']['L'] = [textids[2],textids[3]]
@@ -77,6 +81,9 @@ def update_textures(keys):
             textures[x]['stairs']['R'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
             textures[x]['stairs']['L'] = [textids[17],textids[18],textids[19],textids[20],textids[21]]
         else: # RAPPER
+
+            coll_d[x] = {'dx':48,'dfx':48,'dy':0,'dfy':10}
+
             textures[x]['nothing'] = {}
             textures[x]['nothing']['R'] = [textids[0],textids[1],textids[2]]
             textures[x]['nothing']['L'] = [textids[3],textids[4],textids[5]]
@@ -121,15 +128,19 @@ def update_textures(keys):
             textures[x]['drink']['L'] = [textids[34],textids[35],textids[36]]
             textures[x]['drink']['R'] = [textids[37],textids[38],textids[39]]
 
+            textures[x]['combat'] = {}
+            textures[x]['combat']['R'] = [textids[40],textids[41]]
+            textures[x]['combat']['L'] = [textids[44],textids[45]]
+
             textures[x]['hold'] = {}
-            textures[x]['hold']['R'] = [textids[40],textids[42]]
-            textures[x]['hold']['L'] = [textids[43],textids[45]]
-            textures[x]['hold']['armR'] = textids[41]
-            textures[x]['hold']['armL'] = textids[44]
+            textures[x]['hold']['R'] = [textids[41],textids[43]]
+            textures[x]['hold']['L'] = [textids[45],textids[47]]
+            textures[x]['hold']['armR'] = textids[42]
+            textures[x]['hold']['armL'] = textids[46]
 
             textures[x]['move_hold'] = {}
-            textures[x]['move_hold']['R'] = [textids[40],textids[46]]
-            textures[x]['move_hold']['L'] = [textids[43],textids[47]]
+            textures[x]['move_hold']['R'] = [textids[41],textids[48]]
+            textures[x]['move_hold']['L'] = [textids[45],textids[49]]
 
 
 
@@ -289,7 +300,8 @@ class Human():
         self.yspeed = 5
         self.runspeed = 100
         self._speed = 0
-        self.id = get_id('hum')
+        #self.id = get_id('hum')
+        self.id = get_id(type(self).__name__.lower()[:3])
         self.cheat = False
 
         self.vehicle = None
@@ -375,6 +387,7 @@ class Human():
 
         # skins
         self.textids = textures[key_skin]
+        self.key_skin = key_skin
 
         self.grp = group
 
@@ -389,6 +402,20 @@ class Human():
 
     def add_money(self,qté):
         self.money += qté
+
+    def add_life(self,qté):
+        self.life += qté
+        if self.life > self.max_life:
+            self.life = self.max_life
+
+        if self.loaded:
+            ## label +57
+            s=str(qté)
+            pos = self.gcx +r.randint(-10,10),self.box.fy
+            g.pman.addLabPart(s,pos,color='lightgreen',key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=o2.NY.CITY[self.street].visible)
+
+        self.do('heal')
+        g.bertran.schedule_once(self.undo,0.2,'heal')
 
     def die(self):
         self.do('die')
@@ -846,7 +873,10 @@ class Human():
             if self.MODE == 'peace':
                 action = 'nothing'
             elif self.MODE == 'fight':
-                action = 'hold'
+                if self.selecter[self.selected] and hasattr(self.selecter[self.selected],'hit'):
+                    action = 'hold'
+                else:
+                    action = 'combat'
 
         #if type(self) == Perso : print('doin',action)
 
@@ -856,7 +886,7 @@ class Human():
                 self.undo()
                 self.update_skin()
             elif self.alive:
-                if action == 'nothing' or action == 'hold':
+                if action == 'nothing' or action == 'hold' or action == 'combat':
                     self.doing = [action]
 
                 elif action == 'hit':
@@ -901,15 +931,16 @@ class Human():
     def undo(self,dt=0,action=None):
 
         if not action:
-            self.undo(0,'hold')
+            if 'hold' in self.doing: self.doing.remove('hold')
+            if 'combat' in self.doing: self.doing.remove('combat')
             action = 'nothing'
 
         #if type(self) == Perso : print('undoin',action)
 
         if action in self.doing:
             self.doing.remove(action)
-            if self.doing == []:
-                self.do()
+        if self.doing == []:
+            self.do()
 
     def check_do(self):
 
@@ -936,46 +967,43 @@ class Human():
 
         if self.alive :
 
-            street = o2.NY.CITY[self.street]
-
-            maxx = street.xxf
-            maxy = street.yyf
-
             if not speed:
                 speed = self.speed
 
             moved = False
             activated_smthg = False
 
+            collision = o2.NY.CITY[self.street].collision(self,dir,speed,not self.loaded)
+
+            ## check collisions and move
             if not self.static:
-                #R/L
-                if 'write' not in self.doing and 'wait' not in self.doing:
 
-                    if dir == 'R' :
-                        if (maxx[1] == None or maxx[1] > self.gex+speed+SIZE_SPR ):
-                            self.gex+=speed
-                            moved = True
+                if dir == 'R' and not collision:
+                        self.gex+=speed
+                        moved = True
 
-                    elif dir == 'L' and (maxx[0] == None or maxx[0] < self.gex-speed ):
+                elif dir == 'L' and not collision:
                         self.gex-=speed
                         moved = True
 
-            # up/down
-            if dir == 'up':
-                if maxy[1] > self.gey+self.yspeed:
-                    self.gey+=self.yspeed
-                    moved = True
-            elif dir == 'down':
-                if maxy[0] < self.gey-self.yspeed :
-                    self.gey-=self.yspeed
-                    moved = True
+                elif dir == 'up' and not collision:
+                        self.gey+=self.yspeed
+                        moved = True
+
+                elif dir == 'down' and not collision:
+                        self.gey-=self.yspeed
+                        moved = True
+
+                if not moved and speed > self.speed:
+                    self.move(dir)
+                    return
 
             ## check activations
             if type(self) == Perso:
                 if dir == 'up':
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'front':
                         self.element_colli.close(self)
-                    if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
+                    if collision and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1000,7 +1028,7 @@ class Human():
                     if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
 
                         self.element_colli.close(self)
-                    if (maxy[0] >= self.gey-self.yspeed or type(self.vehicle) in [o2.Train]) and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
+                    if (collision or type(self.vehicle) in [o2.Train]) and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1023,7 +1051,7 @@ class Human():
             else:
                 if dir == 'up':
                     #print(self.name,'up')
-                    if maxy[1] <= self.gey+self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'back':
+                    if collision and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1046,7 +1074,7 @@ class Human():
                             return
 
                 if dir == 'down':
-                    if maxy[0] >= self.gey-self.yspeed and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'front':
+                    if collision and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1082,6 +1110,7 @@ class Human():
                     self.addsub_fed()
 
                 if dir in ['R','L']:
+                    #if type(self) == Perso : cmd.say('weshhh')
                     self._speed = speed
                     if self.dir != dir:
                         self.dir = dir
@@ -1097,14 +1126,11 @@ class Human():
                 self.check_colli()
             elif activated_smthg:
 
-                #print('actin')
                 if 'heal' in self.doing:
                     self.done_todo()
                 self.do('act')
 
                 self.time_last_acted = time.time()
-            elif not activated_smthg and speed > self.speed:
-                self.move(dir)
 
     def tp(self,x=None,y=None,street=None,arrival=None):
 
@@ -1183,7 +1209,7 @@ class Human():
         ## on affiche le label que si on se situe dans la bonne street évidemment
         if self.loaded:
             ## label +57
-            s=convert_huge_nb(dmg)
+            s=str(dmg)
             pos = self.gcx +r.randint(-10,10),self.box.fy
             g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=o2.NY.CITY[self.street].visible)
 
@@ -1527,6 +1553,9 @@ class Human():
             for todo in list(filter(lambda x:x['funct'] == lab,self.todo)):
                 self.todo.remove(todo)
 
+    def nearest_bot(self):
+        if len(self.hum_env) > 0:
+            return self.hum_env[0]
 
     ## TO DO
 
@@ -1872,7 +1901,7 @@ class Human():
 
             if not hasattr(self,'skin_id'):
                 self.roll_skin = 0
-                self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp)
+                self.skin_id = g.sman.addSpr(self.textids[self.doing[0]][self.dir][0],(self.gex,self.gey),group=self.grp,id=self.id)
                 self.update_skin(repeat=True)
             if self.outside:
                 g.Cyc.add_spr((self.skin_id,0.3))
@@ -1941,7 +1970,7 @@ class Human():
         self.loaded = False
 
     def update_lab(self):
-        k = int(g.gman.nb_perso_group*self.gey/o2.maxY)
+        #k = int(g.gman.nb_perso_group*self.gey/o2.Y)
         if hasattr(self,'label'):
             # label
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 30
@@ -2037,6 +2066,13 @@ class Human():
     pos_bullet = property(_pos_bullet)
 
 
+    def _collbox(self):
+        rb = self.gebox
+        rb[3] = rb[1]
+        rb[0]+=coll_d[self.key_skin]['dx']
+        rb[2]-=coll_d[self.key_skin]['dfx']
+        return rb
+    collbox = property(_collbox)
     def _realbox(self):
         if hasattr(self,'skin_id'):
             return g.sman.realbox(self.skin_id)
@@ -2046,7 +2082,7 @@ class Human():
             return x,y,SIZE_SPR,SIZE_SPR
     realbox = property(_realbox)
     def _gebox(self):
-        return self.gex,self.gey,self.gex+SIZE_SPR,self.gey+SIZE_SPR
+        return [self.gex,self.gey,self.gfx,self.gey+SIZE_SPR]
     gebox = property(_gebox)
     def _in_combat(self):
 
@@ -2075,6 +2111,7 @@ class Human():
         # ne peut bouger s'il est dans l'un des vehicules sur lequel il n'a pas de controle (train, avion,...)
 
         if self.immobilised: return True
+        elif 'write' in self.doing or 'wait' in self.doing: return True
         elif type(self) == Perso and (key.Z in g.longpress or key.S in g.longpress):
             return True
         elif type(self) != Perso and ((self,key.Z) in g.longpress or (self,key.S) in g.longpress):
@@ -2486,7 +2523,7 @@ class Perso(Rappeur):
 
         self.cheat = CHEAT
 
-        self.grab(o.Bottle())
+        #self.grab(o.Bottle())
         self.grab(o.rplum(self.name))
 
         if False:

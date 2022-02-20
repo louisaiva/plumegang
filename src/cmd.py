@@ -14,8 +14,18 @@ from src.utils import *
 import random as r
 import plume
 
-CMD_TRY = True
+CMD_TRY = False
 # useful for resolving bug in the functions
+
+# DOC:
+#  @ -> mean yourself / your street
+#  # -> mean nearest bot
+#  ¤ -> a thing (it depends) (ex: /tp_street Delta ¤) -> means tp Delta to the street of Delta (useless we agree but still)
+#  * -> everyone / everything
+#  & -> rue principale / poto
+#  ° -> random bot/street
+#
+#  <wesh la zone> -> pour écrire des trucs contenant des espaces (ex: noms de rues etc)
 
 # useful
 def get_hum(name):
@@ -23,6 +33,15 @@ def get_hum(name):
     if name == '@':
         if hasattr(Cmd,'perso'):
             return Cmd.perso
+    elif name == '#':
+        if hasattr(Cmd,'perso'):
+            return Cmd.perso.nearest_bot()
+    elif name == '&':
+        if hasattr(Cmd,'perso'):
+            return Cmd.perso.poto
+    elif name == '°':
+        return r.choice(p.GUYS+p.BOTS)
+
     for h in p.BOTS+p.GUYS:
         if h.name == name or h.id == name:
             return h
@@ -54,7 +73,13 @@ def get_street(name,hum=None):
         if hasattr(Cmd,'perso'):
             return o2.NY.CITY[Cmd.perso.street]
 
-    if name == '#' and hum:
+    elif name == '°':
+        return o2.NY.rd_street()
+
+    if name == '&':
+        return o2.NY.CITY[o2.rue_princ]
+
+    if name == '¤' and hum:
         return o2.NY.CITY[hum.street]
 
     if name in o2.NY.CITY:
@@ -64,7 +89,7 @@ def get_street(name,hum=None):
 def cmds():
 
     # tps
-    def tp(name,x='None',y='None',street='#'):
+    def tp(name,x=None,y=None,street='¤'):
 
         hum = get_hum(name)
         if not hum:
@@ -73,15 +98,22 @@ def cmds():
         if type(x) == type('wesh'):
             if x.isnumeric():
                 x = int(x)
+            elif x[0] == '+':
+                dx = int(x[1:])
+                x = hum.gex + dx
+            elif x[0] == '-':
+                dx = int(x[1:])
+                x = hum.gex - dx
             elif x=='None':
                 x = None
             else:
-                # on essaie de créer trouver un humain pour la destination finale
-                ret = tp_to_perso(name,x)
-                if not ret:
-                    return
                 # ça veut dire qu'on a pas réussi à trouver l'humain de destination, estce une street ?
                 ret = tp_street(name,x)
+                if not ret:
+                    return
+
+                # on essaie de créer trouver un humain pour la destination finale
+                ret = tp_to_perso(name,x)
                 if not ret:
                     return
                 else:
@@ -90,6 +122,12 @@ def cmds():
         if type(y) == type('wesh'):
             if y.isnumeric():
                 y = int(y)
+            elif y[0] == '+':
+                dy = int(y[1:])
+                y = hum.gey + dy
+            elif y[0] == '-':
+                dy = int(y[1:])
+                y = hum.gey - dy
             else:
                 y = None
 
@@ -248,6 +286,16 @@ def cmds():
 
         hum.be_hit(hitter,qté)
 
+    def heal(name,qté='20'):
+        hum = get_hum(name)
+        if not hum:
+            return 'entity not found'
+
+        if qté : qté = int(qté)
+
+        hum.add_life(qté)
+
+
     def perso(name='@'):
         hum = get_hum(name)
         if not hum:
@@ -330,6 +378,14 @@ def cmds():
         plume.app.get_out()
         return 'error'
 
+    # sman
+    def spr(id=None):
+
+        if not id:
+            return str(g.sman)
+
+        return 'wesh'
+
     return locals()
 commands = cmds()
 
@@ -408,27 +464,34 @@ class Console():
                     par.remove('')
 
                 ## adjustment
-                todel = []
-                par_add = []
-                i_add = []
+                newpar = []
+                i = 0
+                while i < len(par):
 
-                for i in range(len(par)):
-                    if i < len(par)-1 and (par[i][0] == '<' and par[i+1][-1] == '>'):
-                        i_add.append(i)
-                        s = par[i][1:] + ' ' + par[i+1][:-1]
-                        par_add.append(s)
-                        todel.append([par[i],par[i+1]])
+                    x = len(newpar)
 
-                    if par[i][0] == '<' and par[i][-1] == '>':
-                        par[i] = par[i][1:-1]
+                    if par[i][0] == '<':
+                        for j in range(i,len(par)):
+                            if par[j][-1] == '>':
 
-                for i in range(len(todel)):
-                    if type(todel[i]) == type([]):
-                        for x in todel[i]:
-                            par.remove(x)
-                    else:
-                        par.remove(todel[i])
-                    par.insert(i_add[i],par_add[i])
+                                if i != j:
+
+                                    s = []
+                                    s.append(par[i][1:])
+                                    for y in range(i+1,j):
+                                        s.append(par[y])
+                                    s.append(par[j][:-1])
+
+                                    newpar.append(' '.join(s))
+                                    i=j
+                                else:
+                                    newpar.append(par[i][1:-1])
+                                break
+
+                    if len(newpar) == x:
+                        newpar.append(par[i])
+                    i+=1
+                par = newpar
 
                 ## lezgo cmd
                 if par[0] not in commands:
