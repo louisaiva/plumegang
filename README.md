@@ -33,7 +33,7 @@ You can click with the mouse on the screen to move items in inventories OR to sh
 If you want to hit bots you need to activate the FIGHT MODE using ***F***.
 You can scroll the mouse to select the item you want to use (like in minecraft)
 
-You can also use the train to move faster inside the city
+You can also use the train (sbahn) to move faster inside the city
 
 ---
 
@@ -55,8 +55,7 @@ You can also use the train to move faster inside the city
 
 ***S*** - move down -- activate object in the foreground / deactivate activated object in bg
 
-***Q*** - move left
-
+***Q*** - move left -
 ***D*** - move right
 
 ***F*** - scroll between modes : (FIGHT/PEACE)
@@ -80,21 +79,19 @@ You can also use the train to move faster inside the city
 
 ***X*** - to hide your perso's menu
 
-***scroll-up/down*** - scroll between your items in the selecter (little inventory bottom right)
-
+***scroll-up/down*** - scroll between your items in the selecter (little inventory bottom right) -
 ***1/2/3/4*** - select corresponding item
 
-***T*** - open chat
-
+***T*** - open chat -
 ***/*** - open command chat
 
-***ENTER*** - (in the chat) say your message
-
+***ENTER*** - (in the chat) say your message -
 ***Y*** - hide/show the chat
 
 ### **COMMANDS**
 
 useful :
+
 `@` is yourself/your street
 
 `#` is the nearest bot
@@ -108,6 +105,8 @@ useful :
 `¤` is a little complicated so discover it urself
 
 `<...>` to write thg with spaces inside : ex: <rue 23> -> rue 23
+
+---
 
 `/tp [personame] (x) (y) (street)`
 `/tp [personame] (otherpersoname)`
