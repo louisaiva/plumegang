@@ -1,5 +1,5 @@
 # plumegang
-Little (early version) 2d game of a game coded in Python with Pyglet
+Little (early version) 2d game coded in Python with Pyglet
 
 
 ### **DESCRIPTION**
@@ -29,41 +29,61 @@ Use the things in your house to make all this stuff !
 For now the game is in a very early version so don't expect to see every thing right now hehe (cheh)
 
 
-Stuff working :
 
-*Lit* - long press **E** to create phase (/!\\ you need to have a plume)
+You can walk around using Z,S,Q,D (azerty keyboard lezgoo), and activate things around by long-hitting Z or S
+You can click with the mouse on the screen to move items in inventories OR to show the message screen -> use it to say things
+If you want to hit bots you need to activate the FIGHT MODE using ***F***.
+You can scroll the mouse to select the item you want to use (like in minecraft)
 
-*Studio* - long press **E** to assemble your song
 
-*Plumoir* - long press **E** to get a new random plume
+*Lit* - long press **Z** to create phase (/!\\ you need to have a plume)
+
+*Studio* - long press **Z** to assemble your song (/!\\ 4 phases + 1 instru)
+
+*Plumoir* - long press **Z** to get a new random plume
 
 *Ordi* - short mouse click on an instru to see details, long click on the detailed instru to buy it
 
-*EasyCash* - short press **E** to earn some money *(dev hack to simplify my life -- won't work like that in the future)*
+*EasyCash* - short press **Z** to earn some money *(dev hack to simplify my life -- won't work like that in the future)*
 
 
 
 
-### **COMMANDS**
+### **CONTROLS**
 
+***Z*** - move up -- activate object in the background / deactivate activated object in foreground
+***S*** - move down -- activate object in the foreground / deactivate activated object in bg
 ***Q*** - move left
-
 ***D*** - move right
 
-***E*** - to use the things in your house (long or short press)
+***E*** - show inventory
 
 ***ESC***  - to close the hud of the thing you are using OR to pause the game
-
 ***up***/***down*** - (in the menu) to control menu
-
 ***ENTER***  - (in the menu) to activate action
 
 ***<-***/***->*** - to control camera
 
-***I*** - to open/close inventory
-
-***A*** - to drop your plume
+***A*** - to drop the selected item
 
 ***X*** - to hide your perso's menu
 
-***F*** - to release the first song in your inventory (+/- working)
+***scroll-up/down*** - scroll between your items in the selecter (little inventory bottom right)
+
+***T*** - open chat
+***/*** - open command chat
+***ENTER*** - (in the chat) say your message
+
+### **COMMANDS**
+
+useful :
+@ is yourself/your street
+# is the nearest bot
+° is a random bot/random street
+¤ is a little complicated so discover it urself
+<...> to write thg with spaces inside : ex: <rue 23> -> rue 23
+
+***/tp [personame] (x) (y) (street)***
+***/tp [personame] (otherpersoname)***
+***/tp [personame] (street)***
+***/give [personame] (itemname)*** - (ex: try /give @ m16)
