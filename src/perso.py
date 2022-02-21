@@ -291,7 +291,7 @@ class Shopguy(Metier):
 
 class Human():
 
-    def __init__(self,key_skin,pos,name='John',group='perso0',street='street1'):
+    def __init__(self,key_skin,pos,name='John',group='perso00',street='street1'):
         # general
 
         self.name = name
@@ -335,6 +335,7 @@ class Human():
         self.life = 100
         self.max_life = 100
         self.damage = r.randint(10, 15)
+        self.y_area = r.randint(15,25)
         self.fed = 100
         self.hyd = 100
 
@@ -492,7 +493,7 @@ class Human():
             g.sman.modify(self.skin_id,group=o.get_perso_grp(self.gey))
 
             ## vérifie la taille du perso et update en fonction
-            X = 1.3 # constante pour augmenter/réduire la taille au loin
+            X = 1.35 # constante pour augmenter/réduire la taille au loin
             yx = X*(SIZE_SPR*o2.NY.CITY[self.street].Y_AVERAGE)/SIZE_SPR # y après lequel la taille est inférieure à SIZE_SPR
             if self.gey > yx:
                 # on calcule la taille future du spr
@@ -543,7 +544,6 @@ class Human():
 
                 g.sman.modify(self.skin_id,size=(SIZE_SPR,SIZE_SPR),anchor=(anc,None))
 
-
             ## if fightin, create skin for the weapon
             item = self.selecter[self.selected]
             if self.MODE == 'fight' and item and hasattr(item,'hit'):
@@ -567,10 +567,11 @@ class Human():
                 if g.sman.spr(self.arm_id).image != self.textids['hold']['arm'+self.dir]:
                     g.sman.set_text(self.arm_id,self.textids['hold']['arm'+self.dir])
 
-                # on modifie les groupes
+                # on modifie les groupes et la taille
                 grp = o.get_perso_grp(self.gey)
-                g.sman.modify(self.weapon_id,group=grp+'_weapon')
-                g.sman.modify(self.arm_id,group=grp+'_arm')
+                w = param['size'][0]*(self.w/SIZE_SPR)
+                g.sman.modify(self.weapon_id,group=grp+'_weapon',size=(w,w))
+                g.sman.modify(self.arm_id,group=grp+'_arm',size=(self.w,self.w))
                 #print(o.get_perso_grp(self.gey),grp,g.gman.name(g.gman.order(grp)+1))
 
                 # on flip la texture si besoin
@@ -800,11 +801,13 @@ class Human():
             if hasattr(self,'weapon_id'):
                 g.sman.modify(self.arm_id,(x_r,y_r),anchor=('center',None))
                 x_r,y_r = self.pos_weapon
-                g.sman.modify(self.weapon_id,(x_r + x,y_r + y),anchor=('center',None))
+                g.sman.modify(self.weapon_id,(x_r + x,y_r + y))
 
         # updates
         self.update_env()
         self.update_lab()
+
+        #if type(self) == Perso: cmd.say(self.group)
 
         # feedin/hydration
         if True:
@@ -1230,20 +1233,19 @@ class Human():
 
             # et on bouge
             self.time_last_move = time.time()
+            self.immobilised = True
+            g.bertran.schedule_once(self.free,0.1)
             self.do('hit')
 
             # puis on vérifie si on touche qqchose
             if self.element_colli != None:
 
-                if isinstance(self.element_colli,Human):
+                if isinstance(self.element_colli,Human) and abs(self.element_colli.gey - self.gey) < self.y_area:
+
                     # là c'est un humain
                     self.last_hit = time.time()
                     self.relup(self.element_colli,self.damage,'peur/rassure')
                     self.element_colli.be_hit(self,self.damage + r.randint(-5,5))
-
-                elif isinstance(self.element_colli,o.Item_ELEM):
-                    # là c'est un item
-                    self.element_colli.activate(self)
 
     def be_hit(self,hitter,dmg):
 
@@ -1255,6 +1257,11 @@ class Human():
             g.sman.add_filter(self.skin_id)
             g.bertran.unschedule(self.un_hit)
             g.bertran.schedule_once(self.un_hit, 0.4)
+
+        if hasattr(self,'weapon_id'):
+            g.sman.add_filter(self.weapon_id)
+            g.sman.add_filter(self.arm_id)
+
 
         #dmg = hitter.damage + r.randint(-5,5)
 
@@ -1328,6 +1335,10 @@ class Human():
         if hasattr(self,'skin_id'):
             g.sman.del_filter(self.skin_id)
 
+        if hasattr(self,'weapon_id'):
+            g.sman.del_filter(self.weapon_id)
+            g.sman.del_filter(self.arm_id)
+
     def drink(self,qté):
         # qté en mL -> 1L recharge 100 de vie d'eau
         self.do('drink')
@@ -1349,6 +1360,9 @@ class Human():
             self.vehicle = None
 
             if type(self) == Perso : g.Cam.static = False
+
+    def free(self,dt=0):
+        if self.immobilised : self.immobilised = False
 
     ## INVENT / SELECTER
 
@@ -1706,24 +1720,24 @@ class Human():
                 speed = self.speed
 
                 #x
-                if target == self.element_colli:
+                if target == self.element_colli and abs(self.element_colli.gey - self.gey) < self.y_area:
                     dt = r.randint(1,2)/10
                     g.bertran.schedule_once(self.hit,dt)
                     g.bertran.schedule_once(self.attack_hum,r.randint(2,5)/10,target)
                 else:
-                    if target in self.collis:
-                        #y
-                        if self.gey > y:
+                    if (target in self.collis or r.random() > 0.7) and abs(target.gey - self.gey) > self.y_area:
+                        #cmd.say(k,int(self.group[-2] + self.group[-1]))
+                        if self.gey > target.gey:
                             self.move('down')
-                        elif self.gey < y:
+                        elif self.gey < target.gey:
                             self.move('up')
 
-                    if self.gex > x:
+                    if self.gex-speed > x:
                         self.move('L',speed)
-                    elif self.gex < x:
+                    elif self.gex+speed < x:
                         self.move('R',speed)
 
-                    if self.alive and not 'nothing' in self.doing:
+                    if self.alive:# and not 'nothing' in self.doing:
                         g.bertran.schedule_once(self.attack_hum,0.01,target)
                     else:
                         self.done_todo()
@@ -2097,11 +2111,13 @@ class Human():
         return SIZE_SPR
     w = property(_w)
     def _h(self):
+        if hasattr(self,'skin_id'):
+            return g.sman.spr(self.skin_id).height
         return SIZE_SPR
     h = property(_h)
 
     def _pos_weapon(self):
-        y = self.gey + self.h/4 + 5
+        y = self.gey + self.h/4 + 5*(self.h/SIZE_SPR)
         x = self.gex
         return x,y
     pos_weapon = property(_pos_weapon)
@@ -2201,7 +2217,7 @@ class Fan(Human):
         if name == None:
             name = r.choice(n.names)
 
-        super(Fan,self).__init__(key_skin,pos,name,group='perso0',street=street)
+        super(Fan,self).__init__(key_skin,pos,name,group='perso00',street=street)
 
 
         rge = [ r.randint(-100,100),r.randint(-100,100) ]

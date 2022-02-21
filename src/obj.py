@@ -216,7 +216,10 @@ def get_perso_grp(gey):
     elif k < 0:
         grp = 'persodown'
     else:
-        grp = 'perso'+str(k)
+        k = str(k)
+        if len(k) == 1:
+            k = '0'+k
+        grp = 'perso'+k
 
     return grp
 
@@ -1060,7 +1063,7 @@ class Item_ELEM(Zone_ELEM):
         else:
             text = g.TEXTIDS['items'][type(item).__name__.lower()]
 
-        super(Item_ELEM,self).__init__(box(*pos,size,size),nom,text,group='perso0',makeCol=False)
+        super(Item_ELEM,self).__init__(box(*pos,size,size),nom,text,group='perso00',makeCol=False)
         self.labtext = type(item).__name__.lower()
         o2.NY.CITY[street].add_item(self)
         self.item = item
