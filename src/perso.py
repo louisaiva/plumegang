@@ -492,31 +492,42 @@ class Human():
             g.sman.modify(self.skin_id,group=o.get_perso_grp(self.gey))
 
             ## vérifie la taille du perso et update en fonction
-            X = 1.3
-            yx = X*(SIZE_SPR*o2.NY.CITY[self.street].Y_AVERAGE)/SIZE_SPR
+            X = 1.3 # constante pour augmenter/réduire la taille au loin
+            yx = X*(SIZE_SPR*o2.NY.CITY[self.street].Y_AVERAGE)/SIZE_SPR # y après lequel la taille est inférieure à SIZE_SPR
             if self.gey > yx:
+                # on calcule la taille future du spr
                 w = int(X*(SIZE_SPR*o2.NY.CITY[self.street].Y_AVERAGE)/self.gey)
 
+                # ensuite on vérifie si le changement de taille va pas nous faire collisionner avec l'environnement
                 anc = 'center'
-                if w > self.w :# o2.NY.CITY[self.street].collision(cbox):
+                if w > self.w :
+                    # on calcule les 3 box de déplacement possible
                     cbox = [self.gex-w/2,self.gey,self.gex+w/2,self.gey]
                     lbox = [self.gex-w,self.gey,self.gex,self.gey]
                     rbox = [self.gex,self.gey,self.gex+w,self.gey]
-                    cmd.say('first',self.gex)
+                    #cmd.say('first',self.gex)
 
+                    # on vérifie les collisions de chaque box
+                    # si la centrale (cbox) ne collisionne pas alors on la choisit, sinon une des 2 autres
+                    # Potentiel problème si on se trouve entre 2 coll_boxs proches et que toutes les 3 boxs (c,l,rbox)
+                    # collisionnent... -> dans ce cas on prend quand même la cbox et chalah
                     if o2.NY.CITY[self.street].collision(return_box=True,thg_box=cbox) == None:
                         pass
                     elif o2.NY.CITY[self.street].collision(return_box=True,thg_box=lbox) == None:
                         anc = 'right'
+                        # on réadapte le gex pour la suite
                         self.gex += (self.w-w)/2
                     elif o2.NY.CITY[self.street].collision(return_box=True,thg_box=rbox) == None:
                         anc = 'left'
+                        # on réadapte le gex pour la suite
                         self.gex += (w-self.w)/2
-
-                g.sman.modify(self.skin_id,size=(w,w),anchor=(anc,None))
+                g.sman.modify(self.skin_id,size=(w,w),anchor=(anc,None)) # finalement on modifie la taille du spr avec la bonne anc
             else:
+                # on fait de même ici :)
                 anc = 'center'
                 if SIZE_SPR > self.w:
+                    # on arrive pratiquement jamais ici parce que *en théorie* self.w est DEJA = à SIZE_SPR.
+                    # si le perso descend très vite on peut arriver là
                     cbox = [self.gex-SIZE_SPR/2,self.gey,self.gex+SIZE_SPR/2,self.gey]
                     lbox = [self.gex-SIZE_SPR,self.gey,self.gex,self.gey]
                     rbox = [self.gex,self.gey,self.gex+SIZE_SPR,self.gey]
