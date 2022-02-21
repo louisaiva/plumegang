@@ -957,7 +957,7 @@ class Porte(Zone_ELEM):
 
         if self.openable(perso):
             x = self.xdest + r.randint(0,self.box.w)-self.box.w/2
-            perso.tp(x=x,y=self.destination.tp_y,street=self.destination,arrival='back')
+            perso.tp(x=x,y=self.destination.Y_AVERAGE,street=self.destination,arrival='back')
             return self.destination.name
         elif isinstance(perso,p.Perso):
             g.pman.alert('you can\'t go here !')
@@ -1147,7 +1147,7 @@ class Ordi(Zone_ACTIV):
 class Studio(Zone_ACTIV):
 
     def __init__(self,x,y):
-        super(Studio,self).__init__(box(x,y,50,150),'studio','blue','mid',makeCol=True,long=True,hud=StudHUD())
+        super(Studio,self).__init__(box(x,y,50,150),'studio','blue','mid',makeCol=False,long=True,hud=StudHUD())
 
     def activate(self,perso):
         super(Studio,self).activate(perso)

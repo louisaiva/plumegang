@@ -363,7 +363,7 @@ class Human():
         self.dials = []
 
         #pos
-        self.gex = pos[0] # general x
+        self.gex = pos[0] # general x ----> POSITION CENTRALE DU SPR
         self.gey = pos[1] # general y
         self.street = street
 
@@ -411,7 +411,7 @@ class Human():
         if self.loaded:
             ## label +57
             s=str(qté)
-            pos = self.gcx +r.randint(-10,10),self.box.fy
+            pos = self.gex +r.randint(-10,10),self.box.fy
             g.pman.addLabPart(s,pos,color='lightgreen',key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=o2.NY.CITY[self.street].visible)
 
         self.do('heal')
@@ -489,8 +489,49 @@ class Human():
         if hasattr(self,'skin_id'):
 
             ## change the right group compared to y pos
-            #k = int(g.gman.nb_perso_group*self.gey/o2.maxY)
             g.sman.modify(self.skin_id,group=o.get_perso_grp(self.gey))
+
+            ## vérifie la taille du perso et update en fonction
+            X = 1.3
+            yx = X*(SIZE_SPR*o2.NY.CITY[self.street].Y_AVERAGE)/SIZE_SPR
+            if self.gey > yx:
+                w = int(X*(SIZE_SPR*o2.NY.CITY[self.street].Y_AVERAGE)/self.gey)
+
+                anc = 'center'
+                if w > self.w :# o2.NY.CITY[self.street].collision(cbox):
+                    cbox = [self.gex-w/2,self.gey,self.gex+w/2,self.gey]
+                    lbox = [self.gex-w,self.gey,self.gex,self.gey]
+                    rbox = [self.gex,self.gey,self.gex+w,self.gey]
+                    cmd.say('first',self.gex)
+
+                    if o2.NY.CITY[self.street].collision(return_box=True,thg_box=cbox) == None:
+                        pass
+                    elif o2.NY.CITY[self.street].collision(return_box=True,thg_box=lbox) == None:
+                        anc = 'right'
+                        self.gex += (self.w-w)/2
+                    elif o2.NY.CITY[self.street].collision(return_box=True,thg_box=rbox) == None:
+                        anc = 'left'
+                        self.gex += (w-self.w)/2
+
+                g.sman.modify(self.skin_id,size=(w,w),anchor=(anc,None))
+            else:
+                anc = 'center'
+                if SIZE_SPR > self.w:
+                    cbox = [self.gex-SIZE_SPR/2,self.gey,self.gex+SIZE_SPR/2,self.gey]
+                    lbox = [self.gex-SIZE_SPR,self.gey,self.gex,self.gey]
+                    rbox = [self.gex,self.gey,self.gex+SIZE_SPR,self.gey]
+
+                    if o2.NY.CITY[self.street].collision(return_box=True,thg_box=cbox) == None:
+                        pass
+                    elif o2.NY.CITY[self.street].collision(return_box=True,thg_box=lbox) == None:
+                        anc = 'right'
+                        self.gex += (self.w-SIZE_SPR)/2
+                    elif o2.NY.CITY[self.street].collision(return_box=True,thg_box=rbox) == None:
+                        anc = 'left'
+                        self.gex += (SIZE_SPR-self.w)/2
+
+                g.sman.modify(self.skin_id,size=(SIZE_SPR,SIZE_SPR),anchor=(anc,None))
+
 
             ## if fightin, create skin for the weapon
             item = self.selecter[self.selected]
@@ -558,8 +599,6 @@ class Human():
                 self.roll_skin = 0
 
             g.sman.set_text(self.skin_id,self.textids[doin][self.dir][self.roll_skin])
-            if g.sman.spr(self.skin_id).width != SIZE_SPR:
-                g.sman.modify(self.skin_id,size=(SIZE_SPR,SIZE_SPR))
 
             self.roll_skin += 1
             if self.roll_skin >= max_roll:
@@ -738,19 +777,19 @@ class Human():
             y_r = self.gey + y
 
             # load/deload
-            if (x_r+SIZE_SPR <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and self.loaded:
+            if (x_r+SIZE_SPR/2 <= -g.SAFE_W or x_r-SIZE_SPR/2 >= g.scr.fx+g.SAFE_W) and self.loaded:
                 self.deload()
-            elif (x_r+SIZE_SPR > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not self.loaded:
+            elif (x_r+SIZE_SPR/2 > -g.SAFE_W and x_r-SIZE_SPR/2 < g.scr.fx+g.SAFE_W) and not self.loaded:
                 self.load()
 
             # updatin pos
             if hasattr(self,'skin_id'):
-                g.sman.modify(self.skin_id,(x_r,y_r))
+                g.sman.modify(self.skin_id,(x_r,y_r),anchor=('center',None))
 
             if hasattr(self,'weapon_id'):
-                g.sman.modify(self.arm_id,(x_r,y_r))
+                g.sman.modify(self.arm_id,(x_r,y_r),anchor=('center',None))
                 x_r,y_r = self.pos_weapon
-                g.sman.modify(self.weapon_id,(x_r + x,y_r + y))
+                g.sman.modify(self.weapon_id,(x_r + x,y_r + y),anchor=('center',None))
 
         # updates
         self.update_env()
@@ -770,7 +809,7 @@ class Human():
 
         #speaking
         if self.keyids_voc and self.loaded:
-            x,y = self.box.cx,self.box.fy + 150
+            x,y = self.gex,self.box.fy + 150
             #print(x,y)
             g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
             #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
@@ -1212,7 +1251,7 @@ class Human():
         if self.loaded:
             ## label +57
             s=str(dmg)
-            pos = self.gcx +r.randint(-10,10),self.box.fy
+            pos = self.gex +r.randint(-10,10),self.box.fy
             g.pman.addLabPart(s,pos,color=c['lightred'],key='dmg',font_name=1,anchor=('center','center'),group='up-1',vis=o2.NY.CITY[self.street].visible)
 
         ## dmging
@@ -1735,7 +1774,7 @@ class Human():
                 g.pman.delete(self.keyids_voc)
 
             # gaffe faut modifier aussi dans l'update
-            x,y = self.gcx,self.box.fy + 150
+            x,y = self.gex,self.box.fy + 150
             self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center')\
                                     ,group='frontstreet',vis=self.loaded,duree=duree,w=w)
 
@@ -2033,15 +2072,17 @@ class Human():
         return box(x,y,w,h)
     box = property(_box)
     def _gfx(self):
-        return self.gex + self.w
-    gfx = property(_gfx)
-    def _gcx(self):
         return self.gex + self.w/2
-    gcx = property(_gcx)
+    gfx = property(_gfx)
+    def _gx(self):
+        return self.gex - self.w/2
+    gx = property(_gx)
     def _gcy(self):
         return self.gey + self.h/2
     gcy = property(_gcy)
     def _w(self):
+        if hasattr(self,'skin_id'):
+            return g.sman.spr(self.skin_id).width
         return SIZE_SPR
     w = property(_w)
     def _h(self):
@@ -2050,7 +2091,7 @@ class Human():
 
     def _pos_weapon(self):
         y = self.gey + self.h/4 + 5
-        x = self.gcx
+        x = self.gex
         return x,y
     pos_weapon = property(_pos_weapon)
     def _pos_bullet(self):
@@ -2079,12 +2120,12 @@ class Human():
         if hasattr(self,'skin_id'):
             return g.sman.realbox(self.skin_id)
         else:
-            x = self.gex + g.Cam.X + g.GodCam.X
+            x = self.gx + g.Cam.X + g.GodCam.X
             y = self.gey + g.Cam.Y
             return x,y,SIZE_SPR,SIZE_SPR
     realbox = property(_realbox)
     def _gebox(self):
-        return [self.gex,self.gey,self.gfx,self.gey+SIZE_SPR]
+        return [self.gx,self.gey,self.gfx,self.gey+self.w]
     gebox = property(_gebox)
     def _in_combat(self):
 

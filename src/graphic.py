@@ -359,6 +359,7 @@ class SpriteManager():
                     x -= self.sprites[sprid].width/2
                 elif ancx and ancx == 'right':
                     x -= self.sprites[sprid].width
+                    
 
                 if ancy and ancy == 'center':
                     y -= self.sprites[sprid].height/2

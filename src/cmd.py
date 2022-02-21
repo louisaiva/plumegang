@@ -315,6 +315,13 @@ def cmds():
         perso.assign_poto(hum)
         return '<@> '+ hum.name + ' assigned to poto'
 
+    def gex(name='@'):
+        hum = get_hum(name)
+        if not hum:
+            return 'entity not found'
+
+        return '<@> '+ str(hum.gex)
+
     # id
     def get_id():
         hum = None

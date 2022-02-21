@@ -397,7 +397,7 @@ class Street():
                             # x y type nom
 
         self.Y = Y
-        self.tp_y = Y_BUILD # y où vont arriver les bots qui se tp ici
+        self.Y_AVERAGE = Y_BUILD # y où vont arriver les bots qui se tp ici
 
     def update(self,x,y):
 
@@ -494,42 +494,47 @@ class Street():
         if hasattr(self,'road1') and hasattr(self,'road2'):
             self.verify_endless_road()
 
-    def collision(self,thg,dir,spd,light=False):
+    def collision(self,thg=0,dir=0,spd=0,light=False,return_box=False,thg_box=None):
 
         ## vérifie si une box entre en collision avec les boxs des éléments de la street
         #if type(thg) == p.Perso : cmd.say(self.Y)
 
-        ## vérifie les bords de la street
-        if dir == 'L' and thg.gex - spd < self.box.x:
-            return True
-        elif dir == 'R' and thg.gex+p.SIZE_SPR + spd > self.box.fx:
-            return True
-        elif dir == 'up' and thg.gey + spd > self.Y[1]:
-            return True
-        elif dir == 'down' and thg.gey - spd < self.Y[0]:
-            return True
+        if not thg_box:
 
-        if light:
-            return False
+            ## vérifie les bords de la street
+            if dir == 'L' and thg.gx - spd < self.box.x:
+                if not return_box: return True
+            elif dir == 'R' and thg.gfx + spd > self.box.fx:
+                if not return_box: return True
+            elif dir == 'up' and thg.gey + spd > self.Y[1]:
+                if not return_box: return True
+            elif dir == 'down' and thg.gey - spd < self.Y[0]:
+                if not return_box: return True
 
-        thg_box = thg.collbox
+            if light:
+                if not return_box: return False
 
-        if dir == 'R':
-            thg_box[0] += spd
-            thg_box[2] += spd
-        elif dir == 'L':
-            thg_box[0] -= spd
-            thg_box[2] -= spd
-        if dir == 'up':
-            thg_box[1] += spd
-            thg_box[3] += spd
-        elif dir == 'down':
-            thg_box[1] -= spd
-            thg_box[3] -= spd
+
+            thg_box = thg.collbox
+            #thg_old_box = thg.collbox
+
+            if dir == 'R':
+                thg_box[0] += spd
+                thg_box[2] += spd
+            elif dir == 'L':
+                thg_box[0] -= spd
+                thg_box[2] -= spd
+            if dir == 'up':
+                thg_box[1] += spd
+                thg_box[3] += spd
+            elif dir == 'down':
+                thg_box[1] -= spd
+                thg_box[3] -= spd
 
         ## vérifie les zones_elems
         for zone in self.zones.values():
             if zone.loaded and collisionAB(zone.gebox,thg_box):
+                if return_box:return zone.gebox
                 return True
 
         ## vérifie les zones des builds où on est
@@ -547,6 +552,7 @@ class Street():
                 rbox[0]+= dx
                 rbox[2]+= dx
                 if collisionAB(rbox,thg_box):
+                    if return_box:return rbox
                     return True
 
             if build != self.get_build(thg_box[2]):
@@ -565,8 +571,10 @@ class Street():
                     rbox[0]+= dx
                     rbox[2]+= dx
                     if collisionAB(rbox,thg_box):
+                        if return_box:return rbox
                         return True
 
+        if return_box: return None
         return False
 
 
@@ -808,14 +816,14 @@ class Street():
 
     # bots
     def rand_pos(self):
-        x,y = random.randint(int(self.gex),int(self.gfx)-p.SIZE_SPR-1),random.randint(self.Y[0],self.tp_y)
+        x,y = random.randint(int(self.gex),int(self.gfx)-p.SIZE_SPR-1),random.randint(self.Y[0],self.Y_AVERAGE)
         return (x,y)
 
     def get_pos(self,hum):
         if hum in self.humans:
             #print(self.box.x)
             #gex = (hum.gex+p.SIZE_SPR/2) # position centrale du perso
-            return (hum.gcx-self.gex)/(self.box.w)
+            return (hum.gex-self.gex)/(self.box.w)
 
     def environ_lr(self,xl,xr):
         #print(xl,xr)
@@ -905,9 +913,10 @@ class Street():
     ## prerue
     def get_build(self,x):
         if type(self) == Street:
+            #cmd.say(x,self.box.fx,self.box.fx-W_SIDE)
             if x < self.box.x + W_SIDE:
                 return 'L'
-            elif x > self.box.fx - W_SIDE:
+            elif x >= self.box.fx - W_SIDE:
                 return 'R'
             else:
                 return (x-W_SIDE)//W_BUILD
@@ -1032,7 +1041,7 @@ class Building(Street):
         super(Building,self).__init__(name,textures,box=box)
 
         self.Y = (50,200)
-        self.tp_y = self.Y[1]
+        self.Y_AVERAGE = self.Y[1]
         self.houses = []
 
         self.outside = False
@@ -1052,7 +1061,7 @@ class House(Street):
 
         self.owners = []
         self.Y = (50,200)
-        self.tp_y = self.Y[1]
+        self.Y_AVERAGE = self.Y[1]
 
 
         self.outside = False
@@ -1083,7 +1092,7 @@ class Shop(House):
 
         self.guys = []
         self.Y = (50,150)
-        self.tp_y = self.Y[1]
+        self.Y_AVERAGE = self.Y[1]
 
         self.outside = False
         self.free_access = True
