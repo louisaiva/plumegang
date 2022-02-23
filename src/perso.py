@@ -4,7 +4,7 @@ enjoy
 """
 
 import random as r
-import json,time,pyglet
+import json,time,pyglet,math
 from pyglet.window import key
 from src.colors import *
 from src.utils import *
@@ -336,6 +336,7 @@ class Human():
         self.max_life = 100
         self.damage = r.randint(10, 15)
         self.y_area = r.randint(15,25)
+        if type(self) == Perso: cmd.say(self.y_area)
         self.fed = 100
         self.hyd = 100
 
@@ -684,25 +685,26 @@ class Human():
                 elif not isinstance(elem,o.Zone_ELEM):
                     self.collis.append(elem)
 
+        collis = []
         if len(self.collis) > 0:
             self.collis.sort(key=lambda x:x.gey)
-            #print(list(map(lambda x:x.name,self.collis)))
 
-            y,yf = street.yyf
+            collis = list(filter(lambda x:isinstance(x,Human),self.collis))
+
+            y,yf = street.YY(self.gex)
             d = yf-y
             yranges = [y]
-            for i in range(len(self.collis)):
-                yranges.append(y+(i+1)*(d/len(self.collis)))
+            for i in range(len(collis)):
+                yranges.append(y+(i+1)*(d/len(collis)))
             #print(yranges)
 
             k=0
-            for i in range(len(self.collis)):
+            for i in range(len(collis)):
                 if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
                     k=i
-            colli_elem = self.collis[k]
+            colli_elem = collis[k]
         else:
             colli_elem = None
-
 
         if type(self) == Perso:
 
@@ -782,8 +784,17 @@ class Human():
 
                 if hasattr(self,'skin_id') and g.sman.spr(self.skin_id).visible:
                     g.sman.unhide(self.skin_id,True)
+                if hasattr(self,'weapon_id') and g.sman.spr(self.weapon_id).visible:
+                    g.sman.unhide(self.weapon_id,True)
+                    g.sman.unhide(self.arm_id,True)
+
             elif hasattr(self,'skin_id') and not g.sman.spr(self.skin_id).visible:
                 g.sman.unhide(self.skin_id)
+
+                if hasattr(self,'weapon_id') and not g.sman.spr(self.weapon_id).visible:
+                    g.sman.unhide(self.weapon_id)
+                    g.sman.unhide(self.arm_id)
+
 
             x_r = self.gex + x
             y_r = self.gey + y
@@ -823,7 +834,7 @@ class Human():
 
         #speaking
         if self.keyids_voc and self.loaded:
-            x,y = self.gex,self.box.fy + 150
+            x,y = self.realbox[0]+self.w/2,self.box.fy + 100
             #print(x,y)
             g.pman.modify_single(self.keyids_voc,setx=x,sety=y)
             #self.keyids_voc = g.pman.addLabPart(exp,(x,y),color=c['yellow'],key='say',anchor=('center','center'),group='up-1',vis=True,duree=20)
@@ -1011,21 +1022,31 @@ class Human():
 
     ## ACTION
 
-    def movedt(self,dt,dir,speed=None,again=4):
-        self.move(dir,speed)
+    def movedt(self,dt,dir,run=False,again=4):
+        self.move(dir,run)
         if again > 0:
-            g.bertran.schedule_once(self.movedt,0.001,dir,again=again-1)
+            g.bertran.schedule_once(self.movedt,0.001,dir,run,again=again-1)
 
-    def move(self,dir,speed=None):
+    def move(self,dir,run=False):
 
         if self.alive :
 
-            if not speed:
+            ## on vérifie la vitesse
+            if dir in ['R','L']:
                 speed = self.speed
+                if run: speed = self.runspeed
+            else:
+                speed = self.yspeed
+                if run: speed = self.yspeed*2
+                if self.gey > o2.NY.CITY[self.street].Y_AVERAGE:
+                    dx = 30
+                    speed *= ((o2.NY.CITY[self.street].Y[1]+dx-self.gey)/(o2.NY.CITY[self.street].Y[1]+dx-o2.NY.CITY[self.street].Y_AVERAGE))
 
+            # on prépare le terrain
             moved = False
             activated_smthg = False
 
+            # on vérifie les collisions
             collision = o2.NY.CITY[self.street].collision(self,dir,speed,not self.loaded)
             if type(self) == Perso and g.keys[key.LALT]:
                 collision = o2.NY.CITY[self.street].collision(self,dir,speed,True)
@@ -1042,14 +1063,15 @@ class Human():
                         moved = True
 
                 elif dir == 'up' and not collision:
-                        self.gey+=self.yspeed
+                        self.gey+=speed
                         moved = True
 
                 elif dir == 'down' and not collision:
-                        self.gey-=self.yspeed
+                        self.gey-=speed
                         moved = True
 
-                if not moved and speed > self.speed:
+                # si on a pas bougé en courant alors on rebouge sans courir (pour s'approcher au plus possible de l'obstacle)
+                if not moved and run:
                     self.move(dir)
                     return
 
@@ -1155,9 +1177,9 @@ class Human():
 
                 if 'heal' in self.doing:
                     self.done_todo()
-                self.do('act')
+                #self.do('act')
 
-                if speed > self.speed:
+                if run:
                     self.addsub_hyd(-0.2)
                     self.addsub_fed()
                 else:
@@ -1165,7 +1187,6 @@ class Human():
                     self.addsub_fed()
 
                 if dir in ['R','L']:
-                    #if type(self) == Perso : cmd.say('weshhh')
                     self._speed = speed
                     if self.dir != dir:
                         self.dir = dir
@@ -1214,8 +1235,6 @@ class Human():
                     o2.NY.CITY[self.street].load()
 
         if arrival == 'back':
-            #self.tp(y=o2.NY.CITY[self.street].yyf[1])
-            #self.gey+=4*self.yspeed
             g.bertran.schedule_once(self.movedt,0.1,'down')
         elif arrival == 'front':
             self.tp(y=o2.NY.CITY[self.street].yyf[0]-self.yspeed)
@@ -1354,7 +1373,7 @@ class Human():
 
             pos = r.choice(self.vehicle.exits)
             self.gex = x=self.vehicle.gcx+pos['dx']-self.box.w/2
-            self.tp(arrival=pos['arrival'])
+            self.tp(y=o2.NY.CITY[self.street].Y[1],arrival=pos['arrival'])
 
             self.vehicle.del_pass(self)
             self.vehicle = None
@@ -1717,7 +1736,7 @@ class Human():
             else:
 
                 x,y = target.gex,target.gey
-                speed = self.speed
+                #speed = self.speed
 
                 #x
                 if target == self.element_colli and abs(self.element_colli.gey - self.gey) < self.y_area:
@@ -1732,14 +1751,15 @@ class Human():
                         elif self.gey < target.gey:
                             self.move('up')
 
-                    if self.gex-speed > x:
-                        self.move('L',speed)
-                    elif self.gex+speed < x:
-                        self.move('R',speed)
+                    if self.gex-self.speed > x:
+                        self.move('L')
+                    elif self.gex+self.speed < x:
+                        self.move('R')
 
                     if self.alive:# and not 'nothing' in self.doing:
                         g.bertran.schedule_once(self.attack_hum,0.01,target)
                     else:
+                        cmd.say('oh we are here wtf')
                         self.done_todo()
         elif not target.alive:
             self.done_todo()
@@ -1748,12 +1768,11 @@ class Human():
 
         if self.alive and target.alive:
             x = target.gex
-            speed = self.speed
 
             if self.gex > x:
-                self.move('R',speed)
+                self.move('R')
             else:
-                self.move('L',speed)
+                self.move('L')
 
             if self.alive and abs(self.gex-x) < safety_distance and not 'nothing' in self.doing:
                 g.bertran.schedule_once(self.fuir,0.01,target)

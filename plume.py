@@ -1003,19 +1003,15 @@ class App():
 
             if not self.gameover:
 
-                speed = self.perso.speed
-                if g.keys[key.LSHIFT]:
-                    speed = self.perso.runspeed
-
                 ## moving perso
                 if g.keys[key.Q]:
-                    self.perso.move('L',speed)
+                    self.perso.move('L',run=g.keys[key.LSHIFT])
                 if g.keys[key.D]:
-                    self.perso.move('R',speed)
+                    self.perso.move('R',run=g.keys[key.LSHIFT])
                 if g.keys[key.Z]:
-                    self.perso.move('up')
+                    self.perso.move('up',run=g.keys[key.LSHIFT])
                 if g.keys[key.S]:
-                    self.perso.move('down')
+                    self.perso.move('down',run=g.keys[key.LSHIFT])
 
                 ## actin
                 if g.keys[key.SPACE]:
