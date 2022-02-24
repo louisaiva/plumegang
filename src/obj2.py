@@ -913,7 +913,6 @@ class Street():
     ## prerue
     def get_build_x(self,x):
         if self.build_list:
-            #cmd.say(x,self.box.fx,self.box.fx-W_SIDE)
             if x < self.box.x + W_SIDE:
                 return 'L'
             elif x >= self.box.fx - W_SIDE:
@@ -925,9 +924,9 @@ class Street():
         if self.build_list:
 
             i = self.get_build_x(x)
-            if i and i not in ['R','L']:
-                print(i)
+            if i != None and i not in ['R','L']:
                 i = self.build_list[int(i)]
+            #cmd.say(x,i)
 
             return i
 

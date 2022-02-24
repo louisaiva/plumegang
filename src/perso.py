@@ -336,7 +336,7 @@ class Human():
         self.max_life = 100
         self.damage = r.randint(10, 15)
         self.y_area = r.randint(15,25)
-        if type(self) == Perso: cmd.say(self.y_area)
+        if type(self) == Perso: self.y_area = 200
         self.fed = 100
         self.hyd = 100
 
@@ -370,8 +370,9 @@ class Human():
         self.street = street
 
         #environ
-        self.element_colli = None
+        self.zone_colli = None
         self.collis = []
+        self.oldcollis = []
         self.environ = []
         self.hum_env = []
 
@@ -676,6 +677,7 @@ class Human():
         street = o2.NY.CITY[self.street]
 
         ## CHANGER DANS PERSO
+        self.oldcollis = self.collis
         self.collis = []
 
         for elem in list(map(lambda x:x.get('elem'),self.environ)):
@@ -685,86 +687,87 @@ class Human():
                 elif not isinstance(elem,o.Zone_ELEM):
                     self.collis.append(elem)
 
-        collis = []
-        if len(self.collis) > 0:
-            self.collis.sort(key=lambda x:x.gey)
+        self.collis.sort(key=lambda x:x.gey)
+        zone_collis = list(filter(lambda x:isinstance(x,o.Zone_ELEM) and not isinstance(x,o.Item_ELEM),self.collis))
 
-            collis = list(filter(lambda x:isinstance(x,Human),self.collis))
+        if len(zone_collis) > 1:
 
             y,yf = street.YY(self.gex)
             d = yf-y
             yranges = [y]
-            for i in range(len(collis)):
-                yranges.append(y+(i+1)*(d/len(collis)))
-            #print(yranges)
+            for i in range(len(zone_collis)):
+                yranges.append(y+(i+1)*(d/len(zone_collis)))
+            #print(zone_collis,yranges)
 
             k=0
-            for i in range(len(collis)):
+            for i in range(len(zone_collis)):
                 if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
                     k=i
-            colli_elem = collis[k]
-        else:
-            colli_elem = None
 
-        if type(self) == Perso:
-
-            if self.element_colli != None:
-                if colli_elem != None:
-                    if colli_elem != self.element_colli :
-                        self.element_colli.unhoover()
-                        self.element_colli = colli_elem
-                        self.element_colli.hoover()
-
-                        ## on reinitialise les keys d'activation (ZS activaiton)
-                        if key.Z in g.longpress:
-                            del g.longpress[key.Z]
-                        if key.S in g.longpress:
-                            del g.longpress[key.S]
-
-                else:
-                    self.element_colli.unhoover()
-                    self.element_colli = None
-
+            if self.zone_colli != zone_collis[k]:
+                self.zone_colli = zone_collis[k]
+                if type(self) == Perso:
                     ## on reinitialise les keys d'activation (ZS activaiton)
                     if key.Z in g.longpress:
                         del g.longpress[key.Z]
                     if key.S in g.longpress:
                         del g.longpress[key.S]
-            else:
-                if colli_elem != None:
-                    self.element_colli = colli_elem
-                    self.element_colli.hoover()
+
+
+        elif len(zone_collis) == 1:
+            if self.zone_colli != zone_collis[0]:
+                self.zone_colli = zone_collis[0]
+                if type(self) == Perso:
+                    ## on reinitialise les keys d'activation (ZS activaiton)
+                    if key.Z in g.longpress:
+                        del g.longpress[key.Z]
+                    if key.S in g.longpress:
+                        del g.longpress[key.S]
         else:
-            self.element_colli = colli_elem
+            self.zone_colli = None
+            if type(self) == Perso:
+                ## on reinitialise les keys d'activation (ZS activaiton)
+                if key.Z in g.longpress:
+                    del g.longpress[key.Z]
+                if key.S in g.longpress:
+                    del g.longpress[key.S]
+
+        if type(self) == Perso:
+
+            for elem in self.collis:
+                if elem not in self.oldcollis:
+                    elem.hoover()
+            for elem in self.oldcollis:
+                if elem not in self.collis:
+                    elem.unhoover()
 
     def lil_check_colli(self):
 
         street = o2.NY.CITY[self.street]
 
-        ## CHANGER DANS PERSO
-        self.collis = street.get_lil_colli(self)
+        zone_collis = street.get_lil_colli(self)
 
-        if len(self.collis) > 0:
-            self.collis.sort(key=lambda x:x.gey)
-            #print(list(map(lambda x:x.name,self.collis)))
+        if len(zone_collis) > 1:
 
-            y,yf = street.yyf
+            y,yf = street.YY(self.gex)
             d = yf-y
             yranges = [y]
-            for i in range(len(self.collis)):
-                yranges.append(y+(i+1)*(d/len(self.collis)))
-            #print(yranges)
+            for i in range(len(zone_collis)):
+                yranges.append(y+(i+1)*(d/len(zone_collis)))
+            #print(zone_collis,yranges)
 
             k=0
-            for i in range(len(self.collis)):
+            for i in range(len(zone_collis)):
                 if self.gey >= yranges[i] and self.gey <= yranges[i+1]:
                     k=i
-            colli_elem = self.collis[k]
-        else:
-            colli_elem = None
 
-        self.element_colli = colli_elem
-        #print(self.element_colli)
+            if self.zone_colli != zone_collis[k]:
+                self.zone_colli = zone_collis[k]
+
+        elif len(zone_collis) == 1:
+            self.zone_colli = zone_collis[0]
+        else:
+            self.zone_colli = None
 
     def update(self,street,x,y):
 
@@ -1076,11 +1079,11 @@ class Human():
                     return
 
             ## check activations
-            if type(self) == Perso:
+            if type(self) == Perso and self.zone_colli:
                 if dir == 'up':
-                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'front':
-                        self.element_colli.close(self)
-                    if collision and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'back':
+                    if isinstance(self.zone_colli, o.Zone_ACTIV) and self.zone_colli.position == 'front':
+                        self.zone_colli.close(self)
+                    if collision and isinstance(self.zone_colli, o.Zone_ELEM) and self.zone_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1091,21 +1094,21 @@ class Human():
                             g.longpress[key.Z] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one(key.Z,self.element_colli)
-                        self.force_anim(perc,self.element_colli.perso_anim)
+                        perc = g.cooldown_one(key.Z,self.zone_colli)
+                        self.force_anim(perc,self.zone_colli.perso_anim)
 
                         #activating
                         if perc > 1:
                             self.update_skin()
                             activated_smthg = False
-                            self.element_colli.activate(self)
+                            self.zone_colli.activate(self)
                             return
 
                 elif dir == 'down':
-                    if isinstance(self.element_colli, o.Zone_ACTIV) and self.element_colli.position == 'back':
+                    if isinstance(self.zone_colli, o.Zone_ACTIV) and self.zone_colli.position == 'back':
 
-                        self.element_colli.close(self)
-                    if (collision or type(self.vehicle) in [o2.Train]) and isinstance(self.element_colli, o.Zone_ELEM) and self.element_colli.position == 'front':
+                        self.zone_colli.close(self)
+                    if (collision or type(self.vehicle) in [o2.Train]) and isinstance(self.zone_colli, o.Zone_ELEM) and self.zone_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1116,19 +1119,19 @@ class Human():
                             g.longpress[key.S] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one(key.S,self.element_colli)
-                        self.force_anim(perc,self.element_colli.perso_anim)
+                        perc = g.cooldown_one(key.S,self.zone_colli)
+                        self.force_anim(perc,self.zone_colli.perso_anim)
 
                         #activating
                         if perc > 1:
                             self.update_skin()
                             activated_smthg = False
-                            self.element_colli.activate(self)
+                            self.zone_colli.activate(self)
                             return
-            else:
+            elif self.zone_colli:
                 if dir == 'up':
                     #print(self.name,'up')
-                    if collision and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'back':
+                    if collision and isinstance(self.zone_colli, o.Porte) and self.zone_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1139,19 +1142,19 @@ class Human():
                             g.longpress[(self,'Z')] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one((self,'Z'),self.element_colli)
-                        self.force_anim(perc,self.element_colli.perso_anim)
+                        perc = g.cooldown_one((self,'Z'),self.zone_colli)
+                        self.force_anim(perc,self.zone_colli.perso_anim)
 
                         #activating
                         if perc > 1:
                             self.update_skin()
                             activated_smthg = False
                             del g.longpress[(self,'Z')]
-                            self.element_colli.activate(self)
+                            self.zone_colli.activate(self)
                             return
 
                 if dir == 'down':
-                    if collision and isinstance(self.element_colli, o.Porte) and self.element_colli.position == 'front':
+                    if collision and isinstance(self.zone_colli, o.Porte) and self.zone_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1162,14 +1165,14 @@ class Human():
                             g.longpress[(self,'S')] = time.time()
 
                         #get cooldown percentage + anim
-                        perc = g.cooldown_one((self,'S'),self.element_colli)
-                        self.force_anim(perc,self.element_colli.perso_anim)
+                        perc = g.cooldown_one((self,'S'),self.zone_colli)
+                        self.force_anim(perc,self.zone_colli.perso_anim)
 
                         #activating
                         if perc > 1:
                             self.update_skin()
                             del g.longpress[(self,'S')]
-                            self.element_colli.activate(self)
+                            self.zone_colli.activate(self)
                             return
 
             ## checking thg
@@ -1223,7 +1226,7 @@ class Human():
 
         if street != None:
             if self.street != street.name:
-                self.element_colli = None
+                self.collis = []
                 if type(self) == Perso:
                     o2.NY.CITY[self.street].deload()
 
@@ -1256,15 +1259,16 @@ class Human():
             g.bertran.schedule_once(self.free,0.1)
             self.do('hit')
 
+            nb = 0
             # puis on vérifie si on touche qqchose
-            if self.element_colli != None:
-
-                if isinstance(self.element_colli,Human) and abs(self.element_colli.gey - self.gey) < self.y_area:
-
+            for x in self.collis:
+                if isinstance(x,Human) and abs(x.gey - self.gey) < self.y_area:
+                    nb+=1
                     # là c'est un humain
                     self.last_hit = time.time()
-                    self.relup(self.element_colli,self.damage,'peur/rassure')
-                    self.element_colli.be_hit(self,self.damage + r.randint(-5,5))
+                    self.relup(x,self.damage,'peur/rassure')
+                    x.be_hit(self,self.damage + r.randint(-5,5))
+            if type(self) == Perso: cmd.say(nb,'ennemis touched')
 
     def be_hit(self,hitter,dmg):
 
@@ -1392,11 +1396,11 @@ class Human():
             if self.MODE == 'peace':
 
                 if self.actin == None:
-                    # si on marche sur un item on le ramasse
-                    if (self.element_colli != None and isinstance(self.element_colli,o.Item_ELEM)):
+                    if len(list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))) > 0:
+                        item = list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))[0]
                         self.actin = 'grab'
                         self.do('hit')
-                        self.element_colli.activate(self)
+                        item.activate(self)
                     elif self.selecter[self.selected] and hasattr(self.selecter[self.selected],'act'): # sinon on active cqu'il spasse
                         self.actin = self.selecter[self.selected]
                         self.selecter[self.selected].act(self)
@@ -1408,10 +1412,11 @@ class Human():
 
                 if self.actin == None:
                     # si on marche sur un item on le ramasse
-                    if (self.element_colli != None and isinstance(self.element_colli,o.Item_ELEM)):
+                    if len(list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))) > 0:
+                        item = list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))[0]
                         self.actin = 'grab'
                         self.do('hit')
-                        self.element_colli.activate(self)
+                        item.activate(self)
                     elif self.selecter[self.selected] and hasattr(self.selecter[self.selected],'hit'): # sinon on hit avec notre arme
                         self.actin = self.selecter[self.selected]
                         self.selecter[self.selected].hit(self)
@@ -1739,7 +1744,7 @@ class Human():
                 #speed = self.speed
 
                 #x
-                if target == self.element_colli and abs(self.element_colli.gey - self.gey) < self.y_area:
+                if target in self.collis and abs(target.gey - self.gey) < self.y_area:
                     dt = r.randint(1,2)/10
                     g.bertran.schedule_once(self.hit,dt)
                     g.bertran.schedule_once(self.attack_hum,r.randint(2,5)/10,target)

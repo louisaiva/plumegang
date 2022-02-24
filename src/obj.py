@@ -2803,8 +2803,8 @@ class InventHUD(HUD):
                     hud = self
                 elif self.perso.selhud.visible and self.perso.selhud.collision(x,y):
                     hud = self.perso.selhud
-                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and self.perso.element_colli.hud.collision(x,y):
-                    hud = self.perso.element_colli.hud
+                elif self.perso.zone_colli != None and isinstance(self.perso.zone_colli,Zone_ACTIV) and self.perso.zone_colli.activated and self.perso.zone_colli.hud.collision(x,y):
+                    hud = self.perso.zone_colli.hud
 
                 # on vérifie si c'est R on drop un seul item
                 unstacked = False
@@ -2888,29 +2888,29 @@ class InventHUD(HUD):
         selector = False
         item = self.item_caught.item
 
-        if self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated:
+        if self.perso.zone_colli != None and isinstance(self.perso.zone_colli,Zone_ACTIV) and self.perso.zone_colli.activated:
 
-            if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
+            if type(self.perso.zone_colli) == Lit and type(item).__name__ == 'Phase':
                 self.del_caught_ui()
                 self.perso.drop(item,create=False)
-                self.perso.element_colli.hud.write(item)
+                self.perso.zone_colli.hud.write(item)
 
-            elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
+            elif type(self.perso.zone_colli) == Ordi and type(item).__name__ == 'Instru':
                 self.del_caught_ui()
                 self.perso.drop(item,create=False)
-                self.perso.element_colli.hud.inspect(item)
+                self.perso.zone_colli.hud.inspect(item)
 
-            elif type(self.perso.element_colli) == Studio:
+            elif type(self.perso.zone_colli) == Studio:
 
-                if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                if type(item).__name__ == 'Phase' and self.perso.zone_colli.hud.phases < 4:
                     self.del_caught_ui()
                     self.perso.drop(item,create=False)
-                    self.perso.element_colli.hud.catch(item)
+                    self.perso.zone_colli.hud.catch(item)
 
-                elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                elif type(item).__name__ == 'Instru' and self.perso.zone_colli.hud.instru == 0:
                     self.del_caught_ui()
                     self.perso.drop(item,create=False)
-                    self.perso.element_colli.hud.catch(item)
+                    self.perso.zone_colli.hud.catch(item)
 
                 else:
                     selector = True
@@ -3251,8 +3251,8 @@ class SelectHUD(HUD):
                     hud = self
                 elif self.perso.invhud.visible and self.perso.invhud.collision(x,y):
                     hud = self.perso.invhud
-                elif self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated and self.perso.element_colli.hud.collision(x,y):
-                    hud = self.perso.element_colli.hud
+                elif self.perso.zone_colli != None and isinstance(self.perso.zone_colli,Zone_ACTIV) and self.perso.zone_colli.activated and self.perso.zone_colli.hud.collision(x,y):
+                    hud = self.perso.zone_colli.hud
 
                 # on vérifie si c'est R on drop un seul item
 
@@ -3320,29 +3320,29 @@ class SelectHUD(HUD):
         inventory = False
         item = self.item_caught.item
 
-        if self.perso.element_colli != None and isinstance(self.perso.element_colli,Zone_ACTIV) and self.perso.element_colli.activated:
+        if self.perso.zone_colli != None and isinstance(self.perso.zone_colli,Zone_ACTIV) and self.perso.zone_colli.activated:
 
-            if type(self.perso.element_colli) == Lit and type(item).__name__ == 'Phase':
+            if type(self.perso.zone_colli) == Lit and type(item).__name__ == 'Phase':
                 self.del_caught_ui()
                 self.perso.drop(item,create=False)
-                self.perso.element_colli.hud.write(item)
+                self.perso.zone_colli.hud.write(item)
 
-            elif type(self.perso.element_colli) == Ordi and type(item).__name__ == 'Instru':
+            elif type(self.perso.zone_colli) == Ordi and type(item).__name__ == 'Instru':
                 self.del_caught_ui()
                 self.perso.drop(item,create=False)
-                self.perso.element_colli.hud.inspect(item)
+                self.perso.zone_colli.hud.inspect(item)
 
-            elif type(self.perso.element_colli) == Studio:
+            elif type(self.perso.zone_colli) == Studio:
 
-                if type(item).__name__ == 'Phase' and self.perso.element_colli.hud.phases < 4:
+                if type(item).__name__ == 'Phase' and self.perso.zone_colli.hud.phases < 4:
                     self.del_caught_ui()
                     self.perso.drop(item,create=False)
-                    self.perso.element_colli.hud.catch(item)
+                    self.perso.zone_colli.hud.catch(item)
 
-                elif type(item).__name__ == 'Instru' and self.perso.element_colli.hud.instru == 0:
+                elif type(item).__name__ == 'Instru' and self.perso.zone_colli.hud.instru == 0:
                     self.del_caught_ui()
                     self.perso.drop(item,create=False)
-                    self.perso.element_colli.hud.catch(item)
+                    self.perso.zone_colli.hud.catch(item)
 
                 else:
                     inventory = True
