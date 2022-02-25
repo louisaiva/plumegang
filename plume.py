@@ -324,6 +324,9 @@ class App():
             g.TEXTIDS['items']['bottle'] = g.TEXTIDS['ux'][7]
             g.TEXTIDS['items']['noodle'] = g.TEXTIDS['ux'][6]
             g.TEXTIDS['items']['m16'] = g.TEXTIDS['ux'][8]
+            g.TEXTIDS['items']['micro'] = g.TEXTIDS['ux'][9]
+            g.TEXTIDS['items']['apple'] = g.TEXTIDS['ux'][10]
+            g.TEXTIDS['items']['secretapple'] = g.TEXTIDS['ux'][11]
 
         # BG
         if True:
@@ -422,7 +425,6 @@ class App():
             ids.reverse()
             g.TEXTIDS['sbahn'] = ids
 
-
         ## sun moon stars ...
         if True:
             g.TEXTIDS['moon'] = g.tman.loadIm('bg/moon.png')
@@ -441,6 +443,15 @@ class App():
 
             ## effects
             g.TEXTIDS['blur'] = g.tman.addCol('black',1,1)
+            g.TEXTIDS['lights'] = {}
+
+            lux=['doucheXL','doucheL','douche']
+
+            g.TEXTIDS['lights'] = {}
+            ids = g.tman.loadImSeq('lum.png',(1,40))
+            for i in range(len(lux)):
+                g.TEXTIDS['lights'][lux[i]] = ids[i]
+
 
     def get_current_screen(self):
 

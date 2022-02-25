@@ -20,7 +20,7 @@ SIZE_SPR = 256
 BOTS = []
 GUYS = []
 CHEAT = False
-WATER = False
+WATER = True
 
 """'''''''''''''''''''''''''''''''''
 '''''''TEXTURES TAB'''''''''''''''''
@@ -828,8 +828,8 @@ class Human():
             self.addsub_hyd()
             self.addsub_fed()
 
-            if WATER and (self.hyd <= 0 or self.fed <= 0):
-                self.life -= 1
+            if WATER and (self.fed <= 0):
+                self.be_hit()
 
         #life
         if self.life < self.max_life and not 'heal' in list(map(lambda x:x['lab'],self.todo)):
@@ -1184,9 +1184,13 @@ class Human():
 
                 if run:
                     self.addsub_hyd(-0.2)
-                    self.addsub_fed()
                 else:
                     self.addsub_hyd()
+
+                if self.hyd <= 0:
+                    self.addsub_fed(-0.1)
+                    if run:self.addsub_fed(-0.1)
+                else:
                     self.addsub_fed()
 
                 if dir in ['R','L']:
@@ -1270,7 +1274,7 @@ class Human():
                     x.be_hit(self,self.damage + r.randint(-5,5))
             if type(self) == Perso: cmd.say(nb,'ennemis touched')
 
-    def be_hit(self,hitter,dmg):
+    def be_hit(self,hitter='food',dmg=0.5):
 
         if self.bigdoing['lab'] == 'heal':
             self.done_todo()
@@ -1298,20 +1302,25 @@ class Human():
         ## dmging
         self.life -= dmg
         self.hits_in_row += 1
-        hitter.cred += 1
-        self.relup(hitter,-dmg)
-        self.relup(hitter,-dmg,'peur/rassure')
+
+        if isinstance(hitter,Human):
+            hitter.cred += 1
+            self.relup(hitter,-dmg)
+            self.relup(hitter,-dmg,'peur/rassure')
 
         if (self.life <= 0) and 'die' not in self.doing:
             #print(red())
-            if self == hitter:
-                cmd.colorsay('red',hitter.name,'committed suicide')
-            else:
-                cmd.colorsay('red',hitter.name,'killed',self.name)
+            if isinstance(hitter,Human):
+                if self == hitter:
+                    cmd.colorsay('red',hitter.name,'committed suicide')
+                else:
+                    cmd.colorsay('red',hitter.name,'killed',self.name)
+            elif hitter == 'food':
+                cmd.colorsay('red',hitter.name,'died of starvation')
 
             self.die()
 
-        if self.alive and type(self) != Perso:
+        if self.alive and isinstance(hitter,Human) and (not self == hitter) and type(self) != Perso:
 
             ## feelings
             #peur
@@ -1320,7 +1329,6 @@ class Human():
                 self.confidence = 0
             else :
                 self.confidence -= self.confidence/(self.life/dmg)
-
 
             if not self.in_combat:
                 # 3 cas de figure : soit on est très confiant et on réplique direct
@@ -1354,6 +1362,9 @@ class Human():
 
         self.last_hit = time.time()
 
+        if type(self) == Perso:
+            self.lifehud.update()
+
     def un_hit(self,dt):
         if hasattr(self,'skin_id'):
             g.sman.del_filter(self.skin_id)
@@ -1362,10 +1373,15 @@ class Human():
             g.sman.del_filter(self.weapon_id)
             g.sman.del_filter(self.arm_id)
 
-    def drink(self,qté):
-        # qté en mL -> 1L recharge 100 de vie d'eau
+    def drink(self,mL):
+        # mL -> 1L recharge 100 de vie d'eau
         self.do('drink')
-        self.addsub_hyd(qté/10)
+        self.addsub_hyd(mL/10)
+
+    def eat(self,cal):
+        # cal -> 1kcal recharge 100 de vie de nourriture
+        self.do('drink')
+        self.addsub_fed(cal/10)
 
     def embarq(self,vehicle):
         self.vehicle = vehicle
@@ -1791,16 +1807,23 @@ class Human():
 
         if self.alive and self.life <= self.max_life:
             if not (self.in_combat or True in list(map(lambda x:x.in_combat,self.hum_env))) and time.time()-self.time_last_move > 1 and time.time()-self.time_last_acted > 1:
-                self.do('heal')
-                heal = self.max_life//100
-                self.life += heal
-                if self.life > self.max_life:
-                    self.life = self.max_life
+
+                #self.do('heal')
+                #heal = self.max_life//100
+                #self.life += heal
+                self.add_life(self.max_life//100)
+                self.addsub_hyd(-1)
+                if self.hyd >= 0:
+                    self.add_life(self.max_life//100)
+
+                if self.life >= self.max_life:
                     self.done_todo()
                 else:
                     g.bertran.schedule_once(self.heal,0.1)
             else:
                 g.bertran.schedule_once(self.heal,0.1)
+
+        if type(self) == Perso:self.lifehud.update()
 
 
     ## SPEAKING
@@ -2233,6 +2256,20 @@ class Human():
         return o.get_perso_grp(self.gey)
     group = property(_group)
 
+    def str_graphic(self):
+        s = self.name + ' '
+        # renvoie la street -- gex,gey -- rx,ry -- w,h -- group/groups --
+        s+= '['+self.street+'] -- '
+
+        s+= 'GE: ' + str(self.gex) + ';' + str(self.gey)
+        if hasattr(self,'skin_id'):
+            skin = g.sman.spr(self.skin_id)
+            s+= ' -- R: ' + str(skin.x) + ';' + str(skin.y)
+            s+= ' -- WH:' + str(skin.width) + ';' + str(skin.height)
+            s+= ' -- ('+self.group+')'
+
+        return s
+
 # les gens que tu croises dans la rue
 class Fan(Human):
 
@@ -2651,16 +2688,6 @@ class Perso(Rappeur):
             self.plumhud.delete()"""
         super(Perso,self).rplum()
         #self.plumhud = o.PlumHUD(self.plume)
-
-    def be_hit(self,hitter,dmg):
-        super(Perso,self).be_hit(hitter,dmg)
-        #self.credhud.update()
-        self.lifehud.update()
-
-    def heal(self,dt=0):
-        super(Perso,self).heal(dt)
-        #self.credhud.update()
-        self.lifehud.update()
 
 
     ## particles

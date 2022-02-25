@@ -14,8 +14,9 @@ import random as r
 from src import cmd
 
 Y = 0,450
+GRP_DY = Y[1]/g.gman.nb_perso_group
 Y_BUILD = 250
-#maxY = 300
+
 W_BUILD = 1500
 W_BACK = 100
 H_BUILD = 830
@@ -386,6 +387,7 @@ class Street():
         self.zones = {}
         self.humans = []
         self.items = []
+        self.lights = {}
 
 
         self.neighbor = {}
@@ -490,6 +492,13 @@ class Street():
                     g.sman.spr(self.side['R']).x = x_r
                     g.sman.spr(self.backside['R']).x = x_r+W_SIDE
 
+            #cmd.say(self.lights)
+            for i_build in self.lights:
+                for id,pos in self.lights[i_build]:
+                    #cmd.say(self.x+pos[0],pos[0])
+                    #g.sman.spr(id).x = self.x+pos[0]
+                    g.sman.modify(id,(self.x+pos[0],None),anchor=('center',None))
+
         # road
         if hasattr(self,'road1') and hasattr(self,'road2'):
             self.verify_endless_road()
@@ -576,7 +585,6 @@ class Street():
 
         if return_box: return None
         return False
-
 
     def assign_zones(self,zones):
         for zone in zones:
@@ -768,6 +776,11 @@ class Street():
                 g.Cyc.add_spr((id,0.3))
                 g.Cyc.add_spr((backid,0.3))
 
+                # lights
+                if builds[build]['lum'] :
+                    for xygey in builds[build]['lum']:
+                        self.addLight(i,'doucheL',*xygey)
+
     def deload_build(self,i):
 
         # 'L' deload la side gauche
@@ -801,6 +814,13 @@ class Street():
                 g.sman.delete(self.backbuilds[i])
                 self.backbuilds[i] = None
 
+                # lights
+                if i in self.lights :
+                    for id,pos in self.lights[i]:
+                        g.sman.delete(id)
+                        g.Cyc.del_spr((id,0.3))
+                    del self.lights[i]
+
     def update_catalog(self):
         self.catalog = []
         for zone in self.zones:
@@ -813,6 +833,18 @@ class Street():
         self.catalog.sort(key=lambda x:x.get('x'))
         #print(self.catalog)
 
+    def addLight(self,i_build,text,lx,ly,gey):
+
+        x = lx + W_SIDE+i_build*W_BUILD
+        y = ly + Y_BUILD
+        grp = o.get_perso_grp(gey+Y_BUILD)
+
+        #cmd.say('new light:',i_build,(x,y))
+        if i_build not in self.lights: self.lights[i_build] = []
+
+        id = g.sman.addSpr(g.TEXTIDS['lights'][text],(x,y),group=grp,anchor=('center','top'))
+        g.Cyc.add_spr((id,0.3))
+        self.lights[i_build].append((id,(x,y)))
 
     # bots
     def rand_pos(self):
@@ -1372,13 +1404,13 @@ MAP_NAME = 'ny'
 '''''''''''''''''''''''''''''''''"""
 
 builds = {
-        'empty':{'text':0 , 'door':None ,'distrib':None,'maxY':None},
-        'stand':{'text':1 , 'door':box(400,50,fx=800,h=370), 'door2':box(890,50,400,370) ,'distrib':(0,0),'maxY':100},
-        'bat':{'text':2 , 'door':box(300,110,fx=570,h=400) ,'distrib':None,'maxY':110},
-        'stairs':{'text':3 , 'door':box(310,100,fx=940,h=420) ,'distrib':(0,0),'maxY':90},
-        'L':{'text':'side', 'door':None,'distrib':None,'maxY':100},
-        'R':{'text':'side', 'door':None,'distrib':None,'maxY':50},
-        'sbahn':{'text':4 , 'arret':750 ,'distrib':None,'maxY':None},
+        'empty':{'text':0 , 'door':None ,'distrib':None,'maxY':None,'lum':None},
+        'stand':{'text':1 , 'door':box(400,50,fx=800,h=370), 'door2':box(890,50,400,370) ,'distrib':(0,0),'maxY':100,'lum':[(140,370,30),(170,370,30)]},
+        'bat':{'text':2 , 'door':box(300,110,fx=570,h=400) ,'distrib':None,'maxY':110,'lum':None},
+        'stairs':{'text':3 , 'door':box(310,100,fx=940,h=420) ,'distrib':(0,0),'maxY':90,'lum':None},
+        'L':{'text':'side', 'door':None,'distrib':None,'maxY':100,'lum':None},
+        'R':{'text':'side', 'door':None,'distrib':None,'maxY':50,'lum':None},
+        'sbahn':{'text':4 , 'arret':750 ,'distrib':None,'maxY':None,'lum':None},
 }
 
 coll_boxs = {

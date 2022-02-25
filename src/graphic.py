@@ -366,7 +366,7 @@ class SpriteManager():
 
                 if ancy and ancy == 'center':
                     y -= self.sprites[sprid].height/2
-                elif ancy and ancy == 'right':
+                elif ancy and ancy == 'top':
                     y -= self.sprites[sprid].height
 
                 self.sprites[sprid].update(x=x,y=y)

@@ -295,13 +295,16 @@ def cmds():
 
         hum.add_life(qté)
 
-
-    def perso(name='@'):
+    def perso(name='@',mode='general'):
         hum = get_hum(name)
         if not hum:
             return 'entity not found'
 
-        return '<@> '+ str(hum)
+        if mode == 'general':
+            return '<@> '+ str(hum)
+        if mode == 'graphic':
+            return '<@> '+hum.str_graphic()
+        return mode
 
     def poto(name='@'):
         hum = get_hum(name)

@@ -210,7 +210,7 @@ def instru_price(ins):
 
 def get_perso_grp(gey):
 
-    k = int(g.gman.nb_perso_group*gey/o2.Y[1])
+    k = int(gey/o2.GRP_DY)
     if k >= g.gman.nb_perso_group:
         grp = 'persoup'
     elif k < 0:
@@ -295,11 +295,13 @@ class Key(Item):
     def details(self):
         return self.target.name.split('-')
 
+#FOOD
 class Food_item(Item):
 
     def __init__(self):
         super(Food_item,self).__init__()
         self.cat = 'food'
+        self.single_act = True
 
 class Bottle(Food_item):
 
@@ -368,6 +370,60 @@ class Bottle(Food_item):
         self.qt -= other.qt
         return other
 
+class Apple(Food_item):
+
+    def __init__(self,stacked=1):
+        super(Apple,self).__init__()
+
+        self.stacked = stacked
+        self.effect = None
+        self.cal = 4
+        # donne 4 calories -> un humain lambda doit manger 1 kcal pr régénerer sa bouffe
+
+    def act(self,perso):
+
+        if perso.fed <= 100-self.cal/10:
+            perso.eat(self.cal)
+            g.bertran.schedule_once(perso.undo,0.2,'drink')
+
+            if self.stacked > 1:
+                self.stacked -= 1
+            else:
+                perso.drop(self,False)
+
+    def __str__(self):
+        return 'apple. simple apple. apple simple'
+
+    def details(self):
+        return ['The','only','apple']
+
+    def stackable(self,other):
+
+        ## return 0 if unstackable
+        ## return 1 if stackable
+
+        if self.stacked + other.stacked  < MAX_STACK:
+            return 1
+        return 0
+
+    def stack(self,other=None):
+
+        if other == None:
+            other=Apple()
+
+        self.stacked += other.stacked
+
+    def unstack(self,other=None):
+
+        if other == None:
+            other=Apple()
+
+        self.stacked -= other.stacked
+        return other
+
+
+
+#WEAPONS
 class Fire_weapon(Item):
 
     def __init__(self):
@@ -415,6 +471,8 @@ class M16(Fire_weapon):
 catalog_items = {   'm16':{'elem':M16,'param':None,'rota':45,'size':(128,128),'bullet_pos':(64,0)},
                     'water_bottle':{'elem':Bottle,'param':[1]},
                     'bottle':{'elem':Bottle,'param':[1]},
+                    'apple':{'elem':Apple,'param':[1]},
+                    'secretapple':{'elem':Apple,'param':[1]},
                     'key':{'elem':Key,'param':['home']}
                 }
 
@@ -866,7 +924,12 @@ class Zone_ELEM(Zone):
         self.x,self.y = x,y
 
         if hasattr(self,'skin_id'):
-            g.sman.modify(self.skin_id,(x,y),group=get_perso_grp(self.gey))
+
+            grp = get_perso_grp(self.gey+o2.GRP_DY)
+            grp += '_arm'
+
+            g.sman.modify(self.skin_id,(x,y),group=grp)
+            #cmd.say(self.name,'group is',grp)
 
         if hasattr(self,'label'):
             # label
@@ -1015,7 +1078,15 @@ class Distrib(Zone_ELEM):
 
     def activate(self,perso):
         super(Distrib,self).activate(perso)
-        perso.grab(Bottle())
+
+        prob = {
+                'bottle':1,
+                'apple':0.1,
+                'm16':0.01,
+        }
+
+        item = r.choices(list(prob.keys()),list(prob.values()))[0]
+        perso.grab(catalog_items[item]['elem']())
 
 #trains
 class TrainStation(Zone_ELEM):
