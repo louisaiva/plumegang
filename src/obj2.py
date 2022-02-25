@@ -1648,6 +1648,11 @@ def create_map():
                 distrib = o3.Distrib(x,y)
                 NY.CITY[nom].assign_zones([distrib])
 
+            ## on crée un lampadaire
+            x,y = i*W_BUILD+W_SIDE-200,Y_BUILD-20
+            lamp = o3.Lamp(x,y)
+            NY.CITY[nom].assign_zones([lamp])
+
             ## On créé un BUILDING
             if rue.cont[i] == 0 and builds[build_list[i]]['door']:
 

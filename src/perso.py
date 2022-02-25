@@ -685,7 +685,7 @@ class Human():
             if collisionAB(self.gebox,elem.gebox) :
                 if isinstance(elem,o3.Zone_HOOV) and elem.activable(self):
                     self.collis.append(elem)
-                elif not isinstance(elem,o3.Zone_HOOV):
+                elif not isinstance(elem,o3.Zone_ELEM):
                     self.collis.append(elem)
 
         self.collis.sort(key=lambda x:x.gey)

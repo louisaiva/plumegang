@@ -413,11 +413,22 @@ class App():
         if True:
             g.TEXTIDS['zone'] = {}
 
-            zones = ['distrib','lamp']
-            ids = g.tman.loadImSeq('zones.png',(1,2))
+            zones = [('distrib',(320,400)),
+                    ('lamp',(90,340))
+                    ]
 
-            for i in range(len(zones)):
-                g.TEXTIDS['zone'][zones[i]] = ids[i]
+            id = g.tman.loadIm('zones.png')
+            img = g.tman.textures[id]
+
+            x=0
+            for name,wh in zones:
+                w,h = wh
+                text = img.get_region(x,0,w,h)
+                id = g.tman.addText(text)
+                g.TEXTIDS['zone'][name] = id
+                #cmd.say(name,'texture created id',id)
+                x+=w
+
 
         ## TRAINS
         if True:

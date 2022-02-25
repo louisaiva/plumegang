@@ -787,7 +787,7 @@ class Zone():
 
     def __init__(self,box,textid='white',group='mid',makeCol=False,vis=False):
 
-        if textid[:4] == 'text':
+        if textid not in c:
             self.text_id = textid
         elif makeCol:
             self.text_id = g.tman.addCol(textid)
@@ -1327,8 +1327,10 @@ class Lamp(Zone_ELEM):
 
         if not self.on:
             self.on = True
+            cmd.say(self.name,'switched on')
 
     def switch_off(self):
 
         if self.on:
             self.on = False
+            cmd.say(self.name,'switched off')
