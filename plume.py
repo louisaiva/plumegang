@@ -18,6 +18,7 @@ import src.getsave as gs
 from src import obj as o
 from src import perso as p
 from src import obj2 as o2
+from src import obj3 as o3
 from src import graphic as g
 from src import menu as m
 from src import cmd
@@ -128,7 +129,7 @@ class App():
             self.perso = p.Perso('rapper',fill=FILL_INV,street='home')
             g.Cam.follow(self.perso)
             p.BOTS.append(self.perso)
-            o.distro.sign(self.perso)
+            o3.distro.sign(self.perso)
 
             #poto
             p.BOTS.append(p.Fan('perso3',o2.NY.CITY['home'].rand_pos(),street='home'))
@@ -189,22 +190,22 @@ class App():
             ## ZONES
             # à la maison
             zones = []
-            zones.append(o.Ordi(1990,260,self.perso))
-            zones.append(o.Studio(2640,225+50))
-            zones.append(o.Market(450,210))
-            zones.append(o.Lit(-600,225))
+            zones.append(o3.Ordi(1990,260,self.perso))
+            zones.append(o3.Studio(2640,225+50))
+            zones.append(o3.Market(450,210))
+            zones.append(o3.Lit(-600,225))
             o2.NY.CITY['home'].assign_zones(zones)
 
             # ez cash
             zones = []
-            zones.append(o.Cash(2900,225))
+            zones.append(o3.Cash(2900,225))
             street = o2.NY.rd_street().name
             o2.NY.CITY[street].assign_zones(zones)
             print('let\'s find the',street,'!')
 
             # distrokid
             zones = []
-            zones.append(o.SimpleReleaser(1670,210,o.distro))
+            zones.append(o3.SimpleReleaser(1670,210,o3.distro))
             o2.NY.CITY['distrokid'].assign_zones(zones)
 
 
@@ -412,8 +413,8 @@ class App():
         if True:
             g.TEXTIDS['zone'] = {}
 
-            zones = ['distrib']
-            ids = g.tman.loadImSeq('zones.png',(1,1))
+            zones = ['distrib','lamp']
+            ids = g.tman.loadImSeq('zones.png',(1,2))
 
             for i in range(len(zones)):
                 g.TEXTIDS['zone'][zones[i]] = ids[i]

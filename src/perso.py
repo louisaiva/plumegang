@@ -12,6 +12,7 @@ from src import graphic as g
 from src import names as n
 from src import obj as o
 from src import obj2 as o2
+from src import obj3 as o3
 from src import voc as v
 from src import cmd
 import pyglet.gl as gl
@@ -195,10 +196,10 @@ class Distroguy(Metier):
         self.dials['distroguy_dial_sign'] = { 't':0 , 'delay':None , 'meaning':'tu bosses?' , 'imp':80 , 'id':'distroguy_dial_sign' }
 
         self.acts['distroguy_act_thune'] = { 't':0 , 'delay':10 , 'giver':self.perso  , 'exp':'prendre'
-                                , 'fct':o.distro.cashback , 'param':[] , 'answer':'merci' , 'id':'distroguy_act_thune'}
+                                , 'fct':o3.distro.cashback , 'param':[] , 'answer':'merci' , 'id':'distroguy_act_thune'}
 
         self.acts['distroguy_act_sign'] = { 't':0 , 'delay':10 , 'giver':self.perso , 'exp':'signer chez distro (1$/jour)'
-                                , 'fct':o.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
+                                , 'fct':o3.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
 
         self.hm_begin,self.hm_end = g.Hour(7),g.Hour(16)
 
@@ -207,18 +208,18 @@ class Distroguy(Metier):
         hum = voice['h']
         if meaning == 'veut thune':
             #print(hum,'veut thune')
-            if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
-                if o.distro.caisse[hum] > 0:
-                    exp = 'tu as ' + str(int(o.distro.caisse[hum])) + ' $ de côté, tu les veux ?'
-                    self.act_cashback(hum,o.distro.caisse[hum])
-                elif o.distro.caisse[hum] < 0:
-                    exp = 'mdr non tu nous dois '+str(int(-o.distro.caisse[hum]))+ ' balles batard'
+            if isinstance(hum, Rappeur) and hum in o3.distro.rappeurs:
+                if o3.distro.caisse[hum] > 0:
+                    exp = 'tu as ' + str(int(o3.distro.caisse[hum])) + ' $ de côté, tu les veux ?'
+                    self.act_cashback(hum,o3.distro.caisse[hum])
+                elif o3.distro.caisse[hum] < 0:
+                    exp = 'mdr non tu nous dois '+str(int(-o3.distro.caisse[hum]))+ ' balles batard'
                 else:
                     exp = 'fais de la thune d\'abord mdr'
                 return exp
 
         elif meaning == 'tu bosses?':
-            if isinstance(hum, Rappeur) and hum not in o.distro.rappeurs:
+            if isinstance(hum, Rappeur) and hum not in o3.distro.rappeurs:
                 exps = ['oue je fais de la thune en signant des rappeurs chez distrokid, ça pourrait t\'interesser !',
                         'ici on accueille des rappeurs qui veulent poster des sons sur le web, ça t\'intéresse ?',
                         'on signe des ptis rappeurs ici ! ça coûte pas cher pour poster tes sons, ça te dit ?',
@@ -241,7 +242,7 @@ class Distroguy(Metier):
 
     def add_arrival_dials(self,hum):
 
-        if isinstance(hum, Rappeur) and hum in o.distro.rappeurs:
+        if isinstance(hum, Rappeur) and hum in o3.distro.rappeurs:
             dial = self.dials['distroguy_dial_thune']
             dial['t'] = time.time()
             hum.add_dial(dial)
@@ -277,10 +278,10 @@ class Shopguy(Metier):
         #self.dials['distroguy_dial_sign'] = { 't':0 , 'delay':None , 'meaning':'tu bosses?' , 'imp':80 , 'id':'distroguy_dial_sign' }
 
         #self.acts['distroguy_act_thune'] = { 't':0 , 'delay':10 , 'giver':self.perso  , 'exp':'prendre'
-        #                        , 'fct':o.distro.cashback , 'param':[] , 'answer':'merci' , 'id':'distroguy_act_thune'}
+        #                        , 'fct':o3.distro.cashback , 'param':[] , 'answer':'merci' , 'id':'distroguy_act_thune'}
 
         #self.acts['distroguy_act_sign'] = { 't':0 , 'delay':10 , 'giver':self.perso , 'exp':'signer chez distro (1$/jour)'
-        #                        , 'fct':o.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
+        #                        , 'fct':o3.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
 
         self.hm_begin,self.hm_end = g.Hour(1,10),g.Hour(23,59)
 
@@ -492,7 +493,7 @@ class Human():
         if hasattr(self,'skin_id'):
 
             ## change the right group compared to y pos
-            g.sman.modify(self.skin_id,group=o.get_perso_grp(self.gey))
+            g.sman.modify(self.skin_id,group=o3.get_perso_grp(self.gey))
 
             ## vérifie la taille du perso et update en fonction
             X = 1.35 # constante pour augmenter/réduire la taille au loin
@@ -551,7 +552,7 @@ class Human():
             if self.MODE == 'fight' and item and hasattr(item,'hit'):
 
                 # on crée et change la texture
-                param = o.catalog_items[type(item).__name__.lower()]
+                param = o3.catalog_items[type(item).__name__.lower()]
                 text = g.TEXTIDS['items'][type(item).__name__.lower()]
                 if not hasattr(self,'weapon_id'):
                     self.weapon_id = g.sman.addSpr(text,wh=param['size'],rota=param['rota'])
@@ -570,11 +571,11 @@ class Human():
                     g.sman.set_text(self.arm_id,self.textids['hold']['arm'+self.dir])
 
                 # on modifie les groupes et la taille
-                grp = o.get_perso_grp(self.gey)
+                grp = o3.get_perso_grp(self.gey)
                 w = param['size'][0]*(self.w/SIZE_SPR)
                 g.sman.modify(self.weapon_id,group=grp+'_weapon',size=(w,w))
                 g.sman.modify(self.arm_id,group=grp+'_arm',size=(self.w,self.w))
-                #print(o.get_perso_grp(self.gey),grp,g.gman.name(g.gman.order(grp)+1))
+                #print(o3.get_perso_grp(self.gey),grp,g.gman.name(g.gman.order(grp)+1))
 
                 # on flip la texture si besoin
                 if self.dir == 'R':
@@ -682,13 +683,13 @@ class Human():
 
         for elem in list(map(lambda x:x.get('elem'),self.environ)):
             if collisionAB(self.gebox,elem.gebox) :
-                if isinstance(elem,o.Zone_ELEM) and elem.activable(self):
+                if isinstance(elem,o3.Zone_HOOV) and elem.activable(self):
                     self.collis.append(elem)
-                elif not isinstance(elem,o.Zone_ELEM):
+                elif not isinstance(elem,o3.Zone_HOOV):
                     self.collis.append(elem)
 
         self.collis.sort(key=lambda x:x.gey)
-        zone_collis = list(filter(lambda x:isinstance(x,o.Zone_ELEM) and not isinstance(x,o.Item_ELEM),self.collis))
+        zone_collis = list(filter(lambda x:isinstance(x,o3.Zone_HOOV) and not isinstance(x,o3.Item_ELEM),self.collis))
 
         if len(zone_collis) > 1:
 
@@ -1081,9 +1082,9 @@ class Human():
             ## check activations
             if type(self) == Perso and self.zone_colli:
                 if dir == 'up':
-                    if isinstance(self.zone_colli, o.Zone_ACTIV) and self.zone_colli.position == 'front':
+                    if isinstance(self.zone_colli, o3.Zone_ACTIV) and self.zone_colli.position == 'front':
                         self.zone_colli.close(self)
-                    if collision and isinstance(self.zone_colli, o.Zone_ELEM) and self.zone_colli.position == 'back':
+                    if collision and isinstance(self.zone_colli, o3.Zone_HOOV) and self.zone_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1105,10 +1106,10 @@ class Human():
                             return
 
                 elif dir == 'down':
-                    if isinstance(self.zone_colli, o.Zone_ACTIV) and self.zone_colli.position == 'back':
+                    if isinstance(self.zone_colli, o3.Zone_ACTIV) and self.zone_colli.position == 'back':
 
                         self.zone_colli.close(self)
-                    if (collision or type(self.vehicle) in [o2.Train]) and isinstance(self.zone_colli, o.Zone_ELEM) and self.zone_colli.position == 'front':
+                    if (collision or type(self.vehicle) in [o2.Train]) and isinstance(self.zone_colli, o3.Zone_HOOV) and self.zone_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1131,7 +1132,7 @@ class Human():
             elif self.zone_colli:
                 if dir == 'up':
                     #print(self.name,'up')
-                    if collision and isinstance(self.zone_colli, o.Porte) and self.zone_colli.position == 'back':
+                    if collision and isinstance(self.zone_colli, o3.Porte) and self.zone_colli.position == 'back':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1154,7 +1155,7 @@ class Human():
                             return
 
                 if dir == 'down':
-                    if collision and isinstance(self.zone_colli, o.Porte) and self.zone_colli.position == 'front':
+                    if collision and isinstance(self.zone_colli, o3.Porte) and self.zone_colli.position == 'front':
 
                         #we are moving -> stop heal and ...
                         activated_smthg = True
@@ -1412,8 +1413,8 @@ class Human():
             if self.MODE == 'peace':
 
                 if self.actin == None:
-                    if len(list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))) > 0:
-                        item = list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))[0]
+                    if len(list(filter(lambda x:isinstance(x,o3.Item_ELEM),self.collis))) > 0:
+                        item = list(filter(lambda x:isinstance(x,o3.Item_ELEM),self.collis))[0]
                         self.actin = 'grab'
                         self.do('hit')
                         item.activate(self)
@@ -1428,8 +1429,8 @@ class Human():
 
                 if self.actin == None:
                     # si on marche sur un item on le ramasse
-                    if len(list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))) > 0:
-                        item = list(filter(lambda x:isinstance(x,o.Item_ELEM),self.collis))[0]
+                    if len(list(filter(lambda x:isinstance(x,o3.Item_ELEM),self.collis))) > 0:
+                        item = list(filter(lambda x:isinstance(x,o3.Item_ELEM),self.collis))[0]
                         self.actin = 'grab'
                         self.do('hit')
                         item.activate(self)
@@ -1477,7 +1478,7 @@ class Human():
             else:
                 dx -= 150
             #print('creatin item',thg)
-            o.Item_ELEM(thg,(x+w/2+dx,y),self.street)
+            o3.Item_ELEM(thg,(x+w/2+dx,y),self.street)
 
     def grab(self,thg,inventory=False):
 
@@ -2087,19 +2088,19 @@ class Human():
         if hasattr(self,'label'):
             # label
             pos = (self.realbox[0] + self.realbox[2])/2 , self.realbox[3] + 30
-            g.lman.modify(self.label,pos,group=o.get_perso_grp(self.gey))
+            g.lman.modify(self.label,pos,group=o3.get_perso_grp(self.gey))
 
         if hasattr(self,'label_life'):
             # spr life
             size_lifebar = 150
             size_fill = (self.life*size_lifebar)/self.max_life
             x,y = self.box.cx-size_lifebar/2 , self.box.fy + 2
-            g.sman.modify(self.label_life,(x,y),scale=(size_fill/32,None),group=o.get_perso_grp(self.gey))
+            g.sman.modify(self.label_life,(x,y),scale=(size_fill/32,None),group=o3.get_perso_grp(self.gey))
             # spr confidence
             size_lifebar = 150
             size_fill = (self.confidence*size_lifebar)/100
             x,y = self.box.cx-size_lifebar/2 , self.box.fy + 7
-            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None),group=o.get_perso_grp(self.gey))
+            g.sman.modify(self.label_conf,(x,y),scale=(size_fill/32,None),group=o3.get_perso_grp(self.gey))
 
     def set_text(self,key_skin):
         if self.textids != textures[key_skin]:
@@ -2172,7 +2173,7 @@ class Human():
         x,y = self.pos_weapon
         item = self.selecter[self.selected]
         if item and hasattr(item,'hit'):
-            param = o.catalog_items[type(item).__name__.lower()]
+            param = o3.catalog_items[type(item).__name__.lower()]
             dx,dy = param['bullet_pos']
             if self.dir == 'R':
                 x += dx
@@ -2253,7 +2254,7 @@ class Human():
 
     def _group(self):
         #k = g.gman.nb_perso_group*self.gey/o2.maxY
-        return o.get_perso_grp(self.gey)
+        return o3.get_perso_grp(self.gey)
     group = property(_group)
 
     def str_graphic(self):
@@ -2477,17 +2478,17 @@ class Rappeur(Fan):
         self.nb_fans = 0
         self.fans = []
 
-        #self.plume = o.rplum(self.name)
-        if type(self) != Perso : self.grab_sel(o.rplum(self.name))
+        #self.plume = o3.rplum(self.name)
+        if type(self) != Perso : self.grab_sel(o3.rplum(self.name))
 
     def rplum(self):
-        self.grab(o.rplum(self.name))
+        self.grab(o3.rplum(self.name))
 
     def release_son(self,son,fans,day,label):
         self.disco.append(son)
         son.release(self,day,label)
 
-        aa = o.a(son.quality)
+        aa = o3.a(son.quality)
         x = (son.quality-self.qua_score) * self.nb_fans
 
         print(son,'a='+str(int(aa)),'x='+str(int(x)))
@@ -2571,7 +2572,7 @@ class Rappeur(Fan):
             x = g.lman.labels[self.label].x
             y = g.lman.labels[self.label].y
 
-            self.label_plume = g.sman.addSpr(g.TEXTIDS[type(self.plume).__name__.lower()][o.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
+            self.label_plume = g.sman.addSpr(g.TEXTIDS[type(self.plume).__name__.lower()][o3.convert_quality(self.plume.quality)[0]],(x,y),group=self.grp,vis=False)
 
             sc = g.lman.labels[self.label].content_height
             w,h = g.sman.sprites[self.label_plume].width,g.sman.sprites[self.label_plume].height
@@ -2617,11 +2618,11 @@ class Rappeur(Fan):
 
     def _plume(self):
         for thg in self.selecter.values():
-            if type(thg) == o.Plume:
+            if type(thg) == o3.Plume:
                 return thg
         for cat in self.inventory:
             for thg in self.inventory[cat]:
-                if type(thg) == o.Plume:
+                if type(thg) == o3.Plume:
                     return thg
         return None
     plume = property(_plume)
@@ -2654,13 +2655,13 @@ class Perso(Rappeur):
 
         self.cheat = CHEAT
 
-        #self.grab(o.Bottle())
-        self.grab(o.rplum(self.name))
+        #self.grab(o3.Bottle())
+        self.grab(o3.rplum(self.name))
 
         if False:
             for i in range(10):
-                self.grab(o.Bottle())
-            self.grab(o.M16())
+                self.grab(o3.Bottle())
+            self.grab(o3.M16())
 
     # cheat
     def cheat(self):
@@ -2672,10 +2673,10 @@ class Perso(Rappeur):
     def cheat_plumson(self):
         """if self.plume != None:
             self.plumhud.delete()"""
-        self.plume = o.splum(self.name)
-        #self.plumhud = o.PlumHUD(self.plume)
+        self.plume = o3.splum(self.name)
+        #self.plumhud = o3.PlumHUD(self.plume)
 
-        self.grab(o.sson(self.name))
+        self.grab(o3.sson(self.name))
 
     def add_dial(self,dial):
         super(Perso,self).add_dial(dial)
@@ -2687,7 +2688,7 @@ class Perso(Rappeur):
         """if self.plume != None:
             self.plumhud.delete()"""
         super(Perso,self).rplum()
-        #self.plumhud = o.PlumHUD(self.plume)
+        #self.plumhud = o3.PlumHUD(self.plume)
 
 
     ## particles

@@ -8,10 +8,14 @@ from colors import *
 
 from src.utils import *
 from src import graphic as g
-from src import obj as o
+#from src import obj as o
+from src import obj3 as o3
 from src import perso as p
 import random as r
 from src import cmd
+
+"""THIS OBJ FILE IS ABOUT CITY,STREETs && BIGGER ELEMENTs (trains, ...)"""
+
 
 Y = 0,450
 GRP_DY = Y[1]/g.gman.nb_perso_group
@@ -80,11 +84,11 @@ class Train():
         y = self.y
         self.zones = []
         zone_box = box( y=y , w=200 , h=self.y+200 - y )
-        self.zones.append(o.TrainStation(self,zone_box))
+        self.zones.append(o3.TrainStation(self,zone_box))
         zone_box = box( y=y , w=200 , h=self.y+200 - y )
-        self.zones.append(o.TrainStation(self,zone_box))
+        self.zones.append(o3.TrainStation(self,zone_box))
         zone_box = box( y=y , w=600 , h=self.y+200 - y )
-        self.zones.append(o.ExitTrain(self,zone_box))
+        self.zones.append(o3.ExitTrain(self,zone_box))
 
     def update(self,x,y):
 
@@ -594,7 +598,7 @@ class Street():
         self.zones[zone.name] = zone
         #print('added zone',zone.name,zone.gex,zone.gey)
 
-        if isinstance(zone,o.Porte) and zone.destination not in self.neighbor:
+        if isinstance(zone,o3.Porte) and zone.destination not in self.neighbor:
             self.neighbor[zone.destination] = {'door':zone}
             if type(zone.destination) == Street:
                 self.neighbors_street[zone.destination] = {'door':zone}
@@ -837,7 +841,7 @@ class Street():
 
         x = lx + W_SIDE+i_build*W_BUILD
         y = ly + Y_BUILD
-        grp = o.get_perso_grp(gey+Y_BUILD)
+        grp = o3.get_perso_grp(gey+Y_BUILD)
 
         #cmd.say('new light:',i_build,(x,y))
         if i_build not in self.lights: self.lights[i_build] = []
@@ -896,7 +900,7 @@ class Street():
 
         if hum in self.humans:
             collis = []
-            for door in list(filter(lambda x:isinstance(x,o.Porte),list(self.zones.values()))):
+            for door in list(filter(lambda x:isinstance(x,o3.Porte),list(self.zones.values()))):
                 #print(door.name)
                 if collisionAB(hum.gebox,door.gebox):
                     collis.append(door)
@@ -1121,7 +1125,7 @@ class House(Street):
 
     def add_owner(self,owner):
         self.owners.append(owner)
-        owner.grab(o.Key(self))
+        owner.grab(o3.Key(self))
 
     def get_random_nb_bots(self):
         return r.randint(0,2)
@@ -1450,7 +1454,7 @@ coll_boxs = {
                 box(x=280,fx=950,y=80+Y_BUILD,fy=800+Y_BUILD),
                 box(x=950,fx=1220,y=50+Y_BUILD,fy=800+Y_BUILD),
                 box(x=1220,fx=1270,y=70+Y_BUILD,fy=800+Y_BUILD),
-                box(x=1270,fx=1500,y=90+Y_BUILD,fy=800+Y_BUILD),
+                box(x=1270,fx=1500,y=100+Y_BUILD,fy=800+Y_BUILD),
                 ],
         'sbahn' : [
                 box(x=1310,fx=1330,y=130+Y_BUILD,fy=160+Y_BUILD),
@@ -1641,7 +1645,7 @@ def create_map():
                 x,y = i*W_BUILD+W_SIDE,Y_BUILD
                 y += builds[build_list[i]]['distrib'][1]
                 x += builds[build_list[i]]['distrib'][0]
-                distrib = o.Distrib(x,y)
+                distrib = o3.Distrib(x,y)
                 NY.CITY[nom].assign_zones([distrib])
 
             ## On créé un BUILDING
@@ -1702,10 +1706,10 @@ def connect(street1,box1,street2,box2,col=(False,False),labs=(None,None)):
     if type(box2) != box:
         box2 = box(box2,Y_BUILD,270,400)
 
-    door1 = o.Porte(street1,box1,street2,box2.x,makeCol=col[0],text=labs[0])
+    door1 = o3.Porte(street1,box1,street2,box2.x,makeCol=col[0],text=labs[0])
     street1.assign_zones([door1])
 
-    door2 = o.Porte(street2,box2,street1,box1.x,makeCol=col[1],text=labs[1])
+    door2 = o3.Porte(street2,box2,street1,box1.x,makeCol=col[1],text=labs[1])
     street2.assign_zones([door2])
 
 def connect_solo(street1,box1,street2,x2,col=False,labs=None,anim='door'):
@@ -1716,7 +1720,7 @@ def connect_solo(street1,box1,street2,x2,col=False,labs=None,anim='door'):
     if type(box1) != box:
         box1 = box(box1,Y_BUILD,270,400)
 
-    door = o.Porte(street1,box1,street2,x2,makeCol=col,text=labs,anim=anim)
+    door = o3.Porte(street1,box1,street2,x2,makeCol=col,text=labs,anim=anim)
     street1.assign_zones([door])
 
 def save_lines(tab):
