@@ -190,22 +190,22 @@ class App():
             ## ZONES
             # à la maison
             zones = []
-            zones.append(o3.Ordi(1990,260,self.perso))
-            zones.append(o3.Studio(2640,225+50))
-            zones.append(o3.Market(450,210))
-            zones.append(o3.Lit(-600,225))
+            zones.append(o3.Ordi(1990,260,self.perso,o2.NY.CITY['home']))
+            zones.append(o3.Studio(2640,225+50,o2.NY.CITY['home']))
+            zones.append(o3.Market(450,210,o2.NY.CITY['home']))
+            zones.append(o3.Lit(-600,225,o2.NY.CITY['home']))
             o2.NY.CITY['home'].assign_zones(zones)
 
             # ez cash
-            zones = []
-            zones.append(o3.Cash(2900,225))
             street = o2.NY.rd_street().name
+            zones = []
+            zones.append(o3.Cash(2900,225,o2.NY.CITY[street]))
             o2.NY.CITY[street].assign_zones(zones)
             print('let\'s find the',street,'!')
 
             # distrokid
             zones = []
-            zones.append(o3.SimpleReleaser(1670,210,o3.distro))
+            zones.append(o3.SimpleReleaser(1670,210,o3.distro,o2.NY.CITY['distrokid']))
             o2.NY.CITY['distrokid'].assign_zones(zones)
 
 

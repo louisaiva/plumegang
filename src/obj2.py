@@ -426,7 +426,7 @@ class Street():
                 if (x_r+zone.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and zone.loaded:
                     zone.deload()
                 elif (x_r+zone.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not zone.loaded:
-                    zone.load(self)
+                    zone.load()
 
             #items
             for item in self.items:
@@ -438,7 +438,7 @@ class Street():
                 if (x_r+item.w <= -g.SAFE_W or x_r >= g.scr.fx+g.SAFE_W) and item.loaded:
                     item.deload()
                 elif (x_r+item.w > -g.SAFE_W and x_r < g.scr.fx+g.SAFE_W) and not item.loaded:
-                    item.load(self)
+                    item.load()
 
         # bg
         if True:
@@ -1645,12 +1645,12 @@ def create_map():
                 x,y = i*W_BUILD+W_SIDE,Y_BUILD
                 y += builds[build_list[i]]['distrib'][1]
                 x += builds[build_list[i]]['distrib'][0]
-                distrib = o3.Distrib(x,y)
+                distrib = o3.Distrib(x,y,NY.CITY[nom])
                 NY.CITY[nom].assign_zones([distrib])
 
             ## on crée un lampadaire
             x,y = i*W_BUILD+W_SIDE-200,Y_BUILD-20
-            lamp = o3.Lamp(x,y)
+            lamp = o3.HourLamp(x,y,NY.CITY[nom])
             NY.CITY[nom].assign_zones([lamp])
 
             ## On créé un BUILDING

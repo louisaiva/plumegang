@@ -856,10 +856,12 @@ class Zone_ELEM(Zone):
 
     ## SIMPLE ELEMNT in the street (borne,machins)
 
-    def __init__(self,box,name='thing',textid='white',makeCol=True):
+    def __init__(self,box,street,name='thing',textid='white',makeCol=True):
         super(Zone_ELEM,self).__init__(box,textid,None,makeCol)
 
         self.name = name
+        self.group = get_perso_grp(self.gey)
+        self.street = street
 
     def move(self,x=None,y=None,anc='left'):
 
@@ -884,9 +886,9 @@ class Zone_ELEM(Zone):
 
             g.sman.modify(self.skin_id,(x,y),group=grp)
 
-    def load(self,street):
+    def load(self):
         super(Zone_ELEM,self).load()
-        if hasattr(self,'skin_id') and street.outside:
+        if hasattr(self,'skin_id') and self.street.outside:
             g.Cyc.add_spr((self.skin_id,0.3))
 
     def deload(self):
@@ -898,8 +900,8 @@ class Zone_HOOV(Zone_ELEM):
 
     ## HOOVER WITH MOVEMENT OF PERSO
 
-    def __init__(self,box,name='thing',textid='white',long=False,makeCol=True,position='back'):
-        super(Zone_HOOV,self).__init__(box,name,textid,makeCol)
+    def __init__(self,box,street,name='thing',textid='white',long=False,makeCol=True,position='back'):
+        super(Zone_HOOV,self).__init__(box,street,name,textid,makeCol)
 
         ## la position est différente que la pos !! (louis du futur stp trouve un autre nom là cé éclaté)
         #   elle régule la position de la zone PAR RAPPORT au perso afin de l'activer correctement
@@ -967,8 +969,8 @@ class Zone_HOOV(Zone_ELEM):
             g.lman.delete(self.label)
             del self.label
 
-    def load(self,street):
-        super(Zone_HOOV,self).load(street)
+    def load(self):
+        super(Zone_HOOV,self).load()
 
         if not hasattr(self,'label'):
             # label
@@ -990,8 +992,8 @@ class Zone_HOOV(Zone_ELEM):
 
 class Market(Zone_HOOV):
 
-    def __init__(self,x,y):
-        super(Market,self).__init__(box(x,y,300,320),'plumoir','pink',True,False)
+    def __init__(self,x,y,street):
+        super(Market,self).__init__(box(x,y,300,320),street,'plumoir','pink',True,False)
 
     def activate(self,perso):
         super(Market,self).activate(perso)
@@ -999,8 +1001,8 @@ class Market(Zone_HOOV):
 
 class SimpleReleaser(Zone_HOOV):
 
-    def __init__(self,x,y,label):
-        super(SimpleReleaser,self).__init__(box(x,y,300,320),'releaser','pink',True,False)
+    def __init__(self,x,y,label,street):
+        super(SimpleReleaser,self).__init__(box(x,y,300,320),street,'releaser','pink',True,False)
         self.LABEL = label
 
     def activate(self,perso):
@@ -1012,9 +1014,9 @@ class Porte(Zone_HOOV):
 
     def __init__(self,street,box,destination,xdest,makeCol=False,text=None,anim='door'):
 
-        super(Porte,self).__init__(box,get_id(destination.name),'grey',makeCol=makeCol)
+        super(Porte,self).__init__(box,street,get_id(destination.name),'grey',makeCol=makeCol)
         self.destination = destination
-        self.street = street
+        #self.street = street
         self.xdest = xdest
         self.perso_anim = anim
 
@@ -1080,8 +1082,8 @@ class Porte(Zone_HOOV):
 
 class Cash(Zone_HOOV):
 
-    def __init__(self,x,y,w=100,h=200,make_col=True):
-        super(Cash,self).__init__(box(x,y,w,h),'ez cash','red',makeCol=make_col)
+    def __init__(self,x,y,street,w=100,h=200,make_col=True):
+        super(Cash,self).__init__(box(x,y,w,h),street,'ez cash','red',makeCol=make_col)
 
     def activate(self,perso):
         super(Cash,self).activate(perso)
@@ -1089,11 +1091,11 @@ class Cash(Zone_HOOV):
 
 class Distrib(Zone_HOOV):
 
-    def __init__(self,x,y):
+    def __init__(self,x,y,street):
 
         text = g.TEXTIDS['zone']['distrib']
         w,h = g.tman.textures[text].width,g.tman.textures[text].height
-        super(Distrib,self).__init__(box(x,y,w,h),get_id('distrib'),text)
+        super(Distrib,self).__init__(box(x,y,w,h),street,get_id('distrib'),text)
         self.labtext = 'distrib'
 
     def activate(self,perso):
@@ -1115,7 +1117,7 @@ class TrainStation(Zone_HOOV):
         self.train = train
         name = train.name
 
-        super(TrainStation,self).__init__(box,get_id(name),'pink',False,False)
+        super(TrainStation,self).__init__(box,self.train.street,get_id(name),'pink',False,False)
         self.labtext = name
         self.perso_anim = 'door'
 
@@ -1130,7 +1132,7 @@ class ExitTrain(Zone_HOOV):
         self.train = train
         name = 'exit '+train.name
 
-        super(ExitTrain,self).__init__(box,get_id(name),'pink',False,False,position='front')
+        super(ExitTrain,self).__init__(box,self.train.street,get_id(name),'pink',False,False,position='front')
         self.labtext = name
         self.targets = [o2.Train]
         self.perso_anim = 'door'
@@ -1154,11 +1156,11 @@ class Item_ELEM(Zone_HOOV):
         else:
             text = g.TEXTIDS['items'][type(item).__name__.lower()]
 
-        super(Item_ELEM,self).__init__(box(*pos,size,size),nom,text,makeCol=False)
+        super(Item_ELEM,self).__init__(box(*pos,size,size),street,nom,text,makeCol=False)
         self.labtext = type(item).__name__.lower()
         o2.NY.CITY[street].add_item(self)
         self.item = item
-        self.street = street
+        #self.street = street
 
     def activate(self,perso):
 
@@ -1172,8 +1174,8 @@ class Item_ELEM(Zone_HOOV):
 
 class Zone_ACTIV(Zone_HOOV):
 
-    def __init__(self,box,name='thing',textid='white',long=False,makeCol=True,position='back',hud=None):
-        super(Zone_ACTIV,self).__init__(box,name,textid,long,makeCol,position)
+    def __init__(self,box,street,name='thing',textid='white',long=False,makeCol=True,position='back',hud=None):
+        super(Zone_ACTIV,self).__init__(box,street,name,textid,long,makeCol,position)
 
         self.activate_inv = True
         self.inv_already_vis = False
@@ -1212,8 +1214,8 @@ class Zone_ACTIV(Zone_HOOV):
 
 class Ordi(Zone_ACTIV):
 
-    def __init__(self,x,y,perso):
-        super(Ordi,self).__init__(box(x,y,230,150),'ordi','red',makeCol=False,long=True,position='front',hud=o.MarketHUD(perso))
+    def __init__(self,x,y,perso,street):
+        super(Ordi,self).__init__(box(x,y,230,150),street,'ordi','red',makeCol=False,long=True,position='front',hud=o.MarketHUD(perso))
 
     def activate(self,perso):
         super(Ordi,self).activate(perso)
@@ -1240,8 +1242,8 @@ class Ordi(Zone_ACTIV):
 
 class Studio(Zone_ACTIV):
 
-    def __init__(self,x,y):
-        super(Studio,self).__init__(box(x,y,50,150),'studio','blue',makeCol=False,long=True,hud=o.StudHUD())
+    def __init__(self,x,y,street):
+        super(Studio,self).__init__(box(x,y,50,150),street,'studio','blue',makeCol=False,long=True,hud=o.StudHUD())
 
     def activate(self,perso):
         super(Studio,self).activate(perso)
@@ -1277,8 +1279,8 @@ class Studio(Zone_ACTIV):
 
 class Lit(Zone_ACTIV):
 
-    def __init__(self,x,y):
-        super(Lit,self).__init__(box(x,y,300,150),'lit','darkgreen',long=True,hud=o.WriteHUD())
+    def __init__(self,x,y,street):
+        super(Lit,self).__init__(box(x,y,300,150),street,'lit','darkgreen',long=True,hud=o.WriteHUD())
 
     def activate(self,perso):
         super(Lit,self).activate(perso)
@@ -1315,11 +1317,16 @@ class Lit(Zone_ACTIV):
 
 class Lamp(Zone_ELEM):
 
-    def __init__(self,x,y):
+    def __init__(self,x,y,street):
 
         text = g.TEXTIDS['zone']['lamp']
         w,h = g.tman.textures[text].width,g.tman.textures[text].height
-        super(Lamp,self).__init__(box(x,y,w,h),get_id('lamp'),text)
+        super(Lamp,self).__init__(box(x,y,w,h),street,get_id('lamp'),text)
+
+        self.light_text = g.TEXTIDS['lights']['doucheL']
+        self.lums = [(20,320),(60,320)]
+        self.lum_ids = []
+        self.ancs = [('center','top')]*2
 
         self.on = False
 
@@ -1327,10 +1334,81 @@ class Lamp(Zone_ELEM):
 
         if not self.on:
             self.on = True
-            cmd.say(self.name,'switched on')
+            #cmd.say(self.name,'switched on')
+
+            # on crée la light
+            if self.loaded: self.load_lums()
 
     def switch_off(self):
 
         if self.on:
             self.on = False
-            cmd.say(self.name,'switched off')
+            #cmd.say(self.name,'switched off')
+
+            if self.loaded: self.deload_lums()
+
+    def update(self,x,y):
+        super(Lamp,self).update(x,y)
+
+        for i in range(len(self.lum_ids)):
+
+            x = self.x+self.lums[i][0]
+            y = self.y+self.lums[i][1]
+            #cmd.say('up lamp',x,y)
+
+            grp = get_perso_grp(self.gey)
+            g.sman.modify(self.lum_ids[i],(x,y),group=grp,anchor=self.ancs[i])
+
+    def load(self):
+        super(Lamp,self).load()
+        if self.on:
+            self.load_lums()
+
+    def deload(self):
+        self.deload_lums()
+        super(Lamp,self).deload()
+
+    def load_lums(self):
+
+        for i in range(len(self.lums)):
+            x,y = self.lums[i]
+            if len(self.lum_ids) <= i:
+
+                x = g.sman.spr(self.skin_id).x + x
+                y = g.sman.spr(self.skin_id).y + y
+                #cmd.say('new lamp',x,y)
+
+                id = g.sman.addSpr(self.light_text,(x,y),self.group,key=self.name+'_lum',anchor=self.ancs[i])
+                self.lum_ids.append(id)
+
+                if self.street.outside:
+                    g.Cyc.add_spr((id,0.3))
+
+    def deload_lums(self):
+        for i in range(len(self.lum_ids)):
+            g.Cyc.del_spr((self.lum_ids[i],0.3))
+            g.sman.delete(self.lum_ids[i])
+        self.lum_ids = []
+
+
+class HourLamp(Lamp):
+
+    def __init__(self,x,y,street):
+
+        super(HourLamp,self).__init__(x,y,street)
+
+        self.hm_begin,self.hm_end = g.Hour(18,0),g.Hour(6,0)
+
+    def update(self,x,y):
+
+        super(HourLamp,self).update(x,y)
+
+        #hours
+        if (g.Cyc >= self.hm_begin or g.Cyc < self.hm_end) and not self.on:
+            self.switch_on()
+        elif (g.Cyc < self.hm_begin and g.Cyc >= self.hm_end) and self.on:
+            self.switch_off()
+
+    def _hours(self):
+        return self.hm_begin,self.hm_end
+    hours = property(_hours)
