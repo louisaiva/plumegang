@@ -208,8 +208,6 @@ class App():
             zones.append(o3.SimpleReleaser(1670,210,o3.distro,o2.NY.CITY['distrokid']))
             o2.NY.CITY['distrokid'].assign_zones(zones)
 
-
-
             o2.NY.CITY[self.perso.street].load()
 
         # lot of stuff : hud/end/menu/labels/keys/clicks/final
@@ -414,7 +412,7 @@ class App():
             g.TEXTIDS['zone'] = {}
 
             zones = [('distrib',(320,400)),
-                    ('lamp',(90,340))
+                    ('lamp',(200,700))
                     ]
 
             id = g.tman.loadIm('zones.png')
@@ -428,7 +426,6 @@ class App():
                 g.TEXTIDS['zone'][name] = id
                 #cmd.say(name,'texture created id',id)
                 x+=w
-
 
         ## TRAINS
         if True:
@@ -457,13 +454,12 @@ class App():
             g.TEXTIDS['blur'] = g.tman.addCol('black',1,1)
             g.TEXTIDS['lights'] = {}
 
-            lux=['doucheXL','doucheL','douche']
+            lux=['doucheXL','doucheL','douche','bigdouche']
 
             g.TEXTIDS['lights'] = {}
-            ids = g.tman.loadImSeq('lum.png',(1,40))
+            ids = g.tman.loadImSeq('lum.png',(1,20))
             for i in range(len(lux)):
                 g.TEXTIDS['lights'][lux[i]] = ids[i]
-
 
     def get_current_screen(self):
 

@@ -546,7 +546,7 @@ class Street():
 
         ## vérifie les zones_elems
         for zone in self.zones.values():
-            if zone.loaded and collisionAB(zone.gebox,thg_box):
+            if zone.loaded and collisionAB(zone.collbox,thg_box):
                 if return_box:return zone.gebox
                 return True
 
@@ -589,6 +589,8 @@ class Street():
 
         if return_box: return None
         return False
+
+    # assignements
 
     def assign_zones(self,zones):
         for zone in zones:
@@ -1409,7 +1411,7 @@ MAP_NAME = 'ny'
 
 builds = {
         'empty':{'text':0 , 'door':None ,'distrib':None,'maxY':None,'lum':None},
-        'stand':{'text':1 , 'door':box(400,50,fx=800,h=370), 'door2':box(890,50,400,370) ,'distrib':(0,0),'maxY':100,'lum':[(140,370,30),(170,370,30)]},
+        'stand':{'text':1 , 'door':box(400,50,fx=800,h=370), 'door2':box(890,50,400,370) ,'distrib':(0,0),'maxY':100,'lum':None},
         'bat':{'text':2 , 'door':box(300,110,fx=570,h=400) ,'distrib':None,'maxY':110,'lum':None},
         'stairs':{'text':3 , 'door':box(310,100,fx=940,h=420) ,'distrib':(0,0),'maxY':90,'lum':None},
         'L':{'text':'side', 'door':None,'distrib':None,'maxY':100,'lum':None},
@@ -1649,7 +1651,7 @@ def create_map():
                 NY.CITY[nom].assign_zones([distrib])
 
             ## on crée un lampadaire
-            x,y = i*W_BUILD+W_SIDE-200,Y_BUILD-20
+            x,y = i*W_BUILD+W_SIDE-200,-20
             lamp = o3.HourLamp(x,y,NY.CITY[nom])
             NY.CITY[nom].assign_zones([lamp])
 

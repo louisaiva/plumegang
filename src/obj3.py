@@ -852,6 +852,8 @@ class Zone():
 
 #------# elements
 
+catalog_zones = {}
+
 class Zone_ELEM(Zone):
 
     ## SIMPLE ELEMNT in the street (borne,machins)
@@ -895,6 +897,10 @@ class Zone_ELEM(Zone):
         if hasattr(self,'skin_id'):
             g.Cyc.del_spr((self.skin_id,0.3))
         super(Zone_ELEM,self).deload()
+
+    def _collbox(self):
+        return self.gebox
+    collbox = property(_collbox)
 
 class Zone_HOOV(Zone_ELEM):
 
@@ -1160,11 +1166,11 @@ class Item_ELEM(Zone_HOOV):
         self.labtext = type(item).__name__.lower()
         o2.NY.CITY[street].add_item(self)
         self.item = item
-        #self.street = street
+        self.street = o2.NY.CITY[street]
 
     def activate(self,perso):
 
-        o2.NY.CITY[self.street].del_item(self)
+        self.street.del_item(self)
         perso.grab(self.item)
 
         print(perso.name,'took',self.name)
@@ -1315,16 +1321,25 @@ class Lit(Zone_ACTIV):
 
 #------# lights
 
+catalog_zones['lamps'] = {'linilop': {'text':'lamp',
+                                    'light_text':'bigdouche',
+                                    'collbox':(90,0,110,30)
+                                    }
+                        }
+
 class Lamp(Zone_ELEM):
 
     def __init__(self,x,y,street):
 
-        text = g.TEXTIDS['zone']['lamp']
-        w,h = g.tman.textures[text].width,g.tman.textures[text].height
-        super(Lamp,self).__init__(box(x,y,w,h),street,get_id('lamp'),text)
+        self.lamp = catalog_zones['lamps']['linilop']
+        key = get_id('linilop')
 
-        self.light_text = g.TEXTIDS['lights']['doucheL']
-        self.lums = [(20,320),(60,320)]
+        text = g.TEXTIDS['zone'][self.lamp['text']]
+        w,h = g.tman.textures[text].width,g.tman.textures[text].height
+        super(Lamp,self).__init__(box(x,y,w,h),street,key,text)
+
+        self.light_text = g.TEXTIDS['lights'][self.lamp['light_text']]
+        self.lums = [(60,700),(130,700)]
         self.lum_ids = []
         self.ancs = [('center','top')]*2
 
@@ -1390,6 +1405,10 @@ class Lamp(Zone_ELEM):
             g.sman.delete(self.lum_ids[i])
         self.lum_ids = []
 
+    def _collbox(self):
+        x,y,fx,fy = self.lamp['collbox']
+        return self.gex+x,self.gey+y,self.gex+fx,self.gey+fy
+    collbox = property(_collbox)
 
 class HourLamp(Lamp):
 
@@ -1397,7 +1416,7 @@ class HourLamp(Lamp):
 
         super(HourLamp,self).__init__(x,y,street)
 
-        self.hm_begin,self.hm_end = g.Hour(18,0),g.Hour(6,0)
+        self.hm_begin,self.hm_end = g.Hour(18,0),g.Hour(6,30)
 
     def update(self,x,y):
 

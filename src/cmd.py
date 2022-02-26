@@ -6,7 +6,7 @@ enjoy
 from src import perso as p
 from src import graphic as g
 from src import obj2 as o2
-from src import obj as o
+from src import obj3 as o3
 import pyglet,time
 from colors import *
 from src.colors import *
@@ -49,22 +49,22 @@ def get_hum(name):
 def get_item(name,*args):
 
     item = None
-    if name in o.catalog_items:
+    if name in o3.catalog_items:
 
         arg = []
 
-        if o.catalog_items[name]['param'] and args != []:
+        if o3.catalog_items[name]['param'] and args != []:
             arg = args
-        elif o.catalog_items[name]['param']:
-            arg = o.catalog_items[name]['param']
+        elif o3.catalog_items[name]['param']:
+            arg = o3.catalog_items[name]['param']
 
         if CMD_TRY:
             try:
-                item = o.catalog_items[name]['elem'](*arg)
+                item = o3.catalog_items[name]['elem'](*arg)
             except:
                 return 'error in the parameters'
         else:
-            item = o.catalog_items[name]['elem'](*arg)
+            item = o3.catalog_items[name]['elem'](*arg)
 
     return item
 
