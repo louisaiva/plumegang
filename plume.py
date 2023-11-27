@@ -129,7 +129,7 @@ class App():
             self.perso = p.Perso('rapper',fill=FILL_INV,street='home')
             g.Cam.follow(self.perso)
             p.BOTS.append(self.perso)
-            o3.distro.sign(self.perso)
+            # o3.distro.sign(self.perso)
 
             #poto
             p.BOTS.append(p.Fan('perso3',o2.NY.CITY['home'].rand_pos(),street='home'))

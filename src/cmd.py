@@ -250,6 +250,9 @@ def cmds():
     def esh():
         return wesh()
 
+    def cheh():
+        return wesh()
+
     def kill(name):
         hum = get_hum(name)
         if not hum:

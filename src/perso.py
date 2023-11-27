@@ -21,7 +21,7 @@ SIZE_SPR = 256
 BOTS = []
 GUYS = []
 CHEAT = False
-WATER = True
+WATER = False
 
 """'''''''''''''''''''''''''''''''''
 '''''''TEXTURES TAB'''''''''''''''''
@@ -190,6 +190,7 @@ class Distroguy(Metier):
 
     def __init__(self,perso):
         super(Distroguy,self).__init__(perso,'distroguy')
+        print('distroguy is '+str(perso.name))
         self.meanings.append('tu bosses?')
 
         self.dials['distroguy_dial_thune'] = { 't':0 , 'delay':None , 'meaning':'veut thune' , 'imp':81 , 'id':'distroguy_dial_thune' }
@@ -201,7 +202,7 @@ class Distroguy(Metier):
         self.acts['distroguy_act_sign'] = { 't':0 , 'delay':10 , 'giver':self.perso , 'exp':'signer chez distro (1$/jour)'
                                 , 'fct':o3.distro.sign , 'param':[] , 'answer':'trop cool' , 'id':'distroguy_act_sign'}
 
-        self.hm_begin,self.hm_end = g.Hour(7),g.Hour(16)
+        self.hm_begin,self.hm_end = g.Hour(1),g.Hour(23)
 
     def answer(self,voice):
         meaning = voice['meaning']
@@ -2508,8 +2509,9 @@ class Rappeur(Fan):
     def auto_release(self,label):
 
         choiced_son = None
-        for son in self.selecter.values() + self.inventory['son']:
-            if not son._released:
+        for son in list(self.selecter.values()) + self.inventory['son']:
+            # on verifie si c'est un son
+            if type(son) == o3.Son and not son._released:
                 choiced_son = son
                 break
         if choiced_son:

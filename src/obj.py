@@ -950,7 +950,7 @@ class StudHUD(HUD):
             for i in range(4):
                 ph.append(self.uis['phase'+str(i)].item)
 
-            son = Son(instru,ph,perso.name)
+            son = o3.Son(instru,ph,perso.name)
 
             self.delete_ui('instru')
             for i in range(4):

@@ -664,11 +664,13 @@ class Son(Sound_item):
         return qua
 
     def release(self,perso,day,label):
-        self._released = True
         self.author = perso
         self.release_date = day
         self.label = label
         self.label.release(self)
+        self._released = True
+        
+        print(self.name,'released by',perso.name,'on',day)
 
     def stream(self):
         self.streams+=1
@@ -737,7 +739,7 @@ class Label():
             score = self.promo*perc
             sd = {'son':son , 'promo':score }
 
-            SPOTIFY.append(sd)
+            SPOTIFY[self.name].append(sd)
 
     def stream(self,son):
         self.streams[son.author][son] += 1
@@ -1417,6 +1419,7 @@ class HourLamp(Lamp):
         super(HourLamp,self).__init__(x,y,street)
 
         self.hm_begin,self.hm_end = g.Hour(18,0),g.Hour(6,30)
+        self.activated = True
 
     def update(self,x,y):
 
